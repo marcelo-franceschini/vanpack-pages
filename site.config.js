@@ -18,4 +18,3 @@ export const siteConfig = {
     postalCode: process.env.VITE_CEP || '',
   },
 };
-
