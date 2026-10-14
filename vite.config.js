@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { defineConfig, loadEnv } from 'vite';
+import { siteConfig } from './site.config.js';
 
 const decodeEntities = (s) =>
   s
@@ -11,36 +12,51 @@ const decodeEntities = (s) =>
     .replace(/&amp;/g, '&');
 
 /**
- * Escreve os links do WhatsApp no HTML: `data-wa="mensagem"` vira `href="https://wa.me/<número>?text=…"`,
- * então os botões funcionam sem JS e o número fica só no `.env` (VITE_WHATSAPP).
- * Também minifica o JSON-LD e acrescenta o telefone quando houver número.
+ * Escreve os links do WhatsApp e dados institucionais no HTML:
+ * - `data-wa="mensagem"` vira `href="https://wa.me/<número>?text=…"`;
+ * - Minifica o JSON-LD e acrescenta telefone/cnpj quando existirem;
+ * - Oculta elementos marcados com `data-field` cujos valores estejam vazios em site.config.js.
  */
-function whatsapp(rawPhone = '') {
-  const phone = rawPhone.replace(/\D/g, '');
+function siteDataPlugin(rawPhone = '') {
+  const phone = (rawPhone || siteConfig.whatsapp || '').replace(/\D/g, '');
   if (phone && !/^55\d{10,11}$/.test(phone)) {
     throw new Error(
       `VITE_WHATSAPP inválido ("${rawPhone}"): use 55 + DDD + número, ex.: 5511912345678.`,
     );
   }
   return {
-    name: 'vanpack:whatsapp',
+    name: 'vanpack:site-data',
     transformIndexHtml: {
       order: 'post',
-      handler: (html) =>
-        html
-          .replace(
-            /data-wa="([^"]*)"/g,
-            (_, text) =>
-              `href="https://wa.me/${phone}?text=${encodeURIComponent(decodeEntities(text))}" target="_blank" rel="noopener"`,
-          )
-          .replace(
-            /(<script type="application\/ld\+json">)([\s\S]*?)(<\/script>)/,
-            (_, open, json, close) => {
-              const data = JSON.parse(json);
-              if (phone) data.telephone = `+${phone}`;
-              return open + JSON.stringify(data) + close;
-            },
-          ),
+      handler: (html) => {
+        let result = html;
+        result = result.replace(
+          /data-wa="([^"]*)"/g,
+          (_, text) =>
+            `href="https://wa.me/${phone}?text=${encodeURIComponent(decodeEntities(text))}" target="_blank" rel="noopener"`,
+        );
+
+        result = result.replace(
+          /(<script type="application\/ld\+json">)([\s\S]*?)(<\/script>)/,
+          (_, open, json, close) => {
+            const data = JSON.parse(json);
+            if (phone) data.telephone = `+${phone}`;
+            if (siteConfig.cnpj) data.taxID = siteConfig.cnpj;
+            if (siteConfig.email) data.email = siteConfig.email;
+            return open + JSON.stringify(data) + close;
+          },
+        );
+
+        // Remove marcações com dados ausentes
+        if (!siteConfig.phone) {
+          result = result.replace(/<[^>]+data-field="phone"[\s\S]*?<\/[^>]+>\s*/g, '');
+        }
+        if (!siteConfig.cnpj) {
+          result = result.replace(/<[^>]+data-field="cnpj"[\s\S]*?<\/[^>]+>\s*/g, '');
+        }
+
+        return result;
+      },
     },
   };
 }
@@ -89,7 +105,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd());
   return {
     base: './',
-    plugins: [whatsapp(env.VITE_WHATSAPP), contentSecurityPolicy()],
+    plugins: [siteDataPlugin(env.VITE_WHATSAPP), contentSecurityPolicy()],
     worker: { format: 'es' },
     build: {
       modulePreload: { polyfill: false },

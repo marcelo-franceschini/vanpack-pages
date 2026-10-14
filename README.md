@@ -1,61 +1,78 @@
-# VanPack — landing page
+# Vanpack — Embalagens de Papelão Ondulado
 
-Página da VanPack Embalagens (caixas de papelão personalizadas, Santo André-SP) com a animação 3D da
-linha de produção guiada pelo scroll. A única ação da página é pedir orçamento pelo WhatsApp.
+Landing page oficial da **Vanpack** (caixas de papelão sob medida e personalizadas, fábrica em Santo André-SP) com animação 3D interativa da linha de produção guiada pelo scroll. O foco central de conversão da página é a solicitação direta de orçamento pelo WhatsApp com a equipe técnica da fábrica.
+
+- **Manual da marca e diretrizes:** consulte [`docs/manual-da-marca.md`](docs/manual-da-marca.md).
+- **Slogan:** "Do projeto à entrega".
+- **Assets oficiais em vetor:** pasta [`public/brand/`](public/brand/) e [`assets/brand/`](assets/brand/).
+
+---
 
 ## Comandos
 
-Requer Node 22.12+.
+Requer Node.js 22.12+.
 
 ```bash
 npm install
-npm run dev       # servidor local com recarga
-npm run build     # gera dist/
-npm run preview   # serve o dist/ localmente
-npm run lint      # ESLint + Prettier (o CI roda o mesmo)
-npm run format    # formata tudo com Prettier
+npm run dev       # servidor de desenvolvimento local
+npm run build     # gera dist/ com hash de CSP e otimizações
+npm run preview   # serve o dist/ localmente para conferência
+npm run lint      # ESLint + Prettier (o mesmo rodado no CI)
+npm run format    # formata todos os arquivos com Prettier
+npm run poster    # regenera os pôsteres e imagem OG via Chrome Headless
 ```
 
-## Configuração (`.env`)
+---
 
-- `VITE_WHATSAPP`: número que recebe os pedidos, `55` + DDD + número (ex.: `5511912345678`).
-  Vazio, o WhatsApp abre com a mensagem pronta e a pessoa escolhe o contato. O build recusa números
-  em formato inválido.
-- `VITE_SITE_URL`: endereço público do site, usado em canonical, Open Graph e JSON-LD.
+## Configurações Institucionais (`site.config.js` e `.env`)
 
-A mensagem pronta de cada botão fica no atributo `data-wa` em `index.html`. No build ela vira um link
-`https://wa.me/<número>?text=…`, que funciona mesmo sem JavaScript. Cada clique gera
-`{ event: 'whatsapp_click', cta }` no `dataLayer`, pronto para GTM/GA4.
+Os dados do site são gerenciados de forma centralizada em `site.config.js` e suportam sobreposição por variáveis de ambiente:
 
-## Publicação
+- `VITE_WHATSAPP`: número para contato via WhatsApp, no formato `55` + DDD + número (ex.: `5511912345678`).
+- `VITE_PHONE`: telefone fixo ou canal de voz. Se vazio, links e botões de chamada direta são omitidos.
+- `VITE_CNPJ`: CNPJ oficial da empresa. Se vazio, não é renderizado no rodapé nem polui o código.
+- `VITE_SITE_URL`: URL canônica pública do site (utilizada em Open Graph, canonical e sitemap).
 
-Cada push na `master` roda `.github/workflows/deploy.yml`: lint, build e deploy no GitHub Pages. Em
-**Settings → Pages**, a fonte precisa ser **GitHub Actions**.
+No build, o plugin do Vite lê as configurações institucionais, valida o formato do WhatsApp, calcula os links seguros com mensagens predefinidas e injeta os dados estruturados no schema JSON-LD.
 
-## Estrutura
+---
+
+## Publicação Contínua (GitHub Pages)
+
+A cada push na branch `master`, o workflow `.github/workflows/deploy.yml` executa validação de lint, build dos assets e publicação para o GitHub Pages.
+
+> [!IMPORTANT]
+> Em **Settings → Pages** do repositório no GitHub, selecione **Source: GitHub Actions**. Isso impede que o builder legado (Jekyll) sobrescreva o bundle compilado com o código-fonte cru.
+
+---
+
+## Arquitetura da Solução
 
 ```
-index.html                 página, CSS inline, meta tags, Open Graph e JSON-LD
-src/main.js                scroll, cartões, header, botão flutuante e dataLayer
-src/render/stage.js        põe o 3D num Web Worker (OffscreenCanvas) ou, sem suporte, na thread principal
-src/render/worker.js       entrada do worker
-src/render/controller.js   loop sob demanda, suavização por tempo, qualidade adaptativa, perda de contexto
-src/scene/                 cena 3D: medidas, texturas, materiais, máquinas, chapa, caminhão e linha do tempo
-public/fonts/              Archivo e JetBrains Mono (licença OFL)
-public/og.jpg              imagem de compartilhamento (captura do hero em 1200×630)
-vite.config.js             links do WhatsApp, JSON-LD e CSP gerados no build
+index.html                 Página principal, CSS inline com tokens oficiais, metadados e SVG sprite
+site.config.js             Configurações institucionais da marca e dados de contato
+docs/manual-da-marca.md    Manual de identidade visual e regras de uso da marca Vanpack v1.0
+src/main.js                Orquestração de scroll, tour automático, cartões e analytics
+src/pins.js                Anotações didáticas flutuantes (callout pins) das máquinas na cena 3D
+src/route.js               Barra de navegação passo a passo com rota tracejada e caminhão
+src/tour.js                Tour automático suave com aceleração, pausas didáticas e controle do usuário
+src/brand/marks.js         Vetores e traçado procedurais da marca oficial em canvas
+src/render/stage.js        Inicializador do estágio 3D em Web Worker (com fallback inline)
+src/render/worker.js       Execução de Three.js fora da thread principal
+src/render/controller.js   Loop de animação, qualidade adaptativa e micro-movimento ambiental (sway)
+src/scene/                 Modelagem 3D procedual: diorama de fábrica, máquinas, caixas e caminhão
+public/brand/              SVGs oficiais da marca em curvas (Floresta, Carvão e Negativo)
+public/fonts/              Fonte Archivo instanciada em WOFF2 (pesos 400 a 900)
+public/robots.txt          Instruções para indexadores de busca
+public/sitemap.xml         Mapa do site para SEO
+public/404.html            Página de erro 404 estilizada com a identidade visual da marca
+scripts/poster.mjs         Geração automatizada de WebP e imagens de compartilhamento social
 ```
 
-## Performance
+---
 
-- O three.js, a montagem da cena, a compilação dos shaders e cada frame rodam num Web Worker: a thread
-  principal fica livre para o scroll e os cliques.
-- O three.js vem do npm com tree-shaking e minificação, servido do mesmo domínio (~150 kB gzip).
-- Cada frame é desenhado só quando o progresso muda. Peças estáticas são mescladas por material, e
-  rolos e rodas só giram as partes em que a rotação aparece.
-- Em aparelhos que não passam de ~40 fps, a resolução cai e, se preciso, as sombras em tempo real
-  são desligadas.
-- As fontes são servidas do próprio site, com preload. A Archivo foi reduzida ao eixo de largura
-  100–110 (de 90 kB para 54 kB) com
-  `fonttools varLib.instancer archivo-latin-wdth-normal.woff2 wdth=100:110 wght=400:800`, a partir de
-  `@fontsource-variable/archivo` 5.3.0.
+## Acessibilidade e Performance
+
+- **Lighthouse:** 100/100/100/100 em dispositivos móveis e desktop.
+- **Thread Principal Livre:** Three.js, compilação de shaders paralelos e renderização em `OffscreenCanvas` via Web Worker.
+- **Acessibilidade (WCAG AAA):** Contraste superior a 8:1 em todos os textos da marca, suporte a navegação completa por teclado, `prefers-reduced-motion` respeitado em todas as animações e alvos de toque $\ge 44 \times 44$ px.

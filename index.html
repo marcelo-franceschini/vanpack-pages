@@ -738,33 +738,73 @@
         max-width: 46ch;
         text-wrap: pretty;
       }
+      /* Divisor com as ondas do papelão ondulado em kraft */
+      .wave-divider {
+        width: 100%;
+        overflow: hidden;
+        line-height: 0;
+        background: var(--papel);
+      }
+      .wave-divider svg {
+        display: block;
+        width: 100%;
+        height: 20px;
+        color: var(--kraft);
+      }
+      .wave-divider--top {
+        transform: rotate(180deg);
+      }
+
+      /* Diferenciais: cards sólidos com ícones e cantos retos/6px */
       .grid3 {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 1px;
-        background: var(--line);
-        border-block: 1px solid var(--line);
+        gap: 1.5rem;
       }
       .feat {
-        background: var(--papel);
-        padding: clamp(1.5rem, 3vw, 2.5rem) clamp(0px, 2vw, 2rem) clamp(1.75rem, 3vw, 2.75rem) 0;
+        background: color-mix(in oklab, var(--papel) 94%, #fff);
+        border: 2px solid var(--line);
+        border-radius: 6px;
+        padding: clamp(1.75rem, 3.5vw, 2.5rem);
+        display: flex;
+        flex-direction: column;
+        transition:
+          border-color 0.25s,
+          transform 0.25s,
+          box-shadow 0.25s;
       }
-      .feat + .feat {
-        padding-left: clamp(1.25rem, 2.5vw, 2.25rem);
+      .feat:hover {
+        border-color: color-mix(in oklab, var(--floresta) 50%, var(--line));
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgb(27 26 23 / 0.06);
       }
-      .feat .k {
-        display: block;
-        margin-bottom: 3rem;
+      .feat-icon {
+        width: 3.25rem;
+        height: 3.25rem;
+        display: grid;
+        place-items: center;
+        border-radius: 4px;
+        background: color-mix(in oklab, var(--floresta) 10%, var(--papel));
+        color: var(--floresta);
+        margin-bottom: 1.75rem;
+      }
+      .feat-icon svg {
+        width: 1.75rem;
+        height: 1.75rem;
+        fill: currentColor;
       }
       .feat h3 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-        margin-bottom: 0.625rem;
+        font-size: 1.375rem;
+        font-weight: 800;
+        letter-spacing: -0.015em;
+        margin-bottom: 0.75rem;
+        color: var(--carvao);
       }
       .feat p {
         color: var(--carvao-muted);
-        font-size: 1.0625rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        text-wrap: pretty;
       }
       @media (max-width: 860px) {
         .sec-head {
@@ -772,24 +812,37 @@
         }
         .grid3 {
           grid-template-columns: minmax(0, 1fr);
-        }
-        .feat,
-        .feat + .feat {
-          padding: 1.75rem 0;
-        }
-        .feat .k {
-          margin-bottom: 1.25rem;
+          gap: 1rem;
         }
       }
+
+      /* Seção Orçamento com fluxo 'Como pedir' */
       .cta {
+        position: relative;
         background: var(--floresta);
         color: var(--papel);
+        overflow: hidden;
+      }
+      .cta::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: repeating-linear-gradient(
+          45deg,
+          rgb(255 255 255 / 0.018) 0,
+          rgb(255 255 255 / 0.018) 2px,
+          transparent 2px,
+          transparent 8px
+        );
+        pointer-events: none;
       }
       .cta .wrap {
+        position: relative;
+        z-index: 1;
         display: grid;
-        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-        gap: 2.5rem 4rem;
-        align-items: end;
+        grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+        gap: 3rem 4.5rem;
+        align-items: center;
       }
       .cta h2 {
         font-size: clamp(2.125rem, 5vw, 4.25rem);
@@ -804,10 +857,43 @@
         margin-bottom: 1.25rem;
         display: block;
       }
-      .cta p {
-        color: color-mix(in oklab, var(--papel) 88%, var(--floresta));
-        margin-bottom: 1.75rem;
-        max-width: 44ch;
+      .como-pedir {
+        display: flex;
+        flex-direction: column;
+        gap: 0.875rem;
+        margin: 1.5rem 0 2rem;
+      }
+      .pedir-step {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 0.875rem 1rem;
+        border-radius: 4px;
+        background: color-mix(in oklab, var(--papel) 8%, transparent);
+        border: 1px solid color-mix(in oklab, var(--papel) 14%, transparent);
+      }
+      .pedir-num {
+        display: grid;
+        place-items: center;
+        width: 1.75rem;
+        height: 1.75rem;
+        flex: none;
+        border-radius: 3px;
+        background: var(--papel);
+        color: var(--floresta);
+        font: 800 0.875rem/1 var(--font);
+      }
+      .pedir-step strong {
+        display: block;
+        font: 700 0.9375rem/1.2 var(--font);
+        color: var(--papel);
+        margin-bottom: 0.25rem;
+      }
+      .pedir-step p {
+        font-size: 0.875rem;
+        line-height: 1.4;
+        color: color-mix(in oklab, var(--papel) 82%, var(--floresta));
+        margin: 0;
       }
       .btn-light {
         background: var(--papel);
@@ -816,6 +902,11 @@
         min-height: 3.5rem;
         padding: 0 1.75rem;
         font-size: 1.0625rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
       }
       .btn-light:hover {
         background: #fff;
@@ -1044,6 +1135,60 @@
           fill="currentColor"
         />
       </symbol>
+      <symbol id="i-feat-prazo" viewBox="0 0 24 24">
+        <path
+          d="M1 4h14v11H1zM15 8h4l3 3v4h-7z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="square"
+        />
+        <circle cx="5.5" cy="18.5" r="2.5" fill="none" stroke="currentColor" stroke-width="2" />
+        <circle cx="17.5" cy="18.5" r="2.5" fill="none" stroke="currentColor" stroke-width="2" />
+        <path
+          d="M8 8h3v3"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="square"
+        />
+      </symbol>
+      <symbol id="i-feat-fabrica" viewBox="0 0 24 24">
+        <path
+          d="M2 21V9l6 4V9l6 4V4h8v17H2z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="square"
+          stroke-linejoin="miter"
+        />
+        <path
+          d="M18 8h1M18 12h1M18 16h1M6 17h3v4H6z"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="square"
+        />
+      </symbol>
+      <symbol id="i-feat-consistencia" viewBox="0 0 24 24">
+        <rect
+          x="3"
+          y="3"
+          width="18"
+          height="18"
+          rx="1"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+        <path
+          d="M3 9h18M9 3v6M15 3v6M9 15h6M12 12v6"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="square"
+        />
+      </symbol>
     </svg>
     <a class="skip" href="#conteudo">Pular para o conteúdo</a>
 
@@ -1241,6 +1386,17 @@
         </div>
       </section>
 
+      <div class="wave-divider" aria-hidden="true">
+        <svg viewBox="0 0 1200 20" preserveAspectRatio="none">
+          <path
+            d="M0,10 Q15,0 30,10 T60,10 T90,10 T120,10 T150,10 T180,10 T210,10 T240,10 T270,10 T300,10 T330,10 T360,10 T390,10 T420,10 T450,10 T480,10 T510,10 T540,10 T570,10 T600,10 T630,10 T660,10 T690,10 T720,10 T750,10 T780,10 T810,10 T840,10 T870,10 T900,10 T930,10 T960,10 T990,10 T1020,10 T1050,10 T1080,10 T1110,10 T1140,10 T1170,10 T1200,10"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          />
+        </svg>
+      </div>
+
       <section class="block" id="diferenciais">
         <div class="wrap">
           <div class="sec-head">
@@ -1255,26 +1411,52 @@
           </div>
           <div class="grid3">
             <article class="feat">
-              <span class="k">01</span>
-              <h3>Entrega rápida</h3>
-              <p>Combinamos o prazo já no orçamento, para você não ficar sem caixa.</p>
-            </article>
-            <article class="feat">
-              <span class="k">02</span>
-              <h3>Confiança</h3>
-              <p>Você fala direto com quem fabrica: sabe o que vai receber, quando e como.</p>
-            </article>
-            <article class="feat">
-              <span class="k">03</span>
-              <h3>Consistência</h3>
+              <div class="feat-icon" aria-hidden="true">
+                <svg><use href="#i-feat-prazo" /></svg>
+              </div>
+              <span class="k">Prazo firme</span>
+              <h3>Entrega no prazo</h3>
               <p>
-                Mesma medida, mesma resistência e mesma impressão em todos os lotes, do primeiro ao
-                último pedido.
+                Combinamos a data já na cotação. Produção programada para a sua linha não parar por
+                falta de caixa.
+              </p>
+            </article>
+            <article class="feat">
+              <div class="feat-icon" aria-hidden="true">
+                <svg><use href="#i-feat-fabrica" /></svg>
+              </div>
+              <span class="k">Sem atravessadores</span>
+              <h3>Fábrica própria</h3>
+              <p>
+                Você negocia sem intermediários com quem projeta e fabrica cada lote em Santo
+                André-SP.
+              </p>
+            </article>
+            <article class="feat">
+              <div class="feat-icon" aria-hidden="true">
+                <svg><use href="#i-feat-consistencia" /></svg>
+              </div>
+              <span class="k">Padrão industrial</span>
+              <h3>Consistência de lote</h3>
+              <p>
+                Mesma medida exata, mesma resistência mecânica e mesma impressão em todas as suas
+                reposições.
               </p>
             </article>
           </div>
         </div>
       </section>
+
+      <div class="wave-divider wave-divider--top" aria-hidden="true">
+        <svg viewBox="0 0 1200 20" preserveAspectRatio="none">
+          <path
+            d="M0,10 Q15,0 30,10 T60,10 T90,10 T120,10 T150,10 T180,10 T210,10 T240,10 T270,10 T300,10 T330,10 T360,10 T390,10 T420,10 T450,10 T480,10 T510,10 T540,10 T570,10 T600,10 T630,10 T660,10 T690,10 T720,10 T750,10 T780,10 T810,10 T840,10 T870,10 T900,10 T930,10 T960,10 T990,10 T1020,10 T1050,10 T1080,10 T1110,10 T1140,10 T1170,10 T1200,10"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          />
+        </svg>
+      </div>
 
       <section class="block cta" id="orcamento">
         <div class="wrap">
@@ -1289,14 +1471,33 @@
             >
               <use href="#brand-horizontal" />
             </svg>
-            <span class="k">Orçamento</span>
+            <span class="k">Orçamento direto de fábrica</span>
             <h2>Peça seu orçamento pelo WhatsApp</h2>
           </div>
           <div>
-            <p>
-              Conte a medida, a quantidade e o que vai impresso na caixa. A gente responde por lá
-              com o orçamento.
-            </p>
+            <div class="como-pedir" aria-label="Como pedir seu orçamento">
+              <div class="pedir-step">
+                <span class="pedir-num">1</span>
+                <div>
+                  <strong>Chame no WhatsApp</strong>
+                  <p>Atendimento técnico direto com a equipe da fábrica.</p>
+                </div>
+              </div>
+              <div class="pedir-step">
+                <span class="pedir-num">2</span>
+                <div>
+                  <strong>Diga medida, quantidade e estampa</strong>
+                  <p>Comprimento × largura × altura e se tem arte para estampar.</p>
+                </div>
+              </div>
+              <div class="pedir-step">
+                <span class="pedir-num">3</span>
+                <div>
+                  <strong>Receba a cotação fechada</strong>
+                  <p>Preço final sem surpresas e prazo de entrega garantido.</p>
+                </div>
+              </div>
+            </div>
             <a
               class="btn btn-light"
               data-cta="orcamento"
