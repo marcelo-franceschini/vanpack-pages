@@ -1,6 +1,8 @@
 // Texturas procedurais desenhadas em canvas uma única vez (sem downloads de imagem).
 import * as THREE from 'three';
 
+import { drawHorizontalBrand, BRAND_COLORS } from '../brand/marks.js';
+
 /** PRNG com semente (mulberry32): as mesmas texturas a cada carregamento. */
 function seededRandom(seed) {
   return () => {
@@ -58,11 +60,11 @@ export function createTextures() {
   const BLACK = [0, 0, 0];
   const WHITE = [255, 255, 255];
   const kraftFill = (g, w, h) => {
-    g.fillStyle = '#c4945e';
+    g.fillStyle = '#b78c5c';
     g.fillRect(0, 0, w, h);
     speckle(g, w, h, (w * h) / 22, 0.07, [
-      [90, 60, 30],
-      [235, 200, 150],
+      [75, 50, 25],
+      [215, 180, 130],
     ]);
   };
 
@@ -73,7 +75,7 @@ export function createTextures() {
     const lh = h / L;
     for (let i = 0; i < L; i++) {
       const y0 = i * lh;
-      g.fillStyle = i % 2 ? '#b98a59' : '#c39362';
+      g.fillStyle = i % 2 ? '#b18454' : '#b98c5a';
       g.fillRect(0, y0, w, lh);
       g.fillStyle = 'rgba(60,35,15,.35)';
       g.fillRect(0, y0, w, 1.4);
@@ -92,23 +94,27 @@ export function createTextures() {
 
   const INK = [512, 420];
   const inkA = tex(...INK, (g, w, h) => {
-    g.fillStyle = '#2a1f14';
+    g.fillStyle = '#1B1A17';
     g.textAlign = 'center';
     g.textBaseline = 'middle';
-    g.font = '800 74px Helvetica, Arial, sans-serif';
-    g.fillText('SEU LOGO', w / 2, h / 2 - 40);
-    g.fillText('AQUI', w / 2, h / 2 + 42);
+    g.font = '800 58px Helvetica, Arial, sans-serif';
+    g.fillText('SUA MARCA', w / 2, h / 2 - 20);
+    g.font = '700 42px Helvetica, Arial, sans-serif';
+    g.fillText('AQUI', w / 2, h / 2 + 36);
   });
   const inkB = tex(...INK, (g, w, h) => {
-    g.strokeStyle = '#c8452c';
+    g.strokeStyle = '#14513A';
     g.lineWidth = 10;
     g.setLineDash([26, 16]);
     g.beginPath();
-    g.roundRect(34, 44, w - 68, h - 88, 30);
+    g.roundRect(34, 44, w - 68, h - 88, 16);
     g.stroke();
     g.setLineDash([]);
-    g.fillStyle = '#c8452c';
-    g.fillRect(w / 2 - 70, h / 2 + 96, 140, 9);
+    g.fillStyle = '#14513A';
+    g.beginPath();
+    g.arc(w / 2, h / 2 - 92, 18, 0, Math.PI * 2);
+    g.fill();
+    g.fillRect(w / 2 - 50, h / 2 + 82, 100, 8);
   });
   const printed = tex(...INK, (g, w, h) => {
     kraftFill(g, w, h);
@@ -227,7 +233,7 @@ export function createTextures() {
   const screen = tex(256, 160, (g, w, h) => {
     g.fillStyle = '#0f2a33';
     g.fillRect(0, 0, w, h);
-    g.fillStyle = '#1f5c4a';
+    g.fillStyle = '#14513A';
     g.fillRect(0, 0, w, 22);
     g.fillStyle = '#9fd8c3';
     [44, 70, 58, 90, 76, 100].forEach((bh, i) => g.fillRect(18 + i * 26, 140 - bh, 16, bh));
@@ -296,11 +302,8 @@ export function createTextures() {
   );
 
   const brand = tex(1024, 320, (g, w, h) => {
-    g.fillStyle = '#1f5c4a';
-    g.textBaseline = 'middle';
-    g.textAlign = 'center';
-    g.font = 'bold 190px Helvetica, Arial, sans-serif';
-    g.fillText('vanpack', w / 2, h / 2 + 6);
+    // Marca oficial horizontal em Floresta sobre baú claro com área de respiro preservada
+    drawHorizontalBrand(g, (w - 840) / 2, (h - 210) / 2, 840, BRAND_COLORS.floresta);
   });
 
   return {

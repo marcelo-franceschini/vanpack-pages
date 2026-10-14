@@ -1,6 +1,6 @@
 // Medidas da cena, em metros. Origem no piso; x segue a linha de produção, z é a largura.
 
-export const BG = 0xf1ece3;
+export const BG = 0xfbf8f2;
 
 export const PY = 0.55; // altura da linha de passagem da chapa
 export const T = 0.012; // espessura da chapa
