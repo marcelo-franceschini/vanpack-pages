@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Vanpack — Lorem ipsum dolor sit amet</title>
+<meta name="description" content="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.">
+<meta name="theme-color" content="#f1ece3">
+<meta property="og:title" content="Vanpack — Lorem ipsum dolor sit amet">
+<meta property="og:description" content="Lorem ipsum dolor sit amet, consectetur adipiscing elit.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
+<link rel="modulepreload" href="https://unpkg.com/three@0.184.0/build/three.module.js" crossorigin integrity="sha384-8FCZ1eVO6it4+pbec2aDtnTrwjWXZLJRC+MAGCIPDgsYnUrl/E0A2YlF8ioMKI/J">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.184.0/build/three.module.js",
+    "three/addons/controls/OrbitControls.js": "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js",
+    "three/addons/exporters/OBJExporter.js": "https://unpkg.com/three@0.184.0/examples/jsm/exporters/OBJExporter.js",
+    "three/addons/exporters/GLTFExporter.js": "https://unpkg.com/three@0.184.0/examples/jsm/exporters/GLTFExporter.js"
+  },
+  "integrity": {
+    "https://unpkg.com/three@0.184.0/build/three.module.js": "sha384-8FCZ1eVO6it4+pbec2aDtnTrwjWXZLJRC+MAGCIPDgsYnUrl/E0A2YlF8ioMKI/J",
+    "https://unpkg.com/three@0.184.0/build/three.core.js": "sha384-dw2ooPewaEIrAgl6oFDBmmBWCE9oW9LxRGcfwZ0hLvEprzo202wXl7vCYHRlSnOT",
+    "https://unpkg.com/three@0.184.0/examples/jsm/controls/OrbitControls.js": "sha384-4rziNxOBZKQ69i+w+f89KJ55TCYquwchVbByQwmaOeIOXdOU2PLDn3kOfXHwIJC9",
+    "https://unpkg.com/three@0.184.0/examples/jsm/exporters/OBJExporter.js": "sha384-nbwtoZENJD3Vq+ACK0CuGQdPMuDWHkamC2KJD70EV5nfg6jQjfppKOea07YJN+N3",
+    "https://unpkg.com/three@0.184.0/examples/jsm/exporters/GLTFExporter.js": "sha384-VofkvpG6HERhFCYbsUOHeNXBCqID2nfqkQqnVzE1jc/oPcz+qJ13ADdXH08hE+cQ"
+  }
+}
+</script>
+<style>
+:root{
+  --bg:#f1ece3;--bg-2:#e8e1d4;--ink:#24211c;--ink-2:#5a5248;--line:#d6cdbd;
+  --green:#1f5c4a;--green-ink:#f1ece3;--kraft:#bf8f5a;--kraft-ink:#7a5428;
+  --font:"Archivo",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --pad:clamp(20px,5vw,72px);--maxw:1280px;--hdr:64px;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-padding-top:var(--hdr)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.55 var(--font);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+img,svg,canvas{display:block;max-width:100%}
+h1,h2,h3,p{margin:0}
+a{color:var(--green);text-underline-offset:3px}a:hover{color:#163f33}
+:focus-visible{outline:2px solid var(--green);outline-offset:3px;border-radius:4px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:fixed;left:12px;top:-60px;z-index:100;background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:8px;transition:top .2s}
+.skip:focus{top:12px;color:var(--bg)}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 var(--pad)}
+.k{font:500 12px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--kraft-ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 22px;border-radius:999px;font:600 15px/1 var(--font);text-decoration:none;border:1.5px solid transparent;cursor:pointer;transition:background-color .2s,color .2s,border-color .2s,transform .2s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--green);color:var(--green-ink)}.btn-primary:hover{background:#163f33;color:var(--green-ink)}
+.btn-ghost{border-color:currentColor;color:var(--ink)}.btn-ghost:hover{background:var(--ink);color:var(--bg)}
+
+/* Header */
+.hdr{position:fixed;inset:0 0 auto;z-index:50;height:var(--hdr);transition:background-color .3s,box-shadow .3s}
+.hdr.solid{background:color-mix(in oklab,var(--bg) 88%,transparent);backdrop-filter:saturate(1.4) blur(12px);-webkit-backdrop-filter:saturate(1.4) blur(12px);box-shadow:0 1px 0 var(--line)}
+.hdr .wrap{height:100%;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.logo{font:800 22px/1 var(--font);font-stretch:110%;letter-spacing:-.02em;color:var(--green);text-decoration:none}
+.nav{display:flex;gap:28px}
+.nav a{color:var(--ink);text-decoration:none;font-size:15px;font-weight:500}
+.nav a:hover{color:var(--green)}
+.hdr .btn{min-height:40px;padding:0 18px;font-size:14px}
+@media (max-width:760px){.nav{display:none}}
+
+/* Story */
+.story{position:relative}
+.stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;background:var(--bg)}
+.stage canvas{width:100%;height:100%;opacity:0;transition:opacity .8s}
+.stage.ready canvas{opacity:1}
+.poster{position:absolute;inset:0;display:grid;place-items:center;font:500 12px var(--mono);letter-spacing:.08em;color:#8a8070;transition:opacity .6s}
+.stage.ready .poster{opacity:0;pointer-events:none}
+.dots{position:absolute;right:var(--pad);top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;list-style:none;margin:0;padding:0}
+.dots li{width:6px;height:6px;border-radius:50%;background:var(--line);transition:background-color .3s,transform .3s}
+.dots li.on{background:var(--green);transform:scale(1.5)}
+.steps{position:relative;margin-top:-100vh;margin-top:-100svh;pointer-events:none}
+.step{min-height:100vh;min-height:100svh;display:flex;align-items:center}
+.step .wrap{width:100%}
+.card{max-width:440px;pointer-events:auto;opacity:.0;transform:translateY(20px);transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1);background:color-mix(in oklab,var(--bg) 90%,transparent);backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2);padding:28px 30px 30px;border-radius:20px;border:1px solid var(--line);margin-left:calc(-1 * clamp(0px,1.5vw,30px))}
+.card.on{opacity:1;transform:none}
+.card .k{margin-bottom:16px}
+.card h1,.card h2{font-weight:750;font-stretch:105%;letter-spacing:-.025em;line-height:1.02;text-wrap:balance}
+.card h1{font-size:clamp(40px,6.4vw,84px);margin-bottom:20px}
+.card h2{font-size:clamp(30px,4vw,52px);margin-bottom:14px}
+.card p{color:var(--ink-2);font-size:clamp(16px,1.3vw,18px);text-wrap:pretty}
+.card .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.scrollcue{position:absolute;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);font:500 11px var(--mono);letter-spacing:.1em;color:#8a8070;transition:opacity .4s}
+@media (max-width:760px),(orientation:portrait){
+  .dots{right:auto;left:50%;top:calc(var(--hdr) + 8px);transform:translateX(-50%);flex-direction:row}
+  .step{align-items:flex-end;padding-bottom:max(28px,env(safe-area-inset-bottom))}
+  .card{max-width:none;background:color-mix(in oklab,var(--bg) 86%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:20px;border-radius:16px;border:1px solid var(--line);margin-left:0}
+  .card h1{font-size:clamp(34px,9vw,48px);margin-bottom:12px}
+  .card h2{font-size:clamp(26px,7vw,36px)}
+  .card .actions{margin-top:20px}
+  .card .actions .btn{flex:1}
+  .scrollcue{display:none}
+}
+
+/* Sections */
+section.block{padding:clamp(80px,12vw,160px) 0}
+.sec-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px 64px;align-items:end;margin-bottom:clamp(40px,6vw,72px)}
+.sec-head h2{font-size:clamp(32px,4.6vw,60px);font-weight:750;font-stretch:105%;letter-spacing:-.025em;line-height:1.02;text-wrap:balance;margin-top:16px}
+.sec-head p{color:var(--ink-2);max-width:46ch;text-wrap:pretty}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border-block:1px solid var(--line)}
+.feat{background:var(--bg);padding:clamp(24px,3vw,40px) clamp(0px,2vw,32px) clamp(28px,3vw,44px) 0}
+.feat + .feat{padding-left:clamp(20px,2.5vw,36px)}
+.feat .k{display:block;margin-bottom:48px}
+.feat h3{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-bottom:10px}
+.feat p{color:var(--ink-2);font-size:16px}
+@media (max-width:860px){
+  .sec-head{grid-template-columns:minmax(0,1fr)}
+  .grid3{grid-template-columns:minmax(0,1fr)}
+  .feat,.feat + .feat{padding:28px 0}
+  .feat .k{margin-bottom:20px}
+}
+.cta{background:var(--green);color:var(--green-ink)}
+.cta .wrap{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:40px 64px;align-items:end}
+.cta h2{font-size:clamp(34px,5vw,68px);font-weight:750;font-stretch:105%;letter-spacing:-.03em;line-height:1;text-wrap:balance}
+.cta .k{color:#c9dccf;margin-bottom:20px;display:block}
+.cta p{color:#d3e2d8;margin-bottom:24px;max-width:44ch}
+.form{display:flex;gap:10px;flex-wrap:wrap}
+.form label{flex:1 1 220px}
+.form input{width:100%;min-height:52px;padding:0 18px;border-radius:999px;border:1.5px solid #4f8573;background:transparent;color:var(--green-ink);font:400 16px var(--font)}
+.form input::placeholder{color:#a9c4b6}
+.form input:focus-visible{outline:2px solid var(--green-ink);outline-offset:2px}
+.form .btn{background:var(--bg);color:var(--green);min-height:52px}
+.form .btn:hover{background:#fff;color:var(--green)}
+.form-msg{font-size:14px;color:#c9dccf;min-height:1.5em;margin-top:10px}
+@media (max-width:860px){.cta .wrap{grid-template-columns:minmax(0,1fr)}}
+footer{padding:56px 0 calc(40px + env(safe-area-inset-bottom));font-size:14px;color:var(--ink-2)}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:24px;align-items:center}
+footer nav{display:flex;flex-wrap:wrap;gap:20px}
+footer nav a{color:var(--ink-2);text-decoration:none}footer nav a:hover{color:var(--green)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="hdr" id="hdr">
+  <div class="wrap">
+    <a class="logo" href="#" aria-label="vanpack — início">vanpack</a>
+    <nav class="nav" aria-label="Principal">
+      <a href="#processo">Lorem</a>
+      <a href="#solucoes">Ipsum</a>
+      <a href="#contato">Dolor</a>
+    </nav>
+    <a class="btn btn-primary" href="#contato">Lorem ipsum</a>
+  </div>
+</header>
+
+<main id="conteudo">
+  <section class="story" id="processo" aria-label="Lorem ipsum — processo">
+    <div class="stage" id="stage">
+      <canvas id="gl" role="img" aria-label="Animação 3D: uma chapa de papelão entra na máquina, sai como caixa impressa com o logo do cliente e é carregada num caminhão de entregas."></canvas>
+      <div class="poster" aria-hidden="true">CARREGANDO…</div>
+      <ol class="dots" id="dots" aria-hidden="true"><li></li><li></li><li></li><li></li><li></li></ol>
+      <div class="scrollcue" id="cue" aria-hidden="true">ROLE ↓</div>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="wrap"><div class="card">
+        <div class="k">01 — Lorem ipsum</div>
+        <h1>Lorem ipsum dolor sit amet</h1>
+        <p>Consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+        <div class="actions"><a class="btn btn-primary" href="#contato">Lorem ipsum</a><a class="btn btn-ghost" href="#solucoes">Dolor sit</a></div>
+      </div></div></div>
+      <div class="step"><div class="wrap"><div class="card">
+        <div class="k">02 — Dolor sit</div>
+        <h2>Ut enim ad minim veniam</h2>
+        <p>Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+      </div></div></div>
+      <div class="step"><div class="wrap"><div class="card">
+        <div class="k">03 — Amet consectetur</div>
+        <h2>Duis aute irure dolor</h2>
+        <p>In reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+      </div></div></div>
+      <div class="step"><div class="wrap"><div class="card">
+        <div class="k">04 — Adipiscing elit</div>
+        <h2>Excepteur sint occaecat</h2>
+        <p>Cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+      </div></div></div>
+      <div class="step"><div class="wrap"><div class="card">
+        <div class="k">05 — Sed do eiusmod</div>
+        <h2>Sed ut perspiciatis unde</h2>
+        <p>Omnis iste natus error sit voluptatem accusantium doloremque laudantium.</p>
+      </div></div></div>
+    </div>
+  </section>
+
+  <section class="block" id="solucoes">
+    <div class="wrap">
+      <div class="sec-head">
+        <div><span class="k">Lorem ipsum</span><h2>Nemo enim ipsam voluptatem quia voluptas</h2></div>
+        <p>Sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</p>
+      </div>
+      <div class="grid3">
+        <article class="feat"><span class="k">01</span><h3>Neque porro quisquam</h3><p>Est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.</p></article>
+        <article class="feat"><span class="k">02</span><h3>Quis autem vel eum</h3><p>Iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae.</p></article>
+        <article class="feat"><span class="k">03</span><h3>At vero eos et accusamus</h3><p>Et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="block cta" id="contato">
+    <div class="wrap">
+      <div><span class="k">Lorem ipsum</span><h2>Temporibus autem quibusdam et aut officiis</h2></div>
+      <div>
+        <p>Debitis aut rerum necessitatibus saepe eveniet ut et voluptates repudiandae sint.</p>
+        <form class="form" id="form" novalidate>
+          <label><span class="sr-only">E-mail</span><input type="email" name="email" required autocomplete="email" inputmode="email" placeholder="seu@email.com"></label>
+          <button class="btn" type="submit">Lorem ipsum</button>
+        </form>
+        <p class="form-msg" id="formMsg" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <a class="logo" href="#">vanpack</a>
+    <nav aria-label="Rodapé"><a href="#">Lorem</a><a href="#">Ipsum</a><a href="#">Dolor</a><a href="#">Sit amet</a></nav>
+    <span>© 2026 Lorem ipsum</span>
+  </div>
+</footer>
+
+<noscript><style>.card{opacity:1;transform:none}.poster{display:none}</style></noscript>
+
+<script>
+// UI leve (sem dependências): header, cartões ativos, formulário
+(() => {
+  const hdr = document.getElementById('hdr');
+  const cards = [...document.querySelectorAll('.card')];
+  const dots = [...document.querySelectorAll('#dots li')];
+  const story = document.querySelector('.story');
+  let active = -1, queued = false;
+  function update() {
+    queued = false;
+    const r = story.getBoundingClientRect(), total = r.height - innerHeight;
+    const i = Math.max(0, Math.min(cards.length - 1, Math.round((-r.top / total) * (cards.length - 1))));
+    if (i !== active) {
+      active = i;
+      cards.forEach((c, j) => c.classList.toggle('on', j === i));
+      dots.forEach((d, j) => d.classList.toggle('on', j === i));
+    }
+    hdr.classList.toggle('solid', scrollY > 40);
+  }
+  const onScroll = () => { if (!queued) { queued = true; requestAnimationFrame(update); } };
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll, { passive: true });
+  update();
+  const form = document.getElementById('form'), msg = document.getElementById('formMsg');
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const inp = form.email;
+    msg.textContent = inp.checkValidity() ? 'Lorem ipsum dolor sit amet!' : 'Informe um e-mail válido.';
+    if (inp.checkValidity()) form.reset(); else inp.focus();
+  });
+})();
+</script>
+
+<script type="module">
+const stage = document.getElementById('stage');
+const canvas = document.getElementById('gl');
+const story = document.querySelector('.story');
+const cue = document.getElementById('cue');
+const reduceMQ = matchMedia('(prefers-reduced-motion: reduce)');
+const mobile = matchMedia('(max-width: 760px), (pointer: coarse)').matches;
+
+const hasGL = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch { return false; } })();
+if (!hasGL) { stage.querySelector('.poster').textContent = ''; }
+else {
+  const { createScene } = await import('./scene.js');
+  const s = createScene(canvas, { mobile });
+  s.setReduced(reduceMQ.matches);
+  reduceMQ.addEventListener?.('change', e => s.setReduced(e.matches));
+
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  let target = 0, prog = 0, inView = true, running = false;
+
+  function readScroll() {
+    const r = story.getBoundingClientRect();
+    const total = r.height - innerHeight;
+    target = total > 0 ? clamp(-r.top / total) : 0;
+    cue.style.opacity = target > 0.02 ? 0 : 1;
+  }
+  function tick(t) {
+    const k = reduceMQ.matches ? 1 : 0.1;
+    prog += (target - prog) * k;
+    if (Math.abs(target - prog) < 1e-4) prog = target;
+    s.setProgress(prog, t / 1000);
+    const settling = prog !== target;
+    const animating = s.busy(prog) && !reduceMQ.matches;
+    if (inView && !document.hidden && (settling || animating)) requestAnimationFrame(tick);
+    else running = false;
+  }
+  function wake() { if (!running && inView && !document.hidden) { running = true; requestAnimationFrame(tick); } }
+
+  new ResizeObserver(([e]) => {
+    const { width, height } = e.contentRect;
+    s.resize(Math.round(width), Math.round(height));
+    s.setProgress(prog); wake();
+  }).observe(stage);
+  new IntersectionObserver(([e]) => { inView = e.isIntersecting; wake(); }).observe(story);
+  addEventListener('scroll', () => { readScroll(); wake(); }, { passive: true });
+  document.addEventListener('visibilitychange', wake);
+
+  readScroll(); prog = target;
+  s.setProgress(prog);
+  requestAnimationFrame(() => stage.classList.add('ready'));
+  wake();
+  window.__setProg = p => { target = prog = p; s.setProgress(p); };
+}
+</script>
+</body>
+</html>
