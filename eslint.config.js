@@ -12,4 +12,9 @@ export default [
     files: ['*.config.js'],
     languageOptions: { globals: globals.node },
   },
+  {
+    // Scripts de manutenção: rodam no Node e passam funções para o navegador (page.evaluate).
+    files: ['scripts/**/*.mjs'],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } },
+  },
 ];

@@ -7,7 +7,8 @@ const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
 /**
  * @param {HTMLElement} stage elemento `.stage` com um `<canvas>` dentro
  * @param {number} progress progresso inicial do scroll (0…1)
- * @returns {{ setProgress(p: number): void }}
+ * @returns {{ setProgress(p: number): void, ready: Promise<boolean> }} `ready` resolve `true`
+ *   quando a 1ª imagem 3D aparece e `false` se não houver WebGL (o pôster fica no lugar)
  */
 export function mountStage(stage, progress) {
   const mobile = matchMedia(MOBILE).matches;
@@ -22,10 +23,14 @@ export function mountStage(stage, progress) {
     reduced: reducedQuery.matches,
   };
   let send = () => {};
+  let settle;
+  const ready = new Promise((resolve) => (settle = resolve));
 
   const onEvent = (msg) => {
-    if (msg.type === 'ready') stage.classList.add('ready');
-    else if (msg.type === 'error') fallback(msg.message);
+    if (msg.type === 'ready') {
+      stage.classList.add('ready');
+      settle(true);
+    } else if (msg.type === 'error') fallback(msg.message);
   };
 
   let inline = false;
@@ -33,8 +38,10 @@ export function mountStage(stage, progress) {
     inline = true;
     const { createController } = await import('./controller.js');
     const controller = createController(canvas, { ...state }, (msg) => {
-      if (msg.type === 'error') stage.classList.add('no-gl');
-      else onEvent(msg);
+      if (msg.type === 'error') {
+        stage.classList.add('no-gl');
+        settle(false);
+      } else onEvent(msg);
     });
     send = (msg) => controller.handle(msg);
   }
@@ -82,6 +89,7 @@ export function mountStage(stage, progress) {
   });
 
   return {
+    ready,
     setProgress(p) {
       state.progress = p;
       send({ type: 'progress', value: p });
