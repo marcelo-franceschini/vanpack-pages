@@ -30,12 +30,83 @@ export function buildFactory(b, mat) {
   const { add, B, bb, zr, cyl, tube, flat, plate, label, blob, foot, roll, unitFrame, topCover } =
     b;
 
-  // ---------- Piso ----------
-  const floor = add(new THREE.PlaneGeometry(80, 40), mat.floor, 4, 0, 0);
-  floor.rotation.x = -Math.PI / 2;
-  floor.castShadow = false;
+  // ---------- Piso (Laje de Diorama) ----------
+  // Laje industrial elevada com corte limpo e rodapé escuro
+  bb(-8.6, 13.2, -0.36, 0.0, -3.4, 3.4, mat.floor);
+  // Bordas e chanfro da laje
+  bb(-8.65, 13.25, -0.36, -0.01, 3.35, 3.42, mat.frameDark);
+  bb(-8.65, 13.25, -0.36, -0.01, -3.42, -3.35, mat.frameDark);
+  bb(-8.65, -8.58, -0.36, -0.01, -3.42, 3.42, mat.frameDark);
+  bb(13.18, 13.25, -0.36, -0.01, -3.42, 3.42, mat.frameDark);
+
+  // Sombra e chão base abaixo do diorama
+  const ground = add(new THREE.PlaneGeometry(80, 40), mat.floor, 4, -0.36, 0);
+  ground.rotation.x = -Math.PI / 2;
+  ground.castShadow = false;
+
+  // Demarcações de segurança da linha de produção
   for (const s of [-1, 1]) flat(bb(-7.7, 1.55, 0.001, 0.003, ...zr(s, 1.32, 1.38), mat.line));
   for (const x of [-7.7, 1.55]) flat(bb(x - 0.03, x + 0.03, 0.001, 0.003, -1.38, 1.38, mat.line));
+
+  // Faixa de rodagem e rota de expedição do caminhão
+  for (let px = 1.8; px <= 12.6; px += 0.85) {
+    flat(bb(px, px + 0.45, 0.001, 0.003, -0.035, 0.035, mat.line));
+  }
+  flat(bb(1.8, 12.8, 0.001, 0.003, 1.25, 1.3, mat.line));
+  flat(bb(1.8, 12.8, 0.001, 0.003, -1.3, -1.25, mat.line));
+  flat(bb(2.8, 5.6, 0.001, 0.003, 1.35, 1.42, mat.line));
+  flat(bb(2.8, 5.6, 0.001, 0.003, -1.42, -1.35, mat.line));
+
+  // Postes de segurança (bollards) na baia de expedição
+  for (const s of [-1, 1]) {
+    const bz = s * 1.55;
+    cyl(0.06, 0.72, mat.line, 2.05, 0.36, bz, 'y', b.root, 16);
+    cyl(0.062, 0.08, mat.dark, 2.05, 0.52, bz, 'y', b.root, 16);
+    cyl(0.062, 0.08, mat.dark, 2.05, 0.32, bz, 'y', b.root, 16);
+    cyl(0.085, 0.03, mat.steel, 2.05, 0.015, bz, 'y', b.root, 16);
+  }
+
+  // Props industriais: Rack com bobinas de papel kraft junto ao alimentador
+  {
+    const rx = -7.7;
+    const rz = -2.25;
+    // Estrutura do rack
+    for (const dx of [-0.45, 0.45]) {
+      for (const dz of [-0.35, 0.35]) {
+        bb(rx + dx - 0.025, rx + dx + 0.025, 0, 1.45, rz + dz - 0.025, rz + dz + 0.025, mat.frame);
+      }
+      bb(rx + dx - 0.02, rx + dx + 0.02, 0.65, 0.69, rz - 0.35, rz + 0.35, mat.steel);
+      bb(rx + dx - 0.02, rx + dx + 0.02, 1.35, 1.39, rz - 0.35, rz + 0.35, mat.steel);
+    }
+    // Bobinas horizontais
+    cyl(0.28, 0.76, mat.kraft, rx, 0.32, rz, 'x', b.root, 24);
+    cyl(0.07, 0.78, mat.dark, rx, 0.32, rz, 'x', b.root, 16);
+    cyl(0.25, 0.76, mat.kraft, rx, 0.98, rz, 'x', b.root, 24);
+    cyl(0.07, 0.78, mat.dark, rx, 0.98, rz, 'x', b.root, 16);
+    // Bobina em pé ao lado
+    cyl(0.27, 0.95, mat.kraft, rx + 0.8, 0.475, rz, 'y', b.root, 24);
+    cyl(0.07, 0.97, mat.dark, rx + 0.8, 0.485, rz, 'y', b.root, 16);
+    blob(rx, rz, 1.8, 1.4);
+  }
+
+  // Paleteira manual hidráulica (pallet jack)
+  {
+    const jx = -6.4;
+    const jz = 2.15;
+    // Garfos duplos
+    bb(jx - 0.55, jx + 0.45, 0.02, 0.07, jz - 0.16, jz - 0.06, mat.steel);
+    bb(jx - 0.55, jx + 0.45, 0.02, 0.07, jz + 0.06, jz + 0.16, mat.steel);
+    // Rodízios frontais
+    cyl(0.035, 0.06, mat.rubber, jx - 0.5, 0.035, jz - 0.11, 'z', b.root, 12);
+    cyl(0.035, 0.06, mat.rubber, jx - 0.5, 0.035, jz + 0.11, 'z', b.root, 12);
+    // Chassi e torre
+    bb(jx + 0.42, jx + 0.62, 0.04, 0.32, jz - 0.2, jz + 0.2, mat.line);
+    cyl(0.05, 0.28, mat.steel, jx + 0.52, 0.2, jz, 'y', b.root, 16);
+    // Timão inclinado
+    cyl(0.02, 0.65, mat.dark, jx + 0.65, 0.55, jz, 'x', b.root, 12);
+    bb(jx + 0.95, jx + 0.99, 0.65, 0.75, jz - 0.12, jz + 0.12, mat.dark);
+    blob(jx, jz, 1.4, 0.8);
+  }
 
   // ---------- Alimentador (pilha de chapas) ----------
   {

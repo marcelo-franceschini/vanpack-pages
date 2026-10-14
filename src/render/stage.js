@@ -7,10 +7,13 @@ const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
 /**
  * @param {HTMLElement} stage elemento `.stage` com um `<canvas>` dentro
  * @param {number} progress progresso inicial do scroll (0…1)
- * @returns {{ setProgress(p: number): void, ready: Promise<boolean> }} `ready` resolve `true`
- *   quando a 1ª imagem 3D aparece e `false` se não houver WebGL (o pôster fica no lugar)
+/**
+ * @param {HTMLElement} stage elemento `.stage` com um `<canvas>` dentro
+ * @param {number} progress progresso inicial do scroll (0…1)
+ * @param {{ onAnchors?: (list: Array<{ index: number, x: number, y: number, visible: boolean }>) => void }} [options]
+ * @returns {{ setProgress(p: number): void, setSway(active: boolean): void, ready: Promise<boolean> }}
  */
-export function mountStage(stage, progress) {
+export function mountStage(stage, progress, { onAnchors } = {}) {
   const mobile = matchMedia(MOBILE).matches;
   const reducedQuery = matchMedia(REDUCED_MOTION);
   const pixelRatio = () => Math.min(devicePixelRatio || 1, mobile ? 1.5 : 2);
@@ -30,6 +33,8 @@ export function mountStage(stage, progress) {
     if (msg.type === 'ready') {
       stage.classList.add('ready');
       settle(true);
+    } else if (msg.type === 'anchors') {
+      onAnchors?.(msg.list);
     } else if (msg.type === 'error') fallback(msg.message);
   };
 
@@ -93,6 +98,9 @@ export function mountStage(stage, progress) {
     setProgress(p) {
       state.progress = p;
       send({ type: 'progress', value: p });
+    },
+    setSway(active) {
+      send({ type: 'sway', value: active });
     },
   };
 }

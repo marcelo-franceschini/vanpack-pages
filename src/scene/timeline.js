@@ -28,18 +28,21 @@ const CAMERA_KEYS = [
   [0.17, [-5.9, 3.0, 5.6], [-3.8, 0.75, 0]],
   [0.34, [-3.3, 2.9, 4.1], [-2.45, 0.62, 0]],
   [0.46, [-2.2, 3.2, 5.0], [-1.2, 0.7, 0]],
-  [0.57, [-0.8, 2.6, 4.4], [0.35, 0.9, 0]],
-  [0.67, [0.95, 1.7, 3.3], [0.45, 0.8, 0]],
-  [0.79, [1.6, 2.4, 5.2], [3.4, 1.05, 0]],
+  [0.56, [-1.0, 2.5, 4.3], [0.35, 0.95, 0]],
+  // Órbita suave ao redor da caixa pronta com desaceleração perceptível
+  [0.62, [0.1, 1.9, 3.2], [0.35, 0.95, 0]],
+  [0.68, [1.3, 1.85, 3.0], [0.35, 0.92, 0]],
+  [0.79, [1.7, 2.4, 5.2], [3.4, 1.05, 0]],
   [0.87, [1.9, 2.3, 5.8], [4.0, 1.05, 0]],
-  [1.0, [5.0, 2.8, 9.0], [7.5, 1.0, 0]],
+  // Em p = 1, o caminhão permanece 60–70% visível na via de saída da fábrica
+  [1.0, [4.2, 2.6, 7.6], [6.8, 1.15, 0]],
 ];
 
 const _pos = new THREE.Vector3();
 const _target = new THREE.Vector3();
 
-/** Posiciona a câmera em p; `distK` afasta a câmera em telas estreitas. Devolve o alvo. */
-export function placeCamera(camera, p, distK) {
+/** Posiciona a câmera em p; `distK` afasta a câmera em telas estreitas; `sway` aplica micro-balanço no repouso. Devolve o alvo. */
+export function placeCamera(camera, p, distK, swayX = 0, swayY = 0) {
   let i = 0;
   while (i < CAMERA_KEYS.length - 2 && p > CAMERA_KEYS[i + 1][0]) i++;
   const [p0, a0, t0] = CAMERA_KEYS[i];
@@ -48,6 +51,10 @@ export function placeCamera(camera, p, distK) {
   _pos.set(lerp(a0[0], a1[0], t), lerp(a0[1], a1[1], t), lerp(a0[2], a1[2], t));
   _target.set(lerp(t0[0], t1[0], t), lerp(t0[1], t1[1], t), lerp(t0[2], t1[2], t));
   camera.position.copy(_pos.sub(_target).multiplyScalar(distK).add(_target));
+  if (swayX || swayY) {
+    camera.position.x += swayX;
+    camera.position.y += swayY;
+  }
   camera.lookAt(_target);
   return _target;
 }
@@ -57,10 +64,10 @@ export function animate(p, { factory, blank, truck, spinners, mat, tex }) {
   // Chapa: alimentador → impressoras (0,06–0,33) → corte e vinco → formadora → baú
   let x;
   if (p < 0.4) x = lerp(FEED_X, -2.45, seg(p, 0.06, 0.33));
-  else if (p < 0.64) x = lerp(-2.45, FX, seg(p, 0.4, 0.5));
-  else x = lerp(FX, BOX_END, seg(p, 0.64, 0.79));
+  else if (p < 0.67) x = lerp(-2.45, FX, seg(p, 0.4, 0.5));
+  else x = lerp(FX, BOX_END, seg(p, 0.67, 0.8));
   const drive = clamp((p - 0.88) / 0.12);
-  const dx = drive * drive * 10;
+  const dx = drive * (0.35 * drive + 0.65) * 5.2;
   const h = LIFT * seg(p, 0.53, 0.6);
   blank.blank.position.set(x + (p > 0.8 ? dx : 0), PY + h, 0);
 

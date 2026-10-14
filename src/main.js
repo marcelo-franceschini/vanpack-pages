@@ -3,6 +3,7 @@
 import { mountStage } from './render/stage.js';
 import { createRoute } from './route.js';
 import { createTour } from './tour.js';
+import { createPins } from './pins.js';
 import { sinceLoad, track, trackOnce } from './analytics.js';
 
 const story = document.querySelector('.story');
@@ -13,6 +14,7 @@ const dock = header.querySelector('.btn');
 const routeEl = document.getElementById('route');
 const toggleBtn = document.getElementById('tour-toggle');
 const startLink = document.getElementById('tour-start');
+const pinsEl = document.getElementById('pins');
 const cards = [...document.querySelectorAll('.card')];
 
 const params = new URLSearchParams(location.search);
@@ -35,8 +37,17 @@ function measure() {
 const progressAt = (y) => clamp((y - storyTop) / storyRange);
 const yAt = (p) => storyTop + p * storyRange;
 
+let active = 0; // o 1º cartão já vem ativo no HTML
+let lastAnchors = [];
+const pins = createPins(pinsEl);
+
 measure();
-const stage = mountStage(document.getElementById('stage'), progressAt(scrollY));
+const stage = mountStage(document.getElementById('stage'), progressAt(scrollY), {
+  onAnchors: (list) => {
+    lastAnchors = list;
+    pins.update(list, active);
+  },
+});
 
 // ---------- Tour automático ----------
 let interacted = false; // a pessoa já mexeu na página antes de o tour começar?
@@ -64,6 +75,8 @@ function syncTour(state) {
   const [icon, label] = TOUR_BUTTON[state];
   toggleBtn.querySelector('use').setAttribute('href', `#i-${icon}`);
   toggleBtn.querySelector('.label').textContent = label;
+  if (state === 'paused') stage.setSway(true);
+  else if (state === 'playing') stage.setSway(false);
 }
 
 const tour = createTour({
@@ -120,9 +133,20 @@ routeEl.hidden = false;
 const route = createRoute(routeEl, { dock, onStop: goToChapter, onArrive: pulseDock });
 
 // ---------- Scroll → estado da página ----------
-let active = 0; // o 1º cartão já vem ativo no HTML
 let last = { progress: -1, solid: null, cue: null, fab: null };
 let queued = false;
+let idleTimer = null;
+
+function notifyActivity() {
+  stage.setSway(false);
+  clearTimeout(idleTimer);
+  if (!reducedMotion.matches && tour.state !== 'playing') {
+    idleTimer = setTimeout(() => {
+      const p = progressAt(scrollY);
+      if (p >= 0 && p <= 1) stage.setSway(true);
+    }, 1500);
+  }
+}
 
 function update() {
   queued = false;
@@ -134,6 +158,7 @@ function update() {
     setClass(cards[active], 'on', false);
     setClass(cards[index], 'on', true);
     active = index;
+    pins.update(lastAnchors, active);
     trackOnce(`chapter-${index}`, 'chapter_view', { chapter: index + 1, auto });
   }
   const state = { progress, solid: y > 40, cue: progress > 0.02, fab: progress >= 0.99 };
@@ -143,6 +168,7 @@ function update() {
   if (progress !== last.progress) {
     stage.setProgress(progress);
     route.setProgress(progress);
+    notifyActivity();
   }
   const depth = ((y + innerHeight) / docHeight) * 100;
   for (const d of DEPTHS) {

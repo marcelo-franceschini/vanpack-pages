@@ -96,7 +96,7 @@ export function createScene(canvas, { dpr, mobile }) {
   });
   renderer.setPixelRatio(dpr);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
@@ -122,16 +122,49 @@ export function createScene(canvas, { dpr, mobile }) {
   tex.belt.repeat.set((BELT_X1 - BELT_X0) / 0.25, 1);
   const parts = { factory, blank, truck, spinners: b.spinners, mat, tex };
 
+  // Âncoras 3D das 5 etapas da linha de produção
+  const ANCHORS_3D = [
+    new THREE.Vector3(-5.9, 0.95, 0.2), // 0: Chapa de papelão (alimentador)
+    new THREE.Vector3(-3.7, 1.45, 0.4), // 1: Impressão flexo (impressoras)
+    new THREE.Vector3(-1.65, 1.35, 0.35), // 2: Corte e vinco
+    new THREE.Vector3(1.2, 1.15, 0.2), // 3: Montagem da caixa (esteira de saída)
+    new THREE.Vector3(2.8, 1.45, 0.6), // 4: Entrega (caminhão baú)
+  ];
+  const _proj = new THREE.Vector3();
+
   let distK = 1;
 
   return {
     /** Compila os shaders sem travar (KHR_parallel_shader_compile) antes do 1º frame. */
     compile: () => renderer.compileAsync(scene, camera),
 
-    render(p) {
+    render(p, swayX = 0, swayY = 0) {
       animate(p, parts);
-      follow(placeCamera(camera, p, distK));
+      follow(placeCamera(camera, p, distK, swayX, swayY));
       renderer.render(scene, camera);
+
+      // Acompanha a posição do caminhão na etapa 5
+      ANCHORS_3D[4].x = 2.8 + (p > 0.88 ? parts.truck.truck.position.x : 0);
+
+      // Projeção das âncoras para coordenadas de tela (%)
+      const anchors = [];
+      for (let i = 0; i < ANCHORS_3D.length; i++) {
+        _proj.copy(ANCHORS_3D[i]).project(camera);
+        const visible =
+          _proj.z > -1 &&
+          _proj.z < 1 &&
+          _proj.x >= -0.92 &&
+          _proj.x <= 0.92 &&
+          _proj.y >= -0.92 &&
+          _proj.y <= 0.92;
+        anchors.push({
+          index: i,
+          x: (_proj.x * 0.5 + 0.5) * 100,
+          y: (-_proj.y * 0.5 + 0.5) * 100,
+          visible,
+        });
+      }
+      return anchors;
     },
 
     resize(w, h) {

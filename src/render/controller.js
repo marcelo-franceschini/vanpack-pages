@@ -49,6 +49,9 @@ export function createController(canvas, init, emit) {
   let shadows = true;
   let samples = [];
   let sampledMs = 0;
+  let swayActive = false;
+  let swayTime = 0;
+  let lastAnchorUpdate = 0;
 
   function wake() {
     if (!ready || running || lost) return;
@@ -65,10 +68,25 @@ export function createController(canvas, init, emit) {
     const dt = last ? Math.min(0.1, (now - last) / 1000) : 1 / 60;
     if (last && !reduced) track(now - last);
     last = now;
+    const moving = Math.abs(target - current) >= SETTLED;
     current = reduced ? target : current + (target - current) * (1 - Math.exp(-DAMPING * dt));
-    if (Math.abs(target - current) < SETTLED) current = target;
-    scene.render(current);
-    if (current !== target) schedule(frame);
+    if (!moving) current = target;
+
+    let swayX = 0;
+    let swayY = 0;
+    if (swayActive && !reduced) {
+      swayTime += dt;
+      swayX = Math.sin(swayTime * 0.9) * 0.04;
+      swayY = Math.cos(swayTime * 0.7) * 0.025;
+    }
+
+    const anchors = scene.render(current, swayX, swayY);
+    if (anchors && (now - lastAnchorUpdate > 45 || !moving)) {
+      lastAnchorUpdate = now;
+      emit({ type: 'anchors', list: anchors });
+    }
+
+    if (current !== target || (swayActive && !reduced)) schedule(frame);
     else running = false;
   }
 
@@ -97,16 +115,20 @@ export function createController(canvas, init, emit) {
   canvas.addEventListener('webglcontextrestored', () => {
     lost = false;
     scene.restore();
-    if (ready) scene.render(current);
+    if (ready) {
+      const anchors = scene.render(current);
+      if (anchors) emit({ type: 'anchors', list: anchors });
+    }
     wake();
   });
 
   scene.resize(init.width, init.height);
   scene.compile().then(
     () => {
-      scene.render(current);
+      const anchors = scene.render(current);
       ready = true;
       emit({ type: 'ready' });
+      if (anchors) emit({ type: 'anchors', list: anchors });
       wake();
     },
     (err) => emit({ type: 'error', message: String(err?.message ?? err) }),
@@ -121,6 +143,10 @@ export function createController(canvas, init, emit) {
         case 'reduced':
           reduced = msg.value;
           break;
+        case 'sway':
+          swayActive = Boolean(msg.value);
+          if (swayActive) wake();
+          break;
         case 'resize':
           if (msg.dpr !== dpr) {
             // mantém a redução já aplicada pela qualidade adaptativa
@@ -129,7 +155,10 @@ export function createController(canvas, init, emit) {
             scene.setPixelRatio(pixelRatio);
           }
           scene.resize(msg.width, msg.height);
-          if (ready && !running && !lost) scene.render(current);
+          if (ready && !running && !lost) {
+            const anchors = scene.render(current);
+            if (anchors) emit({ type: 'anchors', list: anchors });
+          }
           return;
         default:
           return;
