@@ -2,9 +2,11 @@
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
-import { Color, Vector3 } from 'three';
-import { CAMERA, PHASE, SCRAPS, SHEET_X } from '../src/scene/constants.js';
+import { Color, Group, MeshLambertMaterial, Vector3 } from 'three';
+import { CAMERA, MACHINE_A, PHASE, SCRAPS, SHEET_LENGTH, SHEET_X } from '../src/scene/constants.js';
+import { buildFactory } from '../src/scene/factory.js';
 import { chamferBox, fadedFloor, pathAt } from '../src/scene/geometry.js';
+import { spinTravel } from '../src/scene/machine.js';
 import { lin, ramp, smooth, within } from '../src/scene/math.js';
 
 test('a chapa avança sempre para a frente e as faixas de fase ficam em 0…1 e em ordem', () => {
@@ -113,6 +115,93 @@ test('piso opaco: Papel nas bordas, cor do piso no miolo', () => {
   assert.ok(near(at(-35, -28), paper), 'canto = Papel');
   assert.ok(near(at(-21, -14), floor), 'a 14 m da borda já é o piso inteiro');
   assert.equal(geometry.index.count % 3, 0);
+});
+
+test('a troca da chapa lisa pela peça herói acontece dentro do trecho fechado da máquina', () => {
+  const { printWindow, closed, cutWindow, x0, x1 } = MACHINE_A;
+  const half = SHEET_LENGTH / 2;
+  assert.ok(
+    PHASE.heroFromX - half >= closed[0],
+    'a cauda da chapa ainda está dentro do trecho fechado',
+  );
+  assert.ok(
+    PHASE.heroFromX + half <= closed[1],
+    'a ponta da chapa ainda está dentro do trecho fechado',
+  );
+  assert.equal(
+    printWindow[1],
+    closed[0],
+    'o trecho fechado começa onde a janela de impressão acaba',
+  );
+  assert.equal(cutWindow[0], closed[1], 'e termina onde a janela de corte começa');
+  assert.ok(printWindow[0] > x0 && cutWindow[1] < x1, 'as janelas ficam entre a entrada e a saída');
+});
+
+test('os cilindros da máquina só andam enquanto a chapa está nela', () => {
+  const half = SHEET_LENGTH / 2;
+  assert.equal(spinTravel(SHEET_X[0][1]), 0, 'chapa no alimentador: parado');
+  assert.equal(spinTravel(MACHINE_A.x0 - half), 0, 'a ponta chega ao primeiro aperto');
+  let last = 0;
+  for (let x = MACHINE_A.x0 - half; x <= MACHINE_A.x1 + half; x += 0.05) {
+    const travel = spinTravel(x);
+    assert.ok(travel >= last, 'nunca volta');
+    last = travel;
+  }
+  assert.ok(Math.abs(last - (MACHINE_A.x1 - MACHINE_A.x0 + SHEET_LENGTH)) < 0.06);
+  assert.equal(
+    spinTravel(MACHINE_A.x1 + half + 3),
+    spinTravel(MACHINE_A.x1 + half),
+    'depois, parado',
+  );
+});
+
+test('máquina A: gira os cilindros no sentido da chapa, só dentro da fábrica, sem NaN', () => {
+  const M = Object.fromEntries(
+    [
+      'dark',
+      'dark2',
+      'mid',
+      'light2',
+      'light',
+      'white',
+      'forest',
+      'kraft',
+      'kraftDark',
+      'glass',
+    ].map((name) => [name, new MeshLambertMaterial()]),
+  );
+  const parent = new Group();
+  const machine = buildFactory(parent, M);
+  const spinners = parent.children.filter((child) => child.isGroup);
+  assert.equal(spinners.length, 5, 'impressão (3) e corte (2)');
+  parent.traverse((object) => {
+    for (const value of object.geometry?.attributes.position.array ?? []) {
+      assert.ok(Number.isFinite(value), 'geometria sem NaN');
+    }
+  });
+  machine.spin(0);
+  assert.ok(
+    spinners.every((s) => s.rotation.z === 0),
+    'em p = 0 tudo parado',
+  );
+  machine.spin(0.2);
+  const turns = spinners.map((s) => s.rotation.z);
+  assert.ok(
+    turns.every((angle) => angle !== 0 && Number.isFinite(angle)),
+    'em movimento',
+  );
+  assert.ok(
+    turns.some((a) => a > 0) && turns.some((a) => a < 0),
+    'em cima e embaixo, sentidos opostos',
+  );
+  machine.spin(0.3);
+  const after = spinners.map((s) => s.rotation.z);
+  machine.spin(1);
+  assert.deepEqual(
+    spinners.map((s) => s.rotation.z),
+    after,
+    'depois que a chapa sai, nada mais gira',
+  );
 });
 
 test('a cena não toca no DOM (roda em Web Worker): sem document, window, navigator nem rAF', () => {
