@@ -123,21 +123,21 @@ Como medir: `npm run audit:bundle`, `audit:scene`, `audit:runtime`, `audit:light
 (Chrome do sistema; o WebGL roda por software, SwiftShader). "Antes" é a `master` anterior ou o
 `scene.js` original do pacote v4.
 
-| O que                                                            | Antes                                 | Agora                                                |
-| ---------------------------------------------------------------- | ------------------------------------- | ---------------------------------------------------- |
-| JS no caminho normal (página + worker), gzip                     | 154,5 KB                              | **137,6 KB** (3,7 + 133,9; brotli do worker 110,3)   |
-| JS se o worker falhar (+ thread principal), gzip                 | 303,4 KB                              | 271,2 KB                                             |
-| HTML + CSS inline, gzip                                          | 11,2 KB                               | 7,1 KB (CSS inline 3,0 KB)                           |
-| Draw calls desktop (p = 0 / .25 / .5 / .75 / 1)                  | 14 / 23 / 24 / 32 / 20                | **12 / 22 / 23 / 31 / 19** (orçamento 90)            |
-| Draw calls celular                                               | 13 / 20 / 21 / 30 / 14                | **11 / 19 / 20 / 29 / 13** (orçamento 60)            |
-| Triângulos (máx.)                                                | 6,6 mil                               | 6,7 mil                                              |
-| Lighthouse mobile (mediana de 5)                                 | 97 · TBT 149–206 ms · LCP 1,5 s       | **100/100/100/100** · TBT 48 ms · LCP 1,36 s · CLS 0 |
-| Lighthouse desktop                                               | 100 / 100 / 92 / 100                  | **100/100/100/100** · TBT 0 · LCP 0,33 s             |
-| Custo por quadro (SwiftShader, mediana de 5 rodadas × 5 quadros) | 1179 ms (desktop) · 424 ms (celular)  | −19% · −23%                                          |
-| 1º quadro em que o herói aparece, versus o quadro seguinte       | +680 ms (desktop) · +415 ms (celular) | +110 ms · +50 ms                                     |
-| Cena pronta, rede 1,6 Mbps/150 ms e CPU 4×                       | ~4,0 s                                | ~2,9 s                                               |
-| Memória da GPU (mapa de sombra + texturas)                       | ~26 MB                                | ~7 MB                                                |
-| `dispose()`                                                      | sobravam recursos                     | 37 geometrias e 7 texturas → 0                       |
+| O que                                                                            | Antes                                 | Agora                                                |
+| -------------------------------------------------------------------------------- | ------------------------------------- | ---------------------------------------------------- |
+| JS no caminho normal (página + worker), gzip                                     | 154,5 KB                              | **137,6 KB** (3,7 + 133,9; brotli do worker 110,3)   |
+| JS se o worker falhar (+ thread principal), gzip                                 | 303,4 KB                              | 271,2 KB                                             |
+| HTML + CSS inline, gzip                                                          | 11,2 KB                               | 7,1 KB (CSS inline 3,0 KB)                           |
+| Draw calls desktop (p = 0 / .25 / .5 / .75 / 1)                                  | 14 / 23 / 24 / 32 / 20                | **12 / 22 / 23 / 31 / 19** (orçamento 90)            |
+| Draw calls celular                                                               | 13 / 20 / 21 / 30 / 14                | **11 / 19 / 20 / 29 / 13** (orçamento 60)            |
+| Triângulos (máx.)                                                                | 6,6 mil                               | 6,7 mil                                              |
+| Lighthouse mobile (mediana de 5)                                                 | 97 · TBT 149–206 ms · LCP 1,5 s       | **100/100/100/100** · TBT 48 ms · LCP 1,36 s · CLS 0 |
+| Lighthouse desktop                                                               | 100 / 100 / 92 / 100                  | **100/100/100/100** · TBT 0 · LCP 0,33 s             |
+| Custo por quadro (SwiftShader, mediana de 5 rodadas × 5 quadros)                 | 1179 ms (desktop) · 424 ms (celular)  | −19% · −23%                                          |
+| 1º quadro em que o herói aparece, versus o quadro seguinte                       | +680 ms (desktop) · +415 ms (celular) | +110 ms · +50 ms                                     |
+| Cena pronta, rede 1,6 Mbps/150 ms e CPU 4×                                       | ~4,0 s                                | ~2,9 s                                               |
+| Memória da GPU, estimada (texels × 4 bytes + mipmaps: mapa de sombra e texturas) | ~26 MB                                | ~7 MB                                                |
+| `dispose()`                                                                      | sobravam recursos                     | 37 geometrias e 7 texturas → 0                       |
 
 O que mudou e por quê (cada item é um commit `perf`, medido antes e depois, com diferença de pixels
 contra o v4 original em 15 valores de `p`, desktop e celular):
