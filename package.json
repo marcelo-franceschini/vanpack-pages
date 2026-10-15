@@ -14,7 +14,7 @@
     "preview": "vite preview",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
-    "test": "npm run build && npm run build:audit && node --test --test-concurrency=1 tests/",
+    "test": "npm run build && npm run build:audit && node --test --test-concurrency=1 tests/*.test.mjs",
     "audit:bundle": "node scripts/audit/bundle.mjs",
     "audit:scene": "node scripts/audit/scene-stats.mjs",
     "audit:runtime": "node scripts/audit/runtime.mjs",
