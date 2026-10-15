@@ -345,6 +345,7 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
       scene.traverse((object) => object.geometry?.dispose());
       for (const resource of disposables) resource?.dispose?.();
       scraps.dispose();
+      sun.shadow.dispose(); // o mapa de sombra é um render target da luz, não do renderer
       renderer.dispose();
     },
   };
