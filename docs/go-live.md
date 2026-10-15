@@ -56,6 +56,25 @@ As chaves "fictícias por natureza" (tudo, menos `VITE_DATA_MODE`, `VITE_SITE_UR
 em `production`. Pedido mínimo, prazo, região, tempo de resposta e formas de pagamento também são
 promessas: confirme cada uma com a área responsável antes de publicar.
 
+## Conteúdo para conferir
+
+Estes textos estão em `site.config.js` e foram escritos como rascunho: confira cada um com quem sabe.
+
+- **Modelos de caixa** (4 cartões em "O que fabricamos"): nomes e descrições.
+- **FAQ**: "Nunca pedimos pagamento para conta de pessoa física", "Pode nos visitar", a diferença entre onda simples e dupla e como enviar a logo.
+- **Prova social**: os dois depoimentos de exemplo só aparecem em modo demo (com o rótulo "Exemplo") e somem em `production`. Para publicar prova real, siga [`docs/provas/README.md`](provas/README.md): autorização registrada por item.
+- **Fotos**: o site não usa nenhuma foto (decisão do dono). Se um dia quiser, a única permitida é a da fachada.
+
+## Domínio próprio
+
+O site é publicado pelo GitHub Actions, então o arquivo `CNAME` é ignorado: o domínio vai nas configurações do repositório.
+
+1. Em **Settings → Pages → Custom domain**, informe o domínio e marque **Enforce HTTPS** quando o certificado ficar pronto.
+2. No provedor do domínio, crie os registros DNS que o GitHub indicar.
+3. Troque `VITE_SITE_URL` no `.env` para a URL nova (`https`, terminando em `/`). Canonical, Open Graph, JSON-LD, `robots.txt`, `sitemap.xml` e a medição passam a usar o domínio novo sozinhos; um teste confere que nada da URL antiga sobra.
+4. No Umami, troque o domínio do site (ou crie outro e atualize `VITE_ANALYTICS_SITE`).
+5. No Search Console, verifique o domínio e envie o `sitemap.xml`; no Perfil da Empresa no Google, aponte o site para a URL nova.
+
 ## Medição (Umami Cloud)
 
 A medição é sem cookies, então o site não precisa de banner. Para ligá-la:
@@ -75,6 +94,7 @@ O site só envia eventos quando o host da página é o da `VITE_SITE_URL`: ao tr
 - [ ] `<meta name="robots" content="noindex,nofollow">` não existe mais no HTML publicado.
 - [ ] `robots.txt` libera o site e o `sitemap.xml` tem a URL final.
 - [ ] A política de privacidade foi revisada pelo jurídico.
+- [ ] Modelos de caixa e respostas do FAQ conferidos; depoimentos de exemplo trocados por prova autorizada (ou removidos).
 - [ ] `npm run og` gera de novo `public/og.jpg`: a imagem de compartilhamento tem o texto do hero.
 - [ ] `npm run audit:lighthouse`: SEO 100 só é possível em `production` (em demo o `noindex` reprova o
       item "página bloqueada para indexação", como esperado).

@@ -44,6 +44,12 @@ npm run og               # regenera public/og.jpg (imagem de compartilhamento) a
 
 ---
 
+## Seções da página
+
+Cabeçalho fixo, a história 3D (`#processo`), a faixa de confiança (`#confianca`: cidade, CNPJ, anos de mercado, mapa, telefone e e-mail), "O que fabricamos" (`#produtos`: 4 modelos de caixa, cada um com o seu botão de orçamento, e pedido mínimo, prazo e região), os diferenciais (`#diferenciais`), os clientes (`#clientes`: só prova autorizada, e exemplos em demo), o FAQ (`#faq`, `<details>`), o CTA final (`#orcamento`) e o rodapé. O botão do WhatsApp fica fixo depois da história: redondo no desktop e barra de largura total com o telefone em telas de até 768 px, e some com o CTA final à vista. Cada seção sem dado (e o link para ela) some sozinha.
+
+---
+
 ## Dados da empresa (`.env`)
 
 Todo dado da empresa (CNPJ, telefone, WhatsApp, endereço, prazos…) vive só no `.env`, que é versionado: a fonte única do rodapé, do JSON-LD, dos links do WhatsApp, do `robots.txt` e do `sitemap.xml`. O [`.env.example`](.env.example) guarda os valores fictícios de demonstração e comenta cada chave; [`docs/go-live.md`](docs/go-live.md) explica como trocar tudo pelos dados reais editando **só o `.env`**. O que não tem dado **não aparece** no HTML (nada de valor de exemplo), e nenhum desses dados é escrito à mão no código (um teste confere).
@@ -80,7 +86,7 @@ A cada push na `master`, o workflow [`deploy.yml`](.github/workflows/deploy.yml)
 
 ```text
 index.html                 Página única: CSS inline (tokens da marca), HTML e metadados
-site.config.js             Marca e createSiteConfig(env): monta a config a partir do .env
+site.config.js             Marca, conteúdo (modelos, FAQ, provas) e createSiteConfig(env): monta a config do .env
 build/render.js            Escreve os dados no HTML (WhatsApp, rodapé, {{variáveis}}, JSON-LD, noindex)
 build/validate.js          Trava de go-live: demo × production
 build/files.js             robots.txt e sitemap.xml gerados da URL do site
@@ -124,6 +130,8 @@ docs/                      Manual da marca e notas da v4
 - `tests/analytics.test.mjs`: eventos no Umami (interceptado, nenhum tráfego real), resumo da visita, sem cookie nem storage e nada enviado fora do host do site.
 - `tests/site-config.test.mjs`: config, trava de go-live (demo × production), render com a config vazia, JSON-LD, robots e sitemap; puro, sem navegador.
 - `tests/data-source.test.mjs`: nenhum dado do `.env` escrito à mão no código, o `.env` chega à página publicada e todo número visível vem da config.
+- `tests/faq.test.mjs`: FAQ por teclado (abre, fecha, foco visível, 44 px) e o evento `faq_open`.
+- `tests/site-url.test.mjs`: build em production com domínio próprio: canonical, Open Graph, JSON-LD, robots, sitemap e medição derivam todos da `VITE_SITE_URL`.
 - `tests/tour.test.mjs`: início automático, percurso e parada no fim da história, interrupções (roda, tecla, clique, toque, scroll, aba oculta), `?tour=0`, `#hash`, movimento reduzido. Usa o relógio falso do Playwright.
 - `tests/layout.test.mjs`: cartão × cabeçalho × botão flutuante × dica sem sobreposição em 1440×900, 1366×768, 924×540, 720×450, 390×844 e 844×390, nos 5 capítulos; alvos de toque ≥ 44 px.
 - `tests/a11y.test.mjs`: estrutura, ordem e visibilidade do foco, cartões `inert`, movimento reduzido e contraste calculado nos estilos reais.
@@ -136,6 +144,6 @@ docs/                      Manual da marca e notas da v4
 ## Marca, produto e segurança
 
 - Cores: só Floresta, Carvão, Papel e Kraft (o Kraft é o material, nunca texto ou botão); só Archivo; logotipo sempre em curvas, em negativo sobre Floresta, com respiro de ¼ do símbolo.
-- Sem imagem raster da cena, sem formulário, sem depoimentos, sem números ou alegações inventados.
+- Sem imagem raster (nenhuma foto: só SVG; logos de clientes também só em SVG), sem formulário, sem números ou alegações inventados. Depoimento, logo de cliente e nota do Google só com autorização registrada em [`docs/provas/`](docs/provas/README.md); itens de exemplo só em modo demo, com o rótulo "Exemplo".
 - Sem PWA: sem manifest, sem service worker e sem instalação como app (decisão do dono: é uma landing de um só objetivo). Ficam `theme-color`, os favicons, o `apple-touch-icon` e o `icon-512.png`, que o JSON-LD usa como logo.
 - CSP por `<meta>` com hash de cada `<style>` (`script-src 'self'`, sem CDN, sem `eval`); o único domínio externo é o servidor da medição (Umami), e só com provedor configurado; links externos com `rel="noopener"`.
