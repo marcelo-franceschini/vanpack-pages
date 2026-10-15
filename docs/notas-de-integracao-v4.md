@@ -79,11 +79,14 @@ em torno de cada centro.
 
 ## 5. Tour automático (`src/tour.js`)
 
-Começa 0,8 s depois de a cena ficar pronta, se a página está no topo, sem `#hash`, sem `?tour=0`, sem
-movimento reduzido, com a aba visível e sem interação prévia. Pausa de 4,5 s no 1º capítulo e de 5 s
-nos seguintes; 3 s entre capítulos (3,5 s no último): ~32 s no total. Termina em `p = 1` (a página
-fica com o scroll no fim da história, **não** segue para as seções seguintes) e o botão
-"Pedir orçamento" do cabeçalho pulsa.
+Começa no instante em que a cena fica pronta (sem espera), se a página está no topo, sem `#hash`, sem
+`?tour=0`, sem movimento reduzido no sistema, com a aba visível e sem interação prévia. `?tour=1` força
+o tour mesmo com movimento reduzido (para testar). Sem pausa inicial: o 1º capítulo já começa andando;
+pausa de 2,5 s nos capítulos seguintes, 2 s entre capítulos (2,5 s no último): ~16 s no total, com
+curva quadrática. Termina em `p = 1` (a página fica com o scroll no fim da história, **não** segue para
+as seções seguintes) e o botão "Pedir orçamento" do cabeçalho pulsa. No F5 a página volta ao topo (o
+navegador restauraria o scroll e o tour não começaria); voltar e avançar mantêm a posição. Quando o tour
+não começa, o console diz o motivo (`[vanpack] autoplay não iniciou: …`).
 
 ## 6. Tokens
 
@@ -107,6 +110,11 @@ fica com o scroll no fim da história, **não** segue para as seções seguintes
 - `text-wrap: pretty` removido dos parágrafos (custava metade do layout inicial em CPU lenta).
 - Slogan "Do projeto à entrega" no rodapé (manual §7); endereço, horário, CNPJ e mapa ficam ocultos
   até existirem em `site.config.js`/`.env`.
+- **Autoplay sem espera, em qualquer tela** (decisão do dono): o tour nunca é desligado por largura de
+  tela nem por Save-Data; só o movimento reduzido do sistema o desliga (acessibilidade).
+- **Sem PWA** (decisão do dono): landing de um só objetivo, então não há manifest, service worker nem
+  instalação como app. Ficam `theme-color`, favicons, `apple-touch-icon` e o `icon-512.png` (logo do
+  JSON-LD). O `brand.test` confere que o Chrome acusa `no-manifest`.
 
 ## 8. Pendências do dono
 

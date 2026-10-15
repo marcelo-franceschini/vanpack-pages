@@ -38,7 +38,7 @@ Manutenção da marca (rodam à mão, não fazem parte do build):
 
 ```bash
 node scripts/brand.mjs   # regenera os SVGs de public/brand/, a fonte e src/brand/marks.js (precisa do uv)
-node scripts/icons.mjs   # regenera favicon, ícones do app e manifest a partir do símbolo
+node scripts/icons.mjs   # regenera favicon, apple-touch-icon e icon-512 (logo do JSON-LD) a partir do símbolo
 npm run og               # regenera public/og.jpg (imagem de compartilhamento) a partir do 1º quadro
 ```
 
@@ -92,7 +92,7 @@ docs/                      Manual da marca e notas da v4
 
 - A cena 3D é uma função de `p` (0…1): o scroll da seção `.story` (560 svh, com o palco fixo na tela) vira `p`, e o render só desenha quando `p` muda.
 - O render roda num **Web Worker** com `OffscreenCanvas`, então a thread principal fica livre. Sem suporte (ou se o worker falhar), a mesma cena roda na thread principal; sem WebGL, ficam o fundo Papel, o símbolo e os cartões, que continuam legíveis e navegáveis.
-- O **tour automático** começa ~0,8 s depois de a cena ficar pronta (no topo, sem `#hash`, sem `?tour=0`, sem movimento reduzido): a página rola sozinha pelos capítulos, **a cena segue o scroll** e o tour para no fim da história (não segue para as seções seguintes), quando o botão "Pedir orçamento" do cabeçalho pulsa. Qualquer roda, toque, clique, tecla ou scroll interrompe, e ele nunca retoma sozinho.
+- O **tour automático** começa no instante em que a cena fica pronta, sem espera e em qualquer tela (no topo, sem `#hash`, sem `?tour=0`, sem movimento reduzido no sistema; `?tour=1` força o tour mesmo com movimento reduzido, para testar): a página rola sozinha pelos capítulos em ~16 s, **a cena segue o scroll** e o tour para no fim da história (não segue para as seções seguintes), quando o botão "Pedir orçamento" do cabeçalho pulsa. No F5 a página volta ao topo e o tour toca de novo. Qualquer roda, toque, clique, tecla ou scroll interrompe, e ele nunca retoma sozinho. Quando o tour não começa, o console diz o motivo (`[vanpack] autoplay não iniciou: …`).
 - A qualidade se adapta ao aparelho: densidade limitada (2× no desktop, 1,5× no celular e 4,5 MP), sombra em tempo real só no desktop, e, se os quadros passam de ~24 ms, a resolução cai e depois a sombra para (sem recompilar shaders).
 
 ---
@@ -114,4 +114,5 @@ docs/                      Manual da marca e notas da v4
 
 - Cores: só Floresta, Carvão, Papel e Kraft (o Kraft é o material, nunca texto ou botão); só Archivo; logotipo sempre em curvas, em negativo sobre Floresta, com respiro de ¼ do símbolo.
 - Sem imagem raster da cena, sem formulário, sem depoimentos, sem números ou alegações inventados.
+- Sem PWA: sem manifest, sem service worker e sem instalação como app (decisão do dono: é uma landing de um só objetivo). Ficam `theme-color`, os favicons, o `apple-touch-icon` e o `icon-512.png`, que o JSON-LD usa como logo.
 - CSP por `<meta>` com hash de cada `<style>` (`script-src 'self'`, sem CDN, sem `eval`); links externos com `rel="noopener"`.

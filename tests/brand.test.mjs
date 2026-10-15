@@ -212,6 +212,29 @@ describe('build: CSP, requisições e marca na página', () => {
     assert.ok(!dist.includes('%VITE_'), 'nenhuma variável sem substituir');
   });
 
+  test('sem PWA: sem manifest, service worker nem instalação como app', async () => {
+    const dist = read('dist/index.html');
+    assert.ok(!/rel="manifest"/.test(dist), 'sem <link rel="manifest">');
+    assert.equal(existsSync(`${ROOT}dist/manifest.webmanifest`), false);
+    for (const file of readdirSync(`${ROOT}dist/assets`).filter((f) => f.endsWith('.js'))) {
+      assert.ok(
+        !/navigator\.serviceWorker|beforeinstallprompt/.test(read(`dist/assets/${file}`)),
+        `${file} sem service worker nem pedido de instalação`,
+      );
+    }
+    // o próprio Chrome diz que a página não é instalável
+    const { page, context } = await openPage(browser, server.url + '?tour=0', {
+      reducedMotion: 'reduce',
+    });
+    const cdp = await context.newCDPSession(page);
+    const { installabilityErrors } = await cdp.send('Page.getInstallabilityErrors');
+    assert.ok(
+      installabilityErrors.some((e) => e.errorId === 'no-manifest'),
+      `o Chrome deveria acusar no-manifest: ${JSON.stringify(installabilityErrors)}`,
+    );
+    await context.close();
+  });
+
   test('percorrer a página inteira não gera violação de CSP, erro nem requisição externa', async () => {
     const { page, context, problems, requests } = await openPage(browser, server.url + '?tour=0', {
       reducedMotion: 'reduce',

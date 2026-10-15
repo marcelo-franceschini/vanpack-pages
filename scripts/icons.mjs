@@ -1,7 +1,6 @@
-// Gera os ícones e manifest da Vanpack:
+// Gera os ícones da Vanpack (o site não é instalável como app: sem manifest nem service worker):
 // - public/favicon.svg (símbolo em negativo)
-// - PNGs: favicon-32x32, apple-touch-icon (180x180), icon-192, icon-512, icon-512-maskable
-// - public/manifest.webmanifest
+// - PNGs: favicon-32x32, apple-touch-icon (180x180) e icon-512 (o logo do JSON-LD)
 import { writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -16,29 +15,6 @@ const SVG_NEGATIVO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 1
 await writeFile(join(publicDir, 'favicon.svg'), SVG_NEGATIVO, 'utf-8');
 console.log('favicon.svg gravado.');
 
-// Gera manifest.webmanifest
-const manifest = {
-  name: 'Vanpack',
-  short_name: 'Vanpack',
-  description: 'Fábrica de caixas de papelão ondulado sob medida com a sua marca.',
-  start_url: './',
-  display: 'standalone',
-  background_color: '#FBF8F2',
-  theme_color: '#FBF8F2',
-  icons: [
-    { src: './favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-    { src: './icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-    { src: './icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-    { src: './icon-512-maskable.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-  ],
-};
-await writeFile(
-  join(publicDir, 'manifest.webmanifest'),
-  JSON.stringify(manifest, null, 2) + '\n',
-  'utf-8',
-);
-console.log('manifest.webmanifest gravado.');
-
 // Gera PNGs via Chromium
 const browser = await chromium.launch({
   executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome-stable',
@@ -47,9 +23,7 @@ const browser = await chromium.launch({
 
 const page = await browser.newPage();
 
-async function renderIcon(filename, size, isMaskable = false) {
-  const padding = isMaskable ? Math.round(size * 0.1) : 0;
-  const contentSize = size - padding * 2;
+async function renderIcon(filename, size) {
   const html = `
     <!DOCTYPE html>
     <html>
@@ -59,14 +33,14 @@ async function renderIcon(filename, size, isMaskable = false) {
           body {
             width: ${size}px;
             height: ${size}px;
-            background: ${isMaskable ? '#14513A' : 'transparent'};
+            background: transparent;
             display: flex;
             align-items: center;
             justify-content: center;
           }
           svg {
-            width: ${contentSize}px;
-            height: ${contentSize}px;
+            width: ${size}px;
+            height: ${size}px;
           }
         </style>
       </head>
@@ -77,16 +51,14 @@ async function renderIcon(filename, size, isMaskable = false) {
   `;
   await page.setViewportSize({ width: size, height: size });
   await page.setContent(html);
-  const buf = await page.screenshot({ omitBackground: !isMaskable });
+  const buf = await page.screenshot({ omitBackground: true });
   await writeFile(join(publicDir, filename), buf);
   console.log(`${filename} (${size}x${size}) gravado: ${(buf.length / 1024).toFixed(1)} KB`);
 }
 
 await renderIcon('favicon-32x32.png', 32);
 await renderIcon('apple-touch-icon.png', 180);
-await renderIcon('icon-192.png', 192);
 await renderIcon('icon-512.png', 512);
-await renderIcon('icon-512-maskable.png', 512, true);
 
 await browser.close();
 console.log('Todos os ícones gerados com sucesso.');
