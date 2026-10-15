@@ -116,3 +116,47 @@ fica com o scroll no fim da história, **não** segue para as seções seguintes
 - Dados institucionais (endereço, horário, CNPJ, mapa) e o número do WhatsApp (`VITE_WHATSAPP`).
 - `assets/brand/*.svg` (fontes da marca) carregam metadados C2PA de ferramenta de IA; os de
   `public/brand/` são limpos.
+
+## 9. Medidas
+
+Como medir: `npm run audit:bundle`, `audit:scene`, `audit:runtime`, `audit:lighthouse` e `audit:capturas`
+(Chrome do sistema; o WebGL roda por software, SwiftShader). "Antes" é a `master` anterior ou o
+`scene.js` original do pacote v4.
+
+| O que                                                            | Antes                                 | Agora                                                |
+| ---------------------------------------------------------------- | ------------------------------------- | ---------------------------------------------------- |
+| JS no caminho normal (página + worker), gzip                     | 154,5 KB                              | **137,6 KB** (3,7 + 133,9; brotli do worker 110,3)   |
+| JS se o worker falhar (+ thread principal), gzip                 | 303,4 KB                              | 271,2 KB                                             |
+| HTML + CSS inline, gzip                                          | 11,2 KB                               | 7,1 KB (CSS inline 3,0 KB)                           |
+| Draw calls desktop (p = 0 / .25 / .5 / .75 / 1)                  | 14 / 23 / 24 / 32 / 20                | **12 / 22 / 23 / 31 / 19** (orçamento 90)            |
+| Draw calls celular                                               | 13 / 20 / 21 / 30 / 14                | **11 / 19 / 20 / 29 / 13** (orçamento 60)            |
+| Triângulos (máx.)                                                | 6,6 mil                               | 6,7 mil                                              |
+| Lighthouse mobile (mediana de 5)                                 | 97 · TBT 149–206 ms · LCP 1,5 s       | **100/100/100/100** · TBT 48 ms · LCP 1,36 s · CLS 0 |
+| Lighthouse desktop                                               | 100 / 100 / 92 / 100                  | **100/100/100/100** · TBT 0 · LCP 0,33 s             |
+| Custo por quadro (SwiftShader, mediana de 5 rodadas × 5 quadros) | 1179 ms (desktop) · 424 ms (celular)  | −19% · −23%                                          |
+| 1º quadro em que o herói aparece, versus o quadro seguinte       | +680 ms (desktop) · +415 ms (celular) | +110 ms · +50 ms                                     |
+| Cena pronta, rede 1,6 Mbps/150 ms e CPU 4×                       | ~4,0 s                                | ~2,9 s                                               |
+| Memória da GPU (mapa de sombra + texturas)                       | ~26 MB                                | ~7 MB                                                |
+| `dispose()`                                                      | sobravam recursos                     | 37 geometrias e 7 texturas → 0                       |
+
+O que mudou e por quê (cada item é um commit `perf`, medido antes e depois, com diferença de pixels
+contra o v4 original em 15 valores de `p`, desktop e celular):
+
+- canvas e piso opacos (sem mistura de tela cheia nem textura de máscara) e sem o tracejado da estrada,
+  que ficava sempre embaixo da estrada;
+- sombra em mapa 1024 com recorte ajustado ao enquadramento e encaixado no texel;
+- texturas de impressão, abas e logo do baú em resolução proporcional ao tamanho em tela;
+- quadro de aquecimento antes do "pronto" (geometrias, texturas e variantes da passada de sombra);
+- desligar a sombra não recompila shaders (1,9 s de travada no v4);
+- chanfros gerados direto, sem `ExtrudeGeometry` (−8 KB gzip);
+- `text-wrap: pretty` removido (layout inicial 230 → 144 ms em CPU 4×);
+- o worker é criado antes de qualquer leitura de layout;
+- aparas fora do quadro até p = 0,18; cartões opacos.
+
+Na rolagem completa da história (14 s): 0 tarefas longas (> 50 ms) na thread principal com CPU
+normal e 2 (61 e 64 ms, pintura e estilo) com CPU 4× mais lenta; com a página parada a cena não
+desenha mais nenhum quadro.
+
+**Não medido / limites**: GPU real (o Chrome de teste não tem GPU, então os quadros por segundo do
+worker são um limite inferior e o custo por quadro é um indicador relativo), Safari/iOS e Firefox,
+leitores de tela, redes e aparelhos reais. O Lighthouse usa a simulação padrão de rede e CPU.
