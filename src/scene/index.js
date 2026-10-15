@@ -266,10 +266,29 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
   };
 
   return {
-    /** Compila os shaders em paralelo (sem travar a página); chame antes do primeiro `render`. */
+    /**
+     * Prepara tudo antes do primeiro quadro visível: compila os shaders em paralelo (sem travar a
+     * página) e desenha um quadro com todas as peças à mostra, para subir geometrias e texturas e
+     * compilar as variantes da passada de sombra. Sem isso, a primeira vez que cada peça aparece
+     * (herói, palete, caminhão) trava o scroll.
+     */
     compile() {
       place(0);
-      return renderer.compileAsync(scene, camera).then(() => undefined);
+      return renderer.compileAsync(scene, camera).then(() => {
+        // sem frustum culling, para subir também o que está fora do primeiro enquadramento
+        const culled = [];
+        scene.traverse((object) => {
+          object.visible = true;
+          if (object.frustumCulled) {
+            object.frustumCulled = false;
+            culled.push(object);
+          }
+        });
+        renderer.render(scene, camera);
+        for (const object of culled) object.frustumCulled = true;
+        applyShadowState();
+        place(0);
+      });
     },
 
     /** Desenha o quadro do progresso `p` (0…1). */
