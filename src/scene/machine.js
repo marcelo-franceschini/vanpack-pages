@@ -98,12 +98,9 @@ export function buildMachineA(st, parent, M) {
   windowBay(st, M, printWindow);
   windowBay(st, M, cutWindow);
 
-  // placa superior, caixa do motor com tela, duto, torre de luz e grelha
-  st.box(M.light2, A0 + 0.6, A1 - 1.3, 1.36, 1.58, -0.8, 0.8);
-  st.box(M.dark, A1 - 1.2, A1 - 0.8, 1.36, 1.72, 0.45, 0.9);
-  st.box(M.light, A1 - 1.18, A1 - 0.82, 1.5, 1.66, 0.9, 0.912, 0.004);
-  st.cyl(M.dark2, -4.2, 1.75, -0.4, 0.09, 0.34, 'y', 16);
-  st.cyl(M.dark, -4.2, 1.93, -0.4, 0.105, 0.03, 'y', 16);
+  // duto sobre o capô, torre de luz e grelha
+  st.cyl(M.dark2, -4.2, 1.53, -0.4, 0.09, 0.34, 'y', 16);
+  st.cyl(M.dark, -4.2, 1.71, -0.4, 0.105, 0.03, 'y', 16);
   st.cyl(M.dark2, -5.0, 1.49, 0.88, 0.02, 0.26, 'y', 8);
   st.cyl(M.forest, -5.0, 1.68, 0.88, 0.05, 0.12, 'y', 12);
   st.cyl(M.dark, -5.0, 1.75, 0.88, 0.056, 0.02, 'y', 12);
