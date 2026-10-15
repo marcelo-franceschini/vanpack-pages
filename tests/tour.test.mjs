@@ -94,7 +94,13 @@ describe('autoplay', () => {
       maxY = Math.max(maxY, await scrollY(page));
       if ((await tourState(page)) === 'done') break;
     }
-    await advance(page, 100); // o quadro que atualiza o cartão depois do último scroll
+    // O cartão do último capítulo atualiza um quadro depois do último scroll, e o evento de scroll
+    // chega em tempo real: numa máquina lenta (CI) ele atrasa. Avança o relógio e espera um pouco de
+    // tempo real, até 10 s, até o último cartão aparecer.
+    for (let i = 0; i < 100 && (await activeCard(page)) !== 5; i++) {
+      await advance(page, 100);
+      await page.waitForTimeout(100);
+    }
     seen.add(await activeCard(page));
     assert.equal(await tourState(page), 'done');
     assert.deepEqual([...seen].sort(), [1, 2, 3, 4, 5], 'todos os cartões apareceram');
