@@ -6,6 +6,7 @@
 export const KRAFT = '#b78c5c';
 export const KRAFT_INNER = '#cfa978'; // face interna do papelão
 export const PALETTE = {
+  paper: '#fbf8f2', // fundo da página: o piso some nele nas bordas
   floor: '#efe9dc',
   dark: '#2f2d29',
   dark2: '#4b4842',

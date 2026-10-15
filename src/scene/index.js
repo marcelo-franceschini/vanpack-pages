@@ -19,10 +19,10 @@ import {
 import { createCameraRig } from './camera.js';
 import { FLAT_T, PALETTE, PALLET_H, SCRAPS, SHEET_LENGTH, STACK_TOP } from './constants.js';
 import { buildFactory } from './factory.js';
-import { Batch, mergeGeometries, ribbon, softRects, stackSides } from './geometry.js';
+import { Batch, fadedFloor, ribbon, softRects, stackSides } from './geometry.js';
 import { createHero } from './hero.js';
 import { clamp } from './math.js';
-import { edgeTexture, floorAlphaTexture, truckLogoTexture } from './textures.js';
+import { edgeTexture, truckLogoTexture } from './textures.js';
 import { createTimeline } from './timeline.js';
 import { buildTruck } from './truck.js';
 
@@ -38,11 +38,11 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
   const renderer = new WebGLRenderer({
     canvas,
     antialias: dpr < 2,
-    alpha: true,
+    alpha: false, // canvas opaco: a página não precisa compor transparência
     powerPreference: 'high-performance',
   });
   renderer.setPixelRatio(dpr);
-  renderer.setClearColor(0x000000, 0);
+  renderer.setClearColor(PALETTE.paper);
   renderer.shadowMap.enabled = !mobile;
   renderer.shadowMap.type = PCFShadowMap;
 
@@ -89,22 +89,13 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
     kraftDark: lambert(PALETTE.kraftDark),
     glass: lambert(PALETTE.glass),
     road: lambert(PALETTE.road),
-    line: track(new MeshBasicMaterial({ color: PALETTE.white })),
     strap: lambert(PALETTE.dark2),
   };
 
-  // piso (alfa suave nas bordas: some no fundo da página), estrada e sombras
-  const floorAlpha = track(floorAlphaTexture(FLOOR.width, FLOOR.depth, FLOOR.fade));
+  // piso opaco que esmaece para o Papel da página, estrada e sombras
   const floor = new Mesh(
-    track(new PlaneGeometry(FLOOR.width, FLOOR.depth).rotateX(-PI / 2)),
-    track(
-      new MeshBasicMaterial({
-        color: PALETTE.floor,
-        alphaMap: floorAlpha,
-        transparent: true,
-        depthWrite: false,
-      }),
-    ),
+    track(fadedFloor(FLOOR.width, FLOOR.depth, FLOOR.fade, PALETTE.floor, PALETTE.paper)),
+    track(new MeshBasicMaterial({ vertexColors: true })),
   );
   floor.position.set(FLOOR.centerX, 0, FLOOR.centerZ);
   scene.add(floor);
@@ -121,9 +112,6 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
       ),
     ),
   );
-  const dashes = [];
-  for (let s = -1; s < 44; s += 1.2) dashes.push(ribbon(s, s + 0.55, 0.275, 0.07, 0.009));
-  scene.add(new Mesh(track(mergeGeometries(dashes)), M.line));
   const blobMaterial = track(
     new MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false }),
   );
@@ -292,7 +280,7 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
 
     /** Contexto restaurado: reenvia as texturas desenhadas à GPU. */
     restore() {
-      for (const texture of [...hero.textures, truckLogo, edgeMap, floorAlpha]) {
+      for (const texture of [...hero.textures, truckLogo, edgeMap]) {
         if (texture) texture.needsUpdate = true;
       }
     },

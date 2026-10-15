@@ -5,14 +5,12 @@ import {
   DataTexture,
   LinearFilter,
   LinearMipmapLinearFilter,
-  NoColorSpace,
   RGBAFormat,
   RepeatWrapping,
   SRGBColorSpace,
 } from 'three';
 import { drawHorizontalBrand } from '../brand/marks.js';
 import { KRAFT, PALETTE } from './constants.js';
-import { smooth } from './math.js';
 
 const HAS_OFFSCREEN_CANVAS = typeof OffscreenCanvas === 'function';
 
@@ -39,7 +37,7 @@ function canvasTexture(width, height, draw) {
 }
 
 /** @param {(x: number, y: number) => readonly [number, number, number, number]} pixel */
-function dataTexture(width, height, pixel, { srgb = true, repeat = false } = {}) {
+function dataTexture(width, height, pixel, { repeat = false } = {}) {
   const data = new Uint8Array(width * height * 4);
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -47,7 +45,7 @@ function dataTexture(width, height, pixel, { srgb = true, repeat = false } = {})
     }
   }
   const texture = new DataTexture(data, width, height, RGBAFormat);
-  texture.colorSpace = srgb ? SRGBColorSpace : NoColorSpace;
+  texture.colorSpace = SRGBColorSpace;
   texture.minFilter = LinearMipmapLinearFilter;
   texture.magFilter = LinearFilter;
   texture.generateMipmaps = true;
@@ -209,18 +207,4 @@ export const edgeTexture = () =>
       return Math.abs(y - wave) < 1.1 ? [176, 127, 78, 255] : [203, 164, 114, 255];
     },
     { repeat: true },
-  );
-
-/** Máscara do piso: opaco no meio e some nas bordas (a página, em Papel, aparece por baixo). */
-export const floorAlphaTexture = (width, depth, fade) =>
-  dataTexture(
-    256,
-    128,
-    (x, y) => {
-      const px = (x / 255) * width;
-      const pz = (y / 127) * depth;
-      const v = Math.round(smooth(Math.min(px, width - px, pz, depth - pz) / fade) * 255);
-      return [v, v, v, 255];
-    },
-    { srgb: false },
   );

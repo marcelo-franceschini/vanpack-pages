@@ -4,14 +4,17 @@ import {
   BoxGeometry,
   BufferAttribute,
   BufferGeometry,
+  Color,
   CylinderGeometry,
   ExtrudeGeometry,
   Float32BufferAttribute,
   Matrix4,
   Mesh,
   Shape,
+  SRGBColorSpace,
 } from 'three';
 import { ROAD, TRUCK_X0 } from './constants.js';
+import { smooth } from './math.js';
 
 /** Caixa com as arestas chanfradas (cai para BoxGeometry quando é fina demais para chanfrar). */
 function chamferBox(w, h, d, c) {
@@ -110,6 +113,56 @@ export class Batch {
     this.byMaterial.clear();
     return meshes;
   }
+}
+
+/**
+ * Piso opaco que esmaece para a cor do fundo nas bordas (cor de vértice, sem textura nem
+ * transparência). A cor é misturada em sRGB, como o navegador faria ao compor um canvas com alfa.
+ * @param {number} width
+ * @param {number} depth
+ * @param {number} fade largura (m) da faixa que esmaece em cada borda
+ * @param {string} floor cor do piso
+ * @param {string} paper cor do fundo da página
+ */
+export function fadedFloor(width, depth, fade, floor, paper) {
+  // linhas da grade: a rampa de cada borda é dividida em 4 trechos
+  const stops = (size) => {
+    const edge = [0, 0.25, 0.5, 0.75, 1].map((t) => t * fade);
+    return [...edge, ...edge.map((v) => size - v).reverse()];
+  };
+  const xs = stops(width);
+  const zs = stops(depth);
+  const a = new Color(floor).getRGB({ r: 0, g: 0, b: 0 }, SRGBColorSpace);
+  const b = new Color(paper).getRGB({ r: 0, g: 0, b: 0 }, SRGBColorSpace);
+  const mixed = new Color();
+  const position = [];
+  const color = [];
+  for (const z of zs) {
+    for (const x of xs) {
+      position.push(x - width / 2, 0, z - depth / 2);
+      const t = smooth(Math.min(x, width - x, z, depth - z) / fade);
+      mixed.setRGB(
+        b.r + (a.r - b.r) * t,
+        b.g + (a.g - b.g) * t,
+        b.b + (a.b - b.b) * t,
+        SRGBColorSpace,
+      );
+      color.push(mixed.r, mixed.g, mixed.b);
+    }
+  }
+  const index = [];
+  const cols = xs.length;
+  for (let j = 0; j < zs.length - 1; j++) {
+    for (let i = 0; i < cols - 1; i++) {
+      const v = j * cols + i;
+      index.push(v, v + cols, v + 1, v + 1, v + cols, v + cols + 1);
+    }
+  }
+  const geometry = new BufferGeometry();
+  geometry.setAttribute('position', new Float32BufferAttribute(position, 3));
+  geometry.setAttribute('color', new Float32BufferAttribute(color, 3));
+  geometry.setIndex(index);
+  return geometry;
 }
 
 /**
