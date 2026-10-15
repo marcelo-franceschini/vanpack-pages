@@ -34,6 +34,13 @@ npm run audit:lighthouse  # Lighthouse mobile e desktop (mediana de 3 execuçõe
 npm run audit:capturas    # as 10 capturas em tamanho real, em docs/capturas/
 ```
 
+Manutenção da marca (rodam à mão, não fazem parte do build):
+
+```bash
+node scripts/brand.mjs   # regenera os SVGs de public/brand/, a fonte e src/brand/marks.js (precisa do uv)
+node scripts/icons.mjs   # regenera favicon, ícones do app e manifest a partir do símbolo
+```
+
 ---
 
 ## Configurações institucionais (`site.config.js` e `.env`)

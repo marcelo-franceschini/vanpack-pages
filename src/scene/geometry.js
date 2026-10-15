@@ -98,7 +98,7 @@ export function chamferBox(w, h, d, c) {
 }
 
 /** Junta geometrias (só posição e normal, sem índice) numa só e descarta as originais. */
-export function mergeGeometries(source) {
+function mergeGeometries(source) {
   const list = source.map((g) => {
     if (!g.index) return g;
     const flat = g.toNonIndexed();
