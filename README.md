@@ -5,7 +5,7 @@ Landing page oficial da **Vanpack** (caixas de papelão sob medida e personaliza
 - **Manual da marca e diretrizes:** [`docs/manual-da-marca.md`](docs/manual-da-marca.md).
 - **Contratos, faixas do scroll, tokens e decisões da v4:** [`docs/notas-de-integracao-v4.md`](docs/notas-de-integracao-v4.md).
 - **Slogan:** "Do projeto à entrega".
-- **Assets oficiais em vetor:** [`public/brand/`](public/brand/) e [`assets/brand/`](assets/brand/).
+- **Assets oficiais em vetor:** [`public/brand/`](public/brand/).
 
 ---
 
@@ -31,7 +31,7 @@ npm run audit:bundle      # gzip/brotli por arquivo, JS inicial (≤ 165 KB gzip
 npm run audit:scene       # draw calls e triângulos nos 5 centros (≤ 90 desktop, ≤ 60 celular)
 npm run audit:runtime     # tarefas longas e quadros ao rolar a história, com CPU 1× e 4×
 npm run audit:lighthouse  # Lighthouse mobile e desktop (mediana de 3 execuções; baixa via npx)
-npm run audit:capturas    # as 10 capturas em tamanho real, em docs/capturas/
+npm run audit:capturas    # as 10 capturas em tamanho real, em docs/capturas/ (fora do git)
 ```
 
 Manutenção da marca (rodam à mão, não fazem parte do build):
@@ -85,7 +85,7 @@ public/brand/              SVGs oficiais da marca (Floresta, Carvão, Papel e ne
 public/fonts/              Archivo (WOFF2, pesos 400 a 900)
 scripts/audit/             Auditorias: bundle, cena, runtime, Lighthouse e capturas
 tests/                     Testes de navegador (Playwright) e da cena (node:test)
-docs/                      Manual da marca, notas da v4 e capturas
+docs/                      Manual da marca e notas da v4
 ```
 
 ### Como a história funciona
