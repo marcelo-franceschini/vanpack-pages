@@ -100,7 +100,7 @@ describe('produto', () => {
 
   test('sem números, datas, velocidades, capacidades ou alegações ambientais inventados', () => {
     const visible = text(html.slice(html.indexOf('<body>')))
-      .replace(/\b0[2-5] — /g, '') // numeração dos capítulos
+      .replace(/\b0[2-5] · /g, '') // numeração dos capítulos
       .replace(/© 2026 /, '')
       .replace(/<b>\d<\/b>/g, '');
     const digits = visible.match(/\d+/g) ?? [];
@@ -213,6 +213,17 @@ describe('build: CSP, requisições e marca na página', () => {
     assert.match(dist, /<link rel="canonical" href="https:\/\/[^"]+\/"/);
     assert.ok(existsSync(`${ROOT}dist/og.jpg`));
     assert.ok(!dist.includes('%VITE_'), 'nenhuma variável sem substituir');
+  });
+
+  test('sem travessão longo no texto visível nem nos atributos (title, meta, aria-label)', () => {
+    for (const file of ['dist/index.html', 'dist/404.html']) {
+      const page = read(file)
+        .replace(/<!--[\s\S]*?-->/g, '')
+        .replace(/<(script|style|svg)[\s\S]*?<\/\1>/g, '');
+      assert.ok(!page.includes('\u2014'), `${file} tem travessão longo`);
+    }
+    const title = read('dist/index.html').match(/<title>([^<]*)<\/title>/)[1];
+    assert.match(title, /^Caixas de papelão sob medida com a sua marca \| Vanpack/);
   });
 
   test('sem PWA: sem manifest, service worker nem instalação como app', async () => {

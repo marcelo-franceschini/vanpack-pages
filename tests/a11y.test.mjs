@@ -125,7 +125,7 @@ describe('teclado', () => {
     }
     assert.deepEqual(order.slice(0, 8), [
       'Pular para o conteúdo',
-      'Vanpack — início',
+      'Vanpack · início',
       'Como fazemos',
       'Diferenciais',
       'Orçamento',

@@ -100,6 +100,8 @@ export function createSiteConfig(env = {}, now = new Date()) {
     serviceArea: site.serviceArea,
     responseTime: site.responseTime,
     paymentMethods: site.paymentMethods,
+    // título e descrição da página (title, og e twitter); a cidade entra só se houver
+    title: `Caixas de papelão sob medida com a sua marca | ${site.name}${city ? ` ${city}` : ''}`,
     description: [
       'Caixas de papelão ondulado sob medida, com a sua marca impressa.',
       cityState && `Fábrica em ${cityState}.`,
