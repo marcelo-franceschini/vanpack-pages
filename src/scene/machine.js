@@ -108,9 +108,7 @@ export function buildMachineA(st, parent, M) {
   windowBay(st, M, printWindow);
   windowBay(st, M, cutWindow);
 
-  // duto sobre o capô, torre da lâmpada e grelha
-  st.cyl(M.dark2, -4.2, 1.53, -0.4, 0.09, 0.34, 'y', 16);
-  st.cyl(M.dark, -4.2, 1.71, -0.4, 0.105, 0.03, 'y', 16);
+  // torre da lâmpada e grelha
   st.cyl(M.dark2, -5.0, 1.49, 0.88, 0.02, 0.26, 'y', 8);
   st.cyl(M.dark, -5.0, 1.75, 0.88, 0.056, 0.02, 'y', 12);
   const lampMesh = new Batch(); // a lâmpada tem material próprio: muda de cor sem tocar no resto
