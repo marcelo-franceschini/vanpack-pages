@@ -136,8 +136,9 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
   buildFactory(world, M);
   const edgeMap = track(edgeTexture());
   const edgeMaterial = track(new MeshLambertMaterial({ map: edgeMap }));
+  // mesmo passo de camada da pilha do palete: com 8 mm o desenho da borda não chega a 2 px na tela
   const feederStack = new Mesh(
-    track(stackSides(-7.02, -6.38, 0.53, 0.842, -0.81, 0.67, 0.008)),
+    track(stackSides(-7.02, -6.38, 0.53, 0.842, -0.81, 0.67, FLAT_T)),
     edgeMaterial,
   );
   feederStack.castShadow = true;
