@@ -91,6 +91,10 @@ export function createSiteConfig(env = {}, now = new Date()) {
     foundedYear,
     yearsInBusiness: site.yearsInBusiness,
     year: site.year,
+    // a faixa de confiança só existe se tiver ao menos um item
+    hasTrust: [cityState, site.cnpj, foundedYear, site.mapUrl, phone, site.email].some(Boolean)
+      ? 'sim'
+      : '',
     minOrder: site.minOrder,
     leadTimeDays: site.leadTimeDays,
     serviceArea: site.serviceArea,

@@ -20,7 +20,15 @@ const { page, context } = await openPage(browser, `${server.url}?tour=0`, {
 });
 // só a marca, a chamada e a cena
 await page.evaluate(() => {
-  for (const selector of ['.nav', '#hdr .btn', '.scrollcue', '.actions', '.seals']) {
+  for (const selector of [
+    '.nav',
+    '#hdr .btn',
+    '.scrollcue',
+    '.actions',
+    '.cta-note',
+    '.seals',
+    '.k-area',
+  ]) {
     for (const el of document.querySelectorAll(selector)) el.style.setProperty('display', 'none');
   }
 });

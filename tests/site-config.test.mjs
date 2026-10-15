@@ -244,6 +244,24 @@ describe('render', () => {
     assert.ok(!('aggregateRating' in ld), 'sem avaliação própria');
   });
 
+  test('a faixa de confiança some inteira sem dado e, com pouco dado, mostra só o que existe', () => {
+    assert.ok(!renderPage(html, empty).includes('id="confianca"'));
+    const onlyCnpj = createSiteConfig({
+      VITE_WHATSAPP: '5511912345678',
+      VITE_CNPJ: REAL.VITE_CNPJ,
+    });
+    const strip = renderPage(html, onlyCnpj).match(/<section class="trust"[\s\S]*?<\/section>/)[0];
+    assert.ok(strip.includes(`CNPJ ${REAL.VITE_CNPJ}`));
+    assert.ok(!/anos de mercado|tel:|mailto:|Fábrica própria/.test(strip), strip);
+  });
+
+  test('sem ano de fundação não há anos de mercado nem "Desde" no rodapé', () => {
+    const semAno = createSiteConfig({ ...example, VITE_FOUNDED_YEAR: '' });
+    const out = renderPage(html, semAno);
+    assert.ok(!/anos de mercado|Desde/.test(out));
+    assert.ok(renderPage(html, demo).includes('Desde 2010'));
+  });
+
   test('elemento removido leva junto o que tem dentro, mesmo com a mesma tag aninhada', () => {
     const out = renderPage(
       '<div data-need="cnpj"><div>a</div><div>b</div></div><p data-need="city">x</p><p>fica</p>',
