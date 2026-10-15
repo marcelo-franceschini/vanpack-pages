@@ -95,6 +95,7 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
     kraft: lambert(PALETTE.kraft),
     kraftDark: lambert(PALETTE.kraftDark),
     glass: lambert(PALETTE.glass),
+    lamp: lambert(PALETTE.amber), // a cor muda com o progresso (machine.js)
     road: lambert(PALETTE.road),
     strap: lambert(PALETTE.dark2),
   };
@@ -264,7 +265,7 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
   };
   const place = (p) => {
     update(p);
-    machine.spin(p);
+    machine.update(p);
     rig.place(p);
     if (shadows) fitShadow(rig.target, rig.reach);
   };

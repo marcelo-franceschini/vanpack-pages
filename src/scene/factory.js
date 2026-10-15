@@ -19,7 +19,7 @@ function rollerBed(st, M, xs, x0, x1) {
 /**
  * @param {import('three').Object3D} parent
  * @param {Record<string, import('three').Material>} M materiais por cor
- * @returns {{ spin: (p: number) => void }} gira os cilindros da máquina A conforme o progresso
+ * @returns {{ update: (p: number) => void }} gira os cilindros e acende a lâmpada da máquina A
  */
 export function buildFactory(parent, M) {
   const st = new Batch();

@@ -2,7 +2,10 @@
 // (da esquerda para a direita), y é a altura e z a largura. Tudo que depende do progresso `p`
 // (0…1, o scroll da história) está nas tabelas deste arquivo.
 
-/** Só Carvão/Papel derivados + Floresta + Kraft (manual da marca §2); sem cor de acento. */
+/**
+ * Só Carvão/Papel derivados + Floresta + Kraft (manual da marca §2); sem cor de acento. Única exceção:
+ * o amarelo da lâmpada de sinalização da máquina (o manual reserva amarelo à ilustração da linha).
+ */
 export const KRAFT = '#b78c5c';
 export const KRAFT_INNER = '#cfa978'; // face interna do papelão
 export const PALETTE = {
@@ -19,6 +22,7 @@ export const PALETTE = {
   kraftDark: '#9a7447',
   road: '#5a574f',
   glass: '#9c9788',
+  amber: '#e3b23c', // só a lâmpada de sinalização da máquina A
 };
 
 /** Caixa: painéis longos, painéis curtos, altura e abas. */

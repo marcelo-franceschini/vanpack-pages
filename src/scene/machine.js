@@ -1,11 +1,12 @@
 // A máquina A — impressão e corte numa passada. A carcaça tem duas janelas na frente (+z) que mostram
 // os cilindros de impressão e de corte; entre elas, um trecho fechado esconde a troca da chapa lisa
 // pela peça "herói". O miolo dos cilindros é estático na malha mesclada da fábrica: só giram os
-// marcadores (listras, luva, lâminas e cruzes), uma malha por cilindro, no ritmo da chapa.
-import { BoxGeometry, CylinderGeometry, Group, Matrix4 } from 'three';
-import { MACHINE_A, RAIL_Y, SHEET_LENGTH, SHEET_X } from './constants.js';
+// marcadores (listras, luva, lâminas e cruzes), uma malha por cilindro, no ritmo da chapa. A lâmpada
+// de sinalização, no topo, passa de amarela a verde quando a peça cortada e impressa sai.
+import { BoxGeometry, Color, CylinderGeometry, Group, Matrix4 } from 'three';
+import { MACHINE_A, PALETTE, RAIL_Y, SHEET_LENGTH, SHEET_X } from './constants.js';
 import { Batch } from './geometry.js';
-import { clamp, lin } from './math.js';
+import { clamp, lin, smooth, within } from './math.js';
 
 const { x0: A0, x1: A1, printWindow, closed, cutWindow } = MACHINE_A;
 const FLAT = 1; // chanfro maior que a peça: vira BoxGeometry (12 triângulos), para o que não aparece
@@ -20,6 +21,14 @@ const SPIN_TO = A1 + SHEET_LENGTH / 2; // a cauda sai do último aperto
 
 /** Quanto a chapa andou (m) dentro da máquina: 0 antes de entrar e constante depois de sair. */
 export const spinTravel = (sheetX) => clamp(sheetX, SPIN_FROM, SPIN_TO) - SPIN_FROM;
+
+const LAMP_FROM = A1 - SHEET_LENGTH / 2; // a ponta da peça cortada e impressa chega à saída
+const LAMP_GLOW = 0.4; // fração da cor que a lâmpada emite (parece acesa, com a luz da cena)
+const AMBER = new Color(PALETTE.amber);
+const GREEN = new Color(PALETTE.forest);
+
+/** 0 = lâmpada amarela, 1 = verde: vira enquanto a peça cortada e impressa sai da máquina. */
+export const lampMix = (sheetX) => smooth(within(sheetX, LAMP_FROM, SPIN_TO));
 
 const IDENTITY = new Matrix4();
 const at = (x, y, z) => new Matrix4().makeTranslation(x, y, z);
@@ -72,7 +81,8 @@ function windowBay(st, M, [w0, w1]) {
  * @param {import('./geometry.js').Batch} st malha estática da fábrica (a máquina entra nela)
  * @param {import('three').Object3D} parent
  * @param {Record<string, import('three').Material>} M materiais por cor
- * @returns {{ spin: (p: number) => void }} gira os cilindros conforme o progresso `p`; não aloca
+ * @returns {{ update: (p: number) => void }} gira os cilindros e acende a lâmpada conforme o
+ *   progresso `p`; não aloca
  */
 export function buildMachineA(st, parent, M) {
   const [y0, y1] = WINDOW_Y;
@@ -98,12 +108,14 @@ export function buildMachineA(st, parent, M) {
   windowBay(st, M, printWindow);
   windowBay(st, M, cutWindow);
 
-  // duto sobre o capô, torre de luz e grelha
+  // duto sobre o capô, torre da lâmpada e grelha
   st.cyl(M.dark2, -4.2, 1.53, -0.4, 0.09, 0.34, 'y', 16);
   st.cyl(M.dark, -4.2, 1.71, -0.4, 0.105, 0.03, 'y', 16);
   st.cyl(M.dark2, -5.0, 1.49, 0.88, 0.02, 0.26, 'y', 8);
-  st.cyl(M.forest, -5.0, 1.68, 0.88, 0.05, 0.12, 'y', 12);
   st.cyl(M.dark, -5.0, 1.75, 0.88, 0.056, 0.02, 'y', 12);
+  const lampMesh = new Batch(); // a lâmpada tem material próprio: muda de cor sem tocar no resto
+  lampMesh.cyl(M.lamp, -5.0, 1.68, 0.88, 0.05, 0.12, 'y', 12);
+  lampMesh.build(parent, false);
   for (const y of [0.56, 0.6, 0.64, 0.68, 0.72]) {
     st.box(M.dark, -4.1, -3.5, y, y + 0.012, 1.0, 1.01, FLAT);
   }
@@ -140,10 +152,18 @@ export function buildMachineA(st, parent, M) {
     cross(m, c, 0.17);
   });
 
+  let lastMix = -1;
   return {
-    spin(p) {
-      const travel = spinTravel(lin(p, SHEET_X));
+    update(p) {
+      const sheetX = lin(p, SHEET_X);
+      const travel = spinTravel(sheetX);
       for (const s of spinners) s.object.rotation.z = (s.dir * travel) / s.radius;
+      const mix = lampMix(sheetX);
+      if (mix !== lastMix) {
+        lastMix = mix;
+        M.lamp.color.lerpColors(AMBER, GREEN, mix);
+        M.lamp.emissive.copy(M.lamp.color).multiplyScalar(LAMP_GLOW);
+      }
     },
   };
 }
