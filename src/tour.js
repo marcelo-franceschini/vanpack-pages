@@ -1,5 +1,5 @@
 // Tour automático: rola a página sozinho pelos 5 capítulos, com pausas curtas para ler, e para no fim
-// da história (~16 s). A animação 3D continua ligada ao scroll, então cartões e cena ficam
+// da história (~18 s). A animação 3D continua ligada ao scroll, então cartões e cena ficam
 // sincronizados e a pessoa pode pegar o controle a qualquer instante (qualquer toque, roda do mouse,
 // tecla ou scroll interrompe). Interrompido, o tour nunca retoma sozinho.
 
@@ -8,6 +8,7 @@ const CENTERS = [0, 0.25, 0.5, 0.75, 1];
 const FIRST_HOLD = 0; // sem espera: o primeiro capítulo já começa andando
 const HOLD = 2500;
 const MOVE = 2000; // por quarto do percurso
+const FIRST_MOVE = 4000; // do 1º ao 2º capítulo, mais devagar: a chapa entra na máquina e sai impressa
 const LAST_MOVE = 2500;
 const MIN_MOVE = 800;
 
@@ -57,7 +58,8 @@ export function createTour({ getProgress, yAt, onState, onEvent, isUi = () => fa
     }
     for (const c of CENTERS) {
       if (c <= cur + 1e-6) continue;
-      const ms = c === 1 ? LAST_MOVE : MOVE * ((c - cur) / 0.25);
+      const perQuarter = c === CENTERS[1] ? FIRST_MOVE : MOVE;
+      const ms = c === 1 ? LAST_MOVE : perQuarter * ((c - cur) / 0.25);
       segs.push({ from: cur, to: c, ms: Math.max(MIN_MOVE, ms) });
       if (c < 1) segs.push({ hold: true, p: c, ms: HOLD });
       cur = c;

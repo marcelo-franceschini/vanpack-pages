@@ -116,14 +116,14 @@ describe('autoplay', () => {
     await context.close();
   });
 
-  test('a duração total do tour fica perto de 16 s (2,5 s de pausa e 2 s de trecho por capítulo)', async () => {
+  test('a duração total do tour fica perto de 18 s (2,5 s de pausa e 2 s de trecho por capítulo, 4 s do 1º ao 2º)', async () => {
     const { page, context } = await open();
     let elapsed = 0;
     while ((await tourState(page)) !== 'done' && elapsed < 60_000) {
       await advance(page, 500);
       elapsed += 500;
     }
-    assert.ok(elapsed > 14_000 && elapsed < 19_000, `durou ${elapsed} ms`);
+    assert.ok(elapsed > 16_000 && elapsed < 21_000, `durou ${elapsed} ms`);
     await context.close();
   });
 

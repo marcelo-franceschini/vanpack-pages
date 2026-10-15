@@ -88,8 +88,8 @@ em torno de cada centro.
 Começa no instante em que a cena fica pronta (sem espera), se a página está no topo, sem `#hash`, sem
 `?tour=0`, sem movimento reduzido no sistema, com a aba visível e sem interação prévia. `?tour=1` força
 o tour mesmo com movimento reduzido (para testar). Sem pausa inicial: o 1º capítulo já começa andando;
-pausa de 2,5 s nos capítulos seguintes, 2 s entre capítulos (2,5 s no último): ~16 s no total, com
-curva quadrática. Termina em `p = 1` (a página fica com o scroll no fim da história, **não** segue para
+pausa de 2,5 s nos capítulos seguintes, 2 s entre capítulos (4 s do 1º ao 2º, onde a chapa entra na
+máquina, e 2,5 s no último): ~18 s no total, com curva quadrática. Termina em `p = 1` (a página fica com o scroll no fim da história, **não** segue para
 as seções seguintes) e o botão "Pedir orçamento" do cabeçalho pulsa. No F5 a página volta ao topo (o
 navegador restauraria o scroll e o tour não começaria); voltar e avançar mantêm a posição. Quando o tour
 não começa, o console diz o motivo (`[vanpack] autoplay não iniciou: …`).
