@@ -5,6 +5,8 @@ Landing page oficial da **Vanpack** (caixas de papelão sob medida e personaliza
 - **Manual da marca e diretrizes:** [`docs/manual-da-marca.md`](docs/manual-da-marca.md).
 - **Contratos, faixas do scroll, tokens e decisões da v4:** [`docs/notas-de-integracao-v4.md`](docs/notas-de-integracao-v4.md).
 - **Slogan:** "Do projeto à entrega".
+- **Passo a passo para ir ao ar com dados reais:** [`docs/go-live.md`](docs/go-live.md).
+- **Experimentos A/B** (regras, métrica, amostra e como ligar): [`docs/experimentos.md`](docs/experimentos.md).
 - **Assets oficiais em vetor:** [`public/brand/`](public/brand/).
 
 ---
@@ -39,6 +41,7 @@ Manutenção da marca (rodam à mão, não fazem parte do build):
 ```bash
 node scripts/brand.mjs   # regenera os SVGs de public/brand/, a fonte e src/brand/marks.js (precisa do uv)
 node scripts/icons.mjs   # regenera favicon, apple-touch-icon e icon-512 (logo do JSON-LD) a partir do símbolo
+npm run amostra -- 0.05 0.06   # tamanho de amostra por variante de um teste A/B
 npm run og               # regenera public/og.jpg (imagem de compartilhamento) a partir do 1º quadro
 ```
 
@@ -98,6 +101,8 @@ src/story.js               scroll → progresso (0…1), cartão ativo, cabeçal
 src/tour.js                Tour automático: rola a página pelos 5 capítulos e para no fim da história
 src/analytics.js           Medição: dataLayer + Umami Cloud (sem cookies, só na página publicada)
 src/vitals.js              Core Web Vitals reais (web-vitals, carregado com o navegador ocioso)
+src/experiments.js         Experimentos A/B (variante por visita no sessionStorage, ?exp_<nome>=B força)
+src/wizard.js              Assistente de orçamento da variante B do experimento quote_wizard
 build/csp.js               CSP por hash dos <style> (e o servidor da medição, se houver)
 politica-de-privacidade.html  2ª página: política de privacidade com os dados do .env
 src/render/stage.js        Liga o canvas ao render: Web Worker (OffscreenCanvas) ou thread principal
@@ -132,6 +137,7 @@ docs/                      Manual da marca e notas da v4
 - `tests/data-source.test.mjs`: nenhum dado do `.env` escrito à mão no código, o `.env` chega à página publicada e todo número visível vem da config.
 - `tests/faq.test.mjs`: FAQ por teclado (abre, fecha, foco visível, 44 px) e o evento `faq_open`.
 - `tests/site-url.test.mjs`: build em production com domínio próprio: canonical, Open Graph, JSON-LD, robots, sitemap e medição derivam todos da `VITE_SITE_URL`.
+- `tests/experiments.test.mjs` e `tests/wizard.test.mjs`: sorteio, persistência, data de término e variante forçada; o assistente de 3 passos (mensagem, validação, teclado, rótulos, contraste e celular).
 - `tests/tour.test.mjs`: início automático, percurso e parada no fim da história, interrupções (roda, tecla, clique, toque, scroll, aba oculta), `?tour=0`, `#hash`, movimento reduzido. Usa o relógio falso do Playwright.
 - `tests/layout.test.mjs`: cartão × cabeçalho × botão flutuante × dica sem sobreposição em 1440×900, 1366×768, 924×540, 720×450, 390×844 e 844×390, nos 5 capítulos; alvos de toque ≥ 44 px.
 - `tests/a11y.test.mjs`: estrutura, ordem e visibilidade do foco, cartões `inert`, movimento reduzido e contraste calculado nos estilos reais.
