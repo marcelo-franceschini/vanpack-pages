@@ -58,6 +58,18 @@ export const SHEET_X = [
   [0.63, TURNTABLE_X],
 ];
 
+/**
+ * Máquina A (impressão e corte): entrada e saída em x e os trechos da frente. As janelas mostram os
+ * cilindros; o miolo fechado esconde a troca da chapa lisa pela peça "herói" (PHASE.heroFromX).
+ */
+export const MACHINE_A = {
+  x0: -5.2,
+  x1: -2.5,
+  printWindow: [-4.9, -4.3],
+  closed: [-4.3, -3.3],
+  cutWindow: [-3.3, -2.8],
+};
+
 /** Faixas de `p` de cada fase (o miolo de cada capítulo é uma pausa da câmera). */
 export const PHASE = {
   heroFromX: -3.8, // a chapa sai da máquina de impressão e corte: entra a peça "herói"
