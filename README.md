@@ -1,78 +1,109 @@
 # Vanpack — Embalagens de Papelão Ondulado
 
-Landing page oficial da **Vanpack** (caixas de papelão sob medida e personalizadas, fábrica em Santo André-SP) com animação 3D interativa da linha de produção guiada pelo scroll. O foco central de conversão da página é a solicitação direta de orçamento pelo WhatsApp com a equipe técnica da fábrica.
+Landing page oficial da **Vanpack** (caixas de papelão sob medida e personalizadas, fábrica em Santo André-SP). Uma página, uma ação: pedir orçamento pelo WhatsApp. No topo, uma história em 5 capítulos mostra a fabricação de uma caixa numa cena 3D ligada ao scroll: a chapa entra na máquina, sai impressa e cortada, é dobrada e colada, vira caixa, é empilhada e segue no caminhão. A página pode rolar sozinha (tour automático) e a pessoa assume o controle a qualquer momento.
 
-- **Manual da marca e diretrizes:** consulte [`docs/manual-da-marca.md`](docs/manual-da-marca.md).
+- **Manual da marca e diretrizes:** [`docs/manual-da-marca.md`](docs/manual-da-marca.md).
+- **Contratos, faixas do scroll, tokens e decisões da v4:** [`docs/notas-de-integracao-v4.md`](docs/notas-de-integracao-v4.md).
 - **Slogan:** "Do projeto à entrega".
-- **Assets oficiais em vetor:** pasta [`public/brand/`](public/brand/) e [`assets/brand/`](assets/brand/).
+- **Assets oficiais em vetor:** [`public/brand/`](public/brand/) e [`assets/brand/`](assets/brand/).
 
 ---
 
 ## Comandos
 
-Requer Node.js 22.12+.
+Requer Node.js 22.12+. Os testes e as auditorias usam o Chrome do sistema (`CHROME_PATH`, padrão `/usr/bin/google-chrome-stable`) com WebGL por software.
 
 ```bash
 npm install
-npm run dev       # servidor de desenvolvimento local
-npm run build     # gera dist/ com hash de CSP e otimizações
-npm run preview   # serve o dist/ localmente para conferência
-npm run lint      # ESLint + Prettier (o mesmo rodado no CI)
-npm run format    # formata todos os arquivos com Prettier
-npm run poster    # regenera os pôsteres e imagem OG via Chrome Headless
+npm run dev            # servidor de desenvolvimento
+npm run build          # gera dist/ (CSP por hash, worker da cena, SVGs e fonte)
+npm run build:audit    # build de auditoria em dist-audit/ (expõe contadores do renderer)
+npm run preview        # serve o dist/ localmente
+npm run lint           # ESLint + Prettier (o mesmo do CI)
+npm run format         # formata tudo com o Prettier
+npm test               # build + build de auditoria + testes de navegador (Playwright)
+```
+
+Auditorias (medem; os orçamentos estão no cabeçalho de cada script):
+
+```bash
+npm run audit:bundle      # gzip/brotli por arquivo, JS inicial (≤ 165 KB gzip), maiores módulos
+npm run audit:scene       # draw calls e triângulos nos 5 centros (≤ 90 desktop, ≤ 60 celular)
+npm run audit:runtime     # tarefas longas e quadros ao rolar a história, com CPU 1× e 4×
+npm run audit:lighthouse  # Lighthouse mobile e desktop (mediana de 3 execuções; baixa via npx)
+npm run audit:capturas    # as 10 capturas em tamanho real, em docs/capturas/
 ```
 
 ---
 
-## Configurações Institucionais (`site.config.js` e `.env`)
+## Configurações institucionais (`site.config.js` e `.env`)
 
-Os dados do site são gerenciados de forma centralizada em `site.config.js` e suportam sobreposição por variáveis de ambiente:
+Os dados do site ficam em `site.config.js` e podem ser sobrescritos por variáveis de ambiente. O que não tem dado **não aparece** no HTML (nada de valor de exemplo):
 
-- `VITE_WHATSAPP`: número para contato via WhatsApp, no formato `55` + DDD + número (ex.: `5511912345678`).
-- `VITE_PHONE`: telefone fixo ou canal de voz. Se vazio, links e botões de chamada direta são omitidos.
-- `VITE_CNPJ`: CNPJ oficial da empresa. Se vazio, não é renderizado no rodapé nem polui o código.
-- `VITE_SITE_URL`: URL canônica pública do site (utilizada em Open Graph, canonical e sitemap).
+- `VITE_WHATSAPP`: número do WhatsApp, `55` + DDD + número (ex.: `5511912345678`). Vazio: o WhatsApp abre com a mensagem pronta e a pessoa escolhe o contato.
+- `VITE_PHONE`, `VITE_EMAIL`: contato (entram só no JSON-LD).
+- `VITE_CNPJ`, `VITE_STREET`, `VITE_CEP`, `VITE_HOURS`, `VITE_MAP_URL`: aparecem no rodapé quando preenchidos (CNPJ, endereço, horário e link do mapa).
+- `VITE_SITE_URL`: URL canônica pública, terminando em `/` (Open Graph, canonical e JSON-LD).
 
-No build, o plugin do Vite lê as configurações institucionais, valida o formato do WhatsApp, calcula os links seguros com mensagens predefinidas e injeta os dados estruturados no schema JSON-LD.
+No build, o plugin do Vite valida o WhatsApp, troca cada `data-wa` por um link `wa.me` com a mensagem pronta, preenche ou remove os campos `data-field` do rodapé e minifica o JSON-LD.
 
 ---
 
-## Publicação Contínua (GitHub Pages)
+## Publicação contínua (GitHub Pages)
 
-A cada push na branch `master`, o workflow `.github/workflows/deploy.yml` executa validação de lint, build dos assets e publicação para o GitHub Pages.
+A cada push na `master`, o workflow [`deploy.yml`](.github/workflows/deploy.yml) roda o lint, gera o build e publica. Os pull requests passam por [`ci.yml`](.github/workflows/ci.yml): lint, build e os testes de navegador.
 
 > [!IMPORTANT]
-> Em **Settings → Pages** do repositório no GitHub, selecione **Source: GitHub Actions**. Isso impede que o builder legado (Jekyll) sobrescreva o bundle compilado com o código-fonte cru.
+> Em **Settings → Pages**, selecione **Source: GitHub Actions**. Isso impede que o builder legado (Jekyll) publique o código-fonte cru.
 
 ---
 
-## Arquitetura da Solução
+## Arquitetura
 
+```text
+index.html                 Página única: CSS inline (tokens da marca), HTML e metadados
+site.config.js             Dados institucionais (vazio = não aparece)
+vite.config.js             Plugins: links do WhatsApp/rodapé/JSON-LD e CSP por hash dos <style>
+src/main.js                Orquestra: história ↔ cena, tour automático, medição de uso
+src/story.js               scroll → progresso (0…1), cartão ativo, cabeçalho, dica e botão flutuante
+src/tour.js                Tour automático: rola a página pelos 5 capítulos e para no fim da história
+src/analytics.js           Medição só por dataLayer (nenhum script de terceiros)
+src/render/stage.js        Liga o canvas ao render: Web Worker (OffscreenCanvas) ou thread principal
+src/render/worker.js       Ponto de entrada do worker
+src/render/controller.js   Loop de render sob demanda, suavização, qualidade adaptativa, contexto perdido
+src/scene/                 Cena 3D procedural: factory/truck/hero/timeline/camera/geometry/textures
+src/brand/marks.js         Caminhos da marca em curvas (gerado por scripts/brand.py)
+public/brand/              SVGs oficiais da marca (Floresta, Carvão, Papel e negativos)
+public/fonts/              Archivo (WOFF2, pesos 400 a 900)
+scripts/audit/             Auditorias: bundle, cena, runtime, Lighthouse e capturas
+tests/                     Testes de navegador (Playwright) e da cena (node:test)
+docs/                      Manual da marca, notas da v4 e capturas
 ```
-index.html                 Página principal, CSS inline com tokens oficiais, metadados e SVG sprite
-site.config.js             Configurações institucionais da marca e dados de contato
-docs/manual-da-marca.md    Manual de identidade visual e regras de uso da marca Vanpack v1.0
-src/main.js                Orquestração de scroll, tour automático, cartões e analytics
-src/pins.js                Anotações didáticas flutuantes (callout pins) das máquinas na cena 3D
-src/route.js               Barra de navegação passo a passo com rota tracejada e caminhão
-src/tour.js                Tour automático suave com aceleração, pausas didáticas e controle do usuário
-src/brand/marks.js         Vetores e traçado procedurais da marca oficial em canvas
-src/render/stage.js        Inicializador do estágio 3D em Web Worker (com fallback inline)
-src/render/worker.js       Execução de Three.js fora da thread principal
-src/render/controller.js   Loop de animação, qualidade adaptativa e micro-movimento ambiental (sway)
-src/scene/                 Modelagem 3D procedual: diorama de fábrica, máquinas, caixas e caminhão
-public/brand/              SVGs oficiais da marca em curvas (Floresta, Carvão e Negativo)
-public/fonts/              Fonte Archivo instanciada em WOFF2 (pesos 400 a 900)
-public/robots.txt          Instruções para indexadores de busca
-public/sitemap.xml         Mapa do site para SEO
-public/404.html            Página de erro 404 estilizada com a identidade visual da marca
-scripts/poster.mjs         Geração automatizada de WebP e imagens de compartilhamento social
-```
+
+### Como a história funciona
+
+- A cena 3D é uma função de `p` (0…1): o scroll da seção `.story` (560 svh, com o palco fixo na tela) vira `p`, e o render só desenha quando `p` muda.
+- O render roda num **Web Worker** com `OffscreenCanvas`, então a thread principal fica livre. Sem suporte (ou se o worker falhar), a mesma cena roda na thread principal; sem WebGL, ficam o fundo Papel, o símbolo e os cartões, que continuam legíveis e navegáveis.
+- O **tour automático** começa ~0,8 s depois de a cena ficar pronta (no topo, sem `#hash`, sem `?tour=0`, sem movimento reduzido): a página rola sozinha pelos capítulos, **a cena segue o scroll** e o tour para no fim da história (não segue para as seções seguintes), quando o botão "Pedir orçamento" do cabeçalho pulsa. Qualquer roda, toque, clique, tecla ou scroll interrompe, e ele nunca retoma sozinho.
+- A qualidade se adapta ao aparelho: densidade limitada (2× no desktop, 1,5× no celular e 4,5 MP), sombra em tempo real só no desktop, e, se os quadros passam de ~24 ms, a resolução cai e depois a sombra para (sem recompilar shaders).
 
 ---
 
-## Acessibilidade e Performance
+## Testes
 
-- **Lighthouse:** 100/100/100/100 em dispositivos móveis e desktop.
-- **Thread Principal Livre:** Three.js, compilação de shaders paralelos e renderização em `OffscreenCanvas` via Web Worker.
-- **Acessibilidade (WCAG AAA):** Contraste superior a 8:1 em todos os textos da marca, suporte a navegação completa por teclado, `prefers-reduced-motion` respeitado em todas as animações e alvos de toque $\ge 44 \times 44$ px.
+`npm test` gera o build de produção e o de auditoria e roda, em sequência:
+
+- `tests/tour.test.mjs`: início automático, percurso e parada no fim da história, interrupções (roda, tecla, clique, toque, scroll, aba oculta), `?tour=0`, `#hash`, movimento reduzido. Usa o relógio falso do Playwright.
+- `tests/layout.test.mjs`: cartão × cabeçalho × botão flutuante × dica sem sobreposição em 1440×900, 1366×768, 924×540, 720×450, 390×844 e 844×390, nos 5 capítulos; alvos de toque ≥ 44 px.
+- `tests/a11y.test.mjs`: estrutura, ordem e visibilidade do foco, cartões `inert`, movimento reduzido e contraste calculado nos estilos reais.
+- `tests/robustness.test.mjs`: sem WebGL, worker bloqueado (fallback na thread principal) e contexto WebGL perdido e restaurado.
+- `tests/brand.test.mjs`: paleta, tipografia, efeitos proibidos, ausência de raster/rota/pinos/formulário, SVGs da marca, CSP e requisições.
+- `tests/scene.test.mjs`: linha do tempo, câmera, estrada, geometria e piso.
+
+---
+
+## Marca, produto e segurança
+
+- Cores: só Floresta, Carvão, Papel e Kraft (o Kraft é o material, nunca texto ou botão); só Archivo; logotipo sempre em curvas, em negativo sobre Floresta, com respiro de ¼ do símbolo.
+- Sem imagem raster da cena, sem formulário, sem depoimentos, sem números ou alegações inventados.
+- CSP por `<meta>` com hash de cada `<style>` (`script-src 'self'`, sem CDN, sem `eval`); links externos com `rel="noopener"`.
