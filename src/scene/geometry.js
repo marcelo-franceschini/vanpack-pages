@@ -6,42 +6,94 @@ import {
   BufferGeometry,
   Color,
   CylinderGeometry,
-  ExtrudeGeometry,
   Float32BufferAttribute,
   Matrix4,
   Mesh,
-  Shape,
   SRGBColorSpace,
+  Vector3,
 } from 'three';
 import { ROAD, TRUCK_X0 } from './constants.js';
 import { smooth } from './math.js';
 
-/** Caixa com as arestas chanfradas (cai para BoxGeometry quando é fina demais para chanfrar). */
-function chamferBox(w, h, d, c) {
+const CHAMFER = 0.9; // cateto do chanfro da seção, em múltiplos do chanfro `c`
+const OFFSET_CORNER = 2 - Math.SQRT2; // deslocar um canto de 45° por `c` come 0,586·c de cateto
+
+/**
+ * Contorno octogonal (8 vértices, anti-horário visto de +z) de meias medidas hx × hy e chanfro `cut`.
+ */
+const octagon = (hx, hy, cut) => [
+  [hx - cut, -hy],
+  [hx, -hy + cut],
+  [hx, hy - cut],
+  [hx - cut, hy],
+  [-hx + cut, hy],
+  [-hx, hy - cut],
+  [-hx, -hy + cut],
+  [-hx + cut, -hy],
+];
+
+/**
+ * Caixa w × h × d com todas as arestas chanfradas por `c` (cai para BoxGeometry quando é fina
+ * demais para chanfrar). É a mesma peça que um ExtrudeGeometry com bisel de 1 segmento, só que sem
+ * arrastar Shape, curvas e triangulação: um prisma octogonal com tampas chanfradas, sombreado
+ * por face (sem índice).
+ */
+export function chamferBox(w, h, d, c) {
   if (Math.min(w, h, d) < c * 3.2) return new BoxGeometry(w, h, d);
-  const hw = w / 2 - c;
-  const hh = h / 2 - c;
-  const k = c * 0.9;
-  const shape = new Shape();
-  shape.moveTo(-hw + k, -hh);
-  shape.lineTo(hw - k, -hh);
-  shape.lineTo(hw, -hh + k);
-  shape.lineTo(hw, hh - k);
-  shape.lineTo(hw - k, hh);
-  shape.lineTo(-hw + k, hh);
-  shape.lineTo(-hw, hh - k);
-  shape.lineTo(-hw, -hh + k);
-  shape.closePath();
-  const geometry = new ExtrudeGeometry(shape, {
-    depth: d - 2 * c,
-    bevelEnabled: true,
-    bevelThickness: c,
-    bevelSize: c,
-    bevelSegments: 1,
-    curveSegments: 1,
-    steps: 1,
-  });
-  geometry.translate(0, 0, -(d - 2 * c) / 2);
+  const cut = CHAMFER * c;
+  const cap = octagon(w / 2 - c, h / 2 - c, cut); // contorno das tampas
+  const body = octagon(w / 2, h / 2, cut + c * OFFSET_CORNER); // contorno do corpo
+  const zCap = d / 2;
+  const zBody = d / 2 - c;
+  const position = [];
+  const normal = [];
+  const a = new Vector3();
+  const b = new Vector3();
+  const n = new Vector3();
+  const centroid = new Vector3();
+  // O sólido é convexo e centrado na origem: toda face é orientada para fora.
+  const triangle = (p0, p1, p2) => {
+    a.subVectors(p1, p0);
+    b.subVectors(p2, p0);
+    n.crossVectors(a, b).normalize();
+    centroid.copy(p0).add(p1).add(p2);
+    const out = n.dot(centroid) >= 0;
+    if (!out) n.negate();
+    for (const p of out ? [p0, p1, p2] : [p0, p2, p1]) {
+      position.push(p.x, p.y, p.z);
+      normal.push(n.x, n.y, n.z);
+    }
+  };
+  const point = ([x, y], z) => new Vector3(x, y, z);
+  const quad = (p0, p1, p2, p3) => {
+    triangle(p0, p1, p2);
+    triangle(p0, p2, p3);
+  };
+  for (let i = 0; i < 8; i++) {
+    const j = (i + 1) % 8;
+    // tampas: leque a partir do vértice 0 (o contorno é convexo)
+    if (i > 0 && i < 7) {
+      triangle(point(cap[0], zCap), point(cap[i], zCap), point(cap[j], zCap));
+      triangle(point(cap[0], -zCap), point(cap[j], -zCap), point(cap[i], -zCap));
+    }
+    // bisel das duas tampas e lados do corpo
+    quad(point(cap[i], zCap), point(cap[j], zCap), point(body[j], zBody), point(body[i], zBody));
+    quad(
+      point(cap[j], -zCap),
+      point(cap[i], -zCap),
+      point(body[i], -zBody),
+      point(body[j], -zBody),
+    );
+    quad(
+      point(body[i], zBody),
+      point(body[j], zBody),
+      point(body[j], -zBody),
+      point(body[i], -zBody),
+    );
+  }
+  const geometry = new BufferGeometry();
+  geometry.setAttribute('position', new Float32BufferAttribute(position, 3));
+  geometry.setAttribute('normal', new Float32BufferAttribute(normal, 3));
   return geometry;
 }
 
