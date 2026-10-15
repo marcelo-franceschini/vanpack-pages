@@ -1,5 +1,6 @@
-// Liga o canvas da animação ao render: em um Web Worker (OffscreenCanvas) quando possível,
-// senão na thread principal. A página só envia o progresso do scroll e o tamanho.
+// Liga o canvas da animação ao render: em um Web Worker (OffscreenCanvas) quando possível, senão
+// na thread principal. A página só envia o progresso do scroll e o tamanho; o render devolve
+// "pronto", "erro" e perda/volta do contexto WebGL.
 
 const MOBILE = '(max-width: 760px), (pointer: coarse)';
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
@@ -7,13 +8,10 @@ const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
 /**
  * @param {HTMLElement} stage elemento `.stage` com um `<canvas>` dentro
  * @param {number} progress progresso inicial do scroll (0…1)
-/**
- * @param {HTMLElement} stage elemento `.stage` com um `<canvas>` dentro
- * @param {number} progress progresso inicial do scroll (0…1)
- * @param {{ onAnchors?: (list: Array<{ index: number, x: number, y: number, visible: boolean }>) => void }} [options]
- * @returns {{ setProgress(p: number): void, setSway(active: boolean): void, ready: Promise<boolean> }}
+ * @returns {{ setProgress(p: number): void, ready: Promise<boolean> }} `ready` resolve `false`
+ *   quando não há WebGL (a página fica com o fundo Papel, o símbolo e os cartões)
  */
-export function mountStage(stage, progress, { onAnchors } = {}) {
+export function mountStage(stage, progress) {
   const mobile = matchMedia(MOBILE).matches;
   const reducedQuery = matchMedia(REDUCED_MOTION);
   const pixelRatio = () => Math.min(devicePixelRatio || 1, mobile ? 1.5 : 2);
@@ -29,12 +27,15 @@ export function mountStage(stage, progress, { onAnchors } = {}) {
   let settle;
   const ready = new Promise((resolve) => (settle = resolve));
 
+  // `ready` mostra o canvas (fade); perdendo o contexto volta ao Papel com o símbolo até restaurar.
   const onEvent = (msg) => {
-    if (msg.type === 'ready') {
+    if (msg.type === 'ready' || msg.type === 'restored') {
       stage.classList.add('ready');
-      settle(true);
-    } else if (msg.type === 'anchors') {
-      onAnchors?.(msg.list);
+      if (msg.type === 'ready') settle(true);
+    } else if (msg.type === 'lost') {
+      stage.classList.remove('ready');
+    } else if (msg.type === 'stats') {
+      if (import.meta.env.MODE === 'audit') (window.__audit ??= {}).stats = msg;
     } else if (msg.type === 'error') fallback(msg.message);
   };
 
@@ -93,14 +94,15 @@ export function mountStage(stage, progress, { onAnchors } = {}) {
     send({ type: 'reduced', value: e.matches });
   });
 
+  if (import.meta.env.MODE === 'audit') {
+    (window.__audit ??= {}).loseContext = () => send({ type: 'audit-lose' });
+  }
+
   return {
     ready,
     setProgress(p) {
       state.progress = p;
       send({ type: 'progress', value: p });
-    },
-    setSway(active) {
-      send({ type: 'sway', value: active });
     },
   };
 }

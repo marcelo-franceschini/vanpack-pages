@@ -1,130 +1,139 @@
-// Linha do tempo da animação: o progresso p (0…1) do scroll define câmera e peças.
-import * as THREE from 'three';
+// Linha do tempo: dado o progresso `p` (0…1), posiciona a chapa/caixa, as aparas, o palete, a cinta,
+// a porta e o caminhão. As faixas de `p` estão em PHASE (constants.js).
+import { Euler, Matrix4, Quaternion, Vector3 } from 'three';
 import {
-  BH,
-  BOX_END,
-  DH,
-  DX,
-  FEED_X,
-  FX,
-  GH,
-  HEAD_REST,
-  LIFT,
-  PY,
-  SL,
-  STACK_Y,
-  T,
-  WR,
+  BOX,
+  PALLET_END_X,
+  PALLET_X,
+  PHASE,
+  RAIL_Y,
+  SCRAPS,
+  SCRAP_FALL,
+  SHEET_LENGTH,
+  SHEET_X,
+  SHEET_Y,
+  STACK_TOP,
 } from './constants.js';
+import { pathAt } from './geometry.js';
+import { clamp, lerp, lin, ramp, smooth, within } from './math.js';
 
-const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
-const ease = (t) => t * t * (3 - 2 * t);
-const seg = (p, a, b) => ease(clamp((p - a) / (b - a)));
-const lerp = (a, b, t) => a + (b - a) * t;
+const GLUE_NOZZLE_X = -0.73; // bocal de cola, em x
+const LIFT = 0.015; // a caixa sobe 15 mm ao chegar à mesa giratória
+const HOP_HEIGHT = 0.38; // altura do salto da mesa para o palete
+const DRIVE_DISTANCE = 9.5; // metros percorridos pelo caminhão na estrada
+const TRUCK_PIVOT = 2.1; // distância da traseira ao centro do eixo, em x
+const HIDDEN = 0.0001;
 
-// [progresso, posição da câmera, alvo]
-const CAMERA_KEYS = [
-  [0.0, [-8.6, 3.3, 6.4], [-5.5, 0.8, 0]],
-  [0.17, [-5.9, 3.0, 5.6], [-3.8, 0.75, 0]],
-  [0.34, [-3.3, 2.9, 4.1], [-2.45, 0.62, 0]],
-  [0.46, [-2.2, 3.2, 5.0], [-1.2, 0.7, 0]],
-  [0.56, [-1.0, 2.5, 4.3], [0.35, 0.95, 0]],
-  // Órbita suave ao redor da caixa pronta com desaceleração perceptível
-  [0.62, [0.1, 1.9, 3.2], [0.35, 0.95, 0]],
-  [0.68, [1.3, 1.85, 3.0], [0.35, 0.92, 0]],
-  [0.79, [1.7, 2.4, 5.2], [3.4, 1.05, 0]],
-  [0.87, [1.9, 2.3, 5.8], [4.0, 1.05, 0]],
-  // Em p = 1, o caminhão permanece 60–70% visível na via de saída da fábrica
-  [1.0, [4.2, 2.6, 7.6], [6.8, 1.15, 0]],
-];
+/**
+ * @param {object} parts
+ * @param {import('three').Mesh} parts.plain chapa lisa antes da máquina
+ * @param {ReturnType<import('./hero.js').createHero>} parts.hero
+ * @param {import('three').InstancedMesh} parts.scraps
+ * @param {import('three').Group} parts.load palete carregado
+ * @param {import('three').Group} parts.strap cinta do palete
+ * @param {import('three').Mesh} parts.loadBlob sombra falsa do palete
+ * @param {import('three').Group} parts.doorPivot
+ * @param {import('three').Group} parts.truck
+ * @param {import('three').Mesh} parts.truckBlob sombra falsa do caminhão
+ * @returns {(p: number) => void} aplica o progresso `p`; não aloca
+ */
+export function createTimeline({
+  plain,
+  hero,
+  scraps,
+  load,
+  strap,
+  loadBlob,
+  doorPivot,
+  truck,
+  truckBlob,
+}) {
+  const position = new Vector3();
+  const scale = new Vector3();
+  const quaternion = new Quaternion();
+  const euler = new Euler();
+  const matrix = new Matrix4();
+  const road = { x: 0, z: 0, a: 0 };
+  const glueEnd = BOX.F + BOX.H;
+  const scrapStartX = SCRAPS.map((scrap) => lin(scrap.t0, SHEET_X));
 
-const _pos = new THREE.Vector3();
-const _target = new THREE.Vector3();
+  return function update(p) {
+    // chapa: sai do alimentador, passa pelas máquinas e chega à mesa giratória
+    const sheetX = lin(p, SHEET_X);
+    plain.visible = sheetX < PHASE.heroFromX;
+    plain.position.set(sheetX, SHEET_Y - 0.004, -0.07);
+    hero.spin.visible = sheetX >= PHASE.heroFromX && p < PHASE.heroEnd;
 
-/** Posiciona a câmera em p; `distK` afasta a câmera em telas estreitas; `sway` aplica micro-balanço no repouso. Devolve o alvo. */
-export function placeCamera(camera, p, distK, swayX = 0, swayY = 0) {
-  let i = 0;
-  while (i < CAMERA_KEYS.length - 2 && p > CAMERA_KEYS[i + 1][0]) i++;
-  const [p0, a0, t0] = CAMERA_KEYS[i];
-  const [p1, a1, t1] = CAMERA_KEYS[i + 1];
-  const t = ease(clamp((p - p0) / (p1 - p0)));
-  _pos.set(lerp(a0[0], a1[0], t), lerp(a0[1], a1[1], t), lerp(a0[2], a1[2], t));
-  _target.set(lerp(t0[0], t1[0], t), lerp(t0[1], t1[1], t), lerp(t0[2], t1[2], t));
-  camera.position.copy(_pos.sub(_target).multiplyScalar(distK).add(_target));
-  if (swayX || swayY) {
-    camera.position.x += swayX;
-    camera.position.y += swayY;
-  }
-  camera.lookAt(_target);
-  return _target;
-}
+    // dobra enquanto atravessa a máquina de cola; depois abre, gira, fecha e salta para o palete
+    const fold = smooth(within(sheetX, PHASE.fold.fromX, PHASE.fold.toX));
+    const open = ramp(p, PHASE.open) * (1 - ramp(p, PHASE.close));
+    const hop = ramp(p, PHASE.hop);
+    const palletX = lerp(PALLET_X, PALLET_END_X, ramp(p, PHASE.slide));
+    const x = lerp(sheetX, palletX, hop);
+    const y =
+      lerp(RAIL_Y + LIFT * ramp(p, PHASE.lift), RAIL_Y + STACK_TOP, hop) +
+      HOP_HEIGHT * Math.sin(Math.PI * hop);
+    const yaw =
+      2 * Math.PI * ramp(p, PHASE.turn) -
+      0.3 * ramp(p, PHASE.wobble) +
+      0.3 * ramp(p, PHASE.turnBack);
+    hero.place(
+      x,
+      y,
+      yaw,
+      fold,
+      1 - open,
+      (Math.PI / 2) * smooth(open / 0.8),
+      ((50 * Math.PI) / 180) * smooth((open - 0.7) / 0.3),
+      (Math.PI / 2) * smooth((open - 0.1) / 0.7),
+    );
 
-/** Aplica o estado das peças animadas para o progresso p. */
-export function animate(p, { factory, blank, truck, spinners, mat, tex }) {
-  // Chapa: alimentador → impressoras (0,06–0,33) → corte e vinco → formadora → baú
-  let x;
-  if (p < 0.4) x = lerp(FEED_X, -2.45, seg(p, 0.06, 0.33));
-  else if (p < 0.67) x = lerp(-2.45, FX, seg(p, 0.4, 0.5));
-  else x = lerp(FX, BOX_END, seg(p, 0.67, 0.8));
-  const drive = clamp((p - 0.88) / 0.12);
-  const dx = drive * (0.35 * drive + 0.65) * 5.2;
-  const h = LIFT * seg(p, 0.53, 0.6);
-  blank.blank.position.set(x + (p > 0.8 ? dx : 0), PY + h, 0);
+    // cola: o fio acompanha o bocal
+    const glueStart = clamp(GLUE_NOZZLE_X - (sheetX - SHEET_LENGTH / 2), BOX.F, glueEnd);
+    const glueLength = glueEnd - glueStart;
+    hero.bead.visible = glueLength > 0.003 && p < PHASE.glueEnd;
+    hero.bead.scale.x = Math.max(glueLength, 0.001);
+    hero.bead.position.x = glueStart + glueLength / 2;
 
-  // As abas dobram enquanto a ventosa ergue o fundo.
-  const a = Math.asin(clamp(h / LIFT));
-  const [px, nx, pz, nz] = blank.pivots;
-  px.rotation.z = -a;
-  nx.rotation.z = a;
-  pz.rotation.x = a;
-  nz.rotation.x = -a;
+    // aparas: soltam da chapa no recolhimento e caem girando
+    const scrapsShown = p >= PHASE.scrapsFrom;
+    for (let i = 0; i < SCRAPS.length; i++) {
+      const scrap = SCRAPS[i];
+      const t = (p - scrap.t0) / SCRAP_FALL;
+      const fall = clamp(t);
+      if (scrapsShown) scale.set(scrap.w, 1, scrap.d);
+      else scale.setScalar(HIDDEN);
+      const from = lin(Math.min(p, scrap.t0), SHEET_X) - SHEET_LENGTH / 2 + scrap.w / 2;
+      const to = scrapStartX[i] - SHEET_LENGTH / 2 + scrap.w / 2 + scrap.vx;
+      position.set(
+        lerp(from, to, fall) + scrap.vx * fall,
+        SHEET_Y - 0.01 - 0.4 * fall * fall,
+        scrap.z,
+      );
+      euler.set(0.3 * fall * Math.sign(scrap.rot), 0, scrap.rot * fall * 0.5);
+      quaternion.setFromEuler(euler);
+      scraps.setMatrixAt(i, matrix.compose(position, quaternion, scale));
+    }
+    scraps.instanceMatrix.needsUpdate = true;
 
-  // Refiles caem depois da faca rotativa.
-  for (const { mesh, lx, lz } of blank.corners) {
-    const start = DX + BH / 2 - lx;
-    const f = clamp((x - start) / 0.3);
-    mesh.visible = f < 1;
-    mesh.position.set(lx - (f > 0 ? x - start : 0) + 0.1 * f, T / 2 - 0.5 * f * f, lz);
-    mesh.rotation.set(0.9 * f * Math.sign(lz), 0, -0.4 * f);
-  }
+    // palete, cinta e porta do baú
+    load.position.set(palletX, RAIL_Y, 0);
+    load.visible = p < PHASE.heroEnd;
+    loadBlob.position.x = palletX;
+    loadBlob.visible = load.visible;
+    const strapGrow = ramp(p, PHASE.strap);
+    strap.visible = strapGrow > 0.01;
+    strap.scale.setScalar(Math.max(strapGrow, 0.001));
+    doorPivot.scale.y = 0.03 + 0.97 * ramp(p, PHASE.door);
 
-  factory.stack.position.y = STACK_Y - T * clamp((x - (FEED_X + SL)) / 0.08);
-
-  // Cabeçote: desce, ergue o fundo junto com a chapa e volta ao repouso.
-  const dn = seg(p, 0.5, 0.53);
-  const up = seg(p, 0.6, 0.635);
-  const hy =
-    p < 0.53
-      ? lerp(HEAD_REST, PY + T, dn)
-      : p < 0.6
-        ? PY + T + h
-        : lerp(PY + T + LIFT, HEAD_REST, up);
-  factory.head.position.y = hy;
-  const rodTop = GH - 0.6;
-  const rodBottom = hy + 0.135;
-  factory.rod.scale.y = rodTop - rodBottom;
-  factory.rod.position.y = (rodTop + rodBottom) / 2;
-  const guideTop = GH - 0.64;
-  const guideBottom = hy + 0.085;
-  factory.guides.scale.y = guideTop - guideBottom;
-  factory.guides.position.y = (guideTop + guideBottom) / 2;
-
-  // Rolos e esteira acompanham o avanço da chapa.
-  const travel = Math.min(x, BOX_END) - FEED_X;
-  for (const [g, r, dir] of spinners) g.rotation.z = (dir * travel) / r;
-  tex.belt.offset.x = -travel / 0.25;
-
-  // Torre de sinalização: verde enquanto a linha roda, âmbar parada.
-  const run = p > 0.06 && p < 0.64;
-  mat.towerG.emissiveIntensity = run ? 2.2 : 0.05;
-  mat.towerA.emissiveIntensity = run ? 0.05 : 1.6;
-
-  // Porta fecha (0,79–0,86) e o caminhão parte (0,88–1).
-  const close = Math.max(0.02, seg(p, 0.79, 0.86));
-  truck.door.scale.y = close;
-  tex.slat.repeat.y = (close * DH) / 0.09;
-  truck.doorHandle.position.y = -DH * close + 0.05;
-  truck.truck.position.x = dx;
-  for (const w of truck.wheels) w.rotation.z = -dx / WR;
-  truck.body.rotation.z = 0.02 * Math.sin(Math.PI * clamp(drive * 2.5)) * (1 - drive);
+    // caminhão: parte pela estrada
+    const driven = DRIVE_DISTANCE * within(p, PHASE.drive[0], PHASE.drive[1]) ** 1.6;
+    pathAt(driven, road);
+    const cos = Math.cos(road.a);
+    const sin = Math.sin(road.a);
+    truck.position.set(road.x - TRUCK_PIVOT * cos, 0, road.z + TRUCK_PIVOT * sin);
+    truck.rotation.y = road.a;
+    truckBlob.position.set(truck.position.x, 0.007, truck.position.z);
+    truckBlob.rotation.y = road.a;
+  };
 }

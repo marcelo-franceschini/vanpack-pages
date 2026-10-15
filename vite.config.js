@@ -11,11 +11,44 @@ const decodeEntities = (s) =>
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&');
 
+const escapeHtml = (s) =>
+  String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+
+/** Valores do rodapé vindos de site.config.js; vazio = sem dado (o elemento sai do HTML). */
+function footerFields() {
+  const { address, slogan, hours, cnpj, mapUrl } = siteConfig;
+  const place = address.street
+    ? [
+        address.street,
+        `${address.city}-${address.state}`,
+        address.postalCode && `CEP ${address.postalCode}`,
+      ]
+        .filter(Boolean)
+        .join(' · ')
+    : '';
+  return {
+    slogan: slogan && escapeHtml(slogan),
+    endereco: place && escapeHtml(place),
+    horario: hours && escapeHtml(hours),
+    cnpj: cnpj && escapeHtml(cnpj),
+    mapa:
+      mapUrl && `<a href="${escapeHtml(mapUrl)}" target="_blank" rel="noopener">Ver no mapa</a>`,
+  };
+}
+
+// <tag … data-field="nome" …>miolo</tag>; o miolo nunca repete a tag (sem aninhamento).
+const FIELD = /<(\w+)([^>]*?)\sdata-field="([a-z]+)"([^>]*)>([\s\S]*?)<\/\1>\s*/g;
+
 /**
  * Escreve os links do WhatsApp e dados institucionais no HTML:
  * - `data-wa="mensagem"` vira `href="https://wa.me/<número>?text=…"`;
  * - Minifica o JSON-LD e acrescenta telefone/cnpj quando existirem;
- * - Oculta elementos marcados com `data-field` cujos valores estejam vazios em site.config.js.
+ * - Preenche os elementos `data-field` (slogan, endereco, horario, cnpj, mapa) com os valores de
+ *   site.config.js e remove do HTML os que não têm dado: nada é inventado nem fica vazio na página.
  */
 function siteDataPlugin(rawPhone = '') {
   const phone = (rawPhone || siteConfig.whatsapp || '').replace(/\D/g, '');
@@ -47,13 +80,15 @@ function siteDataPlugin(rawPhone = '') {
           },
         );
 
-        // Remove marcações com dados ausentes
-        if (!siteConfig.phone) {
-          result = result.replace(/<[^>]+data-field="phone"[\s\S]*?<\/[^>]+>\s*/g, '');
-        }
-        if (!siteConfig.cnpj) {
-          result = result.replace(/<[^>]+data-field="cnpj"[\s\S]*?<\/[^>]+>\s*/g, '');
-        }
+        const fields = footerFields();
+        result = result.replace(FIELD, (_, tag, before, name, after, inner) => {
+          const value = fields[name];
+          if (!value) return '';
+          const attrs = `${before}${after}`.replace(/\shidden(?=\s|$)/g, '');
+          const body = name === 'slogan' ? value : inner.replace('<dd></dd>', `<dd>${value}</dd>`);
+          return `<${tag}${attrs}>${body}</${tag}>\n`;
+        });
+        result = result.replace(/<dl class="foot-info">\s*<\/dl>\s*/, '');
 
         return result;
       },
