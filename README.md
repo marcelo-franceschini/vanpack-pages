@@ -44,16 +44,18 @@ npm run og               # regenera public/og.jpg (imagem de compartilhamento) a
 
 ---
 
-## Configurações institucionais (`site.config.js` e `.env`)
+## Dados da empresa (`.env`)
 
-Os dados do site ficam em `site.config.js` e podem ser sobrescritos por variáveis de ambiente. O que não tem dado **não aparece** no HTML (nada de valor de exemplo):
+Todo dado da empresa (CNPJ, telefone, WhatsApp, endereço, prazos…) vive só no `.env`, que é versionado: a fonte única do rodapé, do JSON-LD, dos links do WhatsApp, do `robots.txt` e do `sitemap.xml`. O [`.env.example`](.env.example) guarda os valores fictícios de demonstração e comenta cada chave; [`docs/go-live.md`](docs/go-live.md) explica como trocar tudo pelos dados reais editando **só o `.env`**. O que não tem dado **não aparece** no HTML (nada de valor de exemplo), e nenhum desses dados é escrito à mão no código (um teste confere).
 
-- `VITE_WHATSAPP`: número do WhatsApp, `55` + DDD + número (ex.: `5511912345678`). Vazio: o WhatsApp abre com a mensagem pronta e a pessoa escolhe o contato.
-- `VITE_PHONE`, `VITE_EMAIL`: contato (entram só no JSON-LD).
-- `VITE_CNPJ`, `VITE_STREET`, `VITE_CEP`, `VITE_HOURS`, `VITE_MAP_URL`: aparecem no rodapé quando preenchidos (CNPJ, endereço, horário e link do mapa).
-- `VITE_SITE_URL`: URL canônica pública, terminando em `/` (Open Graph, canonical e JSON-LD).
+- `VITE_DATA_MODE`: `demo` (dados fictícios: o HTML sai com `noindex` e o `robots.txt` bloqueia tudo) ou `production` (o build falha se faltar dado obrigatório, se o formato for inválido ou se sobrar valor fictício do `.env.example`; outro valor também falha).
+- `VITE_WHATSAPP` (obrigatório nos dois modos: `55` + DDD + número, ex.: `5511912345678`; o build nunca gera `wa.me/?text=…` sem número), `VITE_SITE_URL` (termina em `/`: canonical, Open Graph, JSON-LD, robots e sitemap).
+- Contato e endereço: `VITE_PHONE`, `VITE_PHONE_DISPLAY`, `VITE_EMAIL`, `VITE_CNPJ`, `VITE_LEGAL_NAME`, `VITE_STREET`, `VITE_DISTRICT`, `VITE_CITY`, `VITE_STATE`, `VITE_CEP`, `VITE_HOURS`, `VITE_HOURS_SCHEMA`, `VITE_MAP_URL`.
+- `VITE_FOUNDED_YEAR`: o "N anos de mercado" e o © são calculados dele (no build e de novo no navegador), então não precisam de edição anual.
+- Operacionais: `VITE_MIN_ORDER`, `VITE_LEAD_TIME_DAYS`, `VITE_SERVICE_AREA`, `VITE_RESPONSE_TIME`, `VITE_PAYMENT_METHODS`.
+- Medição sem cookies: `VITE_ANALYTICS_PROVIDER` (`umami` ou vazio), `VITE_ANALYTICS_SITE` e `VITE_ANALYTICS_ENDPOINT`.
 
-No build, o plugin do Vite valida o WhatsApp, troca cada `data-wa` por um link `wa.me` com a mensagem pronta, preenche ou remove os campos `data-field` do rodapé e minifica o JSON-LD.
+No build, o `site.config.js` monta a config a partir do `.env` (`createSiteConfig`), o `build/validate.js` confere a trava de go-live, o `build/render.js` escreve os dados no HTML (links `wa.me`, campos `data-field` do rodapé, trechos `data-need`, `{{variáveis}}`, JSON-LD e o `noindex` em demo) e o `build/files.js` gera `robots.txt` e `sitemap.xml`. `{{variável}}` vazia fora de um `data-need` é erro de build.
 
 ---
 
@@ -70,8 +72,13 @@ A cada push na `master`, o workflow [`deploy.yml`](.github/workflows/deploy.yml)
 
 ```text
 index.html                 Página única: CSS inline (tokens da marca), HTML e metadados
-site.config.js             Dados institucionais (vazio = não aparece)
-vite.config.js             Plugins: links do WhatsApp/rodapé/JSON-LD e CSP por hash dos <style>
+site.config.js             Marca e createSiteConfig(env): monta a config a partir do .env
+build/render.js            Escreve os dados no HTML (WhatsApp, rodapé, {{variáveis}}, JSON-LD, noindex)
+build/validate.js          Trava de go-live: demo × production
+build/files.js             robots.txt e sitemap.xml gerados da URL do site
+build/env.js               Leitor de .env fora do Vite (o .env.example)
+vite.config.js             Plugins: dados no HTML, robots/sitemap e CSP por hash dos <style>
+src/years.js               Anos de mercado e ano do © (build e navegador)
 src/main.js                Orquestra: história ↔ cena, tour automático, medição de uso
 src/story.js               scroll → progresso (0…1), cartão ativo, cabeçalho, dica e botão flutuante
 src/tour.js                Tour automático: rola a página pelos 5 capítulos e para no fim da história
@@ -101,6 +108,8 @@ docs/                      Manual da marca e notas da v4
 
 `npm test` gera o build de produção e o de auditoria e roda, em sequência:
 
+- `tests/site-config.test.mjs`: config, trava de go-live (demo × production), render com a config vazia, JSON-LD, robots e sitemap; puro, sem navegador.
+- `tests/data-source.test.mjs`: nenhum dado do `.env` escrito à mão no código, o `.env` chega à página publicada e todo número visível vem da config.
 - `tests/tour.test.mjs`: início automático, percurso e parada no fim da história, interrupções (roda, tecla, clique, toque, scroll, aba oculta), `?tour=0`, `#hash`, movimento reduzido. Usa o relógio falso do Playwright.
 - `tests/layout.test.mjs`: cartão × cabeçalho × botão flutuante × dica sem sobreposição em 1440×900, 1366×768, 924×540, 720×450, 390×844 e 844×390, nos 5 capítulos; alvos de toque ≥ 44 px.
 - `tests/a11y.test.mjs`: estrutura, ordem e visibilidade do foco, cartões `inert`, movimento reduzido e contraste calculado nos estilos reais.
