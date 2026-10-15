@@ -308,16 +308,17 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
       renderer.setPixelRatio(value);
     },
 
-    /** Liga/desliga a sombra em tempo real (sombras falsas continuam). */
+    /**
+     * Liga/desliga a sombra em tempo real (as sombras falsas continuam). Não recompila shaders: só
+     * a passada de sombra e o piso que a recebe saem do quadro, então serve para aliviar um aparelho
+     * que já está lento. Cenas criadas com `mobile` nascem sem sombra e ficam assim.
+     */
     setShadows(on) {
+      if (mobile) return;
       shadows = Boolean(on);
-      renderer.shadowMap.enabled = shadows;
-      sun.castShadow = shadows;
+      renderer.shadowMap.autoUpdate = shadows;
+      renderer.shadowMap.needsUpdate = shadows;
       applyShadowState();
-      scene.traverse((object) => {
-        if (!object.material) return;
-        for (const material of [].concat(object.material)) material.needsUpdate = true;
-      });
     },
 
     /** Contexto restaurado: reenvia as texturas desenhadas à GPU. */

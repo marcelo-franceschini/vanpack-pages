@@ -4,6 +4,11 @@
 
 const MOBILE = '(max-width: 760px), (pointer: coarse)';
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
+// Resolução do canvas: densidade da tela limitada a 2x (1,5x no celular) e a um teto de pixels, para
+// monitores 4K e janelas enormes não pesarem; abaixo disso a qualidade adaptativa assume.
+const MAX_DENSITY = { desktop: 2, mobile: 1.5 };
+const MAX_PIXELS = 4_500_000;
+const MIN_DENSITY = 0.75;
 
 /**
  * @param {HTMLElement} stage elemento `.stage` com um `<canvas>` dentro
@@ -14,12 +19,22 @@ const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
 export function mountStage(stage, progress) {
   const mobile = matchMedia(MOBILE).matches;
   const reducedQuery = matchMedia(REDUCED_MOTION);
-  const pixelRatio = () => Math.min(devicePixelRatio || 1, mobile ? 1.5 : 2);
+  const pixelRatio = (width, height) =>
+    Math.max(
+      MIN_DENSITY,
+      Math.min(
+        devicePixelRatio || 1,
+        mobile ? MAX_DENSITY.mobile : MAX_DENSITY.desktop,
+        Math.sqrt(MAX_PIXELS / Math.max(1, width * height)),
+      ),
+    );
+  const width = stage.clientWidth;
+  const height = stage.clientHeight;
   const state = {
     progress,
-    width: stage.clientWidth,
-    height: stage.clientHeight,
-    dpr: pixelRatio(),
+    width,
+    height,
+    dpr: pixelRatio(width, height),
     mobile,
     reduced: reducedQuery.matches,
   };
@@ -85,7 +100,7 @@ export function mountStage(stage, progress) {
     const { width, height } = entry.contentRect;
     state.width = Math.round(width);
     state.height = Math.round(height);
-    state.dpr = pixelRatio();
+    state.dpr = pixelRatio(state.width, state.height);
     send({ type: 'resize', width: state.width, height: state.height, dpr: state.dpr });
   }).observe(stage);
 

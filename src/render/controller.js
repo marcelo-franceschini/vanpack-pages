@@ -10,7 +10,6 @@ const SETTLED = 1e-4; // diferença de progresso abaixo da qual a cena "chegou"
 const SAMPLE_WINDOW_MS = 1000;
 const MIN_SAMPLES = 6;
 const SLOW_FRAME_MS = 24;
-const MIN_PIXEL_RATIO = 1;
 const PIXEL_RATIO_STEP = 0.25;
 
 // requestAnimationFrame existe em workers no Chrome/Firefox; senão, um relógio de 60 Hz.
@@ -52,6 +51,7 @@ export function createController(canvas, init, emit) {
   let lost = false;
   let last = 0;
   let pixelRatio = dpr;
+  const minPixelRatio = Math.min(1, dpr); // a qualidade adaptativa nunca sobe a resolução
   let shadows = !init.mobile;
   let sampledMs = 0;
   const samples = [];
@@ -98,8 +98,8 @@ export function createController(canvas, init, emit) {
     samples.length = 0;
     sampledMs = 0;
     if (median <= SLOW_FRAME_MS) return;
-    if (pixelRatio > MIN_PIXEL_RATIO) {
-      pixelRatio = Math.max(MIN_PIXEL_RATIO, pixelRatio - PIXEL_RATIO_STEP);
+    if (pixelRatio > minPixelRatio) {
+      pixelRatio = Math.max(minPixelRatio, pixelRatio - PIXEL_RATIO_STEP);
       scene.setPixelRatio(pixelRatio);
     } else if (shadows) {
       shadows = false;
@@ -146,7 +146,7 @@ export function createController(canvas, init, emit) {
           if (msg.width === width && msg.height === height && msg.dpr === dpr) break;
           if (msg.dpr !== dpr) {
             // mantém a redução já aplicada pela qualidade adaptativa
-            pixelRatio = Math.max(MIN_PIXEL_RATIO, msg.dpr - (dpr - pixelRatio));
+            pixelRatio = Math.max(Math.min(1, msg.dpr), msg.dpr - (dpr - pixelRatio));
             dpr = msg.dpr;
             scene.setPixelRatio(pixelRatio);
           }
