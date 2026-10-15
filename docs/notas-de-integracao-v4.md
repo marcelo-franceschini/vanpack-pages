@@ -83,6 +83,14 @@ em torno de cada centro.
 | 4 Caixa             | 0,60–0,82 | o tubo abre e gira na mesa, fecha e sobe na pilha do palete; cinta  | caixa aberta, marca de frente (0,75) |
 | 5 Entrega           | 0,82–1    | o palete entra no baú, a porta fecha, o caminhão parte pela estrada | caminhão ao longe na estrada (1)     |
 
+A máquina A (`src/scene/machine.js`, trechos em `MACHINE_A`) tem duas janelas na frente (+z) que
+mostram os cilindros de impressão (com a luva Floresta) e de corte. Os cilindros giram junto com a
+chapa, só enquanto ela passa pela máquina: giram só os marcadores (listras, luva, lâminas, cruz), em
+5 malhas à parte, e o miolo fica na malha mesclada da fábrica. O trecho fechado entre as janelas
+esconde a troca da chapa lisa pela peça "herói" (`PHASE.heroFromX`); um teste trava essa regra. A
+lâmpada de sinalização no topo é amarela e vira verde (um verde de sinalização, mais claro que a Floresta) enquanto a peça cortada e impressa sai da
+máquina (`lampMix`, função de `p`); é as duas únicas cores de acento da cena.
+
 ## 5. Tour automático (`src/tour.js`)
 
 Começa no instante em que a cena fica pronta (sem espera), se a página está no topo, sem `#hash`, sem
@@ -100,7 +108,7 @@ não começa, o console diz o motivo (`[vanpack] autoplay não iniciou: …`).
   papelão e a onda do divisor). Derivados só de Carvão/Papel/Floresta (mistura em oklab, calculada em
   hex no `:root` de `index.html`): `#0D3C2A`, `#454440` (texto secundário, 9,2:1 sobre Papel),
   `#ECE9E3`, `#DFDCD7`, `#D0CDC8`, `#2A5D47` (passos "Como pedir", 7,2:1 com texto Papel). Sem cor de
-  acento.
+  acento (a exceção é o amarelo e o verde de sinalização da lâmpada da máquina, na ilustração da linha de produção).
 - Tipografia: só Archivo (`public/fonts/archivo-latin.woff2`, 400–900). Tudo em `rem`.
 - Alvos de toque ≥ 44 px; foco visível de 3 px; quebras: `(max-width: 760px), (max-aspect-ratio: 1/1)`
   = celular (cartões embaixo); `(max-height: 700px)` em paisagem = compacto.

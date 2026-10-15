@@ -1,8 +1,10 @@
 // A linha de produção estática: alimentador, máquina de impressão e corte (A), vão com rolos e
 // recolhimento das aparas, máquina de dobra e cola (B), esteira de trilhos e mesa giratória. Tudo
-// é mesclado por material (um draw call por material).
+// é mesclado por material (um draw call por material); só os marcadores giratórios da máquina A
+// ficam em malhas à parte (machine.js).
 import { RAIL_Y, TURNTABLE_X } from './constants.js';
 import { Batch } from './geometry.js';
+import { buildMachineA } from './machine.js';
 
 const RAIL = RAIL_Y;
 const XT = TURNTABLE_X;
@@ -17,6 +19,7 @@ function rollerBed(st, M, xs, x0, x1) {
 /**
  * @param {import('three').Object3D} parent
  * @param {Record<string, import('three').Material>} M materiais por cor
+ * @returns {{ update: (p: number) => void }} gira os cilindros e acende a lâmpada da máquina A
  */
 export function buildFactory(parent, M) {
   const st = new Batch();
@@ -32,22 +35,8 @@ export function buildFactory(parent, M) {
     st.box(M.dark, x - 0.02, x + 0.02, 0.53, 1.0, z - 0.02, z + 0.02, 0.008);
   // entrada da máquina A: rolos, como na saída (primeiro rolo a 0,2 m do rolo grosso)
   rollerBed(st, M, [-5.4, -5.65, -5.9], -6.05, -5.25);
-  // máquina A — impressão e corte numa passada
-  const A0 = -5.2,
-    A1 = -2.5;
-  st.box(M.dark, A0 - 0.05, A1 + 0.05, 0, 0.12, -1.05, 1.05);
-  st.box(M.light2, A0, A1, 0.12, 0.77, -1.0, 1.0);
-  st.box(M.forest, A0 + 0.25, A1 - 0.25, 0.3, 0.44, 1.0, 1.012);
-  st.box(M.dark, A0 + 0.02, A1 - 0.02, 0.77, 0.93, -0.96, 0.96, 0.004);
-  st.box(M.light, A0, A1 - 0.6, 0.93, 1.36, -1.0, 1.0);
-  st.box(M.light2, A1 - 0.6, A1, 0.93, 0.98, -1.0, 1.0, 0.012);
-  st.box(M.light2, A0 + 0.6, A1 - 1.3, 1.36, 1.58, -0.8, 0.8);
-  st.box(M.dark, A1 - 1.2, A1 - 0.8, 1.36, 1.72, 0.45, 0.9);
-  st.box(M.light, A1 - 1.18, A1 - 0.82, 1.5, 1.66, 0.9, 0.912, 0.004);
-  for (const x of [A0 - 0.01, A1 + 0.01]) {
-    st.cyl(M.dark2, x, 0.775, 0, 0.065, 1.7);
-    st.cyl(M.dark2, x, 0.925, 0, 0.065, 1.7);
-  }
+  // máquina A — impressão e corte numa passada, com janelas e cilindros giratórios
+  const machine = buildMachineA(st, parent, M);
   // vão com rolos e recolhimento
   rollerBed(st, M, [-2.3, -2.05, -1.8, -1.55, -1.3], -2.45, -1.0);
   st.box(M.dark, -2.3, -1.7, 0, 0.04, -0.7, 0.7, 0.01);
@@ -82,4 +71,5 @@ export function buildFactory(parent, M) {
   // mesa giratória
   st.cyl(M.dark2, XT, RAIL + 0.008, 0, 0.64, 0.02, 'y', 40);
   st.build(parent);
+  return machine;
 }

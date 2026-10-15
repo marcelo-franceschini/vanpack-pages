@@ -95,6 +95,7 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
     kraft: lambert(PALETTE.kraft),
     kraftDark: lambert(PALETTE.kraftDark),
     glass: lambert(PALETTE.glass),
+    lamp: lambert(PALETTE.amber), // a cor muda com o progresso (machine.js)
     road: lambert(PALETTE.road),
     strap: lambert(PALETTE.dark2),
   };
@@ -133,7 +134,7 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
   // fábrica (estática) e a pilha de chapas do alimentador
   const world = new Group();
   scene.add(world);
-  buildFactory(world, M);
+  const machine = buildFactory(world, M);
   const edgeMap = track(edgeTexture());
   const edgeMaterial = track(new MeshLambertMaterial({ map: edgeMap }));
   // mesmo passo de camada da pilha do palete: com 8 mm o desenho da borda não chega a 2 px na tela
@@ -264,6 +265,7 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
   };
   const place = (p) => {
     update(p);
+    machine.update(p);
     rig.place(p);
     if (shadows) fitShadow(rig.target, rig.reach);
   };

@@ -2,9 +2,19 @@
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
-import { Color, Vector3 } from 'three';
-import { CAMERA, PHASE, SCRAPS, SHEET_X } from '../src/scene/constants.js';
+import { Color, Group, MeshLambertMaterial, Vector3 } from 'three';
+import {
+  CAMERA,
+  MACHINE_A,
+  PALETTE,
+  PHASE,
+  SCRAPS,
+  SHEET_LENGTH,
+  SHEET_X,
+} from '../src/scene/constants.js';
+import { buildFactory } from '../src/scene/factory.js';
 import { chamferBox, fadedFloor, pathAt } from '../src/scene/geometry.js';
+import { lampMix, spinTravel } from '../src/scene/machine.js';
 import { lin, ramp, smooth, within } from '../src/scene/math.js';
 
 test('a chapa avança sempre para a frente e as faixas de fase ficam em 0…1 e em ordem', () => {
@@ -113,6 +123,127 @@ test('piso opaco: Papel nas bordas, cor do piso no miolo', () => {
   assert.ok(near(at(-35, -28), paper), 'canto = Papel');
   assert.ok(near(at(-21, -14), floor), 'a 14 m da borda já é o piso inteiro');
   assert.equal(geometry.index.count % 3, 0);
+});
+
+test('a troca da chapa lisa pela peça herói acontece dentro do trecho fechado da máquina', () => {
+  const { printWindow, closed, cutWindow, x0, x1 } = MACHINE_A;
+  const half = SHEET_LENGTH / 2;
+  assert.ok(
+    PHASE.heroFromX - half >= closed[0],
+    'a cauda da chapa ainda está dentro do trecho fechado',
+  );
+  assert.ok(
+    PHASE.heroFromX + half <= closed[1],
+    'a ponta da chapa ainda está dentro do trecho fechado',
+  );
+  assert.equal(
+    printWindow[1],
+    closed[0],
+    'o trecho fechado começa onde a janela de impressão acaba',
+  );
+  assert.equal(cutWindow[0], closed[1], 'e termina onde a janela de corte começa');
+  assert.ok(printWindow[0] > x0 && cutWindow[1] < x1, 'as janelas ficam entre a entrada e a saída');
+});
+
+test('os cilindros da máquina só andam enquanto a chapa está nela', () => {
+  const half = SHEET_LENGTH / 2;
+  assert.equal(spinTravel(SHEET_X[0][1]), 0, 'chapa no alimentador: parado');
+  assert.equal(spinTravel(MACHINE_A.x0 - half), 0, 'a ponta chega ao primeiro aperto');
+  let last = 0;
+  for (let x = MACHINE_A.x0 - half; x <= MACHINE_A.x1 + half; x += 0.05) {
+    const travel = spinTravel(x);
+    assert.ok(travel >= last, 'nunca volta');
+    last = travel;
+  }
+  assert.ok(Math.abs(last - (MACHINE_A.x1 - MACHINE_A.x0 + SHEET_LENGTH)) < 0.06);
+  assert.equal(
+    spinTravel(MACHINE_A.x1 + half + 3),
+    spinTravel(MACHINE_A.x1 + half),
+    'depois, parado',
+  );
+});
+
+/** A fábrica montada num Group, com um material Lambert por cor, como em `createScene`. */
+function buildTestFactory() {
+  const M = Object.fromEntries(
+    [
+      'dark',
+      'dark2',
+      'mid',
+      'light2',
+      'light',
+      'white',
+      'forest',
+      'kraft',
+      'kraftDark',
+      'glass',
+      'lamp',
+    ].map((name) => [name, new MeshLambertMaterial()]),
+  );
+  const parent = new Group();
+  return { M, parent, machine: buildFactory(parent, M) };
+}
+
+test('máquina A: gira os cilindros no sentido da chapa, só dentro da fábrica, sem NaN', () => {
+  const { parent, machine } = buildTestFactory();
+  const spinners = parent.children.filter((child) => child.isGroup);
+  assert.equal(spinners.length, 5, 'impressão (3) e corte (2)');
+  parent.traverse((object) => {
+    for (const value of object.geometry?.attributes.position.array ?? []) {
+      assert.ok(Number.isFinite(value), 'geometria sem NaN');
+    }
+  });
+  machine.update(0);
+  assert.ok(
+    spinners.every((s) => s.rotation.z === 0),
+    'em p = 0 tudo parado',
+  );
+  machine.update(0.2);
+  const turns = spinners.map((s) => s.rotation.z);
+  assert.ok(
+    turns.every((angle) => angle !== 0 && Number.isFinite(angle)),
+    'em movimento',
+  );
+  assert.ok(
+    turns.some((a) => a > 0) && turns.some((a) => a < 0),
+    'em cima e embaixo, sentidos opostos',
+  );
+  machine.update(0.3);
+  const after = spinners.map((s) => s.rotation.z);
+  machine.update(1);
+  assert.deepEqual(
+    spinners.map((s) => s.rotation.z),
+    after,
+    'depois que a chapa sai, nada mais gira',
+  );
+});
+
+test('a lâmpada da máquina é amarela até a peça cortada chegar à saída e fica verde depois', () => {
+  const half = SHEET_LENGTH / 2;
+  assert.equal(lampMix(SHEET_X[0][1]), 0, 'chapa no alimentador: amarela');
+  assert.equal(lampMix(MACHINE_A.x1 - half), 0, 'a ponta da peça chega à saída: ainda amarela');
+  assert.equal(lampMix(MACHINE_A.x1 + half), 1, 'a peça saiu inteira: verde');
+  let last = 0;
+  for (let x = MACHINE_A.x1 - half; x <= MACHINE_A.x1 + half; x += 0.02) {
+    const mix = lampMix(x);
+    assert.ok(mix >= last, 'só avança, sem voltar');
+    last = mix;
+  }
+
+  const { M, machine } = buildTestFactory();
+  const amber = new Color(PALETTE.amber);
+  const green = new Color(PALETTE.signalGreen);
+  const near = (a, b) => Math.abs(a.r - b.r) + Math.abs(a.g - b.g) + Math.abs(a.b - b.b) < 1e-6;
+  machine.update(0);
+  assert.ok(near(M.lamp.color, amber), 'em p = 0: amarela');
+  machine.update(0.2);
+  assert.ok(near(M.lamp.color, amber), 'a chapa ainda está dentro da máquina: amarela');
+  machine.update(0.3);
+  assert.ok(near(M.lamp.color, green), 'a peça saiu: verde');
+  machine.update(1);
+  assert.ok(near(M.lamp.color, green), 'e fica verde até o fim');
+  machine.update(0);
+  assert.ok(near(M.lamp.color, amber), 'rolar para trás: volta a amarela');
 });
 
 test('a cena não toca no DOM (roda em Web Worker): sem document, window, navigator nem rAF', () => {

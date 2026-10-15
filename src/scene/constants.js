@@ -2,7 +2,10 @@
 // (da esquerda para a direita), y é a altura e z a largura. Tudo que depende do progresso `p`
 // (0…1, o scroll da história) está nas tabelas deste arquivo.
 
-/** Só Carvão/Papel derivados + Floresta + Kraft (manual da marca §2); sem cor de acento. */
+/**
+ * Só Carvão/Papel derivados + Floresta + Kraft (manual da marca §2); sem cor de acento. Única exceção:
+ * o amarelo e o verde da lâmpada de sinalização da máquina (o manual reserva amarelo à ilustração da linha).
+ */
 export const KRAFT = '#b78c5c';
 export const KRAFT_INNER = '#cfa978'; // face interna do papelão
 export const PALETTE = {
@@ -19,6 +22,8 @@ export const PALETTE = {
   kraftDark: '#9a7447',
   road: '#5a574f',
   glass: '#9c9788',
+  amber: '#e3b23c', // lâmpada de sinalização da máquina A: aguardando a peça sair
+  signalGreen: '#2fbf6a', // a mesma lâmpada: peça cortada e impressa pronta
 };
 
 /** Caixa: painéis longos, painéis curtos, altura e abas. */
@@ -57,6 +62,18 @@ export const SHEET_X = [
   [0.61, 2.0],
   [0.63, TURNTABLE_X],
 ];
+
+/**
+ * Máquina A (impressão e corte): entrada e saída em x e os trechos da frente. As janelas mostram os
+ * cilindros; o miolo fechado esconde a troca da chapa lisa pela peça "herói" (PHASE.heroFromX).
+ */
+export const MACHINE_A = {
+  x0: -5.2,
+  x1: -2.5,
+  printWindow: [-4.9, -4.3],
+  closed: [-4.3, -3.3],
+  cutWindow: [-3.3, -2.8],
+};
 
 /** Faixas de `p` de cada fase (o miolo de cada capítulo é uma pausa da câmera). */
 export const PHASE = {
