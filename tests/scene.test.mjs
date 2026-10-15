@@ -232,7 +232,7 @@ test('a lâmpada da máquina é amarela até a peça cortada chegar à saída e 
 
   const { M, machine } = buildTestFactory();
   const amber = new Color(PALETTE.amber);
-  const green = new Color(PALETTE.forest);
+  const green = new Color(PALETTE.signalGreen);
   const near = (a, b) => Math.abs(a.r - b.r) + Math.abs(a.g - b.g) + Math.abs(a.b - b.b) < 1e-6;
   machine.update(0);
   assert.ok(near(M.lamp.color, amber), 'em p = 0: amarela');

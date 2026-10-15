@@ -25,7 +25,7 @@ export const spinTravel = (sheetX) => clamp(sheetX, SPIN_FROM, SPIN_TO) - SPIN_F
 const LAMP_FROM = A1 - SHEET_LENGTH / 2; // a ponta da peça cortada e impressa chega à saída
 const LAMP_GLOW = 0.4; // fração da cor que a lâmpada emite (parece acesa, com a luz da cena)
 const AMBER = new Color(PALETTE.amber);
-const GREEN = new Color(PALETTE.forest);
+const GREEN = new Color(PALETTE.signalGreen);
 
 /** 0 = lâmpada amarela, 1 = verde: vira enquanto a peça cortada e impressa sai da máquina. */
 export const lampMix = (sheetX) => smooth(within(sheetX, LAMP_FROM, SPIN_TO));

@@ -4,7 +4,7 @@
 
 /**
  * Só Carvão/Papel derivados + Floresta + Kraft (manual da marca §2); sem cor de acento. Única exceção:
- * o amarelo da lâmpada de sinalização da máquina (o manual reserva amarelo à ilustração da linha).
+ * o amarelo e o verde da lâmpada de sinalização da máquina (o manual reserva amarelo à ilustração da linha).
  */
 export const KRAFT = '#b78c5c';
 export const KRAFT_INNER = '#cfa978'; // face interna do papelão
@@ -22,7 +22,8 @@ export const PALETTE = {
   kraftDark: '#9a7447',
   road: '#5a574f',
   glass: '#9c9788',
-  amber: '#e3b23c', // só a lâmpada de sinalização da máquina A
+  amber: '#e3b23c', // lâmpada de sinalização da máquina A: aguardando a peça sair
+  signalGreen: '#2fbf6a', // a mesma lâmpada: peça cortada e impressa pronta
 };
 
 /** Caixa: painéis longos, painéis curtos, altura e abas. */
