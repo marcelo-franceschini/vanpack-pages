@@ -266,6 +266,15 @@ describe('build: CSP, requisições e marca na página', () => {
     await context.close();
   });
 
+  test('a página publicada não tem <form> nem controle de formulário (só o assistente da variante B, por JS)', () => {
+    for (const file of ['dist/index.html', 'dist/politica-de-privacidade.html']) {
+      assert.ok(
+        !/<(form|input|select|textarea)\b/i.test(read(file)),
+        `${file} tem controle estático`,
+      );
+    }
+  });
+
   test('sem travessão longo no texto visível nem nos atributos (title, meta, aria-label)', () => {
     for (const file of ['dist/index.html', 'dist/404.html']) {
       const page = read(file)
