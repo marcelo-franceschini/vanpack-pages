@@ -3,29 +3,19 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-    <title>Vanpack — Caixas de papelão sob medida, com a sua marca</title>
-    <meta
-      name="description"
-      content="Caixas de papelão ondulado sob medida, com a sua marca impressa. Fábrica em Santo André-SP. Peça seu orçamento pelo WhatsApp."
-    />
+    <title>{{title}}</title>
+    <meta name="description" content="{{description}}" />
     <meta name="theme-color" content="#FBF8F2" />
     <meta name="color-scheme" content="light" />
     <link rel="canonical" href="%VITE_SITE_URL%" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/manifest.webmanifest" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="pt_BR" />
     <meta property="og:site_name" content="Vanpack" />
-    <meta
-      property="og:title"
-      content="Vanpack — Caixas de papelão sob medida, do projeto à entrega"
-    />
-    <meta
-      property="og:description"
-      content="Caixas de papelão ondulado sob medida e com a sua marca impressa. Peça seu orçamento pelo WhatsApp."
-    />
+    <meta property="og:title" content="{{title}}" />
+    <meta property="og:description" content="{{description}}" />
     <meta property="og:url" content="%VITE_SITE_URL%" />
     <meta property="og:image" content="%VITE_SITE_URL%og.jpg" />
     <meta property="og:image:width" content="1200" />
@@ -35,6 +25,8 @@
       content="Linha de produção da Vanpack transformando chapas de papelão em caixas impressas."
     />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{{title}}" />
+    <meta name="twitter:description" content="{{description}}" />
     <link
       rel="preload"
       href="/fonts/archivo-latin.woff2"
@@ -43,23 +35,9 @@
       crossorigin
       fetchpriority="high"
     />
+    <!-- JSON-LD montado inteiro em build/render.js a partir do .env -->
     <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "LocalBusiness",
-        "name": "VanPack Embalagens",
-        "alternateName": "Vanpack",
-        "description": "Fábrica de caixas de papelão ondulado personalizadas: sob medida e com a marca do cliente impressa.",
-        "url": "%VITE_SITE_URL%",
-        "image": "%VITE_SITE_URL%og.jpg",
-        "logo": "%VITE_SITE_URL%icon-512.png",
-        "address": {
-          "@type": "PostalAddress",
-          "addressLocality": "Santo André",
-          "addressRegion": "SP",
-          "addressCountry": "BR"
-        }
-      }
+      {}
     </script>
     <style>
       @font-face {
@@ -442,6 +420,13 @@
         gap: 0.75rem;
         margin-top: 1.75rem;
       }
+      /* microcopy de risco ao lado do botão: resposta, sem compromisso, atendimento humano */
+      .card .cta-note {
+        margin-top: 0.875rem;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        line-height: 1.35;
+      }
       .seals {
         display: flex;
         flex-wrap: wrap;
@@ -505,7 +490,9 @@
           padding: 0 1.25rem;
         }
         .seals,
-        .scrollcue {
+        .scrollcue,
+        .optional,
+        .cta-note {
           display: none;
         }
       }
@@ -556,7 +543,8 @@
           flex: 1 1 100%;
         }
         .seals,
-        .scrollcue {
+        .scrollcue,
+        .optional {
           display: none;
         }
       }
@@ -587,6 +575,38 @@
         height: 1.25rem;
         color: var(--kraft);
       }
+      /* faixa de confiança logo depois da história: dados verificáveis da empresa */
+      .trust {
+        background: var(--tint);
+        padding: 0.5rem 0;
+      }
+      .trust-list {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0 1.75rem;
+        font: 600 0.9375rem/1.3 var(--font);
+        color: var(--carvao);
+      }
+      .trust-list li {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-height: 2.75rem;
+      }
+      .trust-list li::before {
+        content: '';
+        flex: none;
+        width: 0.375rem;
+        height: 0.375rem;
+        background: var(--floresta);
+      }
+      .trust-list a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.75rem;
+        font-weight: 700;
+      }
       .grid3 {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -615,6 +635,160 @@
         line-height: 1.55;
         color: var(--carvao-muted);
       }
+      /* o que fabricamos: dados operacionais e modelos */
+      .facts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+        gap: 1rem 1.5rem;
+        margin-bottom: 2rem;
+      }
+      .facts li {
+        padding-left: 1rem;
+        border-left: 0.25rem solid var(--floresta);
+        font-size: 1.125rem;
+        line-height: 1.35;
+      }
+      .facts b {
+        display: block;
+        margin-bottom: 0.25rem;
+        font: 700 0.875rem/1.2 var(--font);
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--carvao-muted);
+      }
+      .models {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+        gap: 1.25rem;
+      }
+      .model {
+        display: flex;
+        flex-direction: column;
+        padding: clamp(1.5rem, 3vw, 2rem);
+        border-radius: 0.5rem;
+        background: var(--tint);
+      }
+      .model h3 {
+        margin-bottom: 0.625rem;
+        font-size: 1.375rem;
+        font-weight: 800;
+        letter-spacing: -0.015em;
+        line-height: 1.15;
+      }
+      .model p {
+        flex: 1;
+        line-height: 1.5;
+        color: var(--carvao-muted);
+      }
+      .model .btn {
+        align-self: flex-start;
+        min-height: 2.75rem;
+        margin-top: 1.25rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.9375rem;
+        line-height: 1.2;
+        white-space: normal;
+      }
+
+      /* clientes: só prova autorizada (ou exemplo, em demo) */
+      .proofs {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+        gap: 1.25rem;
+      }
+      .proof {
+        margin: 0;
+        padding: clamp(1.5rem, 3vw, 2rem);
+        border-radius: 0.5rem;
+        background: var(--tint);
+      }
+      .proof-quote {
+        font-size: 1.25rem;
+        font-weight: 600;
+        line-height: 1.45;
+      }
+      .proof figcaption {
+        margin-top: 1rem;
+        font: 700 0.9375rem/1.3 var(--font);
+        color: var(--carvao-muted);
+      }
+      .tag {
+        display: inline-block;
+        margin-left: 0.5rem;
+        padding: 0.125rem 0.5rem;
+        border-radius: 0.25rem;
+        background: var(--papel);
+        color: var(--carvao);
+        font: 700 0.75rem/1.4 var(--font);
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+      .logos {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1.5rem 2.5rem;
+        margin-top: 2rem;
+      }
+      .rating a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.75rem;
+        margin-top: 1.5rem;
+        font-weight: 700;
+      }
+
+      /* perguntas frequentes */
+      .faq {
+        max-width: 52rem;
+        border-bottom: 1px solid var(--tint-2);
+      }
+      .faq-item {
+        border-top: 1px solid var(--tint-2);
+      }
+      .faq-item summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        min-height: 3.5rem;
+        padding: 0.5rem 0;
+        font-size: 1.1875rem;
+        font-weight: 700;
+        line-height: 1.3;
+        cursor: pointer;
+        list-style: none;
+      }
+      .faq-item summary::-webkit-details-marker {
+        display: none;
+      }
+      .faq-item summary::after {
+        content: '+';
+        flex: none;
+        font-size: 1.75rem;
+        font-weight: 600;
+        line-height: 1;
+        color: var(--floresta);
+      }
+      .faq-item[open] summary::after {
+        content: '\2212';
+      }
+      .faq-item p {
+        max-width: 44rem;
+        padding-bottom: 1.25rem;
+        font-size: 1.125rem;
+        line-height: 1.55;
+        color: var(--carvao-muted);
+      }
+      .faq-more {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem 1.25rem;
+        margin-top: 2rem;
+        font-weight: 600;
+      }
+
       @media (max-width: 860px) {
         .grid3 {
           grid-template-columns: minmax(0, 1fr);
@@ -649,8 +823,135 @@
         max-width: 34rem;
         margin-bottom: 2rem;
       }
+      .cta .alt {
+        margin-top: 0.5rem;
+        font-size: 1rem;
+      }
+      .cta .alt a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.75rem;
+        color: var(--papel);
+        font-weight: 700;
+      }
+      .cta .cta-note {
+        margin-top: 1rem;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        line-height: 1.35;
+        color: var(--papel);
+      }
       .cta :focus-visible {
         outline-color: var(--papel);
+      }
+
+      /* assistente de orçamento (experimento quote_wizard, variante B): montado por src/wizard.js */
+      [data-exp_quote_wizard='B'] .cta .wrap {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      [data-exp_quote_wizard='B'] .how {
+        display: none;
+      }
+      .wizard {
+        display: grid;
+        gap: 1rem;
+        max-width: 34rem;
+      }
+      .wiz-progress {
+        font: 700 0.875rem/1.2 var(--font);
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+      .wiz-step {
+        display: grid;
+        gap: 0.75rem;
+      }
+      .wiz-step:focus {
+        outline: none;
+      }
+      .wizard fieldset {
+        display: grid;
+        gap: 0.625rem;
+        min-width: 0;
+        margin: 0;
+        padding: 0;
+        border: 0;
+      }
+      .wizard legend {
+        margin-bottom: 0.5rem;
+        padding: 0;
+        font-size: 1.375rem;
+        font-weight: 800;
+        line-height: 1.2;
+      }
+      .wiz-title {
+        font-size: 1.375rem;
+        font-weight: 800;
+        line-height: 1.2;
+      }
+      .wiz-opt {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-height: 3rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        background: var(--on-floresta);
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .wiz-opt input {
+        flex: none;
+        width: 1.25rem;
+        height: 1.25rem;
+        accent-color: var(--papel);
+      }
+      .wiz-field {
+        display: grid;
+        gap: 0.25rem;
+        font-weight: 600;
+      }
+      .wiz-field input {
+        min-height: 3rem;
+        padding: 0 0.75rem;
+        border: 0.1875rem solid transparent;
+        border-radius: 0.375rem;
+        background: var(--papel);
+        color: var(--carvao);
+        font: 600 1.125rem/1 var(--font);
+      }
+      .wiz-field input:disabled {
+        background: var(--tint-2);
+      }
+      .wiz-field input[aria-invalid='true'] {
+        border-color: var(--carvao);
+      }
+      .wiz-error {
+        font-weight: 700;
+      }
+      .wiz-error:empty {
+        display: none;
+      }
+      .wiz-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+      .wiz-sum {
+        display: grid;
+        gap: 0.5rem;
+      }
+      .wiz-sum li {
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        background: var(--on-floresta);
+        font-weight: 600;
+      }
+      .wiz-sum b {
+        display: block;
+        font: 700 0.875rem/1.2 var(--font);
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
       }
       .how {
         display: grid;
@@ -725,6 +1026,11 @@
         color: var(--carvao);
         margin-bottom: 0.25rem;
       }
+      .foot-info a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.75rem;
+      }
       .foot-nav {
         display: flex;
         flex-wrap: wrap;
@@ -746,13 +1052,14 @@
         color: var(--carvao-muted);
       }
 
+      /* botão do WhatsApp: redondo no desktop; no celular vira uma barra de largura total com o
+         telefone ao lado. Só aparece depois da história e some com o CTA final à vista. */
       .fab {
         position: fixed;
         right: calc(1rem + env(safe-area-inset-right));
         bottom: calc(1rem + env(safe-area-inset-bottom));
         z-index: 40;
-        display: grid;
-        place-items: center;
+        display: flex;
         width: 3.5rem;
         height: 3.5rem;
         border-radius: 0.375rem;
@@ -764,8 +1071,7 @@
         transition:
           opacity 0.3s,
           transform 0.3s,
-          visibility 0s 0.3s,
-          background-color 0.2s;
+          visibility 0s 0.3s;
       }
       .fab.on {
         opacity: 1;
@@ -773,14 +1079,77 @@
         transform: none;
         transition-delay: 0s;
       }
-      .fab:hover {
+      .fab.on.away {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(1rem) scale(0.92);
+        transition-delay: 0s, 0s, 0.3s;
+      }
+      .fab-wa {
+        flex: 1;
+        display: grid;
+        place-items: center;
+        border-radius: inherit;
+        color: var(--papel);
+        text-decoration: none;
+        transition: background-color 0.2s;
+      }
+      .fab-wa:hover,
+      .fab-tel a:hover {
         background: var(--floresta-dark);
         color: var(--papel);
       }
-      .fab svg {
+      .fab-wa svg {
         width: 1.75rem;
         height: 1.75rem;
         fill: currentColor;
+      }
+      .fab-wa span,
+      .fab-tel {
+        display: none;
+      }
+      .fab-tel a {
+        color: var(--papel);
+        text-decoration: none;
+      }
+      @media (max-width: 768px) {
+        .fab {
+          left: 0;
+          right: 0;
+          bottom: 0;
+          width: auto;
+          height: auto;
+          padding-bottom: env(safe-area-inset-bottom);
+          border-radius: 0;
+          transform: translateY(100%);
+        }
+        .fab-wa {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.625rem;
+          min-height: 3.5rem;
+          border-radius: 0;
+          font: 700 1.0625rem/1 var(--font);
+        }
+        .fab-wa svg {
+          width: 1.5rem;
+          height: 1.5rem;
+        }
+        .fab-wa span {
+          display: inline;
+        }
+        .fab-tel {
+          display: flex;
+          border-left: 1px solid var(--on-floresta);
+        }
+        .fab-tel a {
+          display: flex;
+          align-items: center;
+          padding: 0 1.25rem;
+          min-height: 3.5rem;
+          font: 700 1.0625rem/1 var(--font);
+        }
       }
 
       @media (prefers-reduced-motion: reduce) {
@@ -881,13 +1250,14 @@
 
     <header class="hdr" id="hdr">
       <div class="wrap">
-        <a class="logo" href="#" aria-label="Vanpack — início"
+        <a class="logo" href="#" aria-label="Vanpack · início"
           ><img src="/brand/vanpack-horizontal.svg" alt="" width="136" height="34"
         /></a>
         <nav class="nav" aria-label="Principal">
           <a href="#processo">Como fazemos</a>
+          <a href="#produtos">Produtos</a>
           <a href="#diferenciais">Diferenciais</a>
-          <a href="#orcamento">Orçamento</a>
+          <a href="#faq">FAQ</a>
         </nav>
         <a
           class="btn btn-primary"
@@ -914,9 +1284,19 @@
             <div class="step">
               <div class="wrap">
                 <div class="card on">
-                  <div class="k">Fábrica em Santo André-SP</div>
+                  <div class="k" data-need="cityState">
+                    Fábrica própria em {{cityState}}<span class="optional" data-need="serviceArea">
+                      · Atendemos {{serviceArea}}</span
+                    >
+                  </div>
                   <h1>Caixas de papelão sob medida, com a sua marca</h1>
-                  <p>Você manda a medida e a quantidade. A gente fabrica, imprime e entrega.</p>
+                  <p>
+                    Você manda medida e quantidade. A gente fabrica, imprime e entrega<span
+                      data-need="leadTimeDays"
+                    >
+                      em {{leadTimeDays}} dias úteis</span
+                    ><span class="optional">, direto da fábrica, sem intermediário</span>.
+                  </p>
                   <div class="actions">
                     <a
                       class="btn btn-primary"
@@ -929,10 +1309,14 @@
                       >Ver como fazemos</a
                     >
                   </div>
-                  <ul class="seals" aria-label="Diferenciais">
-                    <li>Sob medida</li>
-                    <li>Com a sua marca</li>
-                    <li>Entrega rápida</li>
+                  <p class="cta-note">
+                    <span data-need="responseTime">Resposta em até {{responseTime}} · </span>Sem
+                    compromisso · Atendimento humano
+                  </p>
+                  <ul class="seals" aria-label="Diferenciais" data-need="hasFacts">
+                    <li data-need="minOrder">Pedido mínimo a partir de {{minOrder}} unidades</li>
+                    <li data-need="leadTimeDays">Prazo de {{leadTimeDays}} dias úteis</li>
+                    <li data-need="serviceArea">Atendemos {{serviceArea}}</li>
                   </ul>
                 </div>
               </div>
@@ -940,7 +1324,7 @@
             <div class="step" id="passo-2">
               <div class="wrap">
                 <div class="card">
-                  <div class="k">02 — Impressão e corte</div>
+                  <div class="k">02 · Impressão e corte</div>
                   <h2>Imprimimos e cortamos de uma vez</h2>
                   <p>A chapa recebe a sua marca e já sai cortada e vincada, na mesma passada.</p>
                 </div>
@@ -949,7 +1333,7 @@
             <div class="step">
               <div class="wrap">
                 <div class="card">
-                  <div class="k">03 — Cola</div>
+                  <div class="k">03 · Cola</div>
                   <h2>Dobramos e colamos</h2>
                   <p>A chapa é dobrada e a emenda é colada: nasce a caixa.</p>
                 </div>
@@ -958,7 +1342,7 @@
             <div class="step">
               <div class="wrap">
                 <div class="card">
-                  <div class="k">04 — Caixa</div>
+                  <div class="k">04 · Caixa</div>
                   <h2>A caixa toma forma</h2>
                   <p>
                     Ela abre na medida certa e segue empilhada e dobrada, ocupando pouco espaço.
@@ -969,9 +1353,11 @@
             <div class="step">
               <div class="wrap">
                 <div class="card">
-                  <div class="k">05 — Entrega</div>
+                  <div class="k">05 · Entrega</div>
                   <h2>Entregamos rápido</h2>
-                  <p>Da nossa fábrica em Santo André até o seu endereço.</p>
+                  <p>
+                    Da nossa fábrica<span data-need="city"> em {{city}}</span> até o seu endereço.
+                  </p>
                   <a class="more" href="#diferenciais">Veja por que a Vanpack ↓</a>
                 </div>
               </div>
@@ -992,6 +1378,40 @@
         </svg>
       </div>
 
+      <section class="trust" id="confianca" aria-label="Quem somos" data-need="hasTrust">
+        <div class="wrap">
+          <ul class="trust-list">
+            <li data-need="cityState">Fábrica própria em {{cityState}}</li>
+            <li data-need="cnpj">CNPJ {{cnpj}}</li>
+            <li data-need="foundedYear">
+              <span data-since="{{foundedYear}}">{{yearsInBusiness}}</span> anos de mercado
+            </li>
+            <li data-field="mapa" hidden></li>
+            <li data-field="telefone" hidden></li>
+            <li data-field="email" hidden></li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="block" id="produtos">
+        <div class="wrap">
+          <div class="sec-head">
+            <span class="k">O que fabricamos</span>
+            <h2>Caixas sob medida, do modelo à impressão</h2>
+          </div>
+          <ul class="facts" data-need="hasFacts">
+            <li data-need="minOrder"><b>Pedido mínimo</b>{{minOrder}} unidades</li>
+            <li data-need="leadTimeDays">
+              <b>Prazo</b>{{leadTimeDays}} dias úteis, por escrito no orçamento
+            </li>
+            <li data-need="serviceArea"><b>Atendemos</b>{{serviceArea}}</li>
+          </ul>
+          <div class="models">
+            <!--render:produtos-->
+          </div>
+        </div>
+      </section>
+
       <section class="block" id="diferenciais">
         <div class="wrap">
           <div class="sec-head">
@@ -1001,20 +1421,61 @@
           <div class="grid3">
             <article class="pillar">
               <svg aria-hidden="true"><use href="#i-prazo" /></svg>
-              <h3>Entrega rápida</h3>
-              <p>Combinamos o prazo já no orçamento, para você não ficar sem caixa.</p>
+              <h3>Prazo por escrito no orçamento</h3>
+              <p>
+                <span data-need="leadTimeDays"
+                  >Entrega em {{leadTimeDays}} dias úteis depois de aprovar a arte.
+                </span>
+                Combinamos o prazo já no orçamento, para você não ficar sem caixa.
+              </p>
             </article>
             <article class="pillar">
               <svg aria-hidden="true"><use href="#i-confianca" /></svg>
-              <h3>Confiança</h3>
-              <p>Você fala direto com quem fabrica: sabe o que vai receber, quando e como.</p>
+              <h3>Fale direto com quem fabrica</h3>
+              <p>Sem intermediário: você sabe o que vai receber, quando e como.</p>
             </article>
             <article class="pillar">
               <svg aria-hidden="true"><use href="#i-consistencia" /></svg>
-              <h3>Consistência</h3>
-              <p>Mesma medida, mesma resistência e mesma impressão em todos os lotes.</p>
+              <h3>Mesma medida e impressão em todos os lotes</h3>
+              <p>
+                Do primeiro ao último lote, a caixa sai com a mesma medida, a mesma resistência e a
+                mesma impressão.
+              </p>
             </article>
           </div>
+        </div>
+      </section>
+
+      <section class="block" id="clientes" data-need="hasProofs">
+        <div class="wrap">
+          <div class="sec-head">
+            <span class="k">Clientes</span>
+            <h2>Quem já pede com a gente</h2>
+          </div>
+          <div class="proofs">
+            <!--render:clientes-->
+          </div>
+        </div>
+      </section>
+
+      <section class="block" id="faq">
+        <div class="wrap">
+          <div class="sec-head">
+            <span class="k">Perguntas frequentes</span>
+            <h2>O que perguntam antes de pedir</h2>
+          </div>
+          <div class="faq">
+            <!--render:faq-->
+          </div>
+          <p class="faq-more">
+            Não achou a sua dúvida?
+            <a
+              class="btn btn-primary"
+              data-cta="faq"
+              data-wa="Olá! Tenho uma dúvida sobre as caixas de papelão."
+              ><svg aria-hidden="true"><use href="#i-wa" /></svg>Tirar dúvida no WhatsApp</a
+            >
+          </p>
         </div>
       </section>
 
@@ -1030,9 +1491,10 @@
               loading="lazy"
               decoding="async"
             />
-            <h2>Peça seu orçamento pelo WhatsApp</h2>
+            <h2>Conte sua medida e receba o orçamento hoje</h2>
             <p class="lead">
-              Conte a medida, a quantidade e o que vai impresso na caixa. A gente responde por lá.
+              Mande medida (C x L x A), quantidade e o que vai impresso. Não tem a medida? Mande a
+              foto do produto que a gente ajuda.
             </p>
             <a
               class="btn btn-light"
@@ -1040,6 +1502,19 @@
               data-wa="Olá! Quero um orçamento de caixas de papelão. Medida: ___ · Quantidade: ___ · Impressão: ___"
               ><svg aria-hidden="true"><use href="#i-wa" /></svg>Pedir orçamento no WhatsApp</a
             >
+            <p class="cta-note">
+              <span data-need="responseTime">Resposta em até {{responseTime}} · </span>Sem
+              compromisso · Atendimento humano
+            </p>
+            <p class="alt" data-need="contactAlt">
+              <span data-need="phone"
+                >Prefere ligar?
+                <a href="tel:{{phone}}" data-contact="phone">{{phoneDisplay}}</a></span
+              ><span data-need="phone email"> · </span
+              ><span data-need="email"
+                >E-mail: <a href="mailto:{{email}}" data-contact="email">{{email}}</a></span
+              >
+            </p>
           </div>
           <ol class="how" aria-label="Como pedir">
             <li><b>1</b>Chame no WhatsApp</li>
@@ -1064,6 +1539,14 @@
           <p class="slogan" data-field="slogan"></p>
         </div>
         <dl class="foot-info">
+          <div data-field="razao" hidden>
+            <dt>Razão social</dt>
+            <dd></dd>
+          </div>
+          <div data-field="cnpj" hidden>
+            <dt>CNPJ</dt>
+            <dd></dd>
+          </div>
           <div data-field="endereco" hidden>
             <dt>Endereço</dt>
             <dd></dd>
@@ -1072,8 +1555,12 @@
             <dt>Horário</dt>
             <dd></dd>
           </div>
-          <div data-field="cnpj" hidden>
-            <dt>CNPJ</dt>
+          <div data-field="telefone" hidden>
+            <dt>Telefone</dt>
+            <dd></dd>
+          </div>
+          <div data-field="email" hidden>
+            <dt>E-mail</dt>
             <dd></dd>
           </div>
           <div data-field="mapa" hidden>
@@ -1082,21 +1569,29 @@
           </div>
         </dl>
         <nav class="foot-nav" aria-label="Rodapé">
-          <a href="#processo">Como fazemos</a><a href="#diferenciais">Diferenciais</a
-          ><a href="#orcamento">Orçamento</a>
+          <a href="#processo">Como fazemos</a><a href="#produtos">Produtos</a
+          ><a href="#diferenciais">Diferenciais</a><a href="#clientes">Clientes</a
+          ><a href="#faq">FAQ</a><a href="#orcamento">Orçamento</a
+          ><a href="./politica-de-privacidade.html">Privacidade</a>
         </nav>
-        <p class="legal">© 2026 VanPack Embalagens · Santo André-SP</p>
+        <p class="legal">
+          © <span data-year>{{year}}</span> {{holder}}<span data-need="cityState">
+            · {{cityState}}</span
+          ><span data-need="foundedYear"> · Desde {{foundedYear}}</span>
+        </p>
       </div>
     </footer>
 
-    <a
-      class="fab"
-      id="fab"
-      data-cta="flutuante"
-      data-wa="Olá! Quero um orçamento de caixas de papelão."
-      aria-label="Pedir orçamento pelo WhatsApp"
-      ><svg aria-hidden="true"><use href="#i-wa" /></svg
-    ></a>
+    <div class="fab" id="fab">
+      <a
+        class="fab-wa"
+        data-cta="flutuante"
+        data-wa="Olá! Quero um orçamento de caixas de papelão."
+        aria-label="Pedir orçamento pelo WhatsApp"
+        ><svg aria-hidden="true"><use href="#i-wa" /></svg><span>Pedir orçamento</span></a
+      >
+      <div class="fab-tel" data-field="telefone" hidden></div>
+    </div>
 
     <script type="module" src="/src/main.js"></script>
   </body>

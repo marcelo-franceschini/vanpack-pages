@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <title>Política de privacidade | {{name}}</title>
+    <meta
+      name="description"
+      content="Como o site da {{holder}} trata dados: sem cookies, sem formulário e com medição anônima."
+    />
+    <meta name="theme-color" content="#FBF8F2" />
+    <meta name="color-scheme" content="light" />
+    <link rel="canonical" href="%VITE_SITE_URL%politica-de-privacidade.html" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link
+      rel="preload"
+      href="/fonts/archivo-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      fetchpriority="high"
+    />
+    <style>
+      @font-face {
+        font-family: 'Archivo';
+        font-style: normal;
+        font-weight: 400 900;
+        font-display: swap;
+        src: url(/fonts/archivo-latin.woff2) format('woff2');
+        unicode-range:
+          U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
+          U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      /* Mesmos tokens da página principal (cores do manual da marca). */
+      :root {
+        color-scheme: light;
+        --floresta: #14513a;
+        --floresta-dark: #0d3c2a;
+        --carvao: #1b1a17;
+        --carvao-muted: #454440;
+        --papel: #fbf8f2;
+        --tint: #ece9e3;
+        --font: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+        --pad: clamp(1.25rem, 4vw, 4.5rem);
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--papel);
+        color: var(--carvao);
+        font: 400 1.125rem/1.6 var(--font);
+        -webkit-font-smoothing: antialiased;
+      }
+      img {
+        display: block;
+        max-width: 100%;
+      }
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+      a {
+        color: var(--floresta);
+        text-underline-offset: 0.2em;
+      }
+      a:hover {
+        color: var(--floresta-dark);
+      }
+      :focus-visible {
+        outline: 0.1875rem solid var(--floresta);
+        outline-offset: 0.1875rem;
+        border-radius: 0.25rem;
+      }
+      .skip {
+        position: fixed;
+        left: 0.75rem;
+        top: -4.5rem;
+        z-index: 100;
+        background: var(--carvao);
+        color: var(--papel);
+        padding: 0.75rem 1rem;
+        border-radius: 0.25rem;
+        transition: top 0.2s;
+      }
+      .skip:focus {
+        top: 0.75rem;
+        color: var(--papel);
+      }
+      .wrap {
+        width: 100%;
+        max-width: 48rem;
+        margin: 0 auto;
+        padding: 0 var(--pad);
+      }
+      .top .wrap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+      }
+      .logo,
+      .back {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.75rem;
+        font-weight: 700;
+      }
+      .logo img {
+        height: 2.125rem;
+        width: auto;
+      }
+      main {
+        padding: 2.5rem 0 4rem;
+      }
+      h1 {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 900;
+        letter-spacing: -0.025em;
+        line-height: 1.05;
+        margin-bottom: 1.25rem;
+      }
+      h2 {
+        font-size: 1.5rem;
+        font-weight: 800;
+        letter-spacing: -0.015em;
+        line-height: 1.2;
+        margin: 2.5rem 0 0.75rem;
+      }
+      p + p {
+        margin-top: 0.75rem;
+      }
+      .lead {
+        font-size: 1.25rem;
+        color: var(--carvao-muted);
+      }
+      footer {
+        background: var(--tint);
+        padding: 1.5rem 0 2rem;
+        font-size: 1rem;
+        color: var(--carvao-muted);
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+
+    <header class="top">
+      <div class="wrap">
+        <a class="logo" href="./" aria-label="Vanpack · início"
+          ><img src="/brand/vanpack-horizontal.svg" alt="" width="136" height="34"
+        /></a>
+        <a class="back" href="./">Voltar ao site</a>
+      </div>
+    </header>
+
+    <main id="conteudo">
+      <div class="wrap">
+        <h1>Política de privacidade</h1>
+        <p class="lead">
+          Em linguagem simples: o site da {{holder}} não usa cookies, não pede seus dados pessoais e
+          não tem formulário.
+        </p>
+
+        <h2>Quem é o responsável</h2>
+        <p>
+          O responsável pelos dados é a {{holder}}<span data-need="cnpj">, CNPJ {{cnpj}}</span
+          ><span data-need="street cityState">, com sede em {{street}}, {{cityState}}</span>.
+        </p>
+        <p data-need="email">
+          Para falar sobre privacidade:
+          <a href="mailto:{{email}}" data-contact="email">{{email}}</a>.
+        </p>
+
+        <h2>Cookies e armazenamento</h2>
+        <p>
+          O site não grava cookies nem guarda identificadores no seu navegador, e não carrega
+          scripts de terceiros.
+        </p>
+
+        <div data-need="analyticsName">
+          <h2>Medição do uso do site</h2>
+          <p>
+            Para entender como o site é usado, medimos de forma agregada: as páginas vistas, os
+            cliques nos botões de WhatsApp, telefone, e-mail e mapa, as perguntas abertas do FAQ,
+            até que ponto da página a pessoa foi e o tempo de carregamento. Nada disso identifica
+            você.
+          </p>
+          <p>
+            A medição é feita pelo {{analyticsName}}, que não usa cookies e informa que não coleta
+            dados pessoais e que anonimiza os dados coletados. Como em qualquer acesso a um site, o
+            endereço de IP e o navegador chegam ao servidor da ferramenta, que fica nos Estados
+            Unidos e na União Europeia. Os dados de medição ficam na ferramenta por tempo limitado
+            (no plano atual, até seis meses).
+          </p>
+        </div>
+        <div data-need="noAnalytics">
+          <h2>Medição do uso do site</h2>
+          <p>O site não envia dados de uso a nenhuma ferramenta de medição.</p>
+        </div>
+
+        <h2>Para quê e com que base legal</h2>
+        <p>
+          Usamos os dados agregados para entender como o site é usado e melhorar as páginas e o
+          atendimento. A base legal é o legítimo interesse (Lei Geral de Proteção de Dados, art. 7º,
+          inciso IX), com dados agregados e sem identificação.
+        </p>
+
+        <h2>O WhatsApp</h2>
+        <p>
+          Os botões de WhatsApp abrem uma conversa no aplicativo, que segue a política da própria
+          plataforma. A mensagem já vem escrita e termina com um código do botão de origem (por
+          exemplo, [site-hero]) e, se você chegou por uma campanha, com a origem dela. Você pode
+          mudar ou apagar a mensagem antes de enviar. O que você enviar será usado só para responder
+          ao seu pedido de orçamento.
+        </p>
+
+        <h2>Seus direitos</h2>
+        <p>
+          A lei garante a você, entre outros, a confirmação de que tratamos dados seus, o acesso, a
+          correção, a eliminação e a informação sobre com quem os dados são compartilhados (art. 18
+          da LGPD). Como a medição do site é anônima, não temos como identificar dados seus nela; se
+          você nos enviou dados pelo WhatsApp<span data-need="email"> ou por e-mail</span>, pode
+          pedir para acessá-los ou eliminá-los falando com a gente<span data-need="email">
+            em <a href="mailto:{{email}}" data-contact="email">{{email}}</a></span
+          >.
+        </p>
+
+        <h2>Mudanças</h2>
+        <p>
+          Se o site passar a usar outra ferramenta ou outros dados, esta página será atualizada.
+        </p>
+      </div>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        <p>© {{year}} {{holder}}<span data-need="cityState"> · {{cityState}}</span></p>
+      </div>
+    </footer>
+  </body>
+</html>

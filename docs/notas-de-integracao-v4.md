@@ -8,17 +8,23 @@ tour automático que rola a página sozinho.
 
 `index.html` é a única página. O que o JS usa (não renomear):
 
-| Seletor                                                      | Papel                                                                          |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------ |
-| `.story[data-tour="idle\|playing\|paused\|done"]`            | seção da história (altura 560 svh; o scroll útil é 460 svh)                    |
-| `.stage#stage` › `canvas#gl` + `.loader` + `.steps` + `#cue` | cena fixa na tela (`position: sticky`)                                         |
-| `.steps › .step › .wrap › .card`                             | 5 cartões, um por capítulo; o ativo tem `.on` e os demais `inert`              |
-| `#hdr` e `#hdr .btn`                                         | cabeçalho; o botão pulsa (`.pulse`) quando o tour termina                      |
-| `#fab`                                                       | botão flutuante do WhatsApp; só aparece depois do fim da história              |
-| `a[data-cta][data-wa]`                                       | botões do WhatsApp; o build troca `data-wa` por `href="https://wa.me/…"`       |
-| `#tour-start` (`data-tour-ui`)                               | "Ver como fazemos": toca o tour (ou, sem tour, leva ao capítulo 2)             |
-| `#processo`, `#diferenciais`, `#orcamento`                   | âncoras do menu                                                                |
-| `[data-field="slogan\|endereco\|horario\|cnpj\|mapa"]`       | rodapé: preenchido por `site.config.js` ou removido do HTML quando não há dado |
+| Seletor                                                                                    | Papel                                                                                                                                                                                            |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `.story[data-tour="idle\|playing\|paused\|done"]`                                          | seção da história (altura 560 svh; o scroll útil é 460 svh)                                                                                                                                      |
+| `.stage#stage` › `canvas#gl` + `.loader` + `.steps` + `#cue`                               | cena fixa na tela (`position: sticky`)                                                                                                                                                           |
+| `.steps › .step › .wrap › .card`                                                           | 5 cartões, um por capítulo; o ativo tem `.on` e os demais `inert`                                                                                                                                |
+| `#hdr` e `#hdr .btn`                                                                       | cabeçalho; o botão pulsa (`.pulse`) quando o tour termina                                                                                                                                        |
+| `#fab`                                                                                     | botão do WhatsApp (div com `.fab-wa` e `.fab-tel`): só aparece depois do fim da história; em ≤ 768 px é uma barra de largura total com o telefone; some (`.away`) com `#orcamento` ≥ 30% visível |
+| `a[data-cta][data-wa]`                                                                     | botões do WhatsApp; o build troca `data-wa` por `href="https://wa.me/…"`                                                                                                                         |
+| `#tour-start` (`data-tour-ui`)                                                             | "Ver como fazemos": toca o tour (ou, sem tour, leva ao capítulo 2)                                                                                                                               |
+| `#processo`, `#confianca`, `#produtos`, `#diferenciais`, `#clientes`, `#faq`, `#orcamento` | seções e âncoras do menu; as sem dado somem com os links                                                                                                                                         |
+| `<!--render:produtos\|faq\|clientes-->`                                                    | blocos gerados do conteúdo do `site.config.js` (`.model`, `details[data-faq]`, `.proof`)                                                                                                         |
+| `[data-field="slogan\|razao\|cnpj\|endereco\|horario\|telefone\|email\|mapa"]`             | rodapé: preenchido com o dado do `.env` ou removido do HTML quando não há dado                                                                                                                   |
+| `[data-need="chave outra"]` e `{{variavel}}`                                               | o elemento sai se alguma chave estiver vazia; `{{variavel}}` vazia fora de um `data-need` é erro de build                                                                                        |
+| `[data-year]` e `[data-since]`                                                             | ano do © e anos de mercado: o build escreve o valor e o `main.js` o recalcula no navegador                                                                                                       |
+| `a[data-contact="phone\|email\|map"]` e `details[data-faq]`                                | links de contato e perguntas do FAQ: viram os eventos `phone_click`, `email_click`, `map_click` e `faq_open`                                                                                     |
+| `html[data-exp_quote_wizard="B"]` e `.wizard`                                              | experimento `quote_wizard` na variante B: o `#orcamento` troca o CTA final pelo assistente de 3 passos (montado por `src/wizard.js`); a A é a página como está                                   |
+| `.optional`                                                                                | trechos opcionais do hero (fim do eyebrow e da subheadline); somem nos layouts compacto e de celular                                                                                             |
 
 Estados da página: `.stage.ready` (cena desenhada: o canvas entra por fade), `.stage.no-gl` (sem
 WebGL: fica o fundo Papel, o símbolo e os cartões) e, enquanto o contexto está perdido, o `ready` sai
@@ -79,11 +85,14 @@ em torno de cada centro.
 
 ## 5. Tour automático (`src/tour.js`)
 
-Começa 0,8 s depois de a cena ficar pronta, se a página está no topo, sem `#hash`, sem `?tour=0`, sem
-movimento reduzido, com a aba visível e sem interação prévia. Pausa de 4,5 s no 1º capítulo e de 5 s
-nos seguintes; 3 s entre capítulos (3,5 s no último): ~32 s no total. Termina em `p = 1` (a página
-fica com o scroll no fim da história, **não** segue para as seções seguintes) e o botão
-"Pedir orçamento" do cabeçalho pulsa.
+Começa no instante em que a cena fica pronta (sem espera), se a página está no topo, sem `#hash`, sem
+`?tour=0`, sem movimento reduzido no sistema, com a aba visível e sem interação prévia. `?tour=1` força
+o tour mesmo com movimento reduzido (para testar). Sem pausa inicial: o 1º capítulo já começa andando;
+pausa de 2,5 s nos capítulos seguintes, 2 s entre capítulos (2,5 s no último): ~16 s no total, com
+curva quadrática. Termina em `p = 1` (a página fica com o scroll no fim da história, **não** segue para
+as seções seguintes) e o botão "Pedir orçamento" do cabeçalho pulsa. No F5 a página volta ao topo (o
+navegador restauraria o scroll e o tour não começaria); voltar e avançar mantêm a posição. Quando o tour
+não começa, o console diz o motivo (`[vanpack] autoplay não iniciou: …`).
 
 ## 6. Tokens
 
@@ -107,6 +116,12 @@ fica com o scroll no fim da história, **não** segue para as seções seguintes
 - `text-wrap: pretty` removido dos parágrafos (custava metade do layout inicial em CPU lenta).
 - Slogan "Do projeto à entrega" no rodapé (manual §7); endereço, horário, CNPJ e mapa ficam ocultos
   até existirem em `site.config.js`/`.env`.
+- **Autoplay sem espera, em qualquer tela** (decisão do dono): o tour nunca é desligado por largura de
+  tela nem por Save-Data; só o movimento reduzido do sistema o desliga (acessibilidade).
+- **Sem fotos** (decisão do dono): só SVG; a única foto real permitida seria a da fachada, e o dono prefere não usá-la. Depoimentos, logos e nota do Google só com autorização em `docs/provas/`.
+- **Sem PWA** (decisão do dono): landing de um só objetivo, então não há manifest, service worker nem
+  instalação como app. Ficam `theme-color`, favicons, `apple-touch-icon` e o `icon-512.png` (logo do
+  JSON-LD). O `brand.test` confere que o Chrome acusa `no-manifest`.
 
 ## 8. Pendências do dono
 

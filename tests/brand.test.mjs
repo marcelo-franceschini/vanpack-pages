@@ -3,9 +3,16 @@
 import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { after, before, describe, test } from 'node:test';
+import { loadEnv } from 'vite';
 import { ROOT, launch, openPage, scrollToProgress, startServer } from '../scripts/lib.mjs';
 
 const read = (file) => readFileSync(`${ROOT}${file}`, 'utf8');
+const env = loadEnv('production', ROOT, 'VITE_');
+// O único domínio externo permitido na CSP é o servidor da medição, e só com provedor configurado.
+const ALLOWED_ORIGINS =
+  env.VITE_ANALYTICS_PROVIDER === 'umami'
+    ? [new URL(env.VITE_ANALYTICS_ENDPOINT || 'https://gateway.umami.is').origin]
+    : [];
 const html = read('index.html');
 const styles = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join('\n');
 const text = (source) =>
@@ -100,7 +107,7 @@ describe('produto', () => {
 
   test('sem números, datas, velocidades, capacidades ou alegações ambientais inventados', () => {
     const visible = text(html.slice(html.indexOf('<body>')))
-      .replace(/\b0[2-5] — /g, '') // numeração dos capítulos
+      .replace(/\b0[2-5] · /g, '') // numeração dos capítulos
       .replace(/© 2026 /, '')
       .replace(/<b>\d<\/b>/g, '');
     const digits = visible.match(/\d+/g) ?? [];
@@ -110,17 +117,20 @@ describe('produto', () => {
       ['1', '2', '3'],
       `números no texto: ${visible.match(/.{0,20}\d+.{0,20}/g)}`,
     );
+    // "dias" e "horas" só ao lado de um {{placeholder}}: o número vem do .env, nunca é digitado
+    const claims = visible.replace(/\{\{\w+\}\}\s+(dias|horas)\b/gi, ' ');
     assert.ok(
       !/ecol[óo]gic|sustent[áa]vel|recicl|ambient|carbono|verde|certifica|iso\s?\d|dias|horas|\b\d+\s?%/i.test(
-        visible,
+        claims,
       ),
     );
   });
 
-  test('o rodapé só mostra o que tem dado: slogan do manual, sem endereço/horário/CNPJ/mapa vazios', () => {
+  test('o rodapé tem o slogan do manual e nenhuma marca de campo sobra no HTML publicado', () => {
+    // o rodapé sem dado (campos que somem) é testado com a config vazia em site-config.test.mjs
     const dist = read('dist/index.html');
     assert.match(dist, /<p class="slogan">Do projeto à entrega<\/p>/);
-    assert.ok(!/data-field|<dl|<dt|<dd/.test(dist), 'campos sem dado saem do HTML');
+    assert.ok(!/data-field|data-need|\{\{/.test(dist), 'todas as marcas foram resolvidas');
   });
 });
 
@@ -188,7 +198,8 @@ describe('build: CSP, requisições e marca na página', () => {
     ]) {
       assert.ok(csp.includes(directive), directive);
     }
-    assert.ok(!/unsafe-(inline|eval)|\*|https?:/.test(csp));
+    assert.ok(!/unsafe-(inline|eval)|\*/.test(csp));
+    assert.deepEqual(csp.match(/https?:\/\/[^\s;']+/g) ?? [], ALLOWED_ORIGINS, 'domínios externos');
     const hashes = [...csp.matchAll(/'sha256-[^']+'/g)].length;
     assert.equal(hashes, [...dist.matchAll(/<style>/g)].length, 'um hash por <style>');
     const inlineScripts = [...dist.matchAll(/<script(?![^>]*\bsrc=)([^>]*)>/g)].filter(
@@ -210,6 +221,92 @@ describe('build: CSP, requisições e marca na página', () => {
     assert.match(dist, /<link rel="canonical" href="https:\/\/[^"]+\/"/);
     assert.ok(existsSync(`${ROOT}dist/og.jpg`));
     assert.ok(!dist.includes('%VITE_'), 'nenhuma variável sem substituir');
+  });
+
+  test('política de privacidade: dados do .env, CSP própria, só as cores da marca e abre sem erro', async () => {
+    const page = read('dist/politica-de-privacidade.html');
+    assert.ok(!/\{\{|data-need|data-field/.test(page), 'marcas e placeholders resolvidos');
+    for (const key of ['VITE_LEGAL_NAME', 'VITE_CNPJ', 'VITE_EMAIL']) {
+      if (env[key]) assert.ok(page.includes(env[key]), `${key} na política`);
+    }
+    const csp = page.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)"/)?.[1];
+    assert.ok(csp, 'CSP presente');
+    assert.equal(
+      [...csp.matchAll(/'sha256-[^']+'/g)].length,
+      [...page.matchAll(/<style>/g)].length,
+    );
+    assert.deepEqual(csp.match(/https?:\/\/[^\s;']+/g) ?? [], ALLOWED_ORIGINS);
+    const css = [...page.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join('\n');
+    for (const [hex] of css.matchAll(/#[0-9a-fA-F]{3,8}\b/g)) {
+      const color = hex.toUpperCase();
+      assert.ok(PALETTE.has(color) || DERIVED.has(color), `cor fora da paleta: ${color}`);
+    }
+    assert.ok(read('dist/index.html').includes('politica-de-privacidade.html'), 'link no rodapé');
+
+    const {
+      page: tab,
+      context,
+      problems,
+      requests,
+    } = await openPage(
+      browser,
+      `${server.url}politica-de-privacidade.html`,
+      { reducedMotion: 'reduce' },
+      { waitFor: 'none' },
+    );
+    await tab.goto(`${server.url}politica-de-privacidade.html`);
+    assert.equal(await tab.locator('h1').count(), 1);
+    assert.equal(await tab.evaluate(() => document.documentElement.lang), 'pt-BR');
+    assert.deepEqual(problems, []);
+    assert.deepEqual(
+      requests.filter((url) => !url.startsWith(server.url)),
+      [],
+      'sem requisição externa',
+    );
+    await context.close();
+  });
+
+  test('a página publicada não tem <form> nem controle de formulário (só o assistente da variante B, por JS)', () => {
+    for (const file of ['dist/index.html', 'dist/politica-de-privacidade.html']) {
+      assert.ok(
+        !/<(form|input|select|textarea)\b/i.test(read(file)),
+        `${file} tem controle estático`,
+      );
+    }
+  });
+
+  test('sem travessão longo no texto visível nem nos atributos (title, meta, aria-label)', () => {
+    for (const file of ['dist/index.html', 'dist/404.html']) {
+      const page = read(file)
+        .replace(/<!--[\s\S]*?-->/g, '')
+        .replace(/<(script|style|svg)[\s\S]*?<\/\1>/g, '');
+      assert.ok(!page.includes('\u2014'), `${file} tem travessão longo`);
+    }
+    const title = read('dist/index.html').match(/<title>([^<]*)<\/title>/)[1];
+    assert.match(title, /^Caixas de papelão sob medida com a sua marca \| Vanpack/);
+  });
+
+  test('sem PWA: sem manifest, service worker nem instalação como app', async () => {
+    const dist = read('dist/index.html');
+    assert.ok(!/rel="manifest"/.test(dist), 'sem <link rel="manifest">');
+    assert.equal(existsSync(`${ROOT}dist/manifest.webmanifest`), false);
+    for (const file of readdirSync(`${ROOT}dist/assets`).filter((f) => f.endsWith('.js'))) {
+      assert.ok(
+        !/navigator\.serviceWorker|beforeinstallprompt/.test(read(`dist/assets/${file}`)),
+        `${file} sem service worker nem pedido de instalação`,
+      );
+    }
+    // o próprio Chrome diz que a página não é instalável
+    const { page, context } = await openPage(browser, server.url + '?tour=0', {
+      reducedMotion: 'reduce',
+    });
+    const cdp = await context.newCDPSession(page);
+    const { installabilityErrors } = await cdp.send('Page.getInstallabilityErrors');
+    assert.ok(
+      installabilityErrors.some((e) => e.errorId === 'no-manifest'),
+      `o Chrome deveria acusar no-manifest: ${JSON.stringify(installabilityErrors)}`,
+    );
+    await context.close();
   });
 
   test('percorrer a página inteira não gera violação de CSP, erro nem requisição externa', async () => {

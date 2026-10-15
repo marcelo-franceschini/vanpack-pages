@@ -25,6 +25,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - name: Avisa se o site vai ao ar com dados fictícios
+        run: |
+          if grep -Eq '^VITE_DATA_MODE=demo' .env; then
+            echo "::warning::VITE_DATA_MODE=demo: o site vai ao ar com dados fictícios e noindex. Troque para production no go-live (docs/go-live.md)."
+          fi
       - run: npm run build
       - uses: actions/upload-pages-artifact@v4
         with:

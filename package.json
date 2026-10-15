@@ -2,7 +2,7 @@
   "name": "vanpack-pages",
   "version": "1.0.0",
   "private": true,
-  "description": "Landing page da VanPack Embalagens com a animação 3D da linha de produção de caixas.",
+  "description": "Landing page da Vanpack Embalagens com a animação 3D da linha de produção de caixas.",
   "type": "module",
   "engines": {
     "node": ">=22.12"
@@ -20,10 +20,12 @@
     "audit:runtime": "node scripts/audit/runtime.mjs",
     "audit:lighthouse": "node scripts/audit/lighthouse.mjs",
     "audit:capturas": "node scripts/audit/capturas.mjs",
-    "og": "node scripts/og.mjs"
+    "og": "node scripts/og.mjs",
+    "amostra": "node scripts/amostra.mjs"
   },
   "dependencies": {
-    "three": "0.184.0"
+    "three": "0.184.0",
+    "web-vitals": "^6.2.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
