@@ -7,6 +7,13 @@ import { Batch } from './geometry.js';
 const RAIL = RAIL_Y;
 const XT = TURNTABLE_X;
 
+/** Mesa de rolos (eixo em z) entre duas guias, de `x0` a `x1`: o topo dos rolos fica em RAIL_Y. */
+function rollerBed(st, M, xs, x0, x1) {
+  for (const x of xs) st.cyl(M.dark2, x, RAIL - 0.025, 0, 0.025, 1.7, 'z', 10);
+  st.box(M.dark, x0, x1, RAIL - 0.04, RAIL - 0.02, -0.92, -0.88, 0.004);
+  st.box(M.dark, x0, x1, RAIL - 0.04, RAIL - 0.02, 0.88, 0.92, 0.004);
+}
+
 /**
  * @param {import('three').Object3D} parent
  * @param {Record<string, import('three').Material>} M materiais por cor
@@ -23,7 +30,8 @@ export function buildFactory(parent, M) {
     [-6.37, 0.71],
   ])
     st.box(M.dark, x - 0.02, x + 0.02, 0.53, 1.0, z - 0.02, z + 0.02, 0.008);
-  st.box(M.dark, -6.05, -5.2, RAIL - 0.014, RAIL, -0.9, 0.9, 0.004);
+  // entrada da máquina A: rolos, como na saída (primeiro rolo a 0,2 m do rolo grosso)
+  rollerBed(st, M, [-5.4, -5.65, -5.9], -6.05, -5.25);
   // máquina A — impressão e corte numa passada
   const A0 = -5.2,
     A1 = -2.5;
@@ -41,10 +49,7 @@ export function buildFactory(parent, M) {
     st.cyl(M.dark2, x, 0.925, 0, 0.065, 1.7);
   }
   // vão com rolos e recolhimento
-  for (const x of [-2.3, -2.05, -1.8, -1.55, -1.3])
-    st.cyl(M.dark2, x, RAIL - 0.025, 0, 0.025, 1.7, 'z', 10);
-  st.box(M.dark, -2.45, -1.0, RAIL - 0.04, RAIL - 0.02, -0.92, -0.88, 0.004);
-  st.box(M.dark, -2.45, -1.0, RAIL - 0.04, RAIL - 0.02, 0.88, 0.92, 0.004);
+  rollerBed(st, M, [-2.3, -2.05, -1.8, -1.55, -1.3], -2.45, -1.0);
   st.box(M.dark, -2.3, -1.7, 0, 0.04, -0.7, 0.7, 0.01);
   st.box(M.dark2, -2.3, -2.26, 0.04, 0.46, -0.7, 0.7, 0.01);
   st.box(M.dark2, -1.74, -1.7, 0.04, 0.46, -0.7, 0.7, 0.01);
