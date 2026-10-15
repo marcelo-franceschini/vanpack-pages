@@ -11,11 +11,17 @@ const dock = $('#hdr .btn'); // "Pedir orçamento" do cabeçalho: pulsa quando o
 const params = new URLSearchParams(location.search);
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const DEPTHS = [25, 50, 75, 100];
-const AUTOPLAY_DELAY = 800; // ms depois de a cena ficar pronta
 
 let stageOk = false; // 3D funcionando
 // O tour é criado mais abaixo; os callbacks da história só o leem quando chamados.
 let tour = null;
+
+// F5 recomeça do topo e o tour toca; sem isso o navegador restaura o scroll e o tour não começa.
+// Voltar e avançar continuam com a posição restaurada. O navegador restaura no reload mesmo com
+// history.scrollRestoration = 'manual' (medido), às vezes depois do nosso código: por isso a
+// restauração também é desfeita por evento, mais abaixo.
+const reloaded = performance.getEntriesByType('navigation')[0]?.type === 'reload' && !location.hash;
+if (reloaded) scrollTo(0, 0);
 
 // ---------- Cena e scroll ----------
 // O worker é criado primeiro (o download dele é o que mais demora); a história lê o layout depois.
@@ -46,7 +52,9 @@ const story = createStory({
 // ---------- Tour automático ----------
 // A página rola sozinha pelos capítulos (a cena continua ligada ao scroll) e para no fim da
 // história. Qualquer interação da pessoa interrompe, e o tour nunca retoma sozinho.
-const tourAvailable = () => stageOk && !reducedMotion.matches;
+// ?tour=1 (QA) força o tour mesmo com movimento reduzido no sistema; ?tour=0 desliga o autoplay.
+const forceTour = params.get('tour') === '1';
+const tourAvailable = () => stageOk && (forceTour || !reducedMotion.matches);
 
 function pulseDock() {
   if (reducedMotion.matches) return;
@@ -81,7 +89,7 @@ $('#tour-start').addEventListener('click', (e) => {
 });
 
 reducedMotion.addEventListener('change', () => {
-  if (reducedMotion.matches) tour.pause('reduced');
+  if (reducedMotion.matches && !forceTour) tour.pause('reduced');
 });
 
 // A pessoa já mexeu na página antes de o tour começar?
@@ -95,28 +103,45 @@ for (const type of ['wheel', 'touchstart', 'pointerdown', 'keydown']) {
   addEventListener(type, markInteraction, { capture: true, passive: true });
 }
 
+// Depois de um F5, volta ao topo se o navegador restaurar o scroll, até a pessoa mexer ou o tour
+// decidir se começa.
+const undoRestore = () => {
+  if (!interacted && tour.state === 'idle' && scrollY >= 40) scrollTo(0, 0);
+};
+if (reloaded) addEventListener('scroll', undoRestore, { passive: true });
+
+/** Por que o autoplay não pode começar agora (ou null, se pode). */
+function whyNoAutoplay() {
+  if (!stageOk) return 'a cena 3D não iniciou (sem WebGL?)';
+  if (!tourAvailable()) return 'movimento reduzido no sistema (?tour=1 força o autoplay)';
+  if (params.get('tour') === '0') return '?tour=0 na URL';
+  if (location.hash) return '#hash na URL';
+  if (interacted) return 'a pessoa já mexeu na página';
+  if (scrollY >= 40) return 'a página não está no topo';
+  if (tour.state !== 'idle') return `o tour já está em "${tour.state}"`;
+  return null;
+}
+
 function startAutoplay() {
-  const canStart =
-    tourAvailable() &&
-    params.get('tour') !== '0' &&
-    !location.hash &&
-    !interacted &&
-    scrollY < 40 &&
-    tour.state === 'idle';
-  if (!canStart) return;
+  if (reloaded) undoRestore(); // o evento de scroll da restauração pode ainda não ter chegado
+  const reason = whyNoAutoplay();
+  if (reason) {
+    console.info(`[vanpack] autoplay não iniciou: ${reason}`);
+    return;
+  }
   // aba em segundo plano: espera a pessoa voltar para começar
   if (document.hidden) {
-    document.addEventListener('visibilitychange', () => setTimeout(startAutoplay, AUTOPLAY_DELAY), {
-      once: true,
-    });
+    document.addEventListener('visibilitychange', startAutoplay, { once: true });
     return;
   }
   tour.start({ auto: true });
 }
 
+// Sem espera: o tour começa no instante em que a cena fica pronta.
 stage.ready.then((ok) => {
   stageOk = ok;
-  setTimeout(startAutoplay, AUTOPLAY_DELAY);
+  startAutoplay();
+  removeEventListener('scroll', undoRestore);
 });
 
 // ---------- Conversão ----------

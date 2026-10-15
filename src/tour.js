@@ -1,22 +1,23 @@
-// Tour automático: rola a página sozinho pelos 5 capítulos, com pausas para ler, e para no fim da
-// história. A animação 3D continua ligada ao scroll, então cartões e cena ficam sincronizados e a
-// pessoa pode pegar o controle a qualquer instante (qualquer toque, roda do mouse, tecla ou scroll
-// interrompe). Interrompido, o tour nunca retoma sozinho.
+// Tour automático: rola a página sozinho pelos 5 capítulos, com pausas curtas para ler, e para no fim
+// da história (~16 s). A animação 3D continua ligada ao scroll, então cartões e cena ficam
+// sincronizados e a pessoa pode pegar o controle a qualquer instante (qualquer toque, roda do mouse,
+// tecla ou scroll interrompe). Interrompido, o tour nunca retoma sozinho.
 
 // Progresso (0…1) no centro de cada capítulo e tempos, em ms.
 const CENTERS = [0, 0.25, 0.5, 0.75, 1];
-const FIRST_HOLD = 4500;
-const HOLD = 5000;
-const MOVE = 3000; // por quarto do percurso
-const LAST_MOVE = 3500;
-const MIN_MOVE = 1200;
+const FIRST_HOLD = 0; // sem espera: o primeiro capítulo já começa andando
+const HOLD = 2500;
+const MOVE = 2000; // por quarto do percurso
+const LAST_MOVE = 2500;
+const MIN_MOVE = 800;
 
 const NEAR = 0.02; // a que distância de um centro conta como "já estou nele"
 const SCROLL_TOLERANCE = 3; // px de diferença aceita entre o scroll pedido e o real
 const MODIFIER_KEYS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'CapsLock']);
 
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
-const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+// Quadrática: a cúbica quase não andava no começo e a página parecia parada.
+const easeInOut = (t) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
 
 /**
  * @param {object} options
@@ -50,7 +51,8 @@ export function createTour({ getProgress, yAt, onState, onEvent, isUi = () => fa
     let cur = p0;
     const near = CENTERS.find((c) => Math.abs(c - p0) < NEAR);
     if (near !== undefined && initialHold) {
-      segs.push({ hold: true, p: near, ms: near === 0 ? FIRST_HOLD : HOLD });
+      const ms = near === 0 ? FIRST_HOLD : HOLD;
+      if (ms > 0) segs.push({ hold: true, p: near, ms }); // pausa de 0 ms dividiria por zero no tick
       cur = near;
     }
     for (const c of CENTERS) {

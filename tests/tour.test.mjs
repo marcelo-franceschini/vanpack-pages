@@ -38,39 +38,58 @@ async function advance(page, ms) {
   for (let left = ms; left > 0; left -= 1000) await page.clock.runFor(Math.min(1000, left));
 }
 
-/** Põe o tour em andamento (começa sozinho 0,8 s depois da cena pronta) e passa `ms`. */
+/** Confere que o tour já está em andamento (começa sozinho quando a cena fica pronta) e passa `ms`. */
 async function playFor(page, ms) {
-  await advance(page, 900);
   assert.equal(await tourState(page), 'playing');
   await advance(page, ms);
 }
 
 describe('autoplay', () => {
-  test('começa sozinho 0,8 s depois de a cena ficar pronta, no topo da página', async () => {
+  test('começa sozinho no instante em que a cena fica pronta e a página já rola no 1º segundo', async () => {
     const { page, context, problems } = await open();
-    assert.equal(await tourState(page), 'idle');
+    assert.equal(await tourState(page), 'playing', 'sem espera nenhuma');
     assert.equal(await scrollY(page), 0);
-    await page.clock.runFor(700);
-    assert.equal(await tourState(page), 'idle', 'ainda dentro dos 0,8 s');
-    await page.clock.runFor(200);
-    assert.equal(await tourState(page), 'playing');
-    await advance(page, 6000);
-    assert.ok(
-      (await scrollY(page)) > 100,
-      'a página começa a rolar depois da pausa do 1º capítulo',
-    );
+    await advance(page, 1000);
+    assert.ok((await scrollY(page)) > 100, 'mais de 100 px de scroll no 1º segundo');
     assert.deepEqual(problems, []);
+    await context.close();
+  });
+
+  test('no celular em pé também começa sozinho e já rola no 1º segundo', async () => {
+    const { page, context } = await open('', {
+      viewport: { width: 390, height: 844 },
+      hasTouch: true,
+      isMobile: true,
+      deviceScaleFactor: 2,
+    });
+    assert.equal(await tourState(page), 'playing');
+    await advance(page, 1000);
+    assert.ok((await scrollY(page)) > 100, 'mais de 100 px de scroll no 1º segundo');
+    await context.close();
+  });
+
+  test('F5 com a página rolada recomeça do topo e toca o tour', async () => {
+    const { page, context } = await openPage(browser, server.url);
+    await page.mouse.wheel(0, 1800); // a pessoa assume o controle e rola a história
+    await page.waitForFunction(() => scrollY > 1500, null, { timeout: 10_000 });
+    await page.reload();
+    await page.waitForSelector('.stage.ready', { timeout: 60_000 });
+    await page.waitForFunction(
+      () => document.querySelector('.story').dataset.tour === 'playing',
+      null,
+      { timeout: 15_000 },
+    );
+    assert.ok((await scrollY(page)) < 900, 'voltou ao topo e o tour está andando');
     await context.close();
   });
 
   test('passa pelos 5 capítulos, termina em p = 1 e não rola para as seções seguintes', async () => {
     const { page, context } = await open();
-    await advance(page, 900);
     const end = await yAtProgress(page, 1);
-    const seen = new Set();
+    const seen = new Set([await activeCard(page)]);
     let maxY = 0;
-    for (let t = 0; t < 40; t++) {
-      await advance(page, 1000);
+    for (let t = 0; t < 160; t++) {
+      await advance(page, 250);
       seen.add(await activeCard(page));
       maxY = Math.max(maxY, await scrollY(page));
       if ((await tourState(page)) === 'done') break;
@@ -91,23 +110,22 @@ describe('autoplay', () => {
     await context.close();
   });
 
-  test('a duração total do tour fica perto de 32 s (4,5 s de pausa inicial + 5 s por capítulo)', async () => {
+  test('a duração total do tour fica perto de 16 s (2,5 s de pausa e 2 s de trecho por capítulo)', async () => {
     const { page, context } = await open();
-    await advance(page, 900);
     let elapsed = 0;
     while ((await tourState(page)) !== 'done' && elapsed < 60_000) {
       await advance(page, 500);
       elapsed += 500;
     }
-    assert.ok(elapsed > 28_000 && elapsed < 36_000, `durou ${elapsed} ms`);
+    assert.ok(elapsed > 14_000 && elapsed < 19_000, `durou ${elapsed} ms`);
     await context.close();
   });
 
   test('o botão "Pedir orçamento" do cabeçalho pulsa quando o tour termina', async () => {
     const { page, context } = await open();
-    await playFor(page, 20_000);
+    await playFor(page, 8000);
     assert.equal(await dockPulses(page), false, 'não pulsa durante o tour');
-    await advance(page, 20_000);
+    await advance(page, 12_000);
     assert.equal(await tourState(page), 'done');
     assert.equal(await dockPulses(page), true);
     await context.close();
@@ -195,6 +213,38 @@ describe('quando não começa sozinho', () => {
     await context.close();
   });
 
+  test('?tour=1 força o autoplay mesmo com movimento reduzido no sistema', async () => {
+    const { page, context } = await open('?tour=1', { reducedMotion: 'reduce' });
+    assert.equal(await tourState(page), 'playing');
+    await advance(page, 1000);
+    assert.ok((await scrollY(page)) > 100, 'a página rola sozinha');
+    await context.close();
+  });
+
+  test('o console explica por que o autoplay não começou', async () => {
+    const cases = [
+      ['?tour=0', {}, '?tour=0'],
+      ['', { reducedMotion: 'reduce' }, 'movimento reduzido'],
+      ['#diferenciais', {}, '#hash'],
+    ];
+    for (const [query, options, expected] of cases) {
+      const messages = [];
+      const { page, context } = await openPage(browser, server.url + query, options, {
+        setup: async (ctx) => {
+          await freezeClock(ctx);
+          ctx.page.on(
+            'console',
+            (m) => m.text().includes('autoplay não iniciou') && messages.push(m.text()),
+          );
+        },
+      });
+      assert.equal(messages.length, 1, `${query || 'movimento reduzido'}: uma mensagem`);
+      assert.ok(messages[0].includes(expected), messages[0]);
+      assert.equal(await tourState(page), 'idle');
+      await context.close();
+    }
+  });
+
   test('com #hash na URL a página não rola sozinha', async () => {
     const { page, context } = await open('#diferenciais');
     await advance(page, 10_000);
@@ -202,13 +252,26 @@ describe('quando não começa sozinho', () => {
     await context.close();
   });
 
-  test('se a pessoa já rolou antes do início, o tour não começa', async () => {
-    const { page, context } = await open();
-    await page.mouse.wheel(0, 200);
-    // o relógio só avança depois de a página ter processado o gesto (o scroll já começou)
-    await page.waitForFunction(() => scrollY > 0, null, { timeout: 10_000 });
+  test('se a pessoa já mexeu antes de a cena ficar pronta, o tour não começa', async () => {
+    // um gesto de roda logo no carregamento (a cena leva alguns segundos para ficar pronta)
+    const { page, context } = await openPage(
+      browser,
+      server.url,
+      {},
+      {
+        setup: async ({ context, page }) => {
+          await freezeClock({ context });
+          await page.addInitScript(() =>
+            addEventListener('DOMContentLoaded', () =>
+              dispatchEvent(new WheelEvent('wheel', { deltaY: 200 })),
+            ),
+          );
+        },
+      },
+    );
     await advance(page, 10_000);
     assert.equal(await tourState(page), 'idle');
+    assert.equal(await scrollY(page), 0);
     await context.close();
   });
 
