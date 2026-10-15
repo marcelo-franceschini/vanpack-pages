@@ -114,8 +114,6 @@ fica com o scroll no fim da história, **não** segue para as seções seguintes
   o símbolo em negativo. É o horizontal oficial com a cor trocada, sem mais nada.
 - Textos dos cartões 2–5 e das mensagens do WhatsApp são rascunho.
 - Dados institucionais (endereço, horário, CNPJ, mapa) e o número do WhatsApp (`VITE_WHATSAPP`).
-- `assets/brand/*.svg` (fontes da marca) carregam metadados C2PA de ferramenta de IA; os de
-  `public/brand/` são limpos.
 
 ## 9. Medidas
 

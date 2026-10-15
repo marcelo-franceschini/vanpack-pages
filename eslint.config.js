@@ -2,8 +2,8 @@ import js from '@eslint/js';
 import globals from 'globals';
 
 export default [
-  // 'Vanpack Site v4/' é o pacote do Claude Design (fora do git); dist-audit/ é o build de auditoria.
-  { ignores: ['dist/', 'dist-audit/', 'Vanpack Site v4/'] },
+  // dist-audit/ é o build de auditoria (npm run build:audit).
+  { ignores: ['dist/', 'dist-audit/'] },
   js.configs.recommended,
   {
     files: ['src/**/*.js'],
