@@ -27,7 +27,7 @@ await page.evaluate(() => {
     '.actions',
     '.cta-note',
     '.seals',
-    '.k-area',
+    '.optional',
   ]) {
     for (const el of document.querySelectorAll(selector)) el.style.setProperty('display', 'none');
   }

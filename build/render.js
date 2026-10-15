@@ -8,6 +8,8 @@
 //   JSON-LD                  montado inteiro a partir da config
 //   modo demo                <meta name="robots" content="noindex,nofollow">
 
+import { visibleProofs } from '../site.config.js';
+
 export const escapeHtml = (s) =>
   String(s)
     .replace(/&/g, '&amp;')
@@ -209,9 +211,92 @@ export function buildJsonLd(site) {
   };
 }
 
+/** Perguntas do FAQ prontas: a resposta ganha os dados do .env e a pergunta sem dado some. */
+export function faqItems(site) {
+  return site.content.faq.flatMap(({ id, q, a }) => {
+    const keys = [...a.matchAll(/\{\{\s*(\w+)\s*\}\}/g)].map((m) => m[1]);
+    for (const key of keys) {
+      if (!(key in site.vars)) throw new Error(`FAQ "${id}": variável desconhecida {{${key}}}`);
+    }
+    if (keys.some((key) => !site.vars[key])) return [];
+    return [{ id, q, a: interpolate(a, site.vars, `FAQ "${id}"`) }];
+  });
+}
+
+const BLOCKS = {
+  // Modelos de caixa: cada um com o seu botão de orçamento (código [site-produtos-<id>]).
+  produtos: (site) =>
+    site.content.models
+      .map(
+        ({ id, name, text }) => `<article class="model">
+  <h3>${escapeHtml(name)}</h3>
+  <p>${escapeHtml(text)}</p>
+  <a class="btn btn-soft" data-cta="produtos-${escapeHtml(id)}" data-wa="${escapeHtml(
+    `Olá! Quero um orçamento da ${name}. Medida: ___ · Quantidade: ___ · Impressão: ___`,
+  )}">Pedir orçamento deste modelo</a>
+</article>`,
+      )
+      .join('\n'),
+
+  faq: (site) =>
+    faqItems(site)
+      .map(
+        ({ id, q, a }) =>
+          `<details class="faq-item" data-faq="${escapeHtml(id)}"><summary>${escapeHtml(q)}</summary><p>${a}</p></details>`,
+      )
+      .join('\n'),
+
+  // Prova social: só o autorizado (e, em demo, os exemplos com o rótulo "Exemplo").
+  clientes: (site) => {
+    const { testimonials, clientLogos, googleRating } = visibleProofs(
+      site.content.proofs,
+      site.dataMode,
+    );
+    return [
+      ...testimonials.map(
+        ({ quote, author, demo }) =>
+          `<figure class="proof"><p class="proof-quote">“${escapeHtml(quote)}”</p><figcaption>${escapeHtml(author)}${
+            demo ? ' <span class="tag">Exemplo</span>' : ''
+          }</figcaption></figure>`,
+      ),
+      clientLogos.length
+        ? `<ul class="logos" aria-label="Clientes">${clientLogos
+            .map(
+              ({ name, src, width = 120, height = 40 }) =>
+                `<li><img src="${escapeHtml(src)}" alt="${escapeHtml(name)}" width="${width}" height="${height}" loading="lazy" decoding="async" /></li>`,
+            )
+            .join('')}</ul>`
+        : '',
+      googleRating
+        ? `<p class="rating"><a href="${escapeHtml(googleRating.url)}" target="_blank" rel="noopener">${escapeHtml(
+            String(googleRating.value).replace('.', ','),
+          )} de 5 no Google (${escapeHtml(String(googleRating.count))} avaliações)</a></p>`
+        : '',
+    ]
+      .filter(Boolean)
+      .join('\n');
+  },
+};
+
+/** <!--render:nome--> vira o bloco gerado do conteúdo (modelos, FAQ, prova social). */
+function renderBlocks(html, site) {
+  return html.replace(/<!--render:(\w+)-->/g, (_, name) => {
+    if (!(name in BLOCKS)) throw new Error(`bloco desconhecido: <!--render:${name}-->`);
+    return BLOCKS[name](site);
+  });
+}
+
+/** Link interno para uma seção que saiu da página (sem dado) sai junto: nada de âncora morta. */
+function dropDeadAnchors(html) {
+  const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]));
+  return html.replace(/<a\b[^>]*\shref="#([A-Za-z][\w-]*)"[^>]*>[\s\S]*?<\/a>/g, (link, id) =>
+    ids.has(id) ? link : '',
+  );
+}
+
 /** Renderiza a página: dados da empresa, links do WhatsApp, JSON-LD e, em demo, o noindex. */
 export function renderPage(html, site) {
-  let out = whatsappLinks(html, site);
+  let out = whatsappLinks(renderBlocks(html, site), site);
   out = outsideRawBlocks(out, (part) =>
     applyMarks(part, { fields: footerFields(site), vars: site.vars }),
   );
@@ -220,6 +305,7 @@ export function renderPage(html, site) {
     /(<script type="application\/ld\+json">)[\s\S]*?(<\/script>)/,
     (_, open, close) => open + JSON.stringify(buildJsonLd(site)).replace(/</g, '\\u003c') + close,
   );
+  out = dropDeadAnchors(out);
   // <dl> sem nenhum campo (nada a mostrar) não fica vazio na página
   out = out.replace(/<dl class="foot-info">\s*<\/dl>\s*/, '');
   if (site.dataMode === 'demo') {

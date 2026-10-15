@@ -201,6 +201,18 @@ if (finalCta) {
   ).observe(finalCta);
 }
 
+// O botão fixo do WhatsApp (barra no celular) sai de cena quando o CTA final já está bem à vista.
+const fab = $('#fab');
+const quote = $('#orcamento');
+if (fab && quote) {
+  new IntersectionObserver(
+    ([entry]) => fab.classList.toggle('away', entry.intersectionRatio >= 0.3),
+    {
+      threshold: [0.3],
+    },
+  ).observe(quote);
+}
+
 // ---------- Uso da página ----------
 // section_view: a seção conta quando metade dela está à vista, ou metade da tela nas seções mais altas
 // que a tela (que nunca chegariam a 50% de si mesmas). #processo é a história 3D e já tem chapter_view.

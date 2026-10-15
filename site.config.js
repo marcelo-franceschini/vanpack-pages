@@ -11,6 +11,111 @@ export const brand = {
     'Fábrica de caixas de papelão ondulado personalizadas: sob medida e com a marca do cliente impressa.',
 };
 
+/**
+ * Modelos de caixa da seção "O que fabricamos": texto genérico e sem números; o dono confere no
+ * go-live (docs/go-live.md). O `id` vira o código de origem do botão ([site-produtos-<id>]).
+ */
+export const models = [
+  {
+    id: 'padrao',
+    name: 'Caixa padrão',
+    text: 'A mais usada: fecha com fita e serve para quase tudo, do e-commerce ao estoque.',
+  },
+  {
+    id: 'envio',
+    name: 'Caixa para envio',
+    text: 'Resistente para correio e transportadora, com a sua marca impressa por fora.',
+  },
+  {
+    id: 'faca',
+    name: 'Caixa com faca',
+    text: 'Corte e vinco sob medida para encaixe, tampa e formatos especiais.',
+  },
+  {
+    id: 'automatica',
+    name: 'Caixa de fundo automático',
+    text: 'Monta num gesto e fecha com firmeza, ideal para quem embala em volume.',
+  },
+];
+
+/**
+ * Perguntas do FAQ. Os {{placeholders}} das respostas vêm do .env; a pergunta cujo dado falta some.
+ * "Nunca pedimos pagamento para conta de pessoa física" também funciona como defesa contra golpe.
+ */
+export const faq = [
+  { id: 'minimo', q: 'Qual o pedido mínimo?', a: 'A partir de {{minOrder}} caixas por modelo.' },
+  {
+    id: 'prazo',
+    q: 'Qual o prazo?',
+    a: 'Em média {{leadTimeDays}} dias úteis após a aprovação da arte, por escrito no orçamento.',
+  },
+  {
+    id: 'entrega',
+    q: 'Entregam na minha cidade?',
+    a: 'Entregamos em {{serviceArea}}. Para outras regiões, consulte o frete.',
+  },
+  {
+    id: 'medida',
+    q: 'Não sei a medida da caixa. E agora?',
+    a: 'Mande a medida do produto ou uma foto dele com uma régua ao lado, que a gente ajuda.',
+  },
+  {
+    id: 'logo',
+    q: 'Como envio minha logo?',
+    a: 'Pelo próprio WhatsApp, em PDF, SVG ou PNG de boa resolução, com prova aprovada antes da produção.',
+  },
+  {
+    id: 'pagamento',
+    q: 'Formas de pagamento?',
+    a: '{{paymentMethods}}. Nunca pedimos pagamento para conta de pessoa física.',
+  },
+  {
+    id: 'confianca',
+    q: 'Como sei que a Vanpack é confiável?',
+    a: 'Somos a {{legalName}}, CNPJ {{cnpj}}, com fábrica em {{street}}, {{city}}. Pode nos visitar.',
+  },
+  {
+    id: 'onda',
+    q: 'Onda simples ou dupla?',
+    a: 'A dupla é mais resistente, indicada para produtos pesados ou empilhamento alto. Ajudamos a escolher.',
+  },
+];
+
+/**
+ * Prova social: nada inventado. Só entra na página o item com `authorized: true` (e registro em
+ * docs/provas/<id>.md). Itens `demo: true` são de exemplo: só aparecem em modo demo, com o rótulo
+ * "Exemplo", e nunca em production. A nota do Google só vale com `authorized` (sem versão demo).
+ * Logos de clientes só em SVG (public/clientes/<id>.svg), sempre com autorização.
+ */
+export const proofs = {
+  testimonials: [
+    {
+      id: 'exemplo-ecommerce',
+      demo: true,
+      quote: 'As caixas chegaram na medida certa e com a nossa marca bem impressa.',
+      author: 'Loja virtual de cosméticos',
+    },
+    {
+      id: 'exemplo-industria',
+      demo: true,
+      quote: 'Pedimos a mesma caixa várias vezes e o padrão nunca mudou.',
+      author: 'Indústria de alimentos',
+    },
+  ],
+  clientLogos: [], // { id, name, src: '/clientes/<id>.svg', authorized: true }
+  googleRating: null, // { value, count, url, authorized: true }
+};
+
+/** O que a página mostra da prova social neste modo (demo mostra os exemplos; production só o autorizado). */
+export function visibleProofs(items, dataMode) {
+  const shown = (item) => item.authorized === true || (item.demo === true && dataMode === 'demo');
+  return {
+    testimonials: items.testimonials.filter(shown),
+    clientLogos: items.clientLogos.filter(shown),
+    googleRating: items.googleRating?.authorized === true ? items.googleRating : null,
+  };
+}
+
 const text = (value) => String(value ?? '').trim();
 
 /** Servidor do Umami Cloud; `VITE_ANALYTICS_ENDPOINT` só muda numa instância própria. */
@@ -36,7 +141,7 @@ function formatPhone(phone) {
  * @param {Record<string, string | undefined>} env
  * @param {Date} [now] data do build (ano do © e anos de mercado)
  */
-export function createSiteConfig(env = {}, now = new Date()) {
+export function createSiteConfig(env = {}, now = new Date(), content = { models, faq, proofs }) {
   const city = text(env.VITE_CITY);
   const state = text(env.VITE_STATE);
   const phone = text(env.VITE_PHONE);
@@ -47,11 +152,12 @@ export function createSiteConfig(env = {}, now = new Date()) {
 
   const site = {
     ...brand,
+    content,
     dataMode: text(env.VITE_DATA_MODE),
     siteUrl: text(env.VITE_SITE_URL),
     whatsapp: text(env.VITE_WHATSAPP).replace(/\D/g, ''),
     phone,
-    phoneDisplay: text(env.VITE_PHONE_DISPLAY) || formatPhone(phone),
+    phoneDisplay: text(env.VITE_PHONE_DISPLAY) || formatPhone(phone) || phone,
     email: text(env.VITE_EMAIL),
     cnpj: text(env.VITE_CNPJ),
     legalName,
@@ -118,6 +224,22 @@ export function createSiteConfig(env = {}, now = new Date()) {
     // política de privacidade: a ferramenta de medição (ou a ausência dela)
     analyticsName: site.analytics.provider === 'umami' ? 'Umami Cloud' : '',
     noAnalytics: site.analytics.provider ? '' : 'sim',
+    // telefone e e-mail do CTA final: a linha só existe se tiver um dos dois
+    contactAlt: phone || site.email ? 'sim' : '',
+    // seções que só existem se tiverem algo a mostrar
+    hasFacts: [
+      text(env.VITE_MIN_ORDER),
+      text(env.VITE_LEAD_TIME_DAYS),
+      text(env.VITE_SERVICE_AREA),
+    ].some(Boolean)
+      ? 'sim'
+      : '',
+    hasProofs: (() => {
+      const shown = visibleProofs(content.proofs, text(env.VITE_DATA_MODE));
+      return shown.testimonials.length || shown.clientLogos.length || shown.googleRating
+        ? 'sim'
+        : '';
+    })(),
     // a faixa de confiança só existe se tiver ao menos um item
     hasTrust: [cityState, site.cnpj, foundedYear, site.mapUrl, phone, site.email].some(Boolean)
       ? 'sim'
