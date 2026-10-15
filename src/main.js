@@ -14,11 +14,12 @@ const DEPTHS = [25, 50, 75, 100];
 const AUTOPLAY_DELAY = 800; // ms depois de a cena ficar pronta
 
 let stageOk = false; // 3D funcionando
-// `stage` e `tour` são criados mais abaixo; os callbacks da história só os leem quando chamados.
-let stage = null;
+// O tour é criado mais abaixo; os callbacks da história só o leem quando chamados.
 let tour = null;
 
 // ---------- Cena e scroll ----------
+// O worker é criado primeiro (o download dele é o que mais demora); a história lê o layout depois.
+const stage = mountStage($('#stage'));
 const story = createStory({
   story: storyEl,
   stage: $('#stage'),
@@ -26,7 +27,7 @@ const story = createStory({
   cue: $('#cue'),
   fab: $('#fab'),
   cards: [...document.querySelectorAll('.card')],
-  onProgress: (p) => stage?.setProgress(p),
+  onProgress: (p) => stage.setProgress(p),
   onChapter: (index) =>
     trackOnce(`chapter-${index}`, 'chapter_view', {
       chapter: index + 1,
@@ -41,7 +42,6 @@ const story = createStory({
     }
   },
 });
-stage = mountStage($('#stage'), story.progress());
 
 // ---------- Tour automático ----------
 // A página rola sozinha pelos capítulos (a cena continua ligada ao scroll) e para no fim da

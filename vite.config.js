@@ -97,28 +97,6 @@ function siteDataPlugin(rawPhone = '') {
 }
 
 /**
- * O worker da cena (três.js + cena) é o maior arquivo da página, mas só seria pedido depois que o
- * script principal executasse. O modulepreload no HTML adianta o download, que o worker então
- * reaproveita do cache HTTP.
- */
-function preloadSceneWorker() {
-  return {
-    name: 'vanpack:preload-worker',
-    apply: 'build',
-    transformIndexHtml: {
-      order: 'post',
-      handler: (html, ctx) => {
-        const file = Object.keys(ctx.bundle ?? {}).find((name) =>
-          /^assets\/worker-.+\.js$/.test(name),
-        );
-        if (!file) return html;
-        return html.replace('</head>', `<link rel="modulepreload" href="./${file}" />\n</head>`);
-      },
-    },
-  };
-}
-
-/**
  * CSP via <meta> (o GitHub Pages não permite cabeçalhos), só no build: o servidor de dev injeta
  * scripts. Roda sobre o index.html final, porque o Vite ainda reescreve URLs dentro dos <style>
  * depois dos hooks de transformIndexHtml, e o hash precisa bater com o conteúdo publicado.
@@ -162,7 +140,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd());
   return {
     base: './',
-    plugins: [siteDataPlugin(env.VITE_WHATSAPP), preloadSceneWorker(), contentSecurityPolicy()],
+    plugins: [siteDataPlugin(env.VITE_WHATSAPP), contentSecurityPolicy()],
     worker: { format: 'es' },
     build: {
       modulePreload: { polyfill: false },

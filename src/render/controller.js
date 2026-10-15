@@ -136,6 +136,7 @@ export function createController(canvas, init, emit) {
       switch (msg.type) {
         case 'progress':
           target = msg.value;
+          if (!ready) current = target; // a página abriu no meio da história: sem deslizar desde 0
           wake();
           break;
         case 'reduced':

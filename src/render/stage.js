@@ -1,6 +1,6 @@
 // Liga o canvas da animação ao render: em um Web Worker (OffscreenCanvas) quando possível, senão
-// na thread principal. A página só envia o progresso do scroll e o tamanho; o render devolve
-// "pronto", "erro" e perda/volta do contexto WebGL.
+// na thread principal. A página envia o tamanho e o progresso do scroll; o render devolve "pronto",
+// "erro" e perda/volta do contexto WebGL.
 
 const MOBILE = '(max-width: 760px), (pointer: coarse)';
 const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
@@ -12,11 +12,24 @@ const MIN_DENSITY = 0.75;
 
 /**
  * @param {HTMLElement} stage elemento `.stage` com um `<canvas>` dentro
- * @param {number} progress progresso inicial do scroll (0…1)
  * @returns {{ setProgress(p: number): void, ready: Promise<boolean> }} `ready` resolve `false`
- *   quando não há WebGL (a página fica com o fundo Papel, o símbolo e os cartões)
+ *   quando não há WebGL (a página fica com o fundo Papel, o símbolo e os cartões). Chame
+ *   `setProgress` com o progresso do scroll assim que souber (vale também antes do "pronto").
  */
-export function mountStage(stage, progress) {
+export function mountStage(stage) {
+  const canvas = stage.querySelector('canvas');
+
+  // O download e a leitura do worker (o maior arquivo da página) são o que mais demora, então ele é
+  // criado antes de qualquer leitura de layout.
+  let worker = null;
+  if (typeof canvas.transferControlToOffscreen === 'function' && typeof Worker === 'function') {
+    try {
+      worker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' });
+    } catch {
+      worker = null;
+    }
+  }
+
   const mobile = matchMedia(MOBILE).matches;
   const reducedQuery = matchMedia(REDUCED_MOTION);
   const pixelRatio = (width, height) =>
@@ -31,7 +44,7 @@ export function mountStage(stage, progress) {
   const width = stage.clientWidth;
   const height = stage.clientHeight;
   const state = {
-    progress,
+    progress: 0,
     width,
     height,
     dpr: pixelRatio(width, height),
@@ -55,10 +68,10 @@ export function mountStage(stage, progress) {
   };
 
   let inline = false;
-  async function startInline(canvas) {
+  async function startInline(target) {
     inline = true;
     const { createController } = await import('./controller.js');
-    const controller = createController(canvas, { ...state }, (msg) => {
+    const controller = createController(target, { ...state }, (msg) => {
       if (msg.type === 'error') {
         stage.classList.add('no-gl');
         settle(false);
@@ -79,11 +92,8 @@ export function mountStage(stage, progress) {
     startInline(fresh);
   }
 
-  const canvas = stage.querySelector('canvas');
-  let worker = null;
-  if (typeof canvas.transferControlToOffscreen === 'function' && typeof Worker === 'function') {
+  if (worker) {
     try {
-      worker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' });
       const offscreen = canvas.transferControlToOffscreen();
       worker.onmessage = ({ data }) => onEvent(data);
       worker.onerror = (e) => fallback(e.message);
@@ -97,9 +107,9 @@ export function mountStage(stage, progress) {
   }
 
   new ResizeObserver(([entry]) => {
-    const { width, height } = entry.contentRect;
-    state.width = Math.round(width);
-    state.height = Math.round(height);
+    const { width: w, height: h } = entry.contentRect;
+    state.width = Math.round(w);
+    state.height = Math.round(h);
     state.dpr = pixelRatio(state.width, state.height);
     send({ type: 'resize', width: state.width, height: state.height, dpr: state.dpr });
   }).observe(stage);
