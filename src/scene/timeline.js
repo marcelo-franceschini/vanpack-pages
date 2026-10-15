@@ -22,7 +22,6 @@ const LIFT = 0.015; // a caixa sobe 15 mm ao chegar à mesa giratória
 const HOP_HEIGHT = 0.38; // altura do salto da mesa para o palete
 const DRIVE_DISTANCE = 9.5; // metros percorridos pelo caminhão na estrada
 const TRUCK_PIVOT = 2.1; // distância da traseira ao centro do eixo, em x
-const HIDDEN = 0.0001;
 
 /**
  * @param {object} parts
@@ -95,26 +94,26 @@ export function createTimeline({
     hero.bead.scale.x = Math.max(glueLength, 0.001);
     hero.bead.position.x = glueStart + glueLength / 2;
 
-    // aparas: soltam da chapa no recolhimento e caem girando
-    const scrapsShown = p >= PHASE.scrapsFrom;
-    for (let i = 0; i < SCRAPS.length; i++) {
-      const scrap = SCRAPS[i];
-      const t = (p - scrap.t0) / SCRAP_FALL;
-      const fall = clamp(t);
-      if (scrapsShown) scale.set(scrap.w, 1, scrap.d);
-      else scale.setScalar(HIDDEN);
-      const from = lin(Math.min(p, scrap.t0), SHEET_X) - SHEET_LENGTH / 2 + scrap.w / 2;
-      const to = scrapStartX[i] - SHEET_LENGTH / 2 + scrap.w / 2 + scrap.vx;
-      position.set(
-        lerp(from, to, fall) + scrap.vx * fall,
-        SHEET_Y - 0.01 - 0.4 * fall * fall,
-        scrap.z,
-      );
-      euler.set(0.3 * fall * Math.sign(scrap.rot), 0, scrap.rot * fall * 0.5);
-      quaternion.setFromEuler(euler);
-      scraps.setMatrixAt(i, matrix.compose(position, quaternion, scale));
+    // aparas: soltam da chapa no recolhimento e caem girando (antes disso nem entram no quadro)
+    scraps.visible = p >= PHASE.scrapsFrom;
+    if (scraps.visible) {
+      for (let i = 0; i < SCRAPS.length; i++) {
+        const scrap = SCRAPS[i];
+        const fall = clamp((p - scrap.t0) / SCRAP_FALL);
+        const from = lin(Math.min(p, scrap.t0), SHEET_X) - SHEET_LENGTH / 2 + scrap.w / 2;
+        const to = scrapStartX[i] - SHEET_LENGTH / 2 + scrap.w / 2 + scrap.vx;
+        scale.set(scrap.w, 1, scrap.d);
+        position.set(
+          lerp(from, to, fall) + scrap.vx * fall,
+          SHEET_Y - 0.01 - 0.4 * fall * fall,
+          scrap.z,
+        );
+        euler.set(0.3 * fall * Math.sign(scrap.rot), 0, scrap.rot * fall * 0.5);
+        quaternion.setFromEuler(euler);
+        scraps.setMatrixAt(i, matrix.compose(position, quaternion, scale));
+      }
+      scraps.instanceMatrix.needsUpdate = true;
     }
-    scraps.instanceMatrix.needsUpdate = true;
 
     // palete, cinta e porta do baú
     load.position.set(palletX, RAIL_Y, 0);

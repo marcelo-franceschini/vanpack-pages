@@ -50,6 +50,8 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
   });
   renderer.setPixelRatio(dpr);
   renderer.setClearColor(PALETTE.paper);
+  // A checagem de erro de shader sincroniza com o driver depois de cada link; só vale em dev/auditoria.
+  renderer.debug.checkShaderErrors = import.meta.env.MODE !== 'production';
   renderer.shadowMap.enabled = !mobile;
   renderer.shadowMap.type = PCFShadowMap;
 
