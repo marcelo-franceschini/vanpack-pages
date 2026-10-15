@@ -11,6 +11,7 @@ export function createCameraRig() {
   const camera = new PerspectiveCamera(FOV_LANDSCAPE, 1, 0.5, 140);
   const direction = new Vector3(...CAMERA_DIRECTION).normalize();
   const target = new Vector3();
+  let reach = 0;
   // fração da largura/altura da tela que a cena útil ocupa (o resto é dos cartões)
   const view = {
     portrait: false,
@@ -24,6 +25,10 @@ export function createCameraRig() {
     camera,
     /** Alvo (x, y, z) da câmera no último `place`; a luz principal o acompanha. */
     target,
+    /** Metade da largura visível (m) no plano do alvo, no último `place`. */
+    get reach() {
+      return reach;
+    },
 
     resize(width, height) {
       const portrait = width / height < 1;
@@ -62,6 +67,7 @@ export function createCameraRig() {
         usefulHeight / (2 * view.tanHalfFov * view.fh),
         usefulWidth / (2 * view.tanHalfFov * view.aspect * view.fw),
       );
+      reach = distance * view.tanHalfFov * view.aspect;
       camera.position.copy(target).addScaledVector(direction, distance);
       camera.lookAt(target);
     },

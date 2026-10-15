@@ -28,6 +28,13 @@ import { buildTruck } from './truck.js';
 
 const PI = Math.PI;
 const SUN_OFFSET = new Vector3(-4.5, 9, 6);
+// A sombra só cai no piso e é suave: mapa de 1024 com o recorte ajustado ao enquadramento atual
+// (de 3,8 a 9,5 m de meia largura) tem texel menor que o antigo 2048 com recorte fixo de 15 m.
+const SHADOW_MAP_SIZE = 1024;
+const SHADOW_HALF_MIN = 3.8;
+const SHADOW_HALF_MAX = 9.5;
+const SHADOW_REACH_FACTOR = 1.5; // meia largura do recorte / alcance da câmera
+const SHADOW_BLUR = 2; // em texels (o mapa tem metade da resolução anterior)
 const FLOOR = { width: 70, depth: 56, centerX: 8, centerZ: -14, fade: 14 };
 
 /**
@@ -58,22 +65,20 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
   // luz: uma principal quente e suave + ambiente
   scene.add(new HemisphereLight(0xffffff, 0xd9d2c4, 2.0));
   const sun = new DirectionalLight(0xfff6ec, 2.1);
-  const shadowHalf = mobile ? 5 : 7.5;
-  const shadowSize = mobile ? 1024 : 2048;
   sun.castShadow = !mobile;
-  sun.shadow.mapSize.set(shadowSize, shadowSize);
-  sun.shadow.radius = 4;
-  Object.assign(sun.shadow.camera, {
-    left: -shadowHalf,
-    right: shadowHalf,
-    top: shadowHalf,
-    bottom: -shadowHalf,
-    near: 1,
-    far: 30,
-  });
+  sun.shadow.mapSize.set(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
+  sun.shadow.radius = SHADOW_BLUR;
+  Object.assign(sun.shadow.camera, { near: 1, far: 30 });
   sun.shadow.bias = -0.0005;
   sun.shadow.normalBias = 0.02;
+  sun.position.copy(SUN_OFFSET);
   scene.add(sun, sun.target);
+  // eixos da luz (a direção é fixa): o recorte da sombra anda em múltiplos de um texel
+  const lightDirection = SUN_OFFSET.clone().negate().normalize();
+  const lightRight = new Vector3().crossVectors(lightDirection, new Vector3(0, 1, 0)).normalize();
+  const lightUp = new Vector3().crossVectors(lightRight, lightDirection);
+  const snapped = new Vector3();
+  let shadowHalf = 0;
 
   // materiais: um por cor (Lambert); a linha da estrada e a cinta são separadas de propósito
   const lambert = (color, options) => track(new MeshLambertMaterial({ color, ...options }));
@@ -235,11 +240,29 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
     truck,
     truckBlob,
   });
+  // Sombra: recorte proporcional ao que a câmera mostra e centro encaixado na grade de texels, para
+  // as bordas não "andarem" durante o scroll.
+  const fitShadow = (target, reach) => {
+    const half = clamp(reach * SHADOW_REACH_FACTOR, SHADOW_HALF_MIN, SHADOW_HALF_MAX);
+    if (half !== shadowHalf) {
+      shadowHalf = half;
+      Object.assign(sun.shadow.camera, { left: -half, right: half, top: half, bottom: -half });
+      sun.shadow.camera.updateProjectionMatrix();
+    }
+    const texel = (2 * half) / SHADOW_MAP_SIZE;
+    const right = target.dot(lightRight);
+    const up = target.dot(lightUp);
+    snapped
+      .copy(target)
+      .addScaledVector(lightRight, Math.round(right / texel) * texel - right)
+      .addScaledVector(lightUp, Math.round(up / texel) * texel - up);
+    sun.target.position.copy(snapped);
+    sun.position.copy(snapped).add(SUN_OFFSET);
+  };
   const place = (p) => {
     update(p);
     rig.place(p);
-    sun.target.position.copy(rig.target);
-    sun.position.copy(rig.target).add(SUN_OFFSET);
+    if (shadows) fitShadow(rig.target, rig.reach);
   };
 
   return {
