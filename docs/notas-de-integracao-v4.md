@@ -83,6 +83,12 @@ em torno de cada centro.
 | 4 Caixa             | 0,60–0,82 | o tubo abre e gira na mesa, fecha e sobe na pilha do palete; cinta  | caixa aberta, marca de frente (0,75) |
 | 5 Entrega           | 0,82–1    | o palete entra no baú, a porta fecha, o caminhão parte pela estrada | caminhão ao longe na estrada (1)     |
 
+A máquina A (`src/scene/machine.js`, trechos em `MACHINE_A`) tem duas janelas na frente (+z) que
+mostram os cilindros de impressão (com a luva Floresta) e de corte. Os cilindros giram junto com a
+chapa, só enquanto ela passa pela máquina: giram só os marcadores (listras, luva, lâminas, cruz), em
+5 malhas à parte, e o miolo fica na malha mesclada da fábrica. O trecho fechado entre as janelas
+esconde a troca da chapa lisa pela peça "herói" (`PHASE.heroFromX`); um teste trava essa regra.
+
 ## 5. Tour automático (`src/tour.js`)
 
 Começa no instante em que a cena fica pronta (sem espera), se a página está no topo, sem `#hash`, sem
