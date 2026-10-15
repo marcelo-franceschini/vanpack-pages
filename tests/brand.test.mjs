@@ -110,17 +110,20 @@ describe('produto', () => {
       ['1', '2', '3'],
       `números no texto: ${visible.match(/.{0,20}\d+.{0,20}/g)}`,
     );
+    // "dias" e "horas" só ao lado de um {{placeholder}}: o número vem do .env, nunca é digitado
+    const claims = visible.replace(/\{\{\w+\}\}\s+(dias|horas)\b/gi, ' ');
     assert.ok(
       !/ecol[óo]gic|sustent[áa]vel|recicl|ambient|carbono|verde|certifica|iso\s?\d|dias|horas|\b\d+\s?%/i.test(
-        visible,
+        claims,
       ),
     );
   });
 
-  test('o rodapé só mostra o que tem dado: slogan do manual, sem endereço/horário/CNPJ/mapa vazios', () => {
+  test('o rodapé tem o slogan do manual e nenhuma marca de campo sobra no HTML publicado', () => {
+    // o rodapé sem dado (campos que somem) é testado com a config vazia em site-config.test.mjs
     const dist = read('dist/index.html');
     assert.match(dist, /<p class="slogan">Do projeto à entrega<\/p>/);
-    assert.ok(!/data-field|<dl|<dt|<dd/.test(dist), 'campos sem dado saem do HTML');
+    assert.ok(!/data-field|data-need|\{\{/.test(dist), 'todas as marcas foram resolvidas');
   });
 });
 
