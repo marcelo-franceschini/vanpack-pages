@@ -1,165 +1,74 @@
-// Caminhão baú da vanpack, com porta de enrolar e rodas.
-import * as THREE from 'three';
-import { CX0, CX1, CY0, CY1, CZ, DH, TW, WR } from './constants.js';
-import { mergeByMaterial } from './merge.js';
+// O caminhão: baú com porta de enrolar, cabine e rodas, mesclados por material. Os logos das duas
+// laterais do baú são decalques com a textura desenhada via Path2D.
+import { BoxGeometry, Group, Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
+import { RAIL_Y } from './constants.js';
+import { Batch } from './geometry.js';
 
-export function buildTruck(b, mat) {
-  const { add, B, bb, zr, cyl, flat, blob } = b;
-  const truck = new THREE.Group();
-  // `body` gira em torno do eixo traseiro (balanço na arrancada); `inner` desfaz o deslocamento.
-  const body = new THREE.Group();
-  body.position.set(3.85, WR, 0);
-  truck.add(body);
-  const inner = new THREE.Group();
-  inner.position.set(-3.85, -WR, 0);
-  body.add(inner);
+const RAIL = RAIL_Y;
 
-  const TB = new THREE.Group();
+/**
+ * @param {Record<string, import('three').Material>} M materiais por cor
+ * @param {import('three').Texture | null} logoTexture
+ * @param {<T>(resource: T) => T} track registra o recurso para o `dispose()` da cena
+ * @returns {{ truck: Group, doorPivot: Group }}
+ */
+export function buildTruck(M, logoTexture, track) {
+  const truck = new Group();
+  const doorPivot = new Group();
   {
-    bb(CX0, CX1, CY0 - TW, CY0, -CZ, CZ, mat.white, TB);
-    bb(CX0, CX1, CY1 - TW, CY1, -CZ, CZ, mat.white, TB);
-    bb(CX1 - TW, CX1, CY0, CY1, -CZ, CZ, mat.white, TB);
-    bb(CX0 + 0.06, CX0 + 0.28, CY1 - 0.24, CY1 - TW, -CZ + TW, CZ - TW, mat.white, TB);
+    const b = new Batch();
+    b.box(M.light2, 0, 3.0, 0.78, RAIL, -0.95, 0.95, 0.01);
+    b.box(M.white, -0.02, 3.02, 2.38, 2.44, -0.97, 0.97, 0.01);
     for (const s of [-1, 1]) {
-      bb(CX0, CX1, CY0, CY1, ...zr(s, CZ - TW, CZ), mat.white, TB);
-      bb(CX0, CX1, CY0 + 0.06, CY0 + 0.15, ...zr(s, CZ, CZ + 0.004), mat.green, TB);
-      flat(
-        add(
-          new THREE.PlaneGeometry(1.55, 0.48),
-          mat.brand,
-          (CX0 + CX1) / 2,
-          1.3,
-          s * (CZ + 0.006),
-          TB,
-        ),
-      ).rotation.y = s < 0 ? Math.PI : 0;
-      bb(CX0, CX1, CY1 - 0.03, CY1 + 0.01, ...zr(s, CZ - 0.025, CZ + 0.012), mat.alu, TB);
-      bb(CX0, CX1, CY0 - 0.07, CY0 - 0.03, ...zr(s, CZ - 0.025, CZ + 0.012), mat.alu, TB);
-      bb(CX1 - 0.03, CX1 + 0.012, CY0 - 0.04, CY1, ...zr(s, CZ - 0.025, CZ + 0.012), mat.alu, TB);
-      bb(
-        CX0 - 0.01,
-        CX0 + 0.06,
-        CY0 - 0.04,
-        CY1 + 0.02,
-        ...zr(s, CZ - 0.07, CZ + 0.005),
-        mat.green,
-        TB,
-      );
-      bb(CX0 - 0.016, CX0 - 0.004, 0.62, 0.8, ...zr(s, CZ - 0.06, CZ - 0.01), mat.tail, TB);
-      bb(3.45, 3.47, 0.08, 0.46, ...zr(s, 0.55, 0.81), mat.rubber, TB);
-      const fender = add(
-        new THREE.TorusGeometry(0.39, 0.022, 8, 28, 2.443),
-        mat.dark,
-        5.75,
-        WR,
-        s * 0.802,
-        TB,
-      );
-      fender.rotation.z = 0.349;
+      b.box(M.white, 0, 3.0, RAIL, 2.38, s > 0 ? 0.92 : -0.95, s > 0 ? 0.95 : -0.92, 0.01);
+      b.box(M.light2, 0, 3.0, RAIL, 2.38, s > 0 ? 0.9 : -0.92, s > 0 ? 0.92 : -0.9, 0.005);
+      b.box(M.dark2, -0.03, 0.05, RAIL, 2.22, s > 0 ? 0.9 : -0.97, s > 0 ? 0.97 : -0.9, 0.01);
+      b.box(M.white, 3.2, 3.85, 1.52, 2.02, s > 0 ? 0.895 : -0.9, s > 0 ? 0.9 : -0.895, 0.004);
+      b.box(M.dark, 4.18, 4.22, 0.75, 0.9, s * 0.55 - 0.125, s * 0.55 + 0.125, 0.01);
     }
-    bb(CX0 - 0.01, CX0 + 0.06, CY1 - 0.1, CY1 + 0.02, -CZ, CZ, mat.green, TB);
-    const well = add(
-      new THREE.CylinderGeometry(0.38, 0.38, 1.6, 28, 1, true, 1.92, 2.443),
-      mat.darkDS,
-      5.75,
-      WR,
-      0,
-      TB,
+    b.box(M.white, 2.94, 3.0, RAIL, 2.38, -0.95, 0.95, 0.01);
+    b.box(M.dark2, -0.03, 0.05, 2.2, 2.42, -0.97, 0.97, 0.01);
+    b.box(M.dark, 0, 3.0, 0.5, 0.78, -0.88, 0.88);
+    b.box(M.dark2, -0.1, 0.02, 0.5, 0.64, -0.85, 0.85);
+    b.box(M.dark2, 3.05, 4.2, 0.52, 1.38, -0.92, 0.92, 0.05);
+    b.box(M.dark2, 3.05, 3.95, 1.38, 2.15, -0.9, 0.9, 0.05);
+    b.box(M.glass, 3.93, 3.97, 1.5, 2.05, -0.8, 0.8, 0.004);
+    for (const s of [-1, 1])
+      b.box(M.glass, 3.2, 3.85, 1.52, 2.02, s > 0 ? 0.9 : -0.905, s > 0 ? 0.905 : -0.9, 0.004);
+    b.box(M.dark, 4.2, 4.24, 0.62, 0.92, -0.4, 0.4, 0.01);
+    for (const x of [0.95, 3.75])
+      for (const s of [-1, 1]) {
+        b.cyl(M.dark, x, 0.34, s * 0.78, 0.34, 0.22, 'z', 28);
+        b.cyl(M.light2, x, 0.34, s * 0.78, 0.17, 0.235, 'z', 20);
+      }
+    b.cyl(M.dark2, 0.02, 2.3, 0, 0.07, 1.8);
+    b.build(truck);
+    const decal = track(new PlaneGeometry(2.222, 0.5556));
+    const decalMaterial = track(
+      new MeshBasicMaterial({
+        map: logoTexture,
+        transparent: true,
+        depthWrite: false,
+        toneMapped: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2,
+      }),
     );
-    well.rotation.x = Math.PI / 2;
-    bb(3.05, 6.15, 0.31, 0.45, -0.5, 0.5, mat.dark, TB);
-    bb(CX0 - 0.09, CX0 + 0.04, 0.33, 0.45, -0.86, 0.86, mat.dark, TB);
-    bb(CX0 - 0.1, CX0 - 0.09, 0.345, 0.435, -0.16, 0.16, mat.white, TB);
-
-    // Cabine: perfil lateral extrudado, com o recorte do para-lama.
-    const prof = new THREE.Shape();
-    prof.moveTo(CX1, 0.45);
-    prof.lineTo(5.393, 0.45);
-    prof.absarc(5.75, WR, 0.38, Math.PI - 0.349, 0.349, true);
-    prof.lineTo(6.3, 0.45);
-    prof.lineTo(6.3, 1.0);
-    prof.lineTo(5.95, 1.58);
-    prof.lineTo(CX1, 1.62);
-    prof.closePath();
-    const cabGeo = new THREE.ExtrudeGeometry(prof, {
-      depth: 1.56,
-      bevelEnabled: true,
-      bevelThickness: 0.02,
-      bevelSize: 0.02,
-      bevelSegments: 3,
-    });
-    cabGeo.translate(0, 0, -0.78);
-    add(cabGeo, mat.green, 0, 0, 0, TB);
-    const wsLen = Math.hypot(0.35, 0.58);
-    flat(
-      add(
-        B(wsLen - 0.1, 0.01, 1.4),
-        mat.glass,
-        (6.3 + 5.95) / 2 + 0.02,
-        (1.0 + 1.58) / 2 + 0.012,
-        0,
-        TB,
-      ),
-    ).rotation.z = Math.atan2(0.58, -0.35);
-    for (const s of [-1, 1]) {
-      bb(5.34, 5.86, 1.06, 1.44, ...zr(s, 0.8, 0.81), mat.glass, TB);
-      for (const [x, y0] of [
-        [5.3, 0.5],
-        [5.92, 0.74],
-      ]) {
-        flat(bb(x - 0.004, x + 0.004, y0, 1.5, ...zr(s, 0.8, 0.804), mat.dark, TB));
+    if (logoTexture) {
+      for (const side of [1, -1]) {
+        const mesh = new Mesh(decal, decalMaterial);
+        mesh.position.set(1.5, 1.6, side * 0.953);
+        if (side < 0) mesh.rotation.y = Math.PI;
+        truck.add(mesh);
       }
-      bb(5.38, 5.46, 0.98, 1.0, ...zr(s, 0.8, 0.82), mat.dark, TB);
-      bb(5.98, 6.0, 1.18, 1.22, ...zr(s, 0.8, 0.9), mat.dark, TB);
-      bb(5.96, 6.0, 1.06, 1.3, ...zr(s, 0.88, 0.94), mat.dark, TB);
-      bb(6.3, 6.34, 0.8, 0.9, ...zr(s, 0.44, 0.66), mat.lamp, TB);
     }
-    bb(6.28, 6.4, 0.44, 0.6, -0.83, 0.83, mat.dark, TB);
-    bb(6.3, 6.32, 0.66, 0.84, -0.36, 0.36, mat.dark, TB);
-    blob(4.8, 0, 3.8, 2.3, TB);
+    // porta de enrolar: encolhe em y a partir do topo
+    doorPivot.position.set(0.035, 2.3, 0);
+    const doorGeometry = new BoxGeometry(0.03, 2.3 - RAIL, 1.8);
+    doorGeometry.translate(0, -(2.3 - RAIL) / 2, 0);
+    doorPivot.add(new Mesh(track(doorGeometry), M.light));
+    truck.add(doorPivot);
   }
-  inner.add(mergeByMaterial(TB));
-
-  // Porta de enrolar: escala em y a partir do topo.
-  const doorPivot = new THREE.Group();
-  doorPivot.position.set(CX0 + 0.02, CY1 - 0.1, 0);
-  inner.add(doorPivot);
-  const doorGeo = B(0.02, DH, 2 * CZ - 0.14);
-  doorGeo.translate(0, -DH / 2, 0);
-  const door = add(doorGeo, mat.door, 0, 0, 0, doorPivot);
-  const doorHandle = add(B(0.03, 0.03, 0.3), mat.dark, -0.02, 0, 0, doorPivot);
-
-  // Rodas: pneu, aro e cubo são simétricos e ficam estáticos; só os parafusos giram.
-  const hubs = new THREE.Group();
-  const wheels = [];
-  for (const x of [3.85, 5.75]) {
-    for (const s of [-1, 1]) {
-      const z = s * 0.68;
-      cyl(WR, 0.24, mat.rubber, x, WR, z, 'z', hubs, 40);
-      cyl(0.2, 0.245, mat.steel, x, WR, z, 'z', hubs, 32);
-      cyl(0.075, 0.26, mat.dark, x, WR, z, 'z', hubs, 20);
-      const lugs = new THREE.Group();
-      for (let k = 0; k < 6; k++) {
-        const a = k * 1.047;
-        cyl(
-          0.014,
-          0.02,
-          mat.chrome,
-          Math.cos(a) * 0.12,
-          Math.sin(a) * 0.12,
-          s * 0.125,
-          'z',
-          lugs,
-          8,
-        );
-      }
-      const wheel = mergeByMaterial(lugs);
-      wheel.position.set(x, WR, z);
-      truck.add(wheel);
-      wheels.push(wheel);
-    }
-  }
-  truck.add(mergeByMaterial(hubs));
-
-  return { truck, body, door, doorHandle, wheels };
+  return { truck, doorPivot };
 }

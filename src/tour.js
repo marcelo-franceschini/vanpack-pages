@@ -1,6 +1,7 @@
-// Tour automático: rola a página sozinho pelos 5 capítulos, com pausas para ler. A animação 3D
-// continua ligada ao scroll, então cartões, rota e cena ficam sincronizados e a pessoa pode pegar
-// o controle a qualquer instante (qualquer toque, roda do mouse, tecla ou scroll interrompe).
+// Tour automático: rola a página sozinho pelos 5 capítulos, com pausas para ler, e para no fim da
+// história. A animação 3D continua ligada ao scroll, então cartões e cena ficam sincronizados e a
+// pessoa pode pegar o controle a qualquer instante (qualquer toque, roda do mouse, tecla ou scroll
+// interrompe). Interrompido, o tour nunca retoma sozinho.
 
 // Progresso (0…1) no centro de cada capítulo e tempos, em ms.
 const CENTERS = [0, 0.25, 0.5, 0.75, 1];
@@ -21,12 +22,11 @@ const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
  * @param {object} options
  * @param {() => number} options.getProgress progresso atual da história (0…1)
  * @param {(p: number) => number} options.yAt scrollY que corresponde ao progresso p
- * @param {number} [options.speed] 2 = metade do tempo (`?tour=fast`)
  * @param {(state: 'idle'|'playing'|'paused'|'done') => void} [options.onState]
  * @param {(event: string, data: object) => void} [options.onEvent] medição
- * @param {(el: EventTarget | null) => boolean} [options.isUi] controles do tour não interrompem
+ * @param {(el: EventTarget | null) => boolean} [options.isUi] elementos que iniciam o tour não o interrompem
  */
-export function createTour({ getProgress, yAt, speed = 1, onState, onEvent, isUi = () => false }) {
+export function createTour({ getProgress, yAt, onState, onEvent, isUi = () => false }) {
   let state = 'idle';
   let segments = [];
   let index = 0;
@@ -60,7 +60,7 @@ export function createTour({ getProgress, yAt, speed = 1, onState, onEvent, isUi
       if (c < 1) segs.push({ hold: true, p: c, ms: HOLD });
       cur = c;
     }
-    return segs.map((s) => ({ ...s, ms: s.ms / speed }));
+    return segs;
   }
 
   function run(p0, initialHold) {
@@ -117,13 +117,6 @@ export function createTour({ getProgress, yAt, speed = 1, onState, onEvent, isUi
     onEvent?.('tour_pause', { chapter: chapter(), by });
   }
 
-  function resume() {
-    if (state === 'playing') return;
-    if (state === 'done') return start();
-    onEvent?.('tour_resume', { chapter: chapter() });
-    run(getProgress(), false);
-  }
-
   // O usuário assumiu o controle: pausa e não retoma sozinho.
   const interrupt = (e) => {
     if (state !== 'playing' || isUi(e.target)) return;
@@ -154,6 +147,5 @@ export function createTour({ getProgress, yAt, speed = 1, onState, onEvent, isUi
     },
     start,
     pause,
-    resume,
   };
 }
