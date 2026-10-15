@@ -3,7 +3,7 @@
 // passam em instantes; a cena continua renderizando no worker em tempo real.
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
-import { launch, openPage, startServer, tourState, yAtProgress } from './helpers.mjs';
+import { launch, openPage, startServer, tourState, yAtProgress } from '../scripts/lib.mjs';
 
 let server;
 let browser;
