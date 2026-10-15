@@ -157,10 +157,29 @@ stage.ready.then((ok) => {
 });
 
 // ---------- Conversão ----------
-// Cada botão do WhatsApp tem data-cta com o ponto de contato.
+// Cada botão do WhatsApp tem data-cta com o ponto de contato, e o build já põe o código [site-<cta>]
+// no fim da mensagem. Se a visita veio de uma campanha, a origem (utm_source e utm_campaign da URL)
+// entra no texto também: o wa.me ignora parâmetros extras, é no texto que o dono a enxerga. Sem
+// cookie nem storage, e só valores simples (letras, números, "." "_" "-", até 40 caracteres), para
+// um link forjado não injetar texto na mensagem.
+const campaign = ['utm_source', 'utm_campaign']
+  .map((key) => params.get(key) ?? '')
+  .filter((value) => /^[\w.-]{1,40}$/.test(value))
+  .join('/');
+
+function addCampaign(link) {
+  if (!campaign) return;
+  const url = new URL(link.href);
+  const message = url.searchParams.get('text');
+  if (!message || message.includes('[utm:')) return;
+  link.href = `${url.origin}${url.pathname}?text=${encodeURIComponent(`${message} [utm: ${campaign}]`)}`;
+}
+
 document.addEventListener('click', (e) => {
   const link = e.target.closest?.('a[data-cta]');
-  if (link) track('whatsapp_click', { cta: link.dataset.cta });
+  if (!link) return;
+  addCampaign(link);
+  track('whatsapp_click', { cta: link.dataset.cta });
 });
 const finalCta = $('#orcamento .btn');
 if (finalCta) {

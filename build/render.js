@@ -155,7 +155,11 @@ export function interpolate(text, vars, where = 'HTML') {
   });
 }
 
-/** Cada <a data-wa="…"> vira um link do wa.me com o número da config e a mensagem pronta. */
+/**
+ * Cada <a data-wa="…"> vira um link do wa.me com o número da config e a mensagem pronta. O fim da
+ * mensagem leva o código de origem do botão ([site-hero], pelo data-cta): o dono vê de qual ponto
+ * da página veio cada conversa.
+ */
 function whatsappLinks(html, site) {
   return html.replace(/<a\b[^>]*\sdata-wa="[^"]*"[^>]*>/g, (tag) => {
     if (!site.whatsapp) {
@@ -163,11 +167,11 @@ function whatsappLinks(html, site) {
         'VITE_WHATSAPP vazio: os botões do WhatsApp abririam wa.me/?text=… sem número.',
       );
     }
-    return tag.replace(
-      /\sdata-wa="([^"]*)"/,
-      (_, message) =>
-        ` href="https://wa.me/${site.whatsapp}?text=${encodeURIComponent(decodeEntities(message))}" target="_blank" rel="noopener"`,
-    );
+    const cta = /\sdata-cta="([^"]*)"/.exec(tag)?.[1];
+    return tag.replace(/\sdata-wa="([^"]*)"/, (_, message) => {
+      const text = decodeEntities(message) + (cta ? ` [site-${cta}]` : '');
+      return ` href="https://wa.me/${site.whatsapp}?text=${encodeURIComponent(text)}" target="_blank" rel="noopener"`;
+    });
   });
 }
 

@@ -260,6 +260,14 @@ describe('render', () => {
     assert.throws(() => renderPage('<p data-need="inventada">x</p>', empty), /desconhecido/);
   });
 
+  test('o fim da mensagem do WhatsApp leva o código de origem do botão (data-cta)', () => {
+    const out = renderPage('<a data-cta="hero" data-wa="Olá! Quero um orçamento."></a>', demo);
+    const text = new URL(out.match(/href="([^"]+)"/)[1]).searchParams.get('text');
+    assert.equal(text, 'Olá! Quero um orçamento. [site-hero]');
+    const sem = renderPage('<a data-wa="Oi"></a>', demo);
+    assert.equal(new URL(sem.match(/href="([^"]+)"/)[1]).searchParams.get('text'), 'Oi');
+  });
+
   test('sem número de WhatsApp o build não gera link wa.me/?', () => {
     assert.throws(
       () => renderPage('<a data-wa="oi"></a>', createSiteConfig({})),
