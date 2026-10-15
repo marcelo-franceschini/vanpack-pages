@@ -14,18 +14,24 @@ import { KRAFT, PALETTE } from './constants.js';
 
 const HAS_OFFSCREEN_CANVAS = typeof OffscreenCanvas === 'function';
 
+// Tamanho das texturas em relação ao desenho de projeto: a impressão ocupa ~150 px na tela, então
+// metade da resolução já é 2x maior que o necessário (e 4x menos GPU e tempo de partida).
+const SCALE = { body: 0.5, print: 0.75, flap: 0.5, logo: 0.5 };
+
 /**
- * @param {number} width
- * @param {number} height
+ * @param {number} width largura de projeto (o desenho usa estas coordenadas)
+ * @param {number} height altura de projeto
+ * @param {number} scale fração do tamanho de projeto que a textura realmente tem
  * @param {(g: OffscreenCanvasRenderingContext2D, w: number, h: number) => void} draw
  * @returns {CanvasTexture | null} `null` quando o ambiente não tem OffscreenCanvas
  */
-function canvasTexture(width, height, draw) {
+function canvasTexture(width, height, scale, draw) {
   if (!HAS_OFFSCREEN_CANVAS) return null;
   try {
-    const canvas = new OffscreenCanvas(width, height);
+    const canvas = new OffscreenCanvas(Math.round(width * scale), Math.round(height * scale));
     const g = canvas.getContext('2d');
     if (!g) return null;
+    g.scale(scale, scale);
     draw(g, width, height);
     const texture = new CanvasTexture(canvas);
     texture.colorSpace = SRGBColorSpace;
@@ -166,7 +172,7 @@ function drawPrint(g, w, h) {
 
 /** Painel do papelão (face externa), com ou sem a impressão do cliente. */
 export const bodyTexture = (printed) =>
-  canvasTexture(768, 592, (g, w, h) => {
+  canvasTexture(768, 592, printed ? SCALE.print : SCALE.body, (g, w, h) => {
     g.fillStyle = KRAFT;
     g.fillRect(0, 0, w, h);
     g.fillStyle = 'rgba(70,44,18,0.30)';
@@ -179,7 +185,7 @@ export const bodyTexture = (printed) =>
   });
 
 export const flapTexture = () =>
-  canvasTexture(512, 256, (g, w, h) => {
+  canvasTexture(512, 256, SCALE.flap, (g, w, h) => {
     g.fillStyle = KRAFT;
     g.fillRect(0, 0, w, h);
     g.fillStyle = 'rgba(70,44,18,0.30)';
@@ -191,7 +197,7 @@ export const flapTexture = () =>
 
 /** Logo horizontal da Vanpack na lateral do baú, desenhado com Path2D (curvas oficiais). */
 export const truckLogoTexture = () =>
-  canvasTexture(1600, 400, (g) => {
+  canvasTexture(1600, 400, SCALE.logo, (g) => {
     g.clearRect(0, 0, 1600, 400);
     drawHorizontalBrand(g, 80, 20, 1440, PALETTE.forest);
   });
