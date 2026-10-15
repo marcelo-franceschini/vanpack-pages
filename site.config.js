@@ -1,22 +1,108 @@
-// Configurações institucionais da marca Vanpack.
-// Valores vazios são intencionalmente omitidos no HTML gerado para garantir apenas dados reais.
+// Configuração do site. Todo dado da empresa (CNPJ, telefone, endereço, prazos…) vive só no `.env`, a
+// fonte única; aqui ficam as constantes da marca e a função que monta a config a partir dele.
+// Valor vazio = sem dado: o trecho correspondente sai do HTML (nada é inventado nem fica vazio).
+import { yearsSince } from './src/years.js';
 
-export const siteConfig = {
+/** Constantes da marca (manual da marca §7); não são dados da empresa. */
+export const brand = {
   name: 'Vanpack',
-  legalName: 'VanPack Embalagens',
   slogan: 'Do projeto à entrega',
-  siteUrl: 'https://marcelo-franceschini.github.io/vanpack-pages/',
-  whatsapp: process.env.VITE_WHATSAPP || '',
-  phone: process.env.VITE_PHONE || '', // Se vazio, botão de chamada direta não é exibido
-  cnpj: process.env.VITE_CNPJ || '', // Se vazio, não é renderizado
-  email: process.env.VITE_EMAIL || '',
-  hours: process.env.VITE_HOURS || '', // Se vazio, o horário não aparece no rodapé
-  mapUrl: process.env.VITE_MAP_URL || '', // Se vazio, o link do mapa não aparece no rodapé
-  address: {
-    city: 'Santo André',
-    state: 'SP',
-    country: 'BR',
-    street: process.env.VITE_STREET || '',
-    postalCode: process.env.VITE_CEP || '',
-  },
+  description:
+    'Fábrica de caixas de papelão ondulado personalizadas: sob medida e com a marca do cliente impressa.',
 };
+
+const text = (value) => String(value ?? '').trim();
+
+/** (11) 4700-1234 a partir de +551147001234; vazio se o telefone não tiver o formato do Brasil. */
+function formatPhone(phone) {
+  const match = /^\+55(\d{2})(\d{4,5})(\d{4})$/.exec(phone);
+  return match ? `(${match[1]}) ${match[2]}-${match[3]}` : '';
+}
+
+/**
+ * Monta a configuração do site a partir das variáveis VITE_* (o objeto que o `loadEnv` do Vite
+ * devolve). Pura: não lê `process.env` nem arquivos.
+ * @param {Record<string, string | undefined>} env
+ * @param {Date} [now] data do build (ano do © e anos de mercado)
+ */
+export function createSiteConfig(env = {}, now = new Date()) {
+  const city = text(env.VITE_CITY);
+  const state = text(env.VITE_STATE);
+  const phone = text(env.VITE_PHONE);
+  const legalName = text(env.VITE_LEGAL_NAME);
+  const foundedYear = text(env.VITE_FOUNDED_YEAR);
+  const years = yearsSince(foundedYear, now);
+  const cityState = city && state ? `${city}-${state}` : city || state;
+
+  const site = {
+    ...brand,
+    dataMode: text(env.VITE_DATA_MODE),
+    siteUrl: text(env.VITE_SITE_URL),
+    whatsapp: text(env.VITE_WHATSAPP).replace(/\D/g, ''),
+    phone,
+    phoneDisplay: text(env.VITE_PHONE_DISPLAY) || formatPhone(phone),
+    email: text(env.VITE_EMAIL),
+    cnpj: text(env.VITE_CNPJ),
+    legalName,
+    address: {
+      street: text(env.VITE_STREET),
+      district: text(env.VITE_DISTRICT),
+      city,
+      state,
+      postalCode: text(env.VITE_CEP),
+      country: 'BR',
+    },
+    cityState,
+    hours: text(env.VITE_HOURS),
+    hoursSchema: text(env.VITE_HOURS_SCHEMA),
+    mapUrl: text(env.VITE_MAP_URL),
+    foundedYear,
+    minOrder: text(env.VITE_MIN_ORDER),
+    leadTimeDays: text(env.VITE_LEAD_TIME_DAYS),
+    serviceArea: text(env.VITE_SERVICE_AREA),
+    responseTime: text(env.VITE_RESPONSE_TIME),
+    paymentMethods: text(env.VITE_PAYMENT_METHODS),
+    analytics: {
+      provider: text(env.VITE_ANALYTICS_PROVIDER),
+      site: text(env.VITE_ANALYTICS_SITE),
+      endpoint: text(env.VITE_ANALYTICS_ENDPOINT),
+    },
+    year: String(now.getFullYear()),
+    yearsInBusiness: Number.isFinite(years) ? String(years) : '',
+  };
+
+  // Variáveis dos {{...}} do HTML (e, adiante, das respostas do FAQ). Vazia = o trecho que a usa tem
+  // de estar dentro de um elemento com data-need.
+  site.vars = {
+    name: site.name,
+    slogan: site.slogan,
+    legalName,
+    holder: legalName || site.name, // titular do ©
+    cnpj: site.cnpj,
+    street: site.address.street,
+    district: site.address.district,
+    city,
+    state,
+    cityState,
+    postalCode: site.address.postalCode,
+    phoneDisplay: site.phoneDisplay,
+    email: site.email,
+    hours: site.hours,
+    foundedYear,
+    yearsInBusiness: site.yearsInBusiness,
+    year: site.year,
+    minOrder: site.minOrder,
+    leadTimeDays: site.leadTimeDays,
+    serviceArea: site.serviceArea,
+    responseTime: site.responseTime,
+    paymentMethods: site.paymentMethods,
+    description: [
+      'Caixas de papelão ondulado sob medida, com a sua marca impressa.',
+      cityState && `Fábrica em ${cityState}.`,
+      'Peça seu orçamento pelo WhatsApp.',
+    ]
+      .filter(Boolean)
+      .join(' '),
+  };
+  return site;
+}

@@ -2,7 +2,7 @@
   "name": "vanpack-pages",
   "version": "1.0.0",
   "private": true,
-  "description": "Landing page da VanPack Embalagens com a animação 3D da linha de produção de caixas.",
+  "description": "Landing page da Vanpack Embalagens com a animação 3D da linha de produção de caixas.",
   "type": "module",
   "engines": {
     "node": ">=22.12"

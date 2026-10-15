@@ -1,6 +1,6 @@
 node_modules/
 dist/
-dist-audit/
+dist-*/
 *.local
 .DS_Store
 docs/capturas/

@@ -4,8 +4,20 @@ import { sinceLoad, track, trackOnce } from './analytics.js';
 import { mountStage } from './render/stage.js';
 import { createStory } from './story.js';
 import { createTour } from './tour.js';
+import { yearsSince } from './years.js';
 
 const $ = (selector) => document.querySelector(selector);
+
+// Textos que dependem do ano corrente (anos de mercado, ©): o build escreve o valor do dia do deploy
+// e aqui ele é recalculado, para não envelhecer entre um deploy e outro.
+for (const el of document.querySelectorAll('[data-since]')) {
+  const years = yearsSince(el.dataset.since);
+  if (Number.isFinite(years)) el.textContent = String(years);
+}
+for (const el of document.querySelectorAll('[data-year]')) {
+  el.textContent = String(new Date().getFullYear());
+}
+
 const storyEl = $('.story');
 const dock = $('#hdr .btn'); // "Pedir orçamento" do cabeçalho: pulsa quando o tour termina
 const params = new URLSearchParams(location.search);

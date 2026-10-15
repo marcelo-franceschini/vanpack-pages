@@ -1,5 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://marcelo-franceschini.github.io/vanpack-pages/sitemap.xml
-

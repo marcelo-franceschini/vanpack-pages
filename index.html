@@ -4,10 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <title>Vanpack — Caixas de papelão sob medida, com a sua marca</title>
-    <meta
-      name="description"
-      content="Caixas de papelão ondulado sob medida, com a sua marca impressa. Fábrica em Santo André-SP. Peça seu orçamento pelo WhatsApp."
-    />
+    <meta name="description" content="{{description}}" />
     <meta name="theme-color" content="#FBF8F2" />
     <meta name="color-scheme" content="light" />
     <link rel="canonical" href="%VITE_SITE_URL%" />
@@ -42,23 +39,9 @@
       crossorigin
       fetchpriority="high"
     />
+    <!-- JSON-LD montado inteiro em build/render.js a partir do .env -->
     <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "LocalBusiness",
-        "name": "VanPack Embalagens",
-        "alternateName": "Vanpack",
-        "description": "Fábrica de caixas de papelão ondulado personalizadas: sob medida e com a marca do cliente impressa.",
-        "url": "%VITE_SITE_URL%",
-        "image": "%VITE_SITE_URL%og.jpg",
-        "logo": "%VITE_SITE_URL%icon-512.png",
-        "address": {
-          "@type": "PostalAddress",
-          "addressLocality": "Santo André",
-          "addressRegion": "SP",
-          "addressCountry": "BR"
-        }
-      }
+      {}
     </script>
     <style>
       @font-face {
@@ -504,7 +487,8 @@
           padding: 0 1.25rem;
         }
         .seals,
-        .scrollcue {
+        .scrollcue,
+        .k-area {
           display: none;
         }
       }
@@ -555,7 +539,8 @@
           flex: 1 1 100%;
         }
         .seals,
-        .scrollcue {
+        .scrollcue,
+        .k-area {
           display: none;
         }
       }
@@ -723,6 +708,11 @@
         text-transform: uppercase;
         color: var(--carvao);
         margin-bottom: 0.25rem;
+      }
+      .foot-info a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.75rem;
       }
       .foot-nav {
         display: flex;
@@ -913,7 +903,11 @@
             <div class="step">
               <div class="wrap">
                 <div class="card on">
-                  <div class="k">Fábrica em Santo André-SP</div>
+                  <div class="k" data-need="cityState">
+                    Fábrica própria em {{cityState}}<span class="k-area" data-need="serviceArea">
+                      · Atendemos {{serviceArea}}</span
+                    >
+                  </div>
                   <h1>Caixas de papelão sob medida, com a sua marca</h1>
                   <p>Você manda a medida e a quantidade. A gente fabrica, imprime e entrega.</p>
                   <div class="actions">
@@ -970,7 +964,9 @@
                 <div class="card">
                   <div class="k">05 — Entrega</div>
                   <h2>Entregamos rápido</h2>
-                  <p>Da nossa fábrica em Santo André até o seu endereço.</p>
+                  <p>
+                    Da nossa fábrica<span data-need="city"> em {{city}}</span> até o seu endereço.
+                  </p>
                   <a class="more" href="#diferenciais">Veja por que a Vanpack ↓</a>
                 </div>
               </div>
@@ -1063,6 +1059,14 @@
           <p class="slogan" data-field="slogan"></p>
         </div>
         <dl class="foot-info">
+          <div data-field="razao" hidden>
+            <dt>Razão social</dt>
+            <dd></dd>
+          </div>
+          <div data-field="cnpj" hidden>
+            <dt>CNPJ</dt>
+            <dd></dd>
+          </div>
           <div data-field="endereco" hidden>
             <dt>Endereço</dt>
             <dd></dd>
@@ -1071,8 +1075,12 @@
             <dt>Horário</dt>
             <dd></dd>
           </div>
-          <div data-field="cnpj" hidden>
-            <dt>CNPJ</dt>
+          <div data-field="telefone" hidden>
+            <dt>Telefone</dt>
+            <dd></dd>
+          </div>
+          <div data-field="email" hidden>
+            <dt>E-mail</dt>
             <dd></dd>
           </div>
           <div data-field="mapa" hidden>
@@ -1084,7 +1092,11 @@
           <a href="#processo">Como fazemos</a><a href="#diferenciais">Diferenciais</a
           ><a href="#orcamento">Orçamento</a>
         </nav>
-        <p class="legal">© 2026 VanPack Embalagens · Santo André-SP</p>
+        <p class="legal">
+          © <span data-year>{{year}}</span> {{holder}}<span data-need="cityState">
+            · {{cityState}}</span
+          >
+        </p>
       </div>
     </footer>
 
