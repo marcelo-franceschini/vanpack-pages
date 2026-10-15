@@ -142,6 +142,10 @@ svg_horizontal = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 10
 with open(os.path.join(BRAND_DIR, 'vanpack-horizontal.svg'), 'w', encoding='utf-8') as f:
     f.write(svg_horizontal)
 
+# Horizontal Negativo (Papel #FBF8F2, para uso sobre Floresta): mesma geometria, só a cor muda
+with open(os.path.join(BRAND_DIR, 'vanpack-horizontal-negativo.svg'), 'w', encoding='utf-8') as f:
+    f.write(svg_horizontal.replace('#14513A', '#FBF8F2'))
+
 # Vertical em Curvas (Floresta #14513A)
 svg_vertical = f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 180" role="img" aria-label="Vanpack"><g transform="translate(90 0)"><rect x="3.5" y="3.5" width="93" height="93" fill="none" stroke="#14513A" stroke-width="7"/><g transform="translate(22 22.6) scale(0.56)" fill="#14513A"><polygon points="14,35 48,18 45,2 11,19"/><polygon points="86,35 52,18 55,2 89,19"/><polygon points="14,41 48,58 42,46 8,29"/><polygon points="86,41 52,58 58,46 92,29"/><polygon points="14,46 50,64 50,96 14,78"/><polygon points="50,64 86,46 86,78 50,96"/></g></g><path d="{text_v_d}" fill="#14513A"/></svg>'''
 with open(os.path.join(BRAND_DIR, 'vanpack-vertical.svg'), 'w', encoding='utf-8') as f:
