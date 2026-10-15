@@ -19,7 +19,8 @@
     "audit:scene": "node scripts/audit/scene-stats.mjs",
     "audit:runtime": "node scripts/audit/runtime.mjs",
     "audit:lighthouse": "node scripts/audit/lighthouse.mjs",
-    "audit:capturas": "node scripts/audit/capturas.mjs"
+    "audit:capturas": "node scripts/audit/capturas.mjs",
+    "og": "node scripts/og.mjs"
   },
   "dependencies": {
     "three": "0.184.0"

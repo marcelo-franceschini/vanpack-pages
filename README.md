@@ -39,6 +39,7 @@ Manutenção da marca (rodam à mão, não fazem parte do build):
 ```bash
 node scripts/brand.mjs   # regenera os SVGs de public/brand/, a fonte e src/brand/marks.js (precisa do uv)
 node scripts/icons.mjs   # regenera favicon, ícones do app e manifest a partir do símbolo
+npm run og               # regenera public/og.jpg (imagem de compartilhamento) a partir do 1º quadro
 ```
 
 ---
