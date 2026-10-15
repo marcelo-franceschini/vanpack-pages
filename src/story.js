@@ -2,6 +2,9 @@
 // cabeçalho, dica de scroll e botão flutuante. As medidas ficam em cache: o scroll só lê scrollY.
 
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+// O botão flutuante só aparece depois do fim da história (px além dele): no último capítulo ele
+// cobriria o cartão em telas estreitas, e o botão do cabeçalho já cumpre o papel.
+const FAB_AFTER = 8;
 
 /**
  * @param {object} options
@@ -58,7 +61,12 @@ export function createStory({
       active = index;
       onChapter(index);
     }
-    const next = { progress, solid: y > 40, cue: progress > 0.02, fab: progress >= 0.99 };
+    const next = {
+      progress,
+      solid: y > 40,
+      cue: progress > 0.02,
+      fab: y > top + range + FAB_AFTER,
+    };
     if (next.solid !== prev.solid) header.classList.toggle('solid', next.solid);
     if (next.cue !== prev.cue) cue.classList.toggle('gone', next.cue);
     if (next.fab !== prev.fab) fab.classList.toggle('on', next.fab);

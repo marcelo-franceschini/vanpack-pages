@@ -73,7 +73,7 @@
           U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
       }
       /* Cores da marca (manual §2). Os derivados abaixo são só Carvão/Papel/Floresta misturados em oklab:
-   floresta-dark = 82% Floresta + preto · muted = 78% Carvão + Papel · tint = 6% · tint-2 = 11% · hover = 17%. */
+   floresta-dark = 82% Floresta + preto · muted = 78% Carvão + Papel · tint = 6% · tint-2 = 11% · hover = 17% · on-floresta = 8% Papel + Floresta (7,2:1 com o texto Papel). */
       :root {
         color-scheme: light;
         --floresta: #14513a;
@@ -84,7 +84,7 @@
         --tint: #ece9e3;
         --tint-2: #dfdcd7;
         --soft-hover: #d0cdc8;
-        --on-floresta: #2f604a;
+        --on-floresta: #2a5d47;
         --kraft: #b78c5c;
         --font: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
         --pad: clamp(1.25rem, 4vw, 4.5rem);
@@ -504,7 +504,8 @@
           min-height: 3rem;
           padding: 0 1.25rem;
         }
-        .seals {
+        .seals,
+        .scrollcue {
           display: none;
         }
       }
