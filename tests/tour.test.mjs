@@ -205,7 +205,8 @@ describe('quando não começa sozinho', () => {
   test('se a pessoa já rolou antes do início, o tour não começa', async () => {
     const { page, context } = await open();
     await page.mouse.wheel(0, 200);
-    await page.waitForTimeout(500);
+    // o relógio só avança depois de a página ter processado o gesto (o scroll já começou)
+    await page.waitForFunction(() => scrollY > 0, null, { timeout: 10_000 });
     await advance(page, 10_000);
     assert.equal(await tourState(page), 'idle');
     await context.close();
@@ -247,7 +248,12 @@ describe('quando não começa sozinho', () => {
     assert.equal(await scrollY(page), 0);
     assert.equal(await page.evaluate(() => document.querySelector('.scrollcue') !== null), true);
     await page.click('#tour-start');
-    await advance(page, 300); // o quadro que troca o cartão ativo (rAF falso)
+    // o scroll chega por um evento do navegador (tempo real) e o quadro que troca o cartão é um rAF
+    // falso: avança o relógio e espera um pouco de tempo real, até 10 s
+    for (let i = 0; i < 100 && (await activeCard(page)) !== 2; i++) {
+      await advance(page, 100);
+      await page.waitForTimeout(100);
+    }
     assert.equal(await activeCard(page), 2);
     assert.equal(await tourState(page), 'idle', 'o tour não é usado com movimento reduzido');
     const target = await yAtProgress(page, 0.25);

@@ -1,5 +1,6 @@
 // Testes da cena que não precisam de navegador: linha do tempo, câmera, geometria e piso.
 import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
 import { Color, Vector3 } from 'three';
 import { CAMERA, PHASE, SCRAPS, SHEET_X } from '../src/scene/constants.js';
@@ -112,4 +113,21 @@ test('piso opaco: Papel nas bordas, cor do piso no miolo', () => {
   assert.ok(near(at(-35, -28), paper), 'canto = Papel');
   assert.ok(near(at(-21, -14), floor), 'a 14 m da borda já é o piso inteiro');
   assert.equal(geometry.index.count % 3, 0);
+});
+
+test('a cena não toca no DOM (roda em Web Worker): sem document, window, navigator nem rAF', () => {
+  const dirs = ['../src/scene/', '../src/brand/'].map((d) => new URL(d, import.meta.url));
+  const files = dirs.flatMap((dir) => readdirSync(dir).map((name) => new URL(name, dir)));
+  assert.ok(files.length >= 10);
+  for (const file of files) {
+    const code = readFileSync(file, 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/\/\/.*$/gm, '');
+    assert.ok(
+      !/\b(document|window|navigator|localStorage|HTMLCanvasElement|requestAnimationFrame)\b/.test(
+        code,
+      ),
+      `${file.pathname} usa o DOM`,
+    );
+  }
 });
