@@ -116,6 +116,17 @@ export function visibleProofs(items, dataMode) {
   };
 }
 
+/**
+ * Experimentos A/B (src/experiments.js). Todos desligados: ligue com `enabled: true` e uma data fixa em
+ * `endsAt` (depois dela só a variante A). `split` são os pesos das variantes, na ordem de `variants`.
+ * `?exp_<nome>=A|B` na URL força a variante (QA e testes), mesmo desligado. Detalhes e a conta do
+ * tamanho de amostra em docs/experimentos.md.
+ */
+export const experiments = {
+  // B troca o CTA final por um assistente de 3 passos que monta a mensagem do WhatsApp.
+  quote_wizard: { enabled: false, variants: ['A', 'B'], split: [50, 50], endsAt: '' },
+};
+
 const text = (value) => String(value ?? '').trim();
 
 /** Servidor do Umami Cloud; `VITE_ANALYTICS_ENDPOINT` só muda numa instância própria. */
@@ -141,7 +152,11 @@ function formatPhone(phone) {
  * @param {Record<string, string | undefined>} env
  * @param {Date} [now] data do build (ano do © e anos de mercado)
  */
-export function createSiteConfig(env = {}, now = new Date(), content = { models, faq, proofs }) {
+export function createSiteConfig(
+  env = {},
+  now = new Date(),
+  content = { models, faq, proofs, experiments },
+) {
   const city = text(env.VITE_CITY);
   const state = text(env.VITE_STATE);
   const phone = text(env.VITE_PHONE);
@@ -190,6 +205,8 @@ export function createSiteConfig(env = {}, now = new Date(), content = { models,
 
   // O que vai ao navegador (define __SITE__): a medição só liga na página publicada (o host do site).
   site.client = {
+    experiments: content.experiments ?? {},
+    models: content.models.map(({ id, name }) => ({ id, name })), // assistente de orçamento
     analytics:
       site.analytics.provider === 'umami'
         ? {

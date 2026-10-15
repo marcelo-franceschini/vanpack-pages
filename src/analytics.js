@@ -2,6 +2,8 @@
 // os eventos de negócio também vão ao Umami Cloud, pelo nosso próprio JS: sem cookies, sem storage e
 // sem script de terceiro. Só envia na página publicada (o host da VITE_SITE_URL), então dev, preview e
 // testes nunca sujam a medição real.
+import { experimentContext } from './experiments.js';
+
 window.dataLayer = window.dataLayer || [];
 
 const sent = new Set();
@@ -78,7 +80,7 @@ function sendSummary() {
   const summary = JSON.stringify(visit);
   if (summary === '{}' || summary === lastSummary) return;
   lastSummary = summary;
-  send({ name: 'visit_summary', data: { ...visit } });
+  send({ name: 'visit_summary', data: { ...visit, ...experimentContext() } });
 }
 
 if (live) {
@@ -92,9 +94,11 @@ if (live) {
 }
 
 export function track(event, data = {}) {
-  window.dataLayer.push({ event, ...data });
+  // todo evento leva a variante de cada experimento (exp_<nome>)
+  const full = { ...data, ...experimentContext() };
+  window.dataLayer.push({ event, ...full });
   remember(event, data);
-  if (FORWARD.has(event)) send({ name: event, data });
+  if (FORWARD.has(event)) send({ name: event, data: full });
 }
 
 /** Envia o evento uma única vez por visita para a mesma `key`. */

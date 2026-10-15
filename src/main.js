@@ -1,6 +1,7 @@
 // Orquestra a página: liga o scroll à cena 3D, roda o tour automático e mede o uso.
 // Tudo que é 3D fica em ./render e ./scene.
 import { sinceLoad, track, trackOnce } from './analytics.js';
+import { startExperiments, variant } from './experiments.js';
 import { mountStage } from './render/stage.js';
 import { createStory } from './story.js';
 import { createTour } from './tour.js';
@@ -8,6 +9,9 @@ import { watchVitals } from './vitals.js';
 import { yearsSince } from './years.js';
 
 const $ = (selector) => document.querySelector(selector);
+
+// Experimentos A/B: resolvidos antes de qualquer evento, para todo evento levar a variante.
+startExperiments();
 
 // Textos que dependem do ano corrente (anos de mercado, ©): o build escreve o valor do dia do deploy
 // e aqui ele é recalculado, para não envelhecer entre um deploy e outro.
@@ -189,8 +193,17 @@ document.addEventListener('click', (e) => {
     track(`${contact.dataset.contact}_click`, { cta: place });
   }
 });
-const finalCta = $('#orcamento .btn');
-if (finalCta) {
+// Experimento quote_wizard: na variante B o CTA final vira um assistente de 3 passos (src/wizard.js,
+// carregado só nessa variante). O cta_view passa a observar o assistente.
+const wizardReady =
+  variant('quote_wizard') === 'B'
+    ? import('./wizard.js').then(({ mountQuoteWizard }) =>
+        mountQuoteWizard($('#orcamento'), { models: __SITE__.models ?? [] }),
+      )
+    : Promise.resolve();
+wizardReady.then(() => {
+  const finalCta = $('#orcamento .wizard') ?? $('#orcamento .btn');
+  if (!finalCta) return;
   new IntersectionObserver(
     ([entry], observer) => {
       if (!entry.isIntersecting) return;
@@ -199,7 +212,7 @@ if (finalCta) {
     },
     { threshold: 0.6 },
   ).observe(finalCta);
-}
+});
 
 // O botão fixo do WhatsApp (barra no celular) sai de cena quando o CTA final já está bem à vista.
 const fab = $('#fab');
