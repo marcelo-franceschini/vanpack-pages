@@ -160,6 +160,88 @@ describe('seções depois da história', () => {
   });
 });
 
+describe('barra fixa do WhatsApp (celular)', () => {
+  // a barra vale até 768 px de largura; o celular deitado (844 px) segue o botão redondo
+  for (const screen of SCREENS.filter((s) => s.mobile && s.width <= 768)) {
+    test(`${screen.name}: largura total, 56 px ou mais, alvos de 44 px e some com o CTA final à vista`, async () => {
+      const { page, context } = await openPage(browser, server.url, {
+        viewport: { width: screen.width, height: screen.height },
+        reducedMotion: 'reduce',
+        hasTouch: true,
+        isMobile: true,
+        deviceScaleFactor: 2,
+      });
+      const end = await yAtProgress(page, 1);
+      await page.evaluate((y) => scrollTo(0, y + 400), end);
+      await page.waitForFunction(
+        () => document.querySelector('#fab').classList.contains('on'),
+        null,
+        {
+          timeout: 5000,
+        },
+      );
+      const bar = await page.evaluate(() => {
+        const rect = (el) => {
+          const r = el.getBoundingClientRect();
+          return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, height: r.height };
+        };
+        return {
+          viewport: { width: innerWidth, height: innerHeight },
+          fab: rect(document.querySelector('#fab')),
+          whatsapp: rect(document.querySelector('.fab-wa')),
+          phone: rect(document.querySelector('.fab-tel a')),
+          scrollWidth: document.documentElement.scrollWidth,
+        };
+      });
+      assert.ok(bar.fab.left <= 0.5 && bar.fab.right >= bar.viewport.width - 0.5, 'largura total');
+      assert.ok(bar.fab.bottom >= bar.viewport.height - 0.5, 'colada no pé da tela');
+      assert.ok(bar.fab.height >= 56 - 0.5, `altura de ${bar.fab.height}px`);
+      assert.ok(bar.whatsapp.height >= 44 && bar.phone.height >= 44, 'alvos de 44 px');
+      assert.ok(bar.whatsapp.right <= bar.phone.left + 0.5, 'WhatsApp e telefone não se sobrepõem');
+      assert.ok(bar.scrollWidth <= bar.viewport.width, 'sem rolagem horizontal');
+
+      // com o CTA final bem à vista a barra some, e volta ao subir
+      await page.evaluate(() => document.querySelector('#orcamento').scrollIntoView());
+      await page.waitForFunction(
+        () => document.querySelector('#fab').classList.contains('away'),
+        null,
+        {
+          timeout: 5000,
+        },
+      );
+      await page.waitForFunction(
+        () => getComputedStyle(document.querySelector('#fab')).visibility === 'hidden',
+        null,
+        { timeout: 5000 },
+      );
+      await page.evaluate((y) => scrollTo(0, y + 400), end);
+      await page.waitForFunction(
+        () => !document.querySelector('#fab').classList.contains('away'),
+        null,
+        {
+          timeout: 5000,
+        },
+      );
+      await context.close();
+    });
+  }
+
+  test('no desktop e no celular deitado segue o botão redondo, só com o ícone', async () => {
+    const { page, context } = await openPage(browser, server.url, { reducedMotion: 'reduce' });
+    const info = await page.evaluate(() => {
+      const fab = document.querySelector('#fab'); // offsetWidth ignora o scale da entrada
+      return {
+        width: fab.offsetWidth,
+        height: fab.offsetHeight,
+        label: getComputedStyle(document.querySelector('.fab-wa span')).display,
+        phone: getComputedStyle(document.querySelector('.fab-tel')).display,
+      };
+    });
+    assert.deepEqual([info.width, info.height, info.label, info.phone], [56, 56, 'none', 'none']);
+    await context.close();
+  });
+});
+
 describe('botão flutuante do WhatsApp', () => {
   test('fica escondido na história (o do cabeçalho cumpre o papel) e aparece depois dela', async () => {
     const { page, context } = await openPage(browser, server.url, { reducedMotion: 'reduce' });

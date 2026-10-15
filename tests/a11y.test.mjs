@@ -108,10 +108,10 @@ describe('estrutura', () => {
 });
 
 describe('teclado', () => {
-  test('ordem de foco: pular → logo → menu → orçamento → hero', async () => {
+  test('ordem de foco: pular → logo → menu → botão do cabeçalho → hero', async () => {
     const { page, context } = await open();
     const order = [];
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 10; i++) {
       await page.keyboard.press('Tab');
       order.push(
         await page.evaluate(() => {
@@ -123,18 +123,19 @@ describe('teclado', () => {
         }),
       );
     }
-    assert.deepEqual(order.slice(0, 8), [
+    assert.deepEqual(order.slice(0, 9), [
       'Pular para o conteúdo',
       'Vanpack · início',
       'Como fazemos',
+      'Produtos',
       'Diferenciais',
-      'Orçamento',
+      'FAQ',
       'Pedir orçamento',
       'Pedir orçamento no WhatsApp',
       'Ver como fazemos',
     ]);
     // depois do cartão ativo o foco segue para o conteúdo seguinte, sem passar pelos cartões inert
-    assert.notEqual(order[8], 'Veja por que a Vanpack ↓');
+    assert.notEqual(order[9], 'Veja por que a Vanpack ↓');
     await context.close();
   });
 
@@ -220,6 +221,17 @@ describe('contraste (calculado nos estilos reais)', () => {
     ['.cta .cta-note', 7],
     ['.trust-list li', 7],
     ['.trust-list a', 7],
+    ['.facts li', 7],
+    ['.facts b', 7],
+    ['.model h3', 7],
+    ['.model p', 7],
+    ['.proof-quote', 7],
+    ['.proof figcaption', 7],
+    ['.faq-item summary', 7],
+    ['.faq-item p', 7],
+    ['.cta .alt a', 7],
+    ['.fab-wa', 7],
+    ['.fab-tel a', 7],
     ['.btn-light', 7],
     ['.how li', 7],
     ['.foot-nav a', 7],

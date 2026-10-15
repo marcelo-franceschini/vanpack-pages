@@ -2,44 +2,23 @@
 // Cobre a trava de go-live (demo × production), o render com a config vazia (nada de campo vazio nem
 // {{placeholder}} sobrando), o JSON-LD, o robots.txt e o sitemap.xml.
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { describe, test } from 'node:test';
 import { parseEnv } from '../build/env.js';
 import { contentSecurityPolicy } from '../build/csp.js';
 import { robotsTxt, sitemapXml } from '../build/files.js';
-import { buildJsonLd, interpolate, renderPage } from '../build/render.js';
+import { buildJsonLd, faqItems, interpolate, renderPage } from '../build/render.js';
 import { isValidCnpj, validateSite } from '../build/validate.js';
-import { createSiteConfig } from '../site.config.js';
+import { createSiteConfig, models, proofs } from '../site.config.js';
 import { yearsSince } from '../src/years.js';
+import { realEnv } from './real-env.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const read = (file) => readFileSync(`${ROOT}${file}`, 'utf8');
 const html = read('index.html');
 const example = parseEnv(read('.env.example'));
 
-// Um conjunto de dados "reais" só para os testes: tudo diferente do .env.example (menos o que é real
-// por natureza, como cidade e UF).
-const REAL = {
-  ...example,
-  VITE_DATA_MODE: 'production',
-  VITE_WHATSAPP: '5511987654321',
-  VITE_PHONE: '+551147001234',
-  VITE_PHONE_DISPLAY: '(11) 4700-1234',
-  VITE_EMAIL: 'vendas@empresa.com.br',
-  VITE_CNPJ: '11.222.333/0001-81',
-  VITE_LEGAL_NAME: 'Vanpack Embalagens LTDA',
-  VITE_STREET: 'Av. das Caixas, 500',
-  VITE_DISTRICT: 'Distrito Industrial',
-  VITE_CEP: '09000-100',
-  VITE_HOURS: 'Seg a Sex, 7h30 às 17h30',
-  VITE_HOURS_SCHEMA: 'Mo-Fr 07:30-17:30',
-  VITE_MAP_URL: 'https://maps.google.com/?q=Av+das+Caixas+500',
-  VITE_MIN_ORDER: '300',
-  VITE_LEAD_TIME_DAYS: '7',
-  VITE_SERVICE_AREA: 'Grande São Paulo',
-  VITE_RESPONSE_TIME: '1 h útil',
-  VITE_PAYMENT_METHODS: 'Pix e boleto',
-};
+const REAL = realEnv(example);
 
 const validate = (env, now) => validateSite({ site: createSiteConfig(env), env, example, now });
 
@@ -347,6 +326,111 @@ describe('medição e CSP', () => {
         '\n',
       ),
       /VITE_ANALYTICS_ENDPOINT/,
+    );
+  });
+});
+
+describe('conteúdo: modelos, FAQ, prova social e menus', () => {
+  const demo = createSiteConfig(example);
+  const production = createSiteConfig(REAL);
+  const empty = createSiteConfig({ VITE_WHATSAPP: '5511912345678' });
+  const ids = (site) => faqItems(site).map((item) => item.id);
+
+  test('cada modelo tem o seu botão de orçamento, com o modelo na mensagem e o código de origem', () => {
+    const cards = [
+      ...renderPage(html, demo).matchAll(/<article class="model">[\s\S]*?<\/article>/g),
+    ];
+    assert.equal(cards.length, models.length);
+    for (const [i, model] of models.entries()) {
+      const text = new URL(cards[i][0].match(/href="([^"]+)"/)[1]).searchParams.get('text');
+      assert.ok(text.includes(`da ${model.name}.`), text);
+      assert.ok(text.endsWith(`[site-produtos-${model.id}]`), text);
+    }
+  });
+
+  test('o FAQ mostra as 8 perguntas com os dados do .env e esconde a que não tem dado', () => {
+    assert.equal(ids(production).length, 8);
+    const out = renderPage(html, production);
+    assert.ok(out.includes('A partir de 300 caixas por modelo.'));
+    assert.ok(out.includes(`CNPJ ${REAL.VITE_CNPJ}`));
+    assert.deepEqual(ids(empty), ['medida', 'logo', 'onda'], 'só as sem placeholder');
+    const semPagamento = createSiteConfig({ ...REAL, VITE_PAYMENT_METHODS: '' });
+    assert.ok(!ids(semPagamento).includes('pagamento'));
+    assert.equal(ids(semPagamento).length, 7);
+  });
+
+  test('placeholder desconhecido no FAQ é erro, não uma pergunta que some em silêncio', () => {
+    const content = {
+      models,
+      proofs,
+      faq: [{ id: 'x', q: 'Pergunta?', a: 'Vale {{inventada}}.' }],
+    };
+    assert.throws(() => faqItems(createSiteConfig(REAL, new Date(), content)), /inventada/);
+  });
+
+  test('prova social: demo mostra os exemplos rotulados; production só o autorizado', () => {
+    const own = {
+      testimonials: [
+        { id: 'cliente-a', authorized: true, quote: 'Entrega no prazo.', author: 'Cliente A' },
+        { id: 'exemplo-x', demo: true, quote: 'Texto de exemplo.', author: 'Cliente X' },
+      ],
+      clientLogos: [],
+      googleRating: { value: 4.8, count: 37, url: 'https://g.page/r/exemplo', authorized: true },
+    };
+    const content = { models, faq: [], proofs: own };
+    const emDemo = renderPage(html, createSiteConfig(example, new Date(), content));
+    assert.ok(
+      emDemo.includes('Texto de exemplo.') && emDemo.includes('<span class="tag">Exemplo</span>'),
+    );
+    assert.ok(emDemo.includes('Entrega no prazo.'));
+    const emProducao = renderPage(html, createSiteConfig(REAL, new Date(), content));
+    assert.ok(emProducao.includes('Entrega no prazo.'));
+    assert.ok(!emProducao.includes('Texto de exemplo.') && !emProducao.includes('Exemplo</span>'));
+    assert.ok(emProducao.includes('4,8 de 5 no Google (37 avaliações)'));
+    // sem prova autorizada a seção e os links para ela somem
+    const semProva = renderPage(html, production);
+    assert.ok(!semProva.includes('id="clientes"') && !semProva.includes('href="#clientes"'));
+    assert.ok(renderPage(html, demo).includes('href="#clientes"'));
+  });
+
+  test('a nota do Google nunca aparece como exemplo', () => {
+    const content = {
+      models,
+      faq: [],
+      proofs: {
+        testimonials: [],
+        clientLogos: [],
+        googleRating: { value: 5, count: 1, url: 'https://g.page/r/x', demo: true },
+      },
+    };
+    assert.ok(
+      !renderPage(html, createSiteConfig(example, new Date(), content)).includes('no Google'),
+    );
+  });
+
+  test('todo item de prova é autorizado (com registro em docs/provas) ou de exemplo; logos só em SVG', () => {
+    const items = [
+      ...proofs.testimonials,
+      ...proofs.clientLogos,
+      ...(proofs.googleRating ? [{ id: 'google', ...proofs.googleRating }] : []),
+    ];
+    for (const item of items) {
+      assert.ok(item.authorized === true || item.demo === true, `${item.id}: sem autorização`);
+      if (item.authorized) {
+        assert.ok(existsSync(`${ROOT}docs/provas/${item.id}.md`), `${item.id}: falta docs/provas`);
+      }
+    }
+    for (const logo of proofs.clientLogos) assert.match(logo.src, /\.svg$/);
+  });
+
+  test('o menu leva às seções e o link para uma seção que saiu da página sai junto', () => {
+    const out = renderPage(html, production);
+    for (const id of ['processo', 'produtos', 'diferenciais', 'faq']) {
+      assert.ok(out.includes(`<a href="#${id}">`), `link #${id}`);
+    }
+    assert.equal(
+      renderPage('<a href="#x">x</a><a href="#y">y</a><p id="y"></p><a href="#">topo</a>', empty),
+      '<a href="#y">y</a><p id="y"></p><a href="#">topo</a>',
     );
   });
 });
