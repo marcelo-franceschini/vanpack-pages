@@ -78,9 +78,13 @@ export function footerFields(site) {
     cnpj: site.cnpj && escapeHtml(site.cnpj),
     endereco: place && escapeHtml(place),
     horario: site.hours && escapeHtml(site.hours),
-    telefone: site.phone && link(`tel:${site.phone}`, site.phoneDisplay || site.phone),
-    email: site.email && link(`mailto:${site.email}`, site.email),
-    mapa: site.mapUrl && link(site.mapUrl, 'Ver no mapa', ' target="_blank" rel="noopener"'),
+    telefone:
+      site.phone &&
+      link(`tel:${site.phone}`, site.phoneDisplay || site.phone, ' data-contact="phone"'),
+    email: site.email && link(`mailto:${site.email}`, site.email, ' data-contact="email"'),
+    mapa:
+      site.mapUrl &&
+      link(site.mapUrl, 'Ver no mapa', ' data-contact="map" target="_blank" rel="noopener"'),
   };
 }
 

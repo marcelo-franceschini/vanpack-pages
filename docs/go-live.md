@@ -56,6 +56,17 @@ As chaves "fictícias por natureza" (tudo, menos `VITE_DATA_MODE`, `VITE_SITE_UR
 em `production`. Pedido mínimo, prazo, região, tempo de resposta e formas de pagamento também são
 promessas: confirme cada uma com a área responsável antes de publicar.
 
+## Medição (Umami Cloud)
+
+A medição é sem cookies, então o site não precisa de banner. Para ligá-la:
+
+1. Crie a conta em cloud.umami.is (e-mail e senha; o plano Hobby é grátis: 100 mil eventos por mês, 1 site e 6 meses de histórico).
+2. Cadastre o site. O campo **Domain** aceita só o host, sem `https://` e sem caminho (hoje `marcelo-franceschini.github.io`; no go-live, o domínio próprio).
+3. Copie o **Website ID** (Settings do site) para `VITE_ANALYTICS_SITE` e deixe `VITE_ANALYTICS_PROVIDER=umami`.
+4. **Não** cole o "Tracking code" do Umami no HTML: o nosso JS já chama a API deles, e a CSP bloquearia o script.
+
+O site só envia eventos quando o host da página é o da `VITE_SITE_URL`: ao trocar de domínio, mude a URL no `.env` e o domínio do site no Umami. Os dados passam por servidores dos EUA e da UE; a [política de privacidade](../politica-de-privacidade.html) do site explica isso e cita o plano atual (se mudar de plano, ajuste o texto de retenção nela). Vale uma checagem rápida dessa política com o jurídico antes do go-live.
+
 ## Checklist final
 
 - [ ] `VITE_DATA_MODE=production` e `npm run build` passam (o build recusa valor fictício).
@@ -63,6 +74,7 @@ promessas: confirme cada uma com a área responsável antes de publicar.
 - [ ] Nenhum `href` de WhatsApp começa com `https://wa.me/?` (o build também recusa).
 - [ ] `<meta name="robots" content="noindex,nofollow">` não existe mais no HTML publicado.
 - [ ] `robots.txt` libera o site e o `sitemap.xml` tem a URL final.
+- [ ] A política de privacidade foi revisada pelo jurídico.
 - [ ] `npm run og` gera de novo `public/og.jpg`: a imagem de compartilhamento tem o texto do hero.
 - [ ] `npm run audit:lighthouse`: SEO 100 só é possível em `production` (em demo o `noindex` reprova o
       item "página bloqueada para indexação", como esperado).

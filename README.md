@@ -59,6 +59,14 @@ No build, o `site.config.js` monta a config a partir do `.env` (`createSiteConfi
 
 ---
 
+## Medição (Umami Cloud, sem cookies)
+
+Todo evento vai para o `dataLayer`. Com `VITE_ANALYTICS_PROVIDER=umami`, os de negócio também vão ao Umami Cloud pelo nosso próprio JS (nenhum script de terceiro), só na página publicada: o host da `VITE_SITE_URL`, então dev, preview e testes nunca sujam a medição. Para caber nos 100 mil eventos por mês do plano grátis, o Umami recebe só a visualização da página, `whatsapp_click`, `phone_click`, `email_click`, `map_click`, `cta_view`, `faq_open` e um `visit_summary` por visita (capítulo e rolagem máximos, tour e LCP, INP e CLS).
+
+Eventos do `dataLayer`: `whatsapp_click{cta}`, `phone_click`, `email_click` e `map_click` (`{cta}` é o lugar do link), `cta_view`, `chapter_view`, `scroll_depth`, `section_view{section_id}`, `faq_open{question_id}`, `web_vitals{name,value}`, `first_interaction` e os do tour. Sem cookies, sem storage e sem banner; a [política de privacidade](politica-de-privacidade.html) explica. Criação da conta: [`docs/go-live.md`](docs/go-live.md).
+
+---
+
 ## Publicação contínua (GitHub Pages)
 
 A cada push na `master`, o workflow [`deploy.yml`](.github/workflows/deploy.yml) roda o lint, gera o build e publica. Os pull requests passam por [`ci.yml`](.github/workflows/ci.yml): lint, build e os testes de navegador.
@@ -82,7 +90,10 @@ src/years.js               Anos de mercado e ano do © (build e navegador)
 src/main.js                Orquestra: história ↔ cena, tour automático, medição de uso
 src/story.js               scroll → progresso (0…1), cartão ativo, cabeçalho, dica e botão flutuante
 src/tour.js                Tour automático: rola a página pelos 5 capítulos e para no fim da história
-src/analytics.js           Medição só por dataLayer (nenhum script de terceiros)
+src/analytics.js           Medição: dataLayer + Umami Cloud (sem cookies, só na página publicada)
+src/vitals.js              Core Web Vitals reais (web-vitals, carregado com o navegador ocioso)
+build/csp.js               CSP por hash dos <style> (e o servidor da medição, se houver)
+politica-de-privacidade.html  2ª página: política de privacidade com os dados do .env
 src/render/stage.js        Liga o canvas ao render: Web Worker (OffscreenCanvas) ou thread principal
 src/render/worker.js       Ponto de entrada do worker
 src/render/controller.js   Loop de render sob demanda, suavização, qualidade adaptativa, contexto perdido
@@ -108,6 +119,9 @@ docs/                      Manual da marca e notas da v4
 
 `npm test` gera o build de produção e o de auditoria e roda, em sequência:
 
+- `tests/conversion.test.mjs`: nenhum botão do WhatsApp sem número, código de origem `[site-…]` na mensagem e campanha (`utm_*`) no texto, sem cookie nem storage.
+- `tests/trust.test.mjs`: faixa de confiança e anos de mercado/© recalculados no navegador (relógio em 2031).
+- `tests/analytics.test.mjs`: eventos no Umami (interceptado, nenhum tráfego real), resumo da visita, sem cookie nem storage e nada enviado fora do host do site.
 - `tests/site-config.test.mjs`: config, trava de go-live (demo × production), render com a config vazia, JSON-LD, robots e sitemap; puro, sem navegador.
 - `tests/data-source.test.mjs`: nenhum dado do `.env` escrito à mão no código, o `.env` chega à página publicada e todo número visível vem da config.
 - `tests/tour.test.mjs`: início automático, percurso e parada no fim da história, interrupções (roda, tecla, clique, toque, scroll, aba oculta), `?tour=0`, `#hash`, movimento reduzido. Usa o relógio falso do Playwright.
@@ -124,4 +138,4 @@ docs/                      Manual da marca e notas da v4
 - Cores: só Floresta, Carvão, Papel e Kraft (o Kraft é o material, nunca texto ou botão); só Archivo; logotipo sempre em curvas, em negativo sobre Floresta, com respiro de ¼ do símbolo.
 - Sem imagem raster da cena, sem formulário, sem depoimentos, sem números ou alegações inventados.
 - Sem PWA: sem manifest, sem service worker e sem instalação como app (decisão do dono: é uma landing de um só objetivo). Ficam `theme-color`, os favicons, o `apple-touch-icon` e o `icon-512.png`, que o JSON-LD usa como logo.
-- CSP por `<meta>` com hash de cada `<style>` (`script-src 'self'`, sem CDN, sem `eval`); links externos com `rel="noopener"`.
+- CSP por `<meta>` com hash de cada `<style>` (`script-src 'self'`, sem CDN, sem `eval`); o único domínio externo é o servidor da medição (Umami), e só com provedor configurado; links externos com `rel="noopener"`.

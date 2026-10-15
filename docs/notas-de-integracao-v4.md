@@ -8,20 +8,21 @@ tour automático que rola a página sozinho.
 
 `index.html` é a única página. O que o JS usa (não renomear):
 
-| Seletor                                                                        | Papel                                                                                                     |
-| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
-| `.story[data-tour="idle\|playing\|paused\|done"]`                              | seção da história (altura 560 svh; o scroll útil é 460 svh)                                               |
-| `.stage#stage` › `canvas#gl` + `.loader` + `.steps` + `#cue`                   | cena fixa na tela (`position: sticky`)                                                                    |
-| `.steps › .step › .wrap › .card`                                               | 5 cartões, um por capítulo; o ativo tem `.on` e os demais `inert`                                         |
-| `#hdr` e `#hdr .btn`                                                           | cabeçalho; o botão pulsa (`.pulse`) quando o tour termina                                                 |
-| `#fab`                                                                         | botão flutuante do WhatsApp; só aparece depois do fim da história                                         |
-| `a[data-cta][data-wa]`                                                         | botões do WhatsApp; o build troca `data-wa` por `href="https://wa.me/…"`                                  |
-| `#tour-start` (`data-tour-ui`)                                                 | "Ver como fazemos": toca o tour (ou, sem tour, leva ao capítulo 2)                                        |
-| `#processo`, `#diferenciais`, `#orcamento`                                     | âncoras do menu                                                                                           |
-| `[data-field="slogan\|razao\|cnpj\|endereco\|horario\|telefone\|email\|mapa"]` | rodapé: preenchido com o dado do `.env` ou removido do HTML quando não há dado                            |
-| `[data-need="chave outra"]` e `{{variavel}}`                                   | o elemento sai se alguma chave estiver vazia; `{{variavel}}` vazia fora de um `data-need` é erro de build |
-| `[data-year]` e `[data-since]`                                                 | ano do © e anos de mercado: o build escreve o valor e o `main.js` o recalcula no navegador                |
-| `.k-area`                                                                      | segunda metade do eyebrow do hero ("Atendemos …"); some nos layouts compacto e de celular                 |
+| Seletor                                                                        | Papel                                                                                                        |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `.story[data-tour="idle\|playing\|paused\|done"]`                              | seção da história (altura 560 svh; o scroll útil é 460 svh)                                                  |
+| `.stage#stage` › `canvas#gl` + `.loader` + `.steps` + `#cue`                   | cena fixa na tela (`position: sticky`)                                                                       |
+| `.steps › .step › .wrap › .card`                                               | 5 cartões, um por capítulo; o ativo tem `.on` e os demais `inert`                                            |
+| `#hdr` e `#hdr .btn`                                                           | cabeçalho; o botão pulsa (`.pulse`) quando o tour termina                                                    |
+| `#fab`                                                                         | botão flutuante do WhatsApp; só aparece depois do fim da história                                            |
+| `a[data-cta][data-wa]`                                                         | botões do WhatsApp; o build troca `data-wa` por `href="https://wa.me/…"`                                     |
+| `#tour-start` (`data-tour-ui`)                                                 | "Ver como fazemos": toca o tour (ou, sem tour, leva ao capítulo 2)                                           |
+| `#processo`, `#diferenciais`, `#orcamento`                                     | âncoras do menu                                                                                              |
+| `[data-field="slogan\|razao\|cnpj\|endereco\|horario\|telefone\|email\|mapa"]` | rodapé: preenchido com o dado do `.env` ou removido do HTML quando não há dado                               |
+| `[data-need="chave outra"]` e `{{variavel}}`                                   | o elemento sai se alguma chave estiver vazia; `{{variavel}}` vazia fora de um `data-need` é erro de build    |
+| `[data-year]` e `[data-since]`                                                 | ano do © e anos de mercado: o build escreve o valor e o `main.js` o recalcula no navegador                   |
+| `a[data-contact="phone\|email\|map"]` e `details[data-faq]`                    | links de contato e perguntas do FAQ: viram os eventos `phone_click`, `email_click`, `map_click` e `faq_open` |
+| `.k-area`                                                                      | segunda metade do eyebrow do hero ("Atendemos …"); some nos layouts compacto e de celular                    |
 
 Estados da página: `.stage.ready` (cena desenhada: o canvas entra por fade), `.stage.no-gl` (sem
 WebGL: fica o fundo Papel, o símbolo e os cartões) e, enquanto o contexto está perdido, o `ready` sai

@@ -3,9 +3,16 @@
 import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { after, before, describe, test } from 'node:test';
+import { loadEnv } from 'vite';
 import { ROOT, launch, openPage, scrollToProgress, startServer } from '../scripts/lib.mjs';
 
 const read = (file) => readFileSync(`${ROOT}${file}`, 'utf8');
+const env = loadEnv('production', ROOT, 'VITE_');
+// O único domínio externo permitido na CSP é o servidor da medição, e só com provedor configurado.
+const ALLOWED_ORIGINS =
+  env.VITE_ANALYTICS_PROVIDER === 'umami'
+    ? [new URL(env.VITE_ANALYTICS_ENDPOINT || 'https://gateway.umami.is').origin]
+    : [];
 const html = read('index.html');
 const styles = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join('\n');
 const text = (source) =>
@@ -191,7 +198,8 @@ describe('build: CSP, requisições e marca na página', () => {
     ]) {
       assert.ok(csp.includes(directive), directive);
     }
-    assert.ok(!/unsafe-(inline|eval)|\*|https?:/.test(csp));
+    assert.ok(!/unsafe-(inline|eval)|\*/.test(csp));
+    assert.deepEqual(csp.match(/https?:\/\/[^\s;']+/g) ?? [], ALLOWED_ORIGINS, 'domínios externos');
     const hashes = [...csp.matchAll(/'sha256-[^']+'/g)].length;
     assert.equal(hashes, [...dist.matchAll(/<style>/g)].length, 'um hash por <style>');
     const inlineScripts = [...dist.matchAll(/<script(?![^>]*\bsrc=)([^>]*)>/g)].filter(
@@ -213,6 +221,49 @@ describe('build: CSP, requisições e marca na página', () => {
     assert.match(dist, /<link rel="canonical" href="https:\/\/[^"]+\/"/);
     assert.ok(existsSync(`${ROOT}dist/og.jpg`));
     assert.ok(!dist.includes('%VITE_'), 'nenhuma variável sem substituir');
+  });
+
+  test('política de privacidade: dados do .env, CSP própria, só as cores da marca e abre sem erro', async () => {
+    const page = read('dist/politica-de-privacidade.html');
+    assert.ok(!/\{\{|data-need|data-field/.test(page), 'marcas e placeholders resolvidos');
+    for (const key of ['VITE_LEGAL_NAME', 'VITE_CNPJ', 'VITE_EMAIL']) {
+      if (env[key]) assert.ok(page.includes(env[key]), `${key} na política`);
+    }
+    const csp = page.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)"/)?.[1];
+    assert.ok(csp, 'CSP presente');
+    assert.equal(
+      [...csp.matchAll(/'sha256-[^']+'/g)].length,
+      [...page.matchAll(/<style>/g)].length,
+    );
+    assert.deepEqual(csp.match(/https?:\/\/[^\s;']+/g) ?? [], ALLOWED_ORIGINS);
+    const css = [...page.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join('\n');
+    for (const [hex] of css.matchAll(/#[0-9a-fA-F]{3,8}\b/g)) {
+      const color = hex.toUpperCase();
+      assert.ok(PALETTE.has(color) || DERIVED.has(color), `cor fora da paleta: ${color}`);
+    }
+    assert.ok(read('dist/index.html').includes('politica-de-privacidade.html'), 'link no rodapé');
+
+    const {
+      page: tab,
+      context,
+      problems,
+      requests,
+    } = await openPage(
+      browser,
+      `${server.url}politica-de-privacidade.html`,
+      { reducedMotion: 'reduce' },
+      { waitFor: 'none' },
+    );
+    await tab.goto(`${server.url}politica-de-privacidade.html`);
+    assert.equal(await tab.locator('h1').count(), 1);
+    assert.equal(await tab.evaluate(() => document.documentElement.lang), 'pt-BR');
+    assert.deepEqual(problems, []);
+    assert.deepEqual(
+      requests.filter((url) => !url.startsWith(server.url)),
+      [],
+      'sem requisição externa',
+    );
+    await context.close();
   });
 
   test('sem travessão longo no texto visível nem nos atributos (title, meta, aria-label)', () => {

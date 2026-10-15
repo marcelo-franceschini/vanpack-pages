@@ -13,6 +13,17 @@ export const brand = {
 
 const text = (value) => String(value ?? '').trim();
 
+/** Servidor do Umami Cloud; `VITE_ANALYTICS_ENDPOINT` só muda numa instância própria. */
+export const UMAMI_CLOUD = 'https://gateway.umami.is';
+
+function hostOf(url) {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return '';
+  }
+}
+
 /** (11) 4700-1234 a partir de +551147001234; vazio se o telefone não tiver o formato do Brasil. */
 function formatPhone(phone) {
   const match = /^\+55(\d{2})(\d{4,5})(\d{4})$/.exec(phone);
@@ -71,6 +82,18 @@ export function createSiteConfig(env = {}, now = new Date()) {
     yearsInBusiness: Number.isFinite(years) ? String(years) : '',
   };
 
+  // O que vai ao navegador (define __SITE__): a medição só liga na página publicada (o host do site).
+  site.client = {
+    analytics:
+      site.analytics.provider === 'umami'
+        ? {
+            site: site.analytics.site,
+            endpoint: (site.analytics.endpoint || UMAMI_CLOUD).replace(/\/+$/, ''),
+            host: hostOf(site.siteUrl),
+          }
+        : null,
+  };
+
   // Variáveis dos {{...}} do HTML (e, adiante, das respostas do FAQ). Vazia = o trecho que a usa tem
   // de estar dentro de um elemento com data-need.
   site.vars = {
@@ -87,10 +110,14 @@ export function createSiteConfig(env = {}, now = new Date()) {
     postalCode: site.address.postalCode,
     phoneDisplay: site.phoneDisplay,
     email: site.email,
+    phone,
     hours: site.hours,
     foundedYear,
     yearsInBusiness: site.yearsInBusiness,
     year: site.year,
+    // política de privacidade: a ferramenta de medição (ou a ausência dela)
+    analyticsName: site.analytics.provider === 'umami' ? 'Umami Cloud' : '',
+    noAnalytics: site.analytics.provider ? '' : 'sim',
     // a faixa de confiança só existe se tiver ao menos um item
     hasTrust: [cityState, site.cnpj, foundedYear, site.mapUrl, phone, site.email].some(Boolean)
       ? 'sim'

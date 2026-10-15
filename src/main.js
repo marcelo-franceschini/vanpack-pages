@@ -4,6 +4,7 @@ import { sinceLoad, track, trackOnce } from './analytics.js';
 import { mountStage } from './render/stage.js';
 import { createStory } from './story.js';
 import { createTour } from './tour.js';
+import { watchVitals } from './vitals.js';
 import { yearsSince } from './years.js';
 
 const $ = (selector) => document.querySelector(selector);
@@ -177,9 +178,16 @@ function addCampaign(link) {
 
 document.addEventListener('click', (e) => {
   const link = e.target.closest?.('a[data-cta]');
-  if (!link) return;
-  addCampaign(link);
-  track('whatsapp_click', { cta: link.dataset.cta });
+  if (link) {
+    addCampaign(link);
+    track('whatsapp_click', { cta: link.dataset.cta });
+  }
+  // telefone, e-mail e mapa (data-contact="phone|email|map"); cta é o lugar da página do link
+  const contact = e.target.closest?.('a[data-contact]');
+  if (contact) {
+    const place = contact.closest('footer') ? 'rodape' : (contact.closest('[id]')?.id ?? 'pagina');
+    track(`${contact.dataset.contact}_click`, { cta: place });
+  }
 });
 const finalCta = $('#orcamento .btn');
 if (finalCta) {
@@ -192,3 +200,40 @@ if (finalCta) {
     { threshold: 0.6 },
   ).observe(finalCta);
 }
+
+// ---------- Uso da página ----------
+// section_view: a seção conta quando metade dela está à vista, ou metade da tela nas seções mais altas
+// que a tela (que nunca chegariam a 50% de si mesmas). #processo é a história 3D e já tem chapter_view.
+const sectionView = new IntersectionObserver(
+  (entries) => {
+    for (const { target, intersectionRect, boundingClientRect } of entries) {
+      const needed = Math.min(boundingClientRect.height, innerHeight) * 0.5;
+      if (intersectionRect.height >= needed) {
+        trackOnce(`section-${target.id}`, 'section_view', { section_id: target.id });
+      }
+    }
+  },
+  { threshold: Array.from({ length: 11 }, (_, i) => i / 10) },
+);
+for (const section of document.querySelectorAll('main section[id]:not(#processo)')) {
+  sectionView.observe(section);
+}
+
+// faq_open: o evento `toggle` do <details> não borbulha, então só chega em fase de captura.
+document.addEventListener(
+  'toggle',
+  (e) => {
+    const question = e.target;
+    if (question.open && question.dataset?.faq) {
+      track('faq_open', { question_id: question.dataset.faq });
+    }
+  },
+  true,
+);
+
+watchVitals((name, value) => {
+  track('web_vitals', {
+    name,
+    value: name === 'CLS' ? Math.round(value * 1000) / 1000 : Math.round(value),
+  });
+});

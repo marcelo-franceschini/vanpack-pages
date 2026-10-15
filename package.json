@@ -23,7 +23,8 @@
     "og": "node scripts/og.mjs"
   },
   "dependencies": {
-    "three": "0.184.0"
+    "three": "0.184.0",
+    "web-vitals": "^6.2.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -90,6 +90,14 @@ export function validateSite({ site, env, example, now = new Date() }) {
   if (provider === 'umami' && !UUID.test(analyticsSite)) {
     errors.push('VITE_ANALYTICS_SITE precisa ser o Website ID (UUID) do site no Umami.');
   }
+  if (
+    site.analytics.endpoint &&
+    !/^https?:\/\/[^/\s]+$/.test(site.analytics.endpoint.replace(/\/+$/, ''))
+  ) {
+    errors.push(
+      `VITE_ANALYTICS_ENDPOINT="${site.analytics.endpoint}" precisa ser só o endereço do servidor, ex.: https://umami.empresa.com.br`,
+    );
+  }
 
   if (site.dataMode === 'demo') {
     warnings.push(

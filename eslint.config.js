@@ -7,7 +7,10 @@ export default [
   js.configs.recommended,
   {
     files: ['src/**/*.js'],
-    languageOptions: { globals: { ...globals.browser, ...globals.worker } },
+    // __SITE__ é injetado pelo Vite (define): host, servidor e site da medição
+    languageOptions: {
+      globals: { ...globals.browser, ...globals.worker, __SITE__: 'readonly' },
+    },
   },
   {
     files: ['*.config.js', 'build/**/*.js'],

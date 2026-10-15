@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, test } from 'node:test';
 import { parseEnv } from '../build/env.js';
+import { contentSecurityPolicy } from '../build/csp.js';
 import { robotsTxt, sitemapXml } from '../build/files.js';
 import { buildJsonLd, interpolate, renderPage } from '../build/render.js';
 import { isValidCnpj, validateSite } from '../build/validate.js';
@@ -309,5 +310,43 @@ describe('robots.txt e sitemap.xml', () => {
     const xml = sitemapXml(createSiteConfig(REAL), new Date('2031-01-02T10:00:00Z'));
     assert.ok(xml.includes(`<loc>${REAL.VITE_SITE_URL}</loc>`));
     assert.ok(xml.includes('<lastmod>2031-01-02</lastmod>'));
+  });
+});
+
+describe('medição e CSP', () => {
+  const UMAMI = {
+    VITE_ANALYTICS_PROVIDER: 'umami',
+    VITE_ANALYTICS_SITE: '12345678-1234-4234-8234-123456789abc',
+    VITE_SITE_URL: 'https://empresa.com.br/loja/',
+  };
+  const csp = (env) =>
+    contentSecurityPolicy({ styleHashes: ["'sha256-x'"], site: createSiteConfig(env) });
+
+  test('sem provedor o navegador não recebe config de medição e a CSP não abre domínio nenhum', () => {
+    assert.equal(createSiteConfig({}).client.analytics, null);
+    assert.match(csp({}), /connect-src 'self';/);
+    assert.ok(!/https?:/.test(csp({})));
+  });
+
+  test('com Umami a config leva o host do site e a CSP abre só o servidor da medição', () => {
+    const { analytics } = createSiteConfig(UMAMI).client;
+    assert.deepEqual(analytics, {
+      site: UMAMI.VITE_ANALYTICS_SITE,
+      endpoint: 'https://gateway.umami.is',
+      host: 'empresa.com.br',
+    });
+    assert.match(csp(UMAMI), /connect-src 'self' https:\/\/gateway\.umami\.is;/);
+  });
+
+  test('instância própria: o endereço do servidor vai na config e na CSP', () => {
+    const own = { ...UMAMI, VITE_ANALYTICS_ENDPOINT: 'https://umami.empresa.com.br/' };
+    assert.equal(createSiteConfig(own).client.analytics.endpoint, 'https://umami.empresa.com.br');
+    assert.match(csp(own), /connect-src 'self' https:\/\/umami\.empresa\.com\.br;/);
+    assert.match(
+      validate({ ...example, ...own, VITE_ANALYTICS_ENDPOINT: 'umami.empresa.com.br' }).errors.join(
+        '\n',
+      ),
+      /VITE_ANALYTICS_ENDPOINT/,
+    );
   });
 });
