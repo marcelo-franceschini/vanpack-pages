@@ -232,7 +232,7 @@ const BLOCKS = {
   <h3>${escapeHtml(name)}</h3>
   <p>${escapeHtml(text)}</p>
   <a class="btn btn-soft" data-cta="produtos-${escapeHtml(id)}" data-wa="${escapeHtml(
-    `Olá! Quero um orçamento da ${name}. Medida: ___ · Quantidade: ___ · Impressão: ___`,
+    `Olá! Quero um orçamento da ${name}.`,
   )}">Pedir orçamento deste modelo</a>
 </article>`,
       )
