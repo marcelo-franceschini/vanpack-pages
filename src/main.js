@@ -25,6 +25,8 @@ for (const el of document.querySelectorAll('[data-year]')) {
 
 const storyEl = $('.story');
 const dock = $('#hdr .btn'); // "Pedir orçamento" do cabeçalho: pulsa quando o tour termina
+const fab = $('#fab'); // botão do WhatsApp fixo (a barra, até 768 px)
+const barQuery = matchMedia('(max-width: 768px)');
 const params = new URLSearchParams(location.search);
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const DEPTHS = [25, 50, 75, 100];
@@ -48,7 +50,7 @@ const story = createStory({
   stage: $('#stage'),
   header: $('#hdr'),
   cue: $('#cue'),
-  fab: $('#fab'),
+  fab,
   cards: [...document.querySelectorAll('.card')],
   onProgress: (p) => stage.setProgress(p),
   onChapter: (index) =>
@@ -75,8 +77,10 @@ const tourAvailable = () => stageOk && (forceTour || !reducedMotion.matches);
 
 function pulseDock() {
   if (reducedMotion.matches) return;
-  dock.classList.add('pulse');
-  dock.addEventListener('animationend', () => dock.classList.remove('pulse'), { once: true });
+  // no celular a barra já está à vista no fim da história (e o botão do cabeçalho saiu): pulsa ela
+  const target = barQuery.matches && fab.classList.contains('on') ? $('#fab .fab-wa') : dock;
+  target.classList.add('pulse');
+  target.addEventListener('animationend', () => target.classList.remove('pulse'), { once: true });
 }
 
 function goToChapter(index) {
@@ -215,7 +219,6 @@ wizardReady.then(() => {
 });
 
 // O botão fixo do WhatsApp (barra no celular) sai de cena quando o CTA final já está bem à vista.
-const fab = $('#fab');
 const quote = $('#orcamento');
 if (fab && quote) {
   new IntersectionObserver(

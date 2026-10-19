@@ -137,6 +137,24 @@ describe('autoplay', () => {
     await context.close();
   });
 
+  test('no celular quem pulsa no fim do tour é a barra do WhatsApp (o cabeçalho está sem botão)', async () => {
+    const { page, context } = await open('', {
+      viewport: { width: 390, height: 844 },
+      hasTouch: true,
+      isMobile: true,
+      deviceScaleFactor: 2,
+    });
+    await playFor(page, 8000);
+    await advance(page, 12_000);
+    assert.equal(await tourState(page), 'done');
+    const pulses = await page.evaluate(() => ({
+      bar: document.querySelector('#fab .fab-wa').classList.contains('pulse'),
+      header: document.querySelector('#hdr .btn').classList.contains('pulse'),
+    }));
+    assert.deepEqual(pulses, { bar: true, header: false });
+    await context.close();
+  });
+
   test('em tempo real a página começa a rolar sozinha', async () => {
     const { page, context } = await openPage(browser, server.url);
     await page.waitForFunction(

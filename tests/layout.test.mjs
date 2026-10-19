@@ -10,6 +10,7 @@ const SCREENS = [
   { name: '1366×768', width: 1366, height: 768 },
   { name: '924×540', width: 924, height: 540 },
   { name: '720×450 (zoom de 200% em 1440×900)', width: 720, height: 450 },
+  { name: '360×640 (Android pequeno)', width: 360, height: 640, mobile: true },
   { name: '390×844 (celular em pé)', width: 390, height: 844, mobile: true },
   { name: '844×390 (celular deitado)', width: 844, height: 390, mobile: true },
 ];
@@ -226,6 +227,44 @@ describe('barra fixa do WhatsApp (celular)', () => {
     });
   }
 
+  for (const screen of SCREENS.filter((s) => s.mobile && s.width <= 768)) {
+    test(`${screen.name}: escondida no capítulo 1, à vista do 2 ao 5 e o cabeçalho sem botão`, async () => {
+      const { page, context } = await openPage(browser, server.url, {
+        viewport: { width: screen.width, height: screen.height },
+        reducedMotion: 'reduce',
+        hasTouch: true,
+        isMobile: true,
+        deviceScaleFactor: 2,
+      });
+      // a barra e o botão do cabeçalho trocam de lugar com uma transição curta: espera o estado
+      const expect = (bar, chapter) =>
+        page
+          .waitForFunction(
+            (bar) => {
+              const shown = (el) => getComputedStyle(el).visibility === 'visible';
+              const fab = document.querySelector('#fab');
+              return (
+                fab.classList.contains('on') === bar &&
+                shown(fab) === bar &&
+                shown(document.querySelector('#hdr .btn')) === !bar
+              );
+            },
+            bar,
+            { timeout: 5000 },
+          )
+          .catch(() => assert.fail(`capítulo ${chapter}: barra ${bar ? 'à vista' : 'escondida'}`));
+      await scrollToProgress(page, 0);
+      await expect(false, 1);
+      for (const p of [0.25, 0.5, 0.75, 1]) {
+        await scrollToProgress(page, p);
+        await expect(true, p * 4 + 1);
+      }
+      await scrollToProgress(page, 0);
+      await expect(false, 1);
+      await context.close();
+    });
+  }
+
   test('no desktop e no celular deitado segue o botão redondo, só com o ícone', async () => {
     const { page, context } = await openPage(browser, server.url, { reducedMotion: 'reduce' });
     const info = await page.evaluate(() => {
@@ -243,7 +282,7 @@ describe('barra fixa do WhatsApp (celular)', () => {
 });
 
 describe('botão flutuante do WhatsApp', () => {
-  test('fica escondido na história (o do cabeçalho cumpre o papel) e aparece depois dela', async () => {
+  test('no desktop fica escondido na história (o do cabeçalho cumpre o papel) e aparece depois dela', async () => {
     const { page, context } = await openPage(browser, server.url, { reducedMotion: 'reduce' });
     const visible = () =>
       page.evaluate(() => {
