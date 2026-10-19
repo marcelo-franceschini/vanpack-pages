@@ -141,6 +141,65 @@ for (const screen of SCREENS) {
   });
 }
 
+describe('1ª tela do celular', () => {
+  for (const screen of SCREENS.filter((s) => s.mobile && s.width <= 768)) {
+    test(`${screen.name}: H1, pedido mínimo, botão e linha de risco sem rolar; o 2º chamado é link`, async () => {
+      const { page, context } = await openPage(browser, server.url, {
+        viewport: { width: screen.width, height: screen.height },
+        reducedMotion: 'reduce',
+        hasTouch: true,
+        isMobile: true,
+        deviceScaleFactor: 2,
+      });
+      const first = await page.evaluate(() => {
+        const card = document.querySelector('.card.on');
+        const rect = (el) => {
+          const r = el.getBoundingClientRect();
+          const style = getComputedStyle(el);
+          const shown = style.display !== 'none' && style.visibility !== 'hidden';
+          return { top: r.top, bottom: r.bottom, width: r.width, shown };
+        };
+        return {
+          height: innerHeight,
+          header: document.querySelector('#hdr').getBoundingClientRect().bottom,
+          parts: {
+            título: rect(card.querySelector('h1')),
+            'pedido mínimo': rect(card.querySelector('.seals li')),
+            botão: rect(card.querySelector('[data-cta="hero"]')),
+            'linha de risco': rect(card.querySelector('.cta-note')),
+          },
+          seals: [...card.querySelectorAll('.seals li')]
+            .filter((li) => getComputedStyle(li).display !== 'none')
+            .map((li) => li.textContent.trim()),
+          link: {
+            ...rect(document.querySelector('#tour-start')),
+            background: getComputedStyle(document.querySelector('#tour-start')).backgroundColor,
+          },
+        };
+      });
+      for (const [name, part] of Object.entries(first.parts)) {
+        assert.ok(part.shown, `${name} à vista`);
+        assert.ok(
+          part.top >= first.header - 0.5 && part.bottom <= first.height + 0.5,
+          `${name} inteiro na 1ª tela (${part.top}–${part.bottom} de ${first.height})`,
+        );
+      }
+      assert.match(first.seals[0], /^Pedido mínimo/);
+      assert.ok(!first.seals.some((s) => s.startsWith('Prazo')), 'o prazo já está no parágrafo');
+      assert.ok(
+        first.link.width < first.parts.botão.width * 0.75,
+        'o 2º chamado não é outro bloco',
+      );
+      assert.equal(
+        first.link.background,
+        'rgba(0, 0, 0, 0)',
+        'o 2º chamado não tem fundo de botão',
+      );
+      await context.close();
+    });
+  }
+});
+
 describe('seções depois da história', () => {
   test('sem rolagem horizontal em nenhum tamanho e botão flutuante sem cobrir o rodapé', async () => {
     for (const screen of SCREENS) {

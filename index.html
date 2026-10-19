@@ -539,9 +539,6 @@
         .card .k {
           margin-bottom: 0.5rem;
         }
-        .actions .btn-soft {
-          min-height: 2.75rem;
-        }
         .card h1 {
           font-size: clamp(1.75rem, 8vw, 2.5rem);
           margin-bottom: 0.5rem;
@@ -560,9 +557,31 @@
         .actions .btn {
           flex: 1 1 100%;
         }
-        .seals,
+        /* o 2º chamado ("Ver como fazemos") é um link: um só bloco de largura total na 1ª tela */
+        .actions .btn-soft {
+          flex: 0 0 auto;
+          min-height: 2.75rem;
+          margin: 0 auto;
+          padding: 0 0.5rem;
+          background: none;
+          color: var(--floresta);
+          text-decoration: underline;
+        }
+        .actions .btn-soft:hover {
+          background: none;
+          color: var(--floresta-dark);
+        }
+        /* pedido mínimo e região antes do clique, numa linha compacta (o prazo já está no parágrafo) */
+        .seals {
+          gap: 0.25rem 1rem;
+          margin-top: 0.75rem;
+        }
+        .seals li {
+          font-size: 0.875rem;
+        }
         .scrollcue,
-        .optional {
+        .optional,
+        .seals .optional {
           display: none;
         }
       }
@@ -1354,7 +1373,9 @@
                   </p>
                   <ul class="seals" aria-label="Diferenciais" data-need="hasFacts">
                     <li data-need="minOrder">Pedido mínimo a partir de {{minOrder}} unidades</li>
-                    <li data-need="leadTimeDays">Prazo de {{leadTimeDays}} dias úteis</li>
+                    <li class="optional" data-need="leadTimeDays">
+                      Prazo de {{leadTimeDays}} dias úteis
+                    </li>
                     <li data-need="serviceArea">Atendemos {{serviceArea}}</li>
                   </ul>
                 </div>
