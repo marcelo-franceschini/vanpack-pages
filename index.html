@@ -1210,6 +1210,84 @@
         }
       }
 
+      /* "O WhatsApp não abriu?" (src/handoff.js): sobe quando a página continua à vista depois do
+         toque num botão do WhatsApp. Fio de 1 px em cima e nenhuma sombra (só o cabeçalho tem). */
+      .sheet {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 60;
+        display: grid;
+        gap: 0.75rem;
+        padding: 1.25rem var(--pad) calc(1.25rem + env(safe-area-inset-bottom));
+        background: var(--papel);
+        border-top: 1px solid var(--tint-2);
+      }
+      .sheet p {
+        font-size: 1.0625rem;
+        line-height: 1.45;
+        color: var(--carvao-muted);
+      }
+      .sheet .sheet-t {
+        padding-right: 5.5rem; /* o "Fechar" fica no canto */
+        font-size: 1.25rem;
+        font-weight: 800;
+        line-height: 1.25;
+        color: var(--carvao);
+      }
+      .sheet-t:focus {
+        outline: none;
+      }
+      .sheet-num {
+        color: var(--carvao);
+        white-space: nowrap;
+      }
+      .sheet-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+      .sheet-actions .btn {
+        flex: 1 1 auto;
+        min-height: 3rem;
+      }
+      .sheet .sheet-status {
+        font-weight: 700;
+        color: var(--floresta);
+      }
+      .sheet-status:empty {
+        margin-top: -0.75rem; /* vazia não ocupa o vão da grade, e segue anunciável (role=status) */
+      }
+      .sheet-x {
+        position: absolute;
+        top: 0.75rem;
+        right: calc(var(--pad) - 0.5rem);
+        min-height: 2.75rem;
+        padding: 0 0.5rem;
+        border: 0;
+        background: none;
+        color: var(--floresta);
+        font-weight: 700;
+        text-decoration: underline;
+        text-underline-offset: 0.2em;
+        cursor: pointer;
+      }
+      @media (min-width: 769px) {
+        .sheet {
+          left: auto;
+          right: calc(1rem + env(safe-area-inset-right));
+          bottom: calc(1rem + env(safe-area-inset-bottom));
+          width: min(26rem, calc(100vw - 2rem));
+          padding: 1.5rem;
+          border: 1px solid var(--tint-2);
+          border-radius: 0.5rem;
+        }
+        .sheet-x {
+          right: 1rem;
+        }
+      }
+
       @media (prefers-reduced-motion: reduce) {
         *,
         *::before,
@@ -1651,6 +1729,32 @@
         ><svg aria-hidden="true"><use href="#i-wa" /></svg><span>Pedir orçamento</span></a
       >
       <div class="fab-tel" data-field="telefone" hidden></div>
+    </div>
+
+    <div class="sheet" id="zap-ajuda" role="dialog" aria-labelledby="zap-ajuda-t" hidden>
+      <p class="sheet-t" id="zap-ajuda-t" tabindex="-1">O WhatsApp não abriu?</p>
+      <p class="sheet-inapp" hidden>
+        Dentro do Instagram, Facebook ou TikTok o WhatsApp às vezes não abre: toque em ⋮ ou ··· no
+        canto da tela e escolha "Abrir no navegador".
+      </p>
+      <p data-need="whatsappDisplay">
+        Nosso WhatsApp é o <b class="sheet-num">{{whatsappDisplay}}</b>.
+      </p>
+      <div class="sheet-actions">
+        <button
+          class="btn btn-primary"
+          type="button"
+          data-need="whatsapp"
+          data-copy="+{{whatsapp}}"
+        >
+          Copiar número
+        </button>
+        <a class="btn btn-soft" data-need="phone" href="tel:{{phone}}" data-contact="phone"
+          >Ligar {{phoneDisplay}}</a
+        >
+      </div>
+      <p class="sheet-status" role="status"></p>
+      <button class="sheet-x" type="button">Fechar</button>
     </div>
 
     <script type="module" src="/src/main.js"></script>

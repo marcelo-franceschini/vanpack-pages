@@ -2,6 +2,7 @@
 // Tudo que é 3D fica em ./render e ./scene.
 import { sinceLoad, track, trackOnce } from './analytics.js';
 import { startExperiments, variant } from './experiments.js';
+import { createHandoff, inAppBrowser } from './handoff.js';
 import { mountStage } from './render/stage.js';
 import { createStory } from './story.js';
 import { createTour } from './tour.js';
@@ -161,6 +162,8 @@ function startAutoplay() {
 // Sem espera: o tour começa no instante em que a cena fica pronta.
 stage.ready.then((ok) => {
   stageOk = ok;
+  // tempo até a cena aparecer (0 = sem 3D): o LCP não enxerga <canvas>, então ele vai no resumo
+  track('scene_ready', { ms: ok ? sinceLoad() : 0 });
   startAutoplay();
   removeEventListener('scroll', undoRestore);
 });
@@ -175,20 +178,36 @@ const campaign = ['utm_source', 'utm_campaign']
   .map((key) => params.get(key) ?? '')
   .filter((value) => /^[\w.-]{1,40}$/.test(value))
   .join('/');
+const addCampaign = (message) =>
+  campaign && !message.includes('[utm:') ? `${message} [utm: ${campaign}]` : message;
 
-function addCampaign(link) {
-  if (!campaign) return;
+// Navegador embutido de rede social (Instagram, Facebook, TikTok): o código de origem ganha o sufixo
+// dele ([site-hero-ig]), para comparar cliques e conversas por navegador; é onde o WhatsApp mais
+// falha em abrir.
+const inapp = inAppBrowser();
+const tagInApp = (message) =>
+  inapp && !message.includes(`-${inapp}]`)
+    ? message.replace(/\[site-([\w-]+)\]/, `[site-$1-${inapp}]`)
+    : message;
+
+/** Reescreve a mensagem de um link do wa.me (o texto vai no parâmetro `text`). */
+function editMessage(link, edit) {
   const url = new URL(link.href);
   const message = url.searchParams.get('text');
-  if (!message || message.includes('[utm:')) return;
-  link.href = `${url.origin}${url.pathname}?text=${encodeURIComponent(`${message} [utm: ${campaign}]`)}`;
+  if (!message) return;
+  const next = edit(message);
+  if (next !== message) link.href = `${url.origin}${url.pathname}?text=${encodeURIComponent(next)}`;
 }
+
+// Se a página continua à vista depois do toque, o WhatsApp não abriu: sobe a folha de ajuda.
+const handoff = createHandoff({ sheet: $('#zap-ajuda'), inapp, onEvent: track });
 
 document.addEventListener('click', (e) => {
   const link = e.target.closest?.('a[data-cta]');
   if (link) {
-    addCampaign(link);
+    editMessage(link, (message) => addCampaign(tagInApp(message)));
     track('whatsapp_click', { cta: link.dataset.cta });
+    handoff.watch(link, e);
   }
   // telefone, e-mail e mapa (data-contact="phone|email|map"); cta é o lugar da página do link
   const contact = e.target.closest?.('a[data-contact]');

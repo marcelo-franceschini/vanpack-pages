@@ -161,6 +161,7 @@ export function createSiteConfig(
   const state = text(env.VITE_STATE);
   const phone = text(env.VITE_PHONE);
   const legalName = text(env.VITE_LEGAL_NAME);
+  const whatsapp = text(env.VITE_WHATSAPP).replace(/\D/g, '');
   const foundedYear = text(env.VITE_FOUNDED_YEAR);
   const years = yearsSince(foundedYear, now);
   const cityState = city && state ? `${city}-${state}` : city || state;
@@ -170,7 +171,9 @@ export function createSiteConfig(
     content,
     dataMode: text(env.VITE_DATA_MODE),
     siteUrl: text(env.VITE_SITE_URL),
-    whatsapp: text(env.VITE_WHATSAPP).replace(/\D/g, ''),
+    whatsapp,
+    // como aparece na folha "O WhatsApp não abriu?": (11) 91234-5678
+    whatsappDisplay: whatsapp ? formatPhone(`+${whatsapp}`) || `+${whatsapp}` : '',
     phone,
     phoneDisplay: text(env.VITE_PHONE_DISPLAY) || formatPhone(phone) || phone,
     email: text(env.VITE_EMAIL),
@@ -234,6 +237,8 @@ export function createSiteConfig(
     phoneDisplay: site.phoneDisplay,
     email: site.email,
     phone,
+    whatsapp, // folha "O WhatsApp não abriu?": o número para copiar
+    whatsappDisplay: site.whatsappDisplay,
     hours: site.hours,
     foundedYear,
     yearsInBusiness: site.yearsInBusiness,
