@@ -4,13 +4,15 @@
 const MODES = ['demo', 'production'];
 
 // Chaves que podem ter o mesmo valor do .env.example mesmo em produção: ou são reais desde já
-// (cidade, UF, URL do site, ano de fundação, Umami) ou não são dados da empresa.
+// (cidade, UF, URL do site, ano de fundação, horário do assistente do WhatsApp, Umami) ou não são
+// dados da empresa.
 const REAL_BY_NATURE = new Set([
   'VITE_DATA_MODE',
   'VITE_SITE_URL',
   'VITE_CITY',
   'VITE_STATE',
   'VITE_FOUNDED_YEAR',
+  'VITE_WHATSAPP_HOURS',
   'VITE_ANALYTICS_PROVIDER',
   'VITE_ANALYTICS_SITE',
   'VITE_ANALYTICS_ENDPOINT',

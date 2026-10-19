@@ -79,7 +79,14 @@ export function footerFields(site) {
     razao: site.legalName && escapeHtml(site.legalName),
     cnpj: site.cnpj && escapeHtml(site.cnpj),
     endereco: place && escapeHtml(place),
-    horario: site.hours && escapeHtml(site.hours),
+    // o assistente do WhatsApp tem o horário dele (VITE_WHATSAPP_HOURS); o VITE_HOURS é o do telefone
+    horario:
+      site.hours &&
+      escapeHtml(
+        site.whatsappHours
+          ? `WhatsApp: ${site.whatsappHours} · Telefone: ${site.hours}`
+          : site.hours,
+      ),
     telefone:
       site.phone &&
       link(`tel:${site.phone}`, site.phoneDisplay || site.phone, ' data-contact="phone"'),

@@ -61,7 +61,7 @@ Todo dado da empresa (CNPJ, telefone, WhatsApp, endereço, prazos…) vive só n
 - `VITE_WHATSAPP` (obrigatório nos dois modos: `55` + DDD + número, ex.: `5511912345678`; o build nunca gera `wa.me/?text=…` sem número), `VITE_SITE_URL` (termina em `/`: canonical, Open Graph, JSON-LD, robots e sitemap).
 - Contato e endereço: `VITE_PHONE`, `VITE_PHONE_DISPLAY`, `VITE_EMAIL`, `VITE_CNPJ`, `VITE_LEGAL_NAME`, `VITE_STREET`, `VITE_DISTRICT`, `VITE_CITY`, `VITE_STATE`, `VITE_CEP`, `VITE_HOURS`, `VITE_HOURS_SCHEMA`, `VITE_MAP_URL`.
 - `VITE_FOUNDED_YEAR`: o "N anos de mercado" e o © são calculados dele (no build e de novo no navegador), então não precisam de edição anual.
-- Operacionais: `VITE_MIN_ORDER`, `VITE_LEAD_TIME_DAYS`, `VITE_SERVICE_AREA`, `VITE_RESPONSE_TIME`, `VITE_PAYMENT_METHODS`.
+- Operacionais: `VITE_MIN_ORDER`, `VITE_LEAD_TIME_DAYS`, `VITE_SERVICE_AREA`, `VITE_PAYMENT_METHODS`, `VITE_WHATSAPP_HOURS` (horário do assistente do WhatsApp; vazio, a página não promete resposta na hora).
 - Medição sem cookies: `VITE_ANALYTICS_PROVIDER` (`umami` ou vazio), `VITE_ANALYTICS_SITE` e `VITE_ANALYTICS_ENDPOINT`.
 
 No build, o `site.config.js` monta a config a partir do `.env` (`createSiteConfig`), o `build/validate.js` confere a trava de go-live, o `build/render.js` escreve os dados no HTML (links `wa.me`, campos `data-field` do rodapé, trechos `data-need`, `{{variáveis}}`, JSON-LD e o `noindex` em demo) e o `build/files.js` gera `robots.txt` e `sitemap.xml`. `{{variável}}` vazia fora de um `data-need` é erro de build.
