@@ -10,6 +10,7 @@ const SCREENS = [
   { name: '1366×768', width: 1366, height: 768 },
   { name: '924×540', width: 924, height: 540 },
   { name: '720×450 (zoom de 200% em 1440×900)', width: 720, height: 450 },
+  { name: '360×640 (Android pequeno)', width: 360, height: 640, mobile: true },
   { name: '390×844 (celular em pé)', width: 390, height: 844, mobile: true },
   { name: '844×390 (celular deitado)', width: 844, height: 390, mobile: true },
 ];
@@ -140,6 +141,65 @@ for (const screen of SCREENS) {
   });
 }
 
+describe('1ª tela do celular', () => {
+  for (const screen of SCREENS.filter((s) => s.mobile && s.width <= 768)) {
+    test(`${screen.name}: H1, pedido mínimo, botão e linha de risco sem rolar; o 2º chamado é link`, async () => {
+      const { page, context } = await openPage(browser, server.url, {
+        viewport: { width: screen.width, height: screen.height },
+        reducedMotion: 'reduce',
+        hasTouch: true,
+        isMobile: true,
+        deviceScaleFactor: 2,
+      });
+      const first = await page.evaluate(() => {
+        const card = document.querySelector('.card.on');
+        const rect = (el) => {
+          const r = el.getBoundingClientRect();
+          const style = getComputedStyle(el);
+          const shown = style.display !== 'none' && style.visibility !== 'hidden';
+          return { top: r.top, bottom: r.bottom, width: r.width, shown };
+        };
+        return {
+          height: innerHeight,
+          header: document.querySelector('#hdr').getBoundingClientRect().bottom,
+          parts: {
+            título: rect(card.querySelector('h1')),
+            'pedido mínimo': rect(card.querySelector('.seals li')),
+            botão: rect(card.querySelector('[data-cta="hero"]')),
+            'linha de risco': rect(card.querySelector('.cta-note')),
+          },
+          seals: [...card.querySelectorAll('.seals li')]
+            .filter((li) => getComputedStyle(li).display !== 'none')
+            .map((li) => li.textContent.trim()),
+          link: {
+            ...rect(document.querySelector('#tour-start')),
+            background: getComputedStyle(document.querySelector('#tour-start')).backgroundColor,
+          },
+        };
+      });
+      for (const [name, part] of Object.entries(first.parts)) {
+        assert.ok(part.shown, `${name} à vista`);
+        assert.ok(
+          part.top >= first.header - 0.5 && part.bottom <= first.height + 0.5,
+          `${name} inteiro na 1ª tela (${part.top}–${part.bottom} de ${first.height})`,
+        );
+      }
+      assert.match(first.seals[0], /^Pedido mínimo/);
+      assert.ok(!first.seals.some((s) => s.startsWith('Prazo')), 'o prazo já está no parágrafo');
+      assert.ok(
+        first.link.width < first.parts.botão.width * 0.75,
+        'o 2º chamado não é outro bloco',
+      );
+      assert.equal(
+        first.link.background,
+        'rgba(0, 0, 0, 0)',
+        'o 2º chamado não tem fundo de botão',
+      );
+      await context.close();
+    });
+  }
+});
+
 describe('seções depois da história', () => {
   test('sem rolagem horizontal em nenhum tamanho e botão flutuante sem cobrir o rodapé', async () => {
     for (const screen of SCREENS) {
@@ -226,6 +286,44 @@ describe('barra fixa do WhatsApp (celular)', () => {
     });
   }
 
+  for (const screen of SCREENS.filter((s) => s.mobile && s.width <= 768)) {
+    test(`${screen.name}: escondida no capítulo 1, à vista do 2 ao 5 e o cabeçalho sem botão`, async () => {
+      const { page, context } = await openPage(browser, server.url, {
+        viewport: { width: screen.width, height: screen.height },
+        reducedMotion: 'reduce',
+        hasTouch: true,
+        isMobile: true,
+        deviceScaleFactor: 2,
+      });
+      // a barra e o botão do cabeçalho trocam de lugar com uma transição curta: espera o estado
+      const expect = (bar, chapter) =>
+        page
+          .waitForFunction(
+            (bar) => {
+              const shown = (el) => getComputedStyle(el).visibility === 'visible';
+              const fab = document.querySelector('#fab');
+              return (
+                fab.classList.contains('on') === bar &&
+                shown(fab) === bar &&
+                shown(document.querySelector('#hdr .btn')) === !bar
+              );
+            },
+            bar,
+            { timeout: 5000 },
+          )
+          .catch(() => assert.fail(`capítulo ${chapter}: barra ${bar ? 'à vista' : 'escondida'}`));
+      await scrollToProgress(page, 0);
+      await expect(false, 1);
+      for (const p of [0.25, 0.5, 0.75, 1]) {
+        await scrollToProgress(page, p);
+        await expect(true, p * 4 + 1);
+      }
+      await scrollToProgress(page, 0);
+      await expect(false, 1);
+      await context.close();
+    });
+  }
+
   test('no desktop e no celular deitado segue o botão redondo, só com o ícone', async () => {
     const { page, context } = await openPage(browser, server.url, { reducedMotion: 'reduce' });
     const info = await page.evaluate(() => {
@@ -243,7 +341,7 @@ describe('barra fixa do WhatsApp (celular)', () => {
 });
 
 describe('botão flutuante do WhatsApp', () => {
-  test('fica escondido na história (o do cabeçalho cumpre o papel) e aparece depois dela', async () => {
+  test('no desktop fica escondido na história (o do cabeçalho cumpre o papel) e aparece depois dela', async () => {
     const { page, context } = await openPage(browser, server.url, { reducedMotion: 'reduce' });
     const visible = () =>
       page.evaluate(() => {

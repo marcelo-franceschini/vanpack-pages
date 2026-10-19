@@ -75,6 +75,12 @@ export const faq = [
     a: 'Somos a {{legalName}}, CNPJ {{cnpj}}, com fábrica em {{street}}, {{city}}. Pode nos visitar.',
   },
   {
+    // o WhatsApp é atendido pelo assistente; a saída para uma pessoa é o telefone
+    id: 'pessoa',
+    q: 'Posso falar com uma pessoa?',
+    a: 'Pode. Ligue para {{phoneDisplay}}, {{hours}}.',
+  },
+  {
     id: 'onda',
     q: 'Onda simples ou dupla?',
     a: 'A dupla é mais resistente, indicada para produtos pesados ou empilhamento alto. Ajudamos a escolher.',
@@ -161,6 +167,7 @@ export function createSiteConfig(
   const state = text(env.VITE_STATE);
   const phone = text(env.VITE_PHONE);
   const legalName = text(env.VITE_LEGAL_NAME);
+  const whatsapp = text(env.VITE_WHATSAPP).replace(/\D/g, '');
   const foundedYear = text(env.VITE_FOUNDED_YEAR);
   const years = yearsSince(foundedYear, now);
   const cityState = city && state ? `${city}-${state}` : city || state;
@@ -170,7 +177,9 @@ export function createSiteConfig(
     content,
     dataMode: text(env.VITE_DATA_MODE),
     siteUrl: text(env.VITE_SITE_URL),
-    whatsapp: text(env.VITE_WHATSAPP).replace(/\D/g, ''),
+    whatsapp,
+    // como aparece na folha "O WhatsApp não abriu?": (11) 91234-5678
+    whatsappDisplay: whatsapp ? formatPhone(`+${whatsapp}`) || `+${whatsapp}` : '',
     phone,
     phoneDisplay: text(env.VITE_PHONE_DISPLAY) || formatPhone(phone) || phone,
     email: text(env.VITE_EMAIL),
@@ -186,13 +195,13 @@ export function createSiteConfig(
     },
     cityState,
     hours: text(env.VITE_HOURS),
+    whatsappHours: text(env.VITE_WHATSAPP_HOURS), // o assistente (chatbot) do WhatsApp
     hoursSchema: text(env.VITE_HOURS_SCHEMA),
     mapUrl: text(env.VITE_MAP_URL),
     foundedYear,
     minOrder: text(env.VITE_MIN_ORDER),
     leadTimeDays: text(env.VITE_LEAD_TIME_DAYS),
     serviceArea: text(env.VITE_SERVICE_AREA),
-    responseTime: text(env.VITE_RESPONSE_TIME),
     paymentMethods: text(env.VITE_PAYMENT_METHODS),
     analytics: {
       provider: text(env.VITE_ANALYTICS_PROVIDER),
@@ -234,7 +243,10 @@ export function createSiteConfig(
     phoneDisplay: site.phoneDisplay,
     email: site.email,
     phone,
+    whatsapp, // folha "O WhatsApp não abriu?": o número para copiar
+    whatsappDisplay: site.whatsappDisplay,
     hours: site.hours,
+    whatsappHours: site.whatsappHours, // linha de risco: "Resposta na hora, 24 horas"
     foundedYear,
     yearsInBusiness: site.yearsInBusiness,
     year: site.year,
@@ -264,7 +276,6 @@ export function createSiteConfig(
     minOrder: site.minOrder,
     leadTimeDays: site.leadTimeDays,
     serviceArea: site.serviceArea,
-    responseTime: site.responseTime,
     paymentMethods: site.paymentMethods,
     // título e descrição da página (title, og e twitter); a cidade entra só se houver
     title: `Caixas de papelão sob medida com a sua marca | ${site.name}${city ? ` ${city}` : ''}`,

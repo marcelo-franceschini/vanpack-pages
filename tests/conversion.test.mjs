@@ -48,6 +48,8 @@ describe('botões do WhatsApp no HTML publicado', () => {
   test('a mensagem termina com o código de origem do botão', () => {
     for (const button of buttons) {
       assert.ok(button.text.startsWith('Olá!'), `${button.cta}: mensagem pronta`);
+      // campo em branco para editar no teclado do celular é motivo para não enviar
+      assert.ok(!button.text.includes('___'), `${button.cta}: mensagem curta, sem lacunas`);
       assert.ok(
         button.text.endsWith(`[site-${button.cta}]`),
         `${button.cta}: "${button.text}" deveria terminar em [site-${button.cta}]`,

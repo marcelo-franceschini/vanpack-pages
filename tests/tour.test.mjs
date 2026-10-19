@@ -55,7 +55,7 @@ describe('autoplay', () => {
     await context.close();
   });
 
-  test('no celular em pé também começa sozinho e já rola no 1º segundo', async () => {
+  test('no celular em pé também começa sozinho e já anda no 1º segundo', async () => {
     const { page, context } = await open('', {
       viewport: { width: 390, height: 844 },
       hasTouch: true,
@@ -63,8 +63,11 @@ describe('autoplay', () => {
       deviceScaleFactor: 2,
     });
     assert.equal(await tourState(page), 'playing');
+    // a história do celular é mais curta (400 svh), então o mesmo trecho rola menos px: a conta é
+    // pelo progresso da história, que é o que move a cena (no desktop, 2,5% passa de 100 px)
+    const target = await yAtProgress(page, 0.025);
     await advance(page, 1000);
-    assert.ok((await scrollY(page)) > 100, 'mais de 100 px de scroll no 1º segundo');
+    assert.ok((await scrollY(page)) > target, 'mais de 2,5% da história no 1º segundo');
     await context.close();
   });
 
@@ -134,6 +137,24 @@ describe('autoplay', () => {
     await advance(page, 12_000);
     assert.equal(await tourState(page), 'done');
     assert.equal(await dockPulses(page), true);
+    await context.close();
+  });
+
+  test('no celular quem pulsa no fim do tour é a barra do WhatsApp (o cabeçalho está sem botão)', async () => {
+    const { page, context } = await open('', {
+      viewport: { width: 390, height: 844 },
+      hasTouch: true,
+      isMobile: true,
+      deviceScaleFactor: 2,
+    });
+    await playFor(page, 8000);
+    await advance(page, 12_000);
+    assert.equal(await tourState(page), 'done');
+    const pulses = await page.evaluate(() => ({
+      bar: document.querySelector('#fab .fab-wa').classList.contains('pulse'),
+      header: document.querySelector('#hdr .btn').classList.contains('pulse'),
+    }));
+    assert.deepEqual(pulses, { bar: true, header: false });
     await context.close();
   });
 

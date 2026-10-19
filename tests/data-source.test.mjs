@@ -7,6 +7,7 @@ import { extname, join, relative } from 'node:path';
 import { describe, test } from 'node:test';
 import { loadEnv } from 'vite';
 import { parseEnv } from '../build/env.js';
+import { createSiteConfig } from '../site.config.js';
 import { yearsSince } from '../src/years.js';
 
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -96,6 +97,8 @@ describe('.env é a fonte única', () => {
       .replace(/&[a-z]+;/g, ' ');
     const allowed = new Set([
       ...(Object.values(env).join(' ').match(/\d+/g) ?? []),
+      // o WhatsApp formatado na folha "O WhatsApp não abriu?": (11) 91234-5678
+      ...(createSiteConfig(env).whatsappDisplay.match(/\d+/g) ?? []),
       '1', // passos "Como pedir": 1, 2 e 3
       '2',
       '3',

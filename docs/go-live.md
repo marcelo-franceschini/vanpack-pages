@@ -23,37 +23,37 @@ anunciado. Depois do deploy, peça a indexação no Search Console.
 
 ## Chaves do `.env`
 
-| Chave                     | O que é                                                    | Obrigatória | Como conferir                                       |
-| ------------------------- | ---------------------------------------------------------- | ----------- | --------------------------------------------------- |
-| `VITE_DATA_MODE`          | `demo` (fictícios, noindex) ou `production`                | sim         | Troque para `production` no go-live                 |
-| `VITE_SITE_URL`           | Endereço público do site, terminando em `/`                | sim         | `https` em production; vale para canonical e OG     |
-| `VITE_WHATSAPP`           | 55 + DDD + número, só dígitos                              | sim         | Teste um botão do site                              |
-| `VITE_PHONE`              | Telefone em `+55DDDnúmero`                                 | production  | Igual ao do Perfil da Empresa no Google             |
-| `VITE_PHONE_DISPLAY`      | Telefone como aparece na página                            | não         | Sem ele, a página formata o `VITE_PHONE`            |
-| `VITE_EMAIL`              | E-mail de contato (de preferência do domínio da empresa)   | production  | Receba um e-mail de teste                           |
-| `VITE_CNPJ`               | CNPJ                                                       | production  | Cartão CNPJ da Receita (o build confere os dígitos) |
-| `VITE_LEGAL_NAME`         | Razão social                                               | não         | Cartão CNPJ                                         |
-| `VITE_STREET`             | Rua e número da fábrica                                    | production  | Igual ao Perfil da Empresa no Google                |
-| `VITE_DISTRICT`           | Bairro                                                     | não         | Cartão CNPJ                                         |
-| `VITE_CITY`               | Cidade                                                     | production  | Cartão CNPJ                                         |
-| `VITE_STATE`              | UF, duas letras                                            | production  | Cartão CNPJ                                         |
-| `VITE_CEP`                | CEP, `00000-000`                                           | production  | Correios                                            |
-| `VITE_HOURS`              | Horário de atendimento, como aparece no rodapé             | production  | Igual ao Perfil da Empresa no Google                |
-| `VITE_HOURS_SCHEMA`       | Horário no formato do schema.org, ex.: `Mo-Fr 08:00-17:00` | não         | Vai só para o JSON-LD                               |
-| `VITE_MAP_URL`            | Link do Google Maps para o endereço                        | não         | Abra o link                                         |
-| `VITE_FOUNDED_YEAR`       | Ano de fundação                                            | não         | Confirme o ano: o "N anos de mercado" sai dele      |
-| `VITE_MIN_ORDER`          | Pedido mínimo, em unidades                                 | não         | Confirme com a produção                             |
-| `VITE_LEAD_TIME_DAYS`     | Prazo de entrega, em dias úteis                            | não         | Confirme com a produção                             |
-| `VITE_SERVICE_AREA`       | Região atendida                                            | não         | Confirme com o comercial                            |
-| `VITE_RESPONSE_TIME`      | Tempo de resposta do atendimento                           | não         | Só prometa o que o time cumpre                      |
-| `VITE_PAYMENT_METHODS`    | Formas de pagamento                                        | não         | Confirme com o financeiro                           |
-| `VITE_ANALYTICS_PROVIDER` | `umami` ou vazio (sem medição)                             | não         | Medição sem cookies, sem pop-up                     |
-| `VITE_ANALYTICS_SITE`     | Website ID do site no Umami Cloud                          | com umami   | Painel do Umami, em Settings do site                |
-| `VITE_ANALYTICS_ENDPOINT` | Servidor do Umami, só se tiver instância própria           | não         | Deixe vazio para usar o Umami Cloud                 |
+| Chave                     | O que é                                                      | Obrigatória | Como conferir                                       |
+| ------------------------- | ------------------------------------------------------------ | ----------- | --------------------------------------------------- |
+| `VITE_DATA_MODE`          | `demo` (fictícios, noindex) ou `production`                  | sim         | Troque para `production` no go-live                 |
+| `VITE_SITE_URL`           | Endereço público do site, terminando em `/`                  | sim         | `https` em production; vale para canonical e OG     |
+| `VITE_WHATSAPP`           | 55 + DDD + número, só dígitos                                | sim         | Teste um botão do site                              |
+| `VITE_PHONE`              | Telefone em `+55DDDnúmero`                                   | production  | Igual ao do Perfil da Empresa no Google             |
+| `VITE_PHONE_DISPLAY`      | Telefone como aparece na página                              | não         | Sem ele, a página formata o `VITE_PHONE`            |
+| `VITE_EMAIL`              | E-mail de contato (de preferência do domínio da empresa)     | production  | Receba um e-mail de teste                           |
+| `VITE_CNPJ`               | CNPJ                                                         | production  | Cartão CNPJ da Receita (o build confere os dígitos) |
+| `VITE_LEGAL_NAME`         | Razão social                                                 | não         | Cartão CNPJ                                         |
+| `VITE_STREET`             | Rua e número da fábrica                                      | production  | Igual ao Perfil da Empresa no Google                |
+| `VITE_DISTRICT`           | Bairro                                                       | não         | Cartão CNPJ                                         |
+| `VITE_CITY`               | Cidade                                                       | production  | Cartão CNPJ                                         |
+| `VITE_STATE`              | UF, duas letras                                              | production  | Cartão CNPJ                                         |
+| `VITE_CEP`                | CEP, `00000-000`                                             | production  | Correios                                            |
+| `VITE_HOURS`              | Horário de atendimento, como aparece no rodapé               | production  | Igual ao Perfil da Empresa no Google                |
+| `VITE_HOURS_SCHEMA`       | Horário no formato do schema.org, ex.: `Mo-Fr 08:00-17:00`   | não         | Vai só para o JSON-LD                               |
+| `VITE_MAP_URL`            | Link do Google Maps para o endereço                          | não         | Abra o link                                         |
+| `VITE_FOUNDED_YEAR`       | Ano de fundação                                              | não         | Confirme o ano: o "N anos de mercado" sai dele      |
+| `VITE_MIN_ORDER`          | Pedido mínimo, em unidades                                   | não         | Confirme com a produção                             |
+| `VITE_LEAD_TIME_DAYS`     | Prazo de entrega, em dias úteis                              | não         | Confirme com a produção                             |
+| `VITE_SERVICE_AREA`       | Região atendida                                              | não         | Confirme com o comercial                            |
+| `VITE_PAYMENT_METHODS`    | Formas de pagamento                                          | não         | Confirme com o financeiro                           |
+| `VITE_WHATSAPP_HOURS`     | Horário do assistente (chatbot) do WhatsApp, ex.: `24 horas` | não         | Só com o assistente no ar: vira "Resposta na hora"  |
+| `VITE_ANALYTICS_PROVIDER` | `umami` ou vazio (sem medição)                               | não         | Medição sem cookies, sem pop-up                     |
+| `VITE_ANALYTICS_SITE`     | Website ID do site no Umami Cloud                            | com umami   | Painel do Umami, em Settings do site                |
+| `VITE_ANALYTICS_ENDPOINT` | Servidor do Umami, só se tiver instância própria             | não         | Deixe vazio para usar o Umami Cloud                 |
 
 As chaves "fictícias por natureza" (tudo, menos `VITE_DATA_MODE`, `VITE_SITE_URL`, `VITE_CITY`,
 `VITE_STATE`, `VITE_FOUNDED_YEAR` e as de analytics) não podem sobrar com o valor do `.env.example`
-em `production`. Pedido mínimo, prazo, região, tempo de resposta e formas de pagamento também são
+em `production`. Pedido mínimo, prazo, região e formas de pagamento também são
 promessas: confirme cada uma com a área responsável antes de publicar.
 
 ## Conteúdo para conferir
@@ -95,6 +95,8 @@ O site só envia eventos quando o host da página é o da `VITE_SITE_URL`: ao tr
 - [ ] `robots.txt` libera o site e o `sitemap.xml` tem a URL final.
 - [ ] A política de privacidade foi revisada pelo jurídico.
 - [ ] Modelos de caixa e respostas do FAQ conferidos; depoimentos de exemplo trocados por prova autorizada (ou removidos).
+- [ ] O assistente (chatbot) do WhatsApp já responde na hora, 24 horas: a página promete isso na linha de risco, em "Como pedir" e no rodapé. Confira também se o FAQ e o CTA final batem com o que ele faz (foto do produto, logo, arte).
+- [ ] Depois do deploy, abra o link de dentro do Instagram (e do Facebook) num celular: o botão abre o WhatsApp? Se não abrir, a folha "O WhatsApp não abriu?" aparece?
 - [ ] `npm run og` gera de novo `public/og.jpg`: a imagem de compartilhamento tem o texto do hero.
 - [ ] `npm run audit:lighthouse`: SEO 100 só é possível em `production` (em demo o `noindex` reprova o
       item "página bloqueada para indexação", como esperado).

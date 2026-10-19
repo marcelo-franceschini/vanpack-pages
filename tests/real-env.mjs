@@ -18,6 +18,6 @@ export const realEnv = (example) => ({
   VITE_MIN_ORDER: '300',
   VITE_LEAD_TIME_DAYS: '7',
   VITE_SERVICE_AREA: 'Grande São Paulo',
-  VITE_RESPONSE_TIME: '1 h útil',
   VITE_PAYMENT_METHODS: 'Pix e boleto',
+  VITE_WHATSAPP_HOURS: '24 horas',
 });

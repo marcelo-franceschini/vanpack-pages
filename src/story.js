@@ -2,9 +2,12 @@
 // cabeçalho, dica de scroll e botão flutuante. As medidas ficam em cache: o scroll só lê scrollY.
 
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
-// O botão flutuante só aparece depois do fim da história (px além dele): no último capítulo ele
-// cobriria o cartão em telas estreitas, e o botão do cabeçalho já cumpre o papel.
+// No desktop o botão flutuante só aparece depois do fim da história (px além dele): o do cabeçalho já
+// está à mão do mouse. Até 768 px (a barra de largura total, a mesma quebra do CSS) a barra aparece a
+// partir do 2º capítulo: o cartão 1 tem o botão grande, e do 2 ao 5 o polegar fica sem botão perto.
+// Os cartões 2 a 5 reservam o espaço da barra (index.html), então ela não cobre o texto.
 const FAB_AFTER = 8;
+const BAR = '(max-width: 768px)';
 
 /**
  * @param {object} options
@@ -36,6 +39,7 @@ export function createStory({
   let active = 0;
   let queued = false;
   let prev = { progress: -1, solid: null, cue: null, fab: null };
+  const bar = matchMedia(BAR);
 
   // só o cartão ativo é lido por leitor de tela e recebe foco
   cards.forEach((card, i) => (card.inert = i !== active));
@@ -65,7 +69,7 @@ export function createStory({
       progress,
       solid: y > 40,
       cue: progress > 0.02,
-      fab: y > top + range + FAB_AFTER,
+      fab: y > top + range + FAB_AFTER || (bar.matches && active > 0),
     };
     if (next.solid !== prev.solid) header.classList.toggle('solid', next.solid);
     if (next.cue !== prev.cue) cue.classList.toggle('gone', next.cue);
@@ -89,6 +93,7 @@ export function createStory({
   measure();
   addEventListener('scroll', schedule, { passive: true });
   addEventListener('resize', remeasure);
+  bar.addEventListener('change', schedule);
   new ResizeObserver(remeasure).observe(story);
   update();
 

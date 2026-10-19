@@ -30,7 +30,7 @@ só experimento configurado, o `quote_wizard`. Não existe experimento que tire 
 - **Hipótese:** trocar o CTA final por um assistente de 3 passos (tipo de caixa, medidas e quantidade,
   impressão) que monta a mensagem do WhatsApp aumenta as **conversas qualificadas por 100 visitas**,
   mesmo que o número de cliques caia: quem chega ao WhatsApp já traz medida, quantidade e impressão.
-- **Variante A:** o CTA final de hoje (botão de WhatsApp com a mensagem em branco para preencher).
+- **Variante A:** o CTA final de hoje (botão de WhatsApp com a mensagem curta, sem campos para preencher).
   **Variante B:** o assistente (`src/wizard.js`, carregado só nessa variante); o botão final tem o código
   de origem `[site-orcamento-assistente]`, e o da A, `[site-orcamento]`.
 - **Métrica principal:** conversas qualificadas por 100 visitas, contadas pelo código `[site-*]` da

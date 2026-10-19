@@ -49,7 +49,7 @@ npm run og               # regenera public/og.jpg (imagem de compartilhamento) a
 
 ## Seções da página
 
-Cabeçalho fixo, a história 3D (`#processo`), a faixa de confiança (`#confianca`: cidade, CNPJ, anos de mercado, mapa, telefone e e-mail), "O que fabricamos" (`#produtos`: 4 modelos de caixa, cada um com o seu botão de orçamento, e pedido mínimo, prazo e região), os diferenciais (`#diferenciais`), os clientes (`#clientes`: só prova autorizada, e exemplos em demo), o FAQ (`#faq`, `<details>`), o CTA final (`#orcamento`) e o rodapé. O botão do WhatsApp fica fixo depois da história: redondo no desktop e barra de largura total com o telefone em telas de até 768 px, e some com o CTA final à vista. Cada seção sem dado (e o link para ela) some sozinha.
+Cabeçalho fixo, a história 3D (`#processo`), a faixa de confiança (`#confianca`: cidade, CNPJ, anos de mercado, mapa, telefone e e-mail), "O que fabricamos" (`#produtos`: 4 modelos de caixa, cada um com o seu botão de orçamento, e pedido mínimo, prazo e região), os diferenciais (`#diferenciais`), os clientes (`#clientes`: só prova autorizada, e exemplos em demo), o FAQ (`#faq`, `<details>`), o CTA final (`#orcamento`) e o rodapé. O botão do WhatsApp fica fixo: no desktop é redondo e aparece depois da história; em telas de até 768 px é uma barra de largura total com o telefone, que aparece já no 2º capítulo (o botão do cabeçalho sai enquanto ela está à vista); os dois somem com o CTA final à vista. Se a página continua à vista 2,5 s depois do toque num botão do WhatsApp, sobe a folha "O WhatsApp não abriu?" (`#zap-ajuda`): copiar o número, ligar e, dentro do Instagram, Facebook ou TikTok, como abrir no navegador. Cada seção sem dado (e o link para ela) some sozinha.
 
 ---
 
@@ -61,7 +61,7 @@ Todo dado da empresa (CNPJ, telefone, WhatsApp, endereço, prazos…) vive só n
 - `VITE_WHATSAPP` (obrigatório nos dois modos: `55` + DDD + número, ex.: `5511912345678`; o build nunca gera `wa.me/?text=…` sem número), `VITE_SITE_URL` (termina em `/`: canonical, Open Graph, JSON-LD, robots e sitemap).
 - Contato e endereço: `VITE_PHONE`, `VITE_PHONE_DISPLAY`, `VITE_EMAIL`, `VITE_CNPJ`, `VITE_LEGAL_NAME`, `VITE_STREET`, `VITE_DISTRICT`, `VITE_CITY`, `VITE_STATE`, `VITE_CEP`, `VITE_HOURS`, `VITE_HOURS_SCHEMA`, `VITE_MAP_URL`.
 - `VITE_FOUNDED_YEAR`: o "N anos de mercado" e o © são calculados dele (no build e de novo no navegador), então não precisam de edição anual.
-- Operacionais: `VITE_MIN_ORDER`, `VITE_LEAD_TIME_DAYS`, `VITE_SERVICE_AREA`, `VITE_RESPONSE_TIME`, `VITE_PAYMENT_METHODS`.
+- Operacionais: `VITE_MIN_ORDER`, `VITE_LEAD_TIME_DAYS`, `VITE_SERVICE_AREA`, `VITE_PAYMENT_METHODS`, `VITE_WHATSAPP_HOURS` (horário do assistente do WhatsApp; vazio, a página não promete resposta na hora).
 - Medição sem cookies: `VITE_ANALYTICS_PROVIDER` (`umami` ou vazio), `VITE_ANALYTICS_SITE` e `VITE_ANALYTICS_ENDPOINT`.
 
 No build, o `site.config.js` monta a config a partir do `.env` (`createSiteConfig`), o `build/validate.js` confere a trava de go-live, o `build/render.js` escreve os dados no HTML (links `wa.me`, campos `data-field` do rodapé, trechos `data-need`, `{{variáveis}}`, JSON-LD e o `noindex` em demo) e o `build/files.js` gera `robots.txt` e `sitemap.xml`. `{{variável}}` vazia fora de um `data-need` é erro de build.
@@ -70,9 +70,11 @@ No build, o `site.config.js` monta a config a partir do `.env` (`createSiteConfi
 
 ## Medição (Umami Cloud, sem cookies)
 
-Todo evento vai para o `dataLayer`. Com `VITE_ANALYTICS_PROVIDER=umami`, os de negócio também vão ao Umami Cloud pelo nosso próprio JS (nenhum script de terceiro), só na página publicada: o host da `VITE_SITE_URL`, então dev, preview e testes nunca sujam a medição. Para caber nos 100 mil eventos por mês do plano grátis, o Umami recebe só a visualização da página, `whatsapp_click`, `phone_click`, `email_click`, `map_click`, `cta_view`, `faq_open` e um `visit_summary` por visita (capítulo e rolagem máximos, tour e LCP, INP e CLS).
+Todo evento vai para o `dataLayer`. Com `VITE_ANALYTICS_PROVIDER=umami`, os de negócio também vão ao Umami Cloud pelo nosso próprio JS (nenhum script de terceiro), só na página publicada: o host da `VITE_SITE_URL`, então dev, preview e testes nunca sujam a medição. Para caber nos 100 mil eventos por mês do plano grátis, o Umami recebe só a visualização da página, `whatsapp_click`, `handoff_fail` (o WhatsApp não abriu depois do clique), `whatsapp_copy` (copiou o número na folha de ajuda), `phone_click`, `email_click`, `map_click`, `cta_view`, `faq_open` e um `visit_summary` por visita (capítulo e rolagem máximos, tour, `scene` (ms até a cena aparecer, que o LCP não mede; 0 = sem 3D), LCP, INP e CLS). Dentro do navegador do Instagram, Facebook ou TikTok todo evento leva `inapp` (`ig`, `fb` ou `tt`).
 
-Eventos do `dataLayer`: `whatsapp_click{cta}`, `phone_click`, `email_click` e `map_click` (`{cta}` é o lugar do link), `cta_view`, `chapter_view`, `scroll_depth`, `section_view{section_id}`, `faq_open{question_id}`, `web_vitals{name,value}`, `first_interaction` e os do tour. Sem cookies, sem storage e sem banner; a [política de privacidade](politica-de-privacidade.html) explica. Criação da conta: [`docs/go-live.md`](docs/go-live.md).
+Eventos do `dataLayer`: `whatsapp_click{cta}`, `handoff_fail{cta}`, `whatsapp_copy{ok}`, `scene_ready{ms}`, `phone_click`, `email_click` e `map_click` (`{cta}` é o lugar do link), `cta_view`, `chapter_view`, `scroll_depth`, `section_view{section_id}`, `faq_open{question_id}`, `web_vitals{name,value}`, `first_interaction` e os do tour. Sem cookies, sem storage e sem banner; a [política de privacidade](politica-de-privacidade.html) explica. Criação da conta: [`docs/go-live.md`](docs/go-live.md).
+
+**Cliques × conversas.** Cada botão põe o código de origem no fim da mensagem (`[site-hero]`, `[site-produtos-envio]`…), e dentro do Instagram, Facebook ou TikTok o código ganha o sufixo do app (`[site-hero-ig]`). Para saber quantos cliques viraram conversa, conte as conversas com cada código no período e divida pelos `whatsapp_click` daquele `cta` (e `inapp`) no Umami. O `handoff_fail` mostra onde o WhatsApp não abriu. Limite conhecido: no navegador do Instagram ou do Facebook o wa.me às vezes abre dentro do próprio app; a página sai de vista e isso não conta como falha, então quem mede esse caso é o sufixo `-ig`/`-fb` nas conversas.
 
 ---
 
@@ -103,6 +105,7 @@ src/analytics.js           Medição: dataLayer + Umami Cloud (sem cookies, só 
 src/vitals.js              Core Web Vitals reais (web-vitals, carregado com o navegador ocioso)
 src/experiments.js         Experimentos A/B (variante por visita no sessionStorage, ?exp_<nome>=B força)
 src/wizard.js              Assistente de orçamento da variante B do experimento quote_wizard
+src/handoff.js             "O WhatsApp não abriu?": folha de ajuda e navegador embutido (Instagram, Facebook, TikTok)
 build/csp.js               CSP por hash dos <style> (e o servidor da medição, se houver)
 politica-de-privacidade.html  2ª página: política de privacidade com os dados do .env
 src/render/stage.js        Liga o canvas ao render: Web Worker (OffscreenCanvas) ou thread principal
@@ -119,7 +122,7 @@ docs/                      Manual da marca e notas da v4
 
 ### Como a história funciona
 
-- A cena 3D é uma função de `p` (0…1): o scroll da seção `.story` (560 svh, com o palco fixo na tela) vira `p`, e o render só desenha quando `p` muda.
+- A cena 3D é uma função de `p` (0…1): o scroll da seção `.story` (560 svh no desktop e 400 svh no celular, com o palco fixo na tela) vira `p`, e o render só desenha quando `p` muda.
 - O render roda num **Web Worker** com `OffscreenCanvas`, então a thread principal fica livre. Sem suporte (ou se o worker falhar), a mesma cena roda na thread principal; sem WebGL, ficam o fundo Papel, o símbolo e os cartões, que continuam legíveis e navegáveis.
 - O **tour automático** começa no instante em que a cena fica pronta, sem espera e em qualquer tela (no topo, sem `#hash`, sem `?tour=0`, sem movimento reduzido no sistema; `?tour=1` força o tour mesmo com movimento reduzido, para testar): a página rola sozinha pelos capítulos em ~18 s, **a cena segue o scroll** e o tour para no fim da história (não segue para as seções seguintes), quando o botão "Pedir orçamento" do cabeçalho pulsa. No F5 a página volta ao topo e o tour toca de novo. Qualquer roda, toque, clique, tecla ou scroll interrompe, e ele nunca retoma sozinho. Quando o tour não começa, o console diz o motivo (`[vanpack] autoplay não iniciou: …`).
 - A qualidade se adapta ao aparelho: densidade limitada (2× no desktop, 1,5× no celular e 4,5 MP), sombra em tempo real só no desktop, e, se os quadros passam de ~24 ms, a resolução cai e depois a sombra para (sem recompilar shaders).
@@ -130,7 +133,8 @@ docs/                      Manual da marca e notas da v4
 
 `npm test` gera o build de produção e o de auditoria e roda, em sequência:
 
-- `tests/conversion.test.mjs`: nenhum botão do WhatsApp sem número, código de origem `[site-…]` na mensagem e campanha (`utm_*`) no texto, sem cookie nem storage.
+- `tests/conversion.test.mjs`: nenhum botão do WhatsApp sem número, código de origem `[site-…]` na mensagem, mensagem curta (sem lacunas) e campanha (`utm_*`) no texto, sem cookie nem storage.
+- `tests/handoff.test.mjs`: folha "O WhatsApp não abriu?" (sobe em 2,5 s com a página à vista, não sobe se o app abre, fecha sozinha se ele abre depois, Esc, "Fechar", Ctrl+clique e copiar número) e navegador embutido (user agent, código `[site-hero-ig]` e a instrução). Usa o relógio falso do Playwright.
 - `tests/trust.test.mjs`: faixa de confiança e anos de mercado/© recalculados no navegador (relógio em 2031).
 - `tests/analytics.test.mjs`: eventos no Umami (interceptado, nenhum tráfego real), resumo da visita, sem cookie nem storage e nada enviado fora do host do site.
 - `tests/site-config.test.mjs`: config, trava de go-live (demo × production), render com a config vazia, JSON-LD, robots e sitemap; puro, sem navegador.
@@ -138,8 +142,8 @@ docs/                      Manual da marca e notas da v4
 - `tests/faq.test.mjs`: FAQ por teclado (abre, fecha, foco visível, 44 px) e o evento `faq_open`.
 - `tests/site-url.test.mjs`: build em production com domínio próprio: canonical, Open Graph, JSON-LD, robots, sitemap e medição derivam todos da `VITE_SITE_URL`.
 - `tests/experiments.test.mjs` e `tests/wizard.test.mjs`: sorteio, persistência, data de término e variante forçada; o assistente de 3 passos (mensagem, validação, teclado, rótulos, contraste e celular).
-- `tests/tour.test.mjs`: início automático, percurso e parada no fim da história, interrupções (roda, tecla, clique, toque, scroll, aba oculta), `?tour=0`, `#hash`, movimento reduzido. Usa o relógio falso do Playwright.
-- `tests/layout.test.mjs`: cartão × cabeçalho × botão flutuante × dica sem sobreposição em 1440×900, 1366×768, 924×540, 720×450, 390×844 e 844×390, nos 5 capítulos; alvos de toque ≥ 44 px.
+- `tests/tour.test.mjs`: início automático, percurso e parada no fim da história, interrupções (roda, tecla, clique, toque, scroll, aba oculta), `?tour=0`, `#hash`, movimento reduzido e, no celular, o pulso da barra no fim. Usa o relógio falso do Playwright.
+- `tests/layout.test.mjs`: cartão × cabeçalho × botão flutuante × dica sem sobreposição em 1440×900, 1366×768, 924×540, 720×450, 360×640, 390×844 e 844×390, nos 5 capítulos; alvos de toque ≥ 44 px; no celular, a barra do 2º capítulo em diante e a 1ª tela com título, pedido mínimo, botão e linha de risco sem rolar.
 - `tests/a11y.test.mjs`: estrutura, ordem e visibilidade do foco, cartões `inert`, movimento reduzido e contraste calculado nos estilos reais.
 - `tests/robustness.test.mjs`: sem WebGL, worker bloqueado (fallback na thread principal) e contexto WebGL perdido e restaurado.
 - `tests/brand.test.mjs`: paleta, tipografia, efeitos proibidos, ausência de raster/rota/pinos/formulário, SVGs da marca, CSP e requisições.
