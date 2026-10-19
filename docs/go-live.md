@@ -96,6 +96,7 @@ O site só envia eventos quando o host da página é o da `VITE_SITE_URL`: ao tr
 - [ ] A política de privacidade foi revisada pelo jurídico.
 - [ ] Modelos de caixa e respostas do FAQ conferidos; depoimentos de exemplo trocados por prova autorizada (ou removidos).
 - [ ] O assistente (chatbot) do WhatsApp já responde na hora, 24 horas: a página promete isso na linha de risco, em "Como pedir" e no rodapé. Confira também se o FAQ e o CTA final batem com o que ele faz (foto do produto, logo, arte).
+- [ ] Depois do deploy, abra o link de dentro do Instagram (e do Facebook) num celular: o botão abre o WhatsApp? Se não abrir, a folha "O WhatsApp não abriu?" aparece?
 - [ ] `npm run og` gera de novo `public/og.jpg`: a imagem de compartilhamento tem o texto do hero.
 - [ ] `npm run audit:lighthouse`: SEO 100 só é possível em `production` (em demo o `noindex` reprova o
       item "página bloqueada para indexação", como esperado).
