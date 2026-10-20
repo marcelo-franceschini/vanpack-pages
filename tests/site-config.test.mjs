@@ -265,6 +265,11 @@ describe('render', () => {
       /VITE_WHATSAPP vazio/,
     );
   });
+
+  test('o link morto sai sozinho, mesmo com o fechamento quebrado pelo Prettier', () => {
+    const nav = '<a href="#y">y</a\n><a href="#x">x</a\n><a href="#y">z</a><p id="y"></p>';
+    assert.equal(renderPage(nav, empty), '<a href="#y">y</a\n><a href="#y">z</a><p id="y"></p>');
+  });
 });
 
 describe('robots.txt e sitemap.xml', () => {

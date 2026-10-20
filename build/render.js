@@ -284,10 +284,14 @@ function renderBlocks(html, site) {
   });
 }
 
-/** Link interno para uma seção que saiu da página (sem dado) sai junto: nada de âncora morta. */
+/**
+ * Link interno para uma seção que saiu da página (sem dado) sai junto: nada de âncora morta. O
+ * fechamento pode vir quebrado pelo Prettier (`</a` e o `>` na linha seguinte): sem aceitar isso, o
+ * link morto engolia o link vizinho.
+ */
 function dropDeadAnchors(html) {
   const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]));
-  return html.replace(/<a\b[^>]*\shref="#([A-Za-z][\w-]*)"[^>]*>[\s\S]*?<\/a>/g, (link, id) =>
+  return html.replace(/<a\b[^>]*\shref="#([A-Za-z][\w-]*)"[^>]*>[\s\S]*?<\/a\s*>/g, (link, id) =>
     ids.has(id) ? link : '',
   );
 }
