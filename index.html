@@ -608,6 +608,11 @@
         line-height: 1.05;
         text-wrap: balance;
       }
+      /* faixas: as seções alternam Papel, tint e Floresta (o CTA final), e a onda de papelão (Kraft,
+         o material) divide a história da faixa de confiança e os produtos dos diferenciais */
+      .tint {
+        background: var(--tint);
+      }
       .wave {
         width: 100%;
         line-height: 0;
@@ -658,7 +663,7 @@
       .pillar {
         padding: clamp(1.75rem, 3vw, 2.5rem);
         border-radius: 0.5rem;
-        background: var(--tint);
+        background: var(--papel); /* cartão Papel sobre a faixa tint */
       }
       .pillar svg {
         width: 2.5rem;
@@ -1580,7 +1585,18 @@
         </div>
       </section>
 
-      <section class="block" id="diferenciais" data-need="hasDiffs">
+      <div class="wave" aria-hidden="true" data-need="hasDiffs">
+        <svg viewBox="0 0 1200 20" preserveAspectRatio="none">
+          <path
+            d="M0,10 Q15,0 30,10 T60,10 T90,10 T120,10 T150,10 T180,10 T210,10 T240,10 T270,10 T300,10 T330,10 T360,10 T390,10 T420,10 T450,10 T480,10 T510,10 T540,10 T570,10 T600,10 T630,10 T660,10 T690,10 T720,10 T750,10 T780,10 T810,10 T840,10 T870,10 T900,10 T930,10 T960,10 T990,10 T1020,10 T1050,10 T1080,10 T1110,10 T1140,10 T1170,10 T1200,10"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          />
+        </svg>
+      </div>
+
+      <section class="block tint" id="diferenciais" data-need="hasDiffs">
         <div class="wrap">
           <div class="sec-head">
             <span class="k">Diferenciais</span>

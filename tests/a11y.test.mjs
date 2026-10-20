@@ -212,7 +212,9 @@ describe('contraste (calculado nos estilos reais)', () => {
     ['.scrollcue', 7],
     ['.sec-head h2', 7],
     ['.sec-head .k', 7],
-    ['.pillar h3', 7],
+    ['#diferenciais .sec-head .k', 7], // faixa tint
+    ['#diferenciais .sec-head h2', 7],
+    ['.pillar h3', 7], // cartão Papel sobre a faixa tint
     ['.pillar p', 7],
     ['.cta h2', 7],
     ['.cta p.lead', 7],
