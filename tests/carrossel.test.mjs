@@ -255,6 +255,39 @@ describe('carrossel: mouse, teclado e toque', () => {
   });
 });
 
+describe('carrossel: aba oculta e fora da tela', () => {
+  test('pausa com a aba oculta e volta ao reaparecer', async () => {
+    const { page, context } = await open('390×844');
+    const setHidden = (hidden) =>
+      page.evaluate((hidden) => {
+        Object.defineProperty(document, 'hidden', { configurable: true, get: () => hidden });
+        document.dispatchEvent(new Event('visibilitychange'));
+      }, hidden);
+    await setHidden(true);
+    assert.equal(await estado(page), 'pausado');
+    assert.ok(await still(page), 'parado com a aba oculta');
+    await setHidden(false);
+    assert.equal(await estado(page), 'rodando');
+    await context.close();
+  });
+
+  test('pausa fora da tela e volta ao reaparecer', async () => {
+    const { page, context } = await open('1440×900');
+    await page.evaluate(() => scrollTo(0, 0));
+    await page.waitForFunction(
+      () => document.querySelector('.carrossel').dataset.estado === 'pausado',
+    );
+    assert.ok(await still(page), 'parado fora da tela');
+    await page.evaluate(() =>
+      document.querySelector('#clientes').scrollIntoView({ block: 'center' }),
+    );
+    await page.waitForFunction(
+      () => document.querySelector('.carrossel').dataset.estado === 'rodando',
+    );
+    await context.close();
+  });
+});
+
 describe('carrossel com movimento reduzido', () => {
   for (const screen of Object.keys(SCREENS)) {
     test(`${screen}: não anda sozinho, sem botão de pausa, e as setas movem`, async () => {
