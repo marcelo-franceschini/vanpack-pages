@@ -65,7 +65,7 @@ responsável antes de publicar.
 
 Estes textos estão em `site.config.js` e foram escritos como rascunho: confira cada um com quem sabe.
 
-- **Produtos** (3 cartões em "O que fabricamos"): nomes, descrições e a mensagem de cada botão.
+- **Produtos** (3 cartões em "O que fabricamos"): nomes, descrições, a mensagem de cada botão e a descrição de cada 3D para leitor de tela (`peca`, em `site.config.js`).
 - **Textos dos 5 cartões da história** (`index.html`) e **diferenciais** (`.env`): são rascunho e podem mudar depois da pesquisa de posicionamento. Nenhum pode falar de prazo, de tempo de resposta ou do processo de fabricação (o `tests/conteudo.test.mjs` confere).
 - **Faixa de confiança**: "Nunca pedimos pagamento para conta de pessoa física" é promessa; confirme com o financeiro.
 - **Clientes**: os 6 "Cliente N" são exemplos. Para publicar um cliente, ponha o nome, o logo em SVG (em `public/clientes/`) e `AUTH=sim`, com a autorização registrada; siga [`docs/provas/README.md`](provas/README.md). Depoimentos (`site.config.js`) também só com autorização.
