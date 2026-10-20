@@ -12,29 +12,28 @@ export const brand = {
 };
 
 /**
- * Modelos de caixa da seção "O que fabricamos": texto genérico e sem números; o dono confere no
- * go-live (docs/go-live.md). O `id` vira o código de origem do botão ([site-produtos-<id>]).
+ * Produtos da seção "O que fabricamos": texto genérico e sem números; o dono confere no go-live
+ * (docs/go-live.md). O `id` vira o código de origem do botão ([site-produtos-<id>]) e o `subject`
+ * completa a mensagem do WhatsApp ("Olá! Quero um orçamento de <subject>.").
  */
 export const models = [
   {
-    id: 'padrao',
-    name: 'Caixa padrão',
-    text: 'A mais usada: fecha com fita e serve para quase tudo, do e-commerce ao estoque.',
+    id: 'corte-e-vinco',
+    name: 'Corte e vinco',
+    subject: 'caixas com corte e vinco',
+    text: 'Caixas com corte e vinco sob medida, para encaixe, tampa e formatos especiais.',
   },
   {
-    id: 'envio',
-    name: 'Caixa para envio',
-    text: 'Resistente para correio e transportadora, com a sua marca impressa por fora.',
+    id: 'divisorias',
+    name: 'Divisórias, tabuleiros e separadores',
+    subject: 'divisórias, tabuleiros e separadores',
+    text: 'Separam, organizam e protegem o que vai dentro da caixa.',
   },
   {
-    id: 'faca',
-    name: 'Caixa com faca',
-    text: 'Corte e vinco sob medida para encaixe, tampa e formatos especiais.',
-  },
-  {
-    id: 'automatica',
-    name: 'Caixa de fundo automático',
-    text: 'Monta num gesto e fecha com firmeza, ideal para quem embala em volume.',
+    id: 'chapas',
+    name: 'Chapas de papelão ondulado',
+    subject: 'chapas de papelão ondulado',
+    text: 'Chapas para embalar, proteger e forrar.',
   },
 ];
 

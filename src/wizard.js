@@ -1,5 +1,5 @@
 // Assistente de orçamento: a variante B do experimento quote_wizard troca o CTA final por 3 passos
-// (tipo de caixa, medidas e quantidade, impressão) que montam a mensagem do WhatsApp. Nada vai a um
+// (produto, medidas e quantidade, impressão) que montam a mensagem do WhatsApp. Nada vai a um
 // servidor e não há <form>: são controles soltos, com rótulo, teclado e validação no lugar. Só é
 // montado na variante B (import dinâmico): a página estática não tem nenhum controle.
 import { track } from './analytics.js';
@@ -72,7 +72,7 @@ export function mountQuoteWizard(section, { models }) {
 
   function content() {
     if (step === 1) {
-      return [el('legend', {}, 'Qual caixa você quer?'), ...radios('tipo', types, state.tipo)];
+      return [el('legend', {}, 'O que você precisa?'), ...radios('tipo', types, state.tipo)];
     }
     if (step === 2) {
       const unknown = el('input', { type: 'checkbox', checked: state.semMedida });
@@ -87,7 +87,7 @@ export function mountQuoteWizard(section, { models }) {
         field('Largura (cm)', 'l', { 'data-medida': '', max: String(MAX_CM) }),
         field('Altura (cm)', 'a', { 'data-medida': '', max: String(MAX_CM) }),
         el('label', { class: 'wiz-opt' }, unknown, el('span', {}, 'Ainda não sei as medidas')),
-        field('Quantidade de caixas', 'qtd', { inputmode: 'numeric', step: '1' }),
+        field('Quantidade', 'qtd', { inputmode: 'numeric', step: '1' }),
       ];
     }
     return [el('legend', {}, 'Vai ter a sua marca impressa?'), ...radios('imp', PRINT, state.imp)];
@@ -100,8 +100,8 @@ export function mountQuoteWizard(section, { models }) {
       : `${show(state.c)} x ${show(state.l)} x ${show(state.a)} cm`;
     const impressao = PRINT.find(({ id }) => id === state.imp).label;
     return (
-      'Olá! Quero um orçamento de caixas de papelão. ' +
-      `Caixa: ${tipo} · Medida (C x L x A): ${medida} · Quantidade: ${show(state.qtd)} · ` +
+      'Olá! Quero um orçamento. ' +
+      `Produto: ${tipo} · Medida (C x L x A): ${medida} · Quantidade: ${show(state.qtd)} · ` +
       `Impressão: ${impressao} [site-orcamento-assistente]`
     );
   }
@@ -111,7 +111,7 @@ export function mountQuoteWizard(section, { models }) {
     const invalid = (input) => input.setAttribute('aria-invalid', 'true');
     for (const input of wizard.querySelectorAll('[aria-invalid]'))
       input.removeAttribute('aria-invalid');
-    if (step === 1 && !state.tipo) return 'Escolha um tipo de caixa para continuar.';
+    if (step === 1 && !state.tipo) return 'Escolha um produto para continuar.';
     if (step === 3 && !state.imp) return 'Diga se a caixa vai ter a sua marca impressa.';
     if (step !== 2) return '';
     if (!state.semMedida) {
@@ -130,7 +130,7 @@ export function mountQuoteWizard(section, { models }) {
       const input = wizard.querySelector('input:not([data-medida]):not([type=checkbox])');
       invalid(input);
       input.focus();
-      return 'Informe a quantidade de caixas (um número inteiro, de 1 em diante).';
+      return 'Informe a quantidade (um número inteiro, de 1 em diante).';
     }
     return '';
   }
@@ -160,7 +160,7 @@ export function mountQuoteWizard(section, { models }) {
         el(
           'ul',
           { class: 'wiz-sum' },
-          line('Caixa', tipo),
+          line('Produto', tipo),
           line('Medida', medida),
           line('Quantidade', show(state.qtd)),
           line('Impressão', PRINT.find(({ id }) => id === state.imp).label),

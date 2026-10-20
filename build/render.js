@@ -226,16 +226,16 @@ export function faqItems(site) {
 }
 
 const BLOCKS = {
-  // Modelos de caixa: cada um com o seu botão de orçamento (código [site-produtos-<id>]).
+  // Produtos: cada um com o seu botão de orçamento (código [site-produtos-<id>]).
   produtos: (site) =>
     site.content.models
       .map(
-        ({ id, name, text }) => `<article class="model">
+        ({ id, name, subject, text }) => `<article class="model">
   <h3>${escapeHtml(name)}</h3>
   <p>${escapeHtml(text)}</p>
   <a class="btn btn-soft" data-cta="produtos-${escapeHtml(id)}" data-wa="${escapeHtml(
-    `Olá! Quero um orçamento da ${name}.`,
-  )}">Pedir orçamento deste modelo</a>
+    `Olá! Quero um orçamento de ${subject}.`,
+  )}">Pedir orçamento deste produto</a>
 </article>`,
       )
       .join('\n'),

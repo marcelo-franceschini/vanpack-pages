@@ -32,7 +32,7 @@ const B = '&exp_quote_wizard=B';
 
 /** Percorre os 3 passos até a mensagem pronta. */
 async function fill(page, { medida = true } = {}) {
-  await page.locator('.wizard').getByText('Caixa padrão', { exact: true }).click();
+  await page.locator('.wizard').getByText('Corte e vinco', { exact: true }).click();
   await page.getByRole('button', { name: 'Próximo' }).click();
   if (medida) {
     await page.getByLabel('Comprimento (cm)').fill('30');
@@ -41,7 +41,7 @@ async function fill(page, { medida = true } = {}) {
   } else {
     await page.getByLabel('Ainda não sei as medidas').check();
   }
-  await page.getByLabel('Quantidade de caixas').fill('500');
+  await page.getByLabel('Quantidade', { exact: true }).fill('500');
   await page.keyboard.press('Enter'); // Enter avança, como num formulário
   await page.locator('.wizard').getByText('Com a minha marca, uma cor').click();
   await page.getByRole('button', { name: 'Ver mensagem' }).click();
@@ -91,8 +91,8 @@ describe('variante B (assistente de 3 passos)', () => {
     const { page, context } = await open(B);
     await page.waitForSelector('.wizard');
     await page.getByRole('button', { name: 'Próximo' }).click();
-    assert.match(await page.locator('.wiz-error').textContent(), /Escolha um tipo de caixa/);
-    await page.locator('.wizard').getByText('Caixa padrão', { exact: true }).click();
+    assert.match(await page.locator('.wiz-error').textContent(), /Escolha um produto/);
+    await page.locator('.wizard').getByText('Corte e vinco', { exact: true }).click();
     assert.equal(await page.locator('.wiz-error').textContent(), '', 'o erro some ao escolher');
     await page.getByRole('button', { name: 'Próximo' }).click();
     await page.getByRole('button', { name: 'Próximo' }).click();
@@ -117,7 +117,7 @@ describe('variante B (assistente de 3 passos)', () => {
     assert.match(url.pathname, /^\/55\d{10,11}$/, 'o número é o do .env');
     assert.equal(
       url.searchParams.get('text'),
-      'Olá! Quero um orçamento de caixas de papelão. Caixa: Caixa padrão · Medida (C x L x A): ' +
+      'Olá! Quero um orçamento. Produto: Corte e vinco · Medida (C x L x A): ' +
         '30 x 20 x 15 cm · Quantidade: 500 · Impressão: Com a minha marca, uma cor ' +
         '[site-orcamento-assistente]',
     );
@@ -146,7 +146,7 @@ describe('variante B (assistente de 3 passos)', () => {
       true,
     );
     await page.getByRole('button', { name: 'Voltar' }).click();
-    assert.equal(await page.getByLabel('Quantidade de caixas').inputValue(), '500');
+    assert.equal(await page.getByLabel('Quantidade', { exact: true }).inputValue(), '500');
     assert.equal(await page.getByLabel('Ainda não sei as medidas').isChecked(), true);
     await context.close();
   });
@@ -154,7 +154,7 @@ describe('variante B (assistente de 3 passos)', () => {
   test('cada controle tem rótulo, o foco vai para o passo ao avançar e o contraste é de 7:1', async () => {
     const { page, context } = await open(B);
     await page.waitForSelector('.wizard');
-    await page.locator('.wizard').getByText('Caixa padrão', { exact: true }).click();
+    await page.locator('.wizard').getByText('Corte e vinco', { exact: true }).click();
     await page.getByRole('button', { name: 'Próximo' }).click();
     assert.equal(await page.evaluate(() => document.activeElement.className), 'wiz-step');
     const info = await page.evaluate(() => {

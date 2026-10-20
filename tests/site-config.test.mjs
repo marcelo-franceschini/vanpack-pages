@@ -352,15 +352,22 @@ describe('conteúdo: modelos, FAQ, prova social e menus', () => {
   const empty = createSiteConfig({ VITE_WHATSAPP: '5511912345678' });
   const ids = (site) => faqItems(site).map((item) => item.id);
 
-  test('cada modelo tem o seu botão de orçamento, com o modelo na mensagem e o código de origem', () => {
+  test('os 3 produtos têm cada um o seu botão, com o produto na mensagem e o código de origem', () => {
+    assert.deepEqual(
+      models.map(({ id }) => id),
+      ['corte-e-vinco', 'divisorias', 'chapas'],
+    );
     const cards = [
       ...renderPage(html, demo).matchAll(/<article class="model">[\s\S]*?<\/article>/g),
     ];
     assert.equal(cards.length, models.length);
     for (const [i, model] of models.entries()) {
+      assert.ok(cards[i][0].includes(`<h3>${model.name}</h3>`), model.name);
       const text = new URL(cards[i][0].match(/href="([^"]+)"/)[1]).searchParams.get('text');
-      assert.ok(text.includes(`da ${model.name}.`), text);
-      assert.ok(text.endsWith(`[site-produtos-${model.id}]`), text);
+      assert.equal(
+        text,
+        `Olá! Quero um orçamento de ${model.subject}. [site-produtos-${model.id}]`,
+      );
     }
   });
 
