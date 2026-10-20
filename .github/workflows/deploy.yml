@@ -15,7 +15,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Os mesmos lint, build e testes do CI dos pull requests: sem isto verde, nada vai ao ar.
+  verificar:
+    uses: ./.github/workflows/verificar.yml
+    permissions:
+      contents: read
+
   build:
+    needs: verificar
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -24,7 +31,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run lint
       - name: Avisa se o site vai ao ar com dados fictícios
         run: |
           if grep -Eq '^VITE_DATA_MODE=demo' .env; then
