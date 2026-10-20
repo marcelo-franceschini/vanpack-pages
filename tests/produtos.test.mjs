@@ -68,6 +68,23 @@ const pixels = (page, i) =>
     return { ink: ink / (data.length / 4), signature, width: source.width };
   }, i);
 
+const frameCount = (page) => page.evaluate(() => window.__audit.produtos.frames);
+
+/**
+ * Espera os quadros pararem de chegar (duas leituras iguais com 1,2 s de intervalo): um quadro já a
+ * caminho quando o desenho para ainda chega, e num computador lento ele demora.
+ */
+async function framesStop(page) {
+  let last = -1;
+  for (let i = 0; i < 10; i++) {
+    const now = await frameCount(page);
+    if (now === last) return now;
+    last = now;
+    await page.waitForTimeout(1200);
+  }
+  return assert.fail('os quadros não pararam de chegar');
+}
+
 describe('carregamento preguiçoso', () => {
   test('nada do 3D dos produtos é baixado na história; o chunk vem quando a seção chega perto', async () => {
     const { page, context, requests, problems } = await open(prod);
@@ -157,8 +174,7 @@ describe('3D nos cartões', () => {
     assert.ok((await frames()) > start, 'à vista: desenha');
     // longe: nada perto, o worker é encerrado e os quadros param
     await page.evaluate(() => scrollTo(0, 0));
-    await page.waitForTimeout(1000);
-    const stopped = await frames();
+    const stopped = await framesStop(page);
     await page.waitForTimeout(1200);
     assert.equal(await frames(), stopped, 'longe: não desenha');
     // de volta: um worker novo
@@ -178,8 +194,7 @@ describe('3D nos cartões', () => {
         document.dispatchEvent(new Event('visibilitychange'));
       }, hidden);
     await setHidden(true);
-    await page.waitForTimeout(500);
-    const paused = await frames();
+    const paused = await framesStop(page);
     await page.waitForTimeout(1200);
     assert.equal(await frames(), paused, 'oculta: não desenha');
     await setHidden(false);
