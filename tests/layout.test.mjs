@@ -185,7 +185,7 @@ describe('1ª tela do celular', () => {
         );
       }
       assert.match(first.seals[0], /^Pedido mínimo/);
-      assert.ok(!first.seals.some((s) => s.startsWith('Prazo')), 'o prazo já está no parágrafo');
+      assert.ok(!first.seals.some((s) => /prazo/i.test(s)), 'sem selo de prazo');
       assert.ok(
         first.link.width < first.parts.botão.width * 0.75,
         'o 2º chamado não é outro bloco',

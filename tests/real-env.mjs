@@ -15,8 +15,6 @@ export const realEnv = (example) => ({
   VITE_HOURS_SCHEMA: 'Mo-Fr 07:30-17:30',
   VITE_MAP_URL: 'https://maps.google.com/?q=Av+das+Caixas+500',
   VITE_MIN_ORDER: '300',
-  VITE_LEAD_TIME_DAYS: '7',
   VITE_SERVICE_AREA: 'Grande São Paulo',
   VITE_PAYMENT_METHODS: 'Pix e boleto',
-  VITE_WHATSAPP_HOURS: '24 horas',
 });

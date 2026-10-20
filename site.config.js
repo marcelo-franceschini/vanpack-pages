@@ -1,5 +1,5 @@
-// Configuração do site. Todo dado da empresa (CNPJ, telefone, endereço, prazos…) vive só no `.env`, a
-// fonte única; aqui ficam as constantes da marca e a função que monta a config a partir dele.
+// Configuração do site. Todo dado da empresa (CNPJ, telefone, endereço, pedido mínimo…) vive só no
+// `.env`, a fonte única; aqui ficam as constantes da marca e a função que monta a config a partir dele.
 // Valor vazio = sem dado: o trecho correspondente sai do HTML (nada é inventado nem fica vazio).
 import { yearsSince } from './src/years.js';
 
@@ -44,11 +44,6 @@ export const models = [
  */
 export const faq = [
   { id: 'minimo', q: 'Qual o pedido mínimo?', a: 'A partir de {{minOrder}} caixas por modelo.' },
-  {
-    id: 'prazo',
-    q: 'Qual o prazo?',
-    a: 'Em média {{leadTimeDays}} dias úteis após a aprovação da arte, por escrito no orçamento.',
-  },
   {
     id: 'entrega',
     q: 'Entregam na minha cidade?',
@@ -194,12 +189,10 @@ export function createSiteConfig(
     },
     cityState,
     hours: text(env.VITE_HOURS),
-    whatsappHours: text(env.VITE_WHATSAPP_HOURS), // o assistente (chatbot) do WhatsApp
     hoursSchema: text(env.VITE_HOURS_SCHEMA),
     mapUrl: text(env.VITE_MAP_URL),
     foundedYear,
     minOrder: text(env.VITE_MIN_ORDER),
-    leadTimeDays: text(env.VITE_LEAD_TIME_DAYS),
     serviceArea: text(env.VITE_SERVICE_AREA),
     paymentMethods: text(env.VITE_PAYMENT_METHODS),
     analytics: {
@@ -244,7 +237,6 @@ export function createSiteConfig(
     whatsapp, // folha "O WhatsApp não abriu?": o número para copiar
     whatsappDisplay: site.whatsappDisplay,
     hours: site.hours,
-    whatsappHours: site.whatsappHours, // linha de risco: "Resposta na hora, 24 horas"
     foundedYear,
     yearsInBusiness: site.yearsInBusiness,
     year: site.year,
@@ -252,13 +244,7 @@ export function createSiteConfig(
     analyticsName: site.analytics.provider === 'umami' ? 'Umami Cloud' : '',
     noAnalytics: site.analytics.provider ? '' : 'sim',
     // seções que só existem se tiverem algo a mostrar
-    hasFacts: [
-      text(env.VITE_MIN_ORDER),
-      text(env.VITE_LEAD_TIME_DAYS),
-      text(env.VITE_SERVICE_AREA),
-    ].some(Boolean)
-      ? 'sim'
-      : '',
+    hasFacts: site.minOrder || site.serviceArea ? 'sim' : '',
     hasProofs: (() => {
       const shown = visibleProofs(content.proofs, text(env.VITE_DATA_MODE));
       return shown.testimonials.length || shown.clientLogos.length || shown.googleRating
@@ -268,7 +254,6 @@ export function createSiteConfig(
     // a faixa de confiança só existe se tiver ao menos um item
     hasTrust: [cityState, site.cnpj, foundedYear, site.mapUrl, phone].some(Boolean) ? 'sim' : '',
     minOrder: site.minOrder,
-    leadTimeDays: site.leadTimeDays,
     serviceArea: site.serviceArea,
     paymentMethods: site.paymentMethods,
     // título e descrição da página (title, og e twitter); a cidade entra só se houver

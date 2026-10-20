@@ -341,15 +341,15 @@ describe('conteúdo: modelos, FAQ, prova social e menus', () => {
     }
   });
 
-  test('o FAQ mostra as 9 perguntas com os dados do .env e esconde a que não tem dado', () => {
-    assert.equal(ids(production).length, 9);
+  test('o FAQ mostra as 8 perguntas com os dados do .env e esconde a que não tem dado', () => {
+    assert.equal(ids(production).length, 8);
     const out = renderPage(html, production);
     assert.ok(out.includes('A partir de 300 caixas por modelo.'));
     assert.ok(out.includes(`CNPJ ${REAL.VITE_CNPJ}`));
     assert.deepEqual(ids(empty), ['medida', 'logo', 'onda'], 'só as sem placeholder');
     const semPagamento = createSiteConfig({ ...REAL, VITE_PAYMENT_METHODS: '' });
     assert.ok(!ids(semPagamento).includes('pagamento'));
-    assert.equal(ids(semPagamento).length, 8);
+    assert.equal(ids(semPagamento).length, 7);
   });
 
   test('placeholder desconhecido no FAQ é erro, não uma pergunta que some em silêncio', () => {
