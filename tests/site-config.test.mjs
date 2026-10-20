@@ -9,7 +9,7 @@ import { contentSecurityPolicy } from '../build/csp.js';
 import { robotsTxt, sitemapXml } from '../build/files.js';
 import { buildJsonLd, interpolate, renderPage } from '../build/render.js';
 import { isValidCnpj, validateSite } from '../build/validate.js';
-import { createSiteConfig, models, proofs } from '../site.config.js';
+import { DIFF_ICONS, createSiteConfig, models, proofs, slug } from '../site.config.js';
 import { yearsSince } from '../src/years.js';
 import { realEnv } from './real-env.mjs';
 
@@ -102,9 +102,12 @@ describe('trava de go-live', () => {
       'VITE_CEP',
       'VITE_HOURS',
       'VITE_SERVICE_AREA',
+      'VITE_CLIENT_1_NAME',
+      'VITE_CLIENT_6_NAME',
     ]) {
       assert.match(all, new RegExp(`${key}`), `${key} sobrou no .env`);
     }
+    assert.ok(!/VITE_DIFF_/.test(all), 'os diferenciais não contam como fictícios');
     assert.match(all, /CNPJ válido|não é um CNPJ válido/, 'o CNPJ fictício também é inválido');
   });
 
@@ -141,6 +144,33 @@ describe('trava de go-live', () => {
         errors.some((e) => e.includes(key)),
         `${key}="${value}" deveria falhar`,
       );
+    }
+  });
+
+  test('diferenciais e clientes: ícone, logo, autorização e numeração inválidos falham nos dois modos', () => {
+    for (const [key, value] of [
+      ['VITE_DIFF_1_ICON', 'estrela'],
+      ['VITE_CLIENT_1_LOGO', 'logo.png'],
+      ['VITE_CLIENT_1_LOGO', '../logo.svg'],
+      ['VITE_CLIENT_1_LOGO', '/clientes/logo.svg'],
+      ['VITE_CLIENT_1_AUTH', 'talvez'],
+      ['VITE_DIFF_7_TITLE', 'Sétimo'],
+      ['VITE_DIFF_0_TITLE', 'Zero'],
+      ['VITE_CLIENT_13_NAME', 'Décimo terceiro'],
+    ]) {
+      for (const env of [example, REAL]) {
+        assert.ok(
+          validate({ ...env, [key]: value }).errors.some((e) => e.includes(key)),
+          `${key}="${value}" deveria falhar (${env.VITE_DATA_MODE})`,
+        );
+      }
+    }
+    for (const [key, value] of [
+      ['VITE_DIFF_6_ICON', 'caixa'],
+      ['VITE_CLIENT_12_LOGO', 'loja-1.svg'],
+      ['VITE_CLIENT_12_AUTH', 'Sim'],
+    ]) {
+      assert.deepEqual(validate({ ...REAL, [key]: value }).errors, [], `${key}="${value}"`);
     }
   });
 
@@ -347,7 +377,7 @@ describe('medição e CSP', () => {
   });
 });
 
-describe('conteúdo: produtos, prova social e menus', () => {
+describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', () => {
   const demo = createSiteConfig(example);
   const production = createSiteConfig(REAL);
   const empty = createSiteConfig({ VITE_WHATSAPP: '5511912345678' });
@@ -382,25 +412,101 @@ describe('conteúdo: produtos, prova social e menus', () => {
     assert.ok(!strip(createSiteConfig({ ...REAL, VITE_CNPJ: '' })).includes(rule), 'só com CNPJ');
   });
 
-  test('prova social: demo mostra os exemplos rotulados; production só o autorizado', () => {
+  test('diferenciais vêm do .env: item sem título some e, sem nenhum, a seção e os links somem', () => {
+    const pillars = (site) =>
+      [...renderPage(html, site).matchAll(/<article class="pillar">[\s\S]*?<\/article>/g)].map(
+        (m) => m[0],
+      );
+    const shown = pillars(demo);
+    assert.equal(shown.length, 3);
+    assert.equal(
+      shown[0],
+      `<article class="pillar"><svg aria-hidden="true"><use href="#i-fabrica" /></svg><h3>${example.VITE_DIFF_1_TITLE}</h3><p>${example.VITE_DIFF_1_TEXT}</p></article>`,
+    );
+    assert.equal(pillars(createSiteConfig({ ...example, VITE_DIFF_2_TITLE: '' })).length, 2);
+    const semIcone = pillars(createSiteConfig({ ...example, VITE_DIFF_1_ICON: '' }))[0];
+    assert.ok(!semIcone.includes('<svg') && semIcone.includes(example.VITE_DIFF_1_TITLE));
+    const semTexto = pillars(createSiteConfig({ ...example, VITE_DIFF_1_TEXT: '' }))[0];
+    assert.ok(!semTexto.includes('<p>'));
+    assert.deepEqual(
+      createSiteConfig({
+        VITE_DIFF_6_TITLE: 'Sexto',
+        VITE_DIFF_7_TITLE: 'Sétimo',
+      }).differentials.map(({ title }) => title),
+      ['Sexto'],
+      'até 6',
+    );
+    const nenhum = renderPage(
+      html,
+      createSiteConfig({
+        ...example,
+        VITE_DIFF_1_TITLE: '',
+        VITE_DIFF_2_TITLE: '',
+        VITE_DIFF_3_TITLE: '',
+      }),
+    );
+    assert.ok(!nenhum.includes('id="diferenciais"') && !nenhum.includes('href="#diferenciais"'));
+    assert.equal(
+      (nenhum.match(/<div class="card(?: on)?">/g) ?? []).length,
+      5,
+      'os 5 cartões ficam',
+    );
+  });
+
+  test('cada ícone de diferencial tem o seu <symbol> no index.html', () => {
+    for (const icon of DIFF_ICONS) assert.ok(html.includes(`<symbol id="i-${icon}"`), icon);
+  });
+
+  test('clientes vêm do .env: demo mostra os 6 exemplos rotulados; production só os autorizados', () => {
+    const strip = (site) =>
+      renderPage(html, site).match(/<div class="logo-strip">[\s\S]*?<\/ul><\/div><\/div>/)?.[0] ??
+      '';
+    const emDemo = strip(demo);
+    assert.match(emDemo, /<div class="logo-scroll" role="region" aria-label="[^"]+" tabindex="0">/);
+    assert.equal((emDemo.match(/<li>/g) ?? []).length, 6);
+    assert.equal((emDemo.match(/<span class="tag">Exemplo<\/span>/g) ?? []).length, 6);
+    assert.ok(emDemo.includes('<span class="logo-name">Cliente 1</span>'));
+    assert.ok(!emDemo.includes('<img'), 'exemplo sem logo real');
+    const site = createSiteConfig({
+      ...REAL,
+      VITE_CLIENT_1_NAME: 'Padaria Real',
+      VITE_CLIENT_1_LOGO: 'padaria-real.svg',
+      VITE_CLIENT_1_AUTH: 'sim',
+      VITE_CLIENT_2_NAME: 'Mercado Sem Autorização',
+    });
+    assert.deepEqual(
+      site.clients.map(({ id, authorized }) => [id, authorized]),
+      [
+        ['padaria-real', true],
+        ['mercado-sem-autorizacao', false],
+      ],
+    );
+    const emProducao = strip(site);
+    assert.ok(
+      emProducao.includes(
+        '<img src="./clientes/padaria-real.svg" alt="Padaria Real" width="160" height="64"',
+      ),
+      'logo com caminho relativo à página',
+    );
+    assert.ok(!emProducao.includes('Mercado') && !emProducao.includes('Exemplo'));
+    assert.equal(slug('Café & Cia. Ltda'), 'cafe-cia-ltda');
+  });
+
+  test('depoimento e nota do Google só aparecem autorizados, em qualquer modo', () => {
     const own = {
       testimonials: [
-        { id: 'cliente-a', authorized: true, quote: 'Entrega no prazo.', author: 'Cliente A' },
+        { id: 'cliente-a', authorized: true, quote: 'Caixa sempre igual.', author: 'Cliente A' },
         { id: 'exemplo-x', demo: true, quote: 'Texto de exemplo.', author: 'Cliente X' },
       ],
-      clientLogos: [],
       googleRating: { value: 4.8, count: 37, url: 'https://g.page/r/exemplo', authorized: true },
     };
     const content = { models, proofs: own };
-    const emDemo = renderPage(html, createSiteConfig(example, new Date(), content));
-    assert.ok(
-      emDemo.includes('Texto de exemplo.') && emDemo.includes('<span class="tag">Exemplo</span>'),
-    );
-    assert.ok(emDemo.includes('Entrega no prazo.'));
-    const emProducao = renderPage(html, createSiteConfig(REAL, new Date(), content));
-    assert.ok(emProducao.includes('Entrega no prazo.'));
-    assert.ok(!emProducao.includes('Texto de exemplo.') && !emProducao.includes('Exemplo</span>'));
-    assert.ok(emProducao.includes('4,8 de 5 no Google (37 avaliações)'));
+    for (const env of [example, REAL]) {
+      const out = renderPage(html, createSiteConfig(env, new Date(), content));
+      assert.ok(out.includes('Caixa sempre igual.'), env.VITE_DATA_MODE);
+      assert.ok(!out.includes('Texto de exemplo.'), env.VITE_DATA_MODE);
+      assert.ok(out.includes('4,8 de 5 no Google (37 avaliações)'), env.VITE_DATA_MODE);
+    }
     // sem prova autorizada a seção e os links para ela somem
     const semProva = renderPage(html, production);
     assert.ok(!semProva.includes('id="clientes"') && !semProva.includes('href="#clientes"'));
@@ -412,7 +518,6 @@ describe('conteúdo: produtos, prova social e menus', () => {
       models,
       proofs: {
         testimonials: [],
-        clientLogos: [],
         googleRating: { value: 5, count: 1, url: 'https://g.page/r/x', demo: true },
       },
     };
@@ -421,19 +526,21 @@ describe('conteúdo: produtos, prova social e menus', () => {
     );
   });
 
-  test('todo item de prova é autorizado (com registro em docs/provas) ou de exemplo; logos só em SVG', () => {
+  test('todo cliente autorizado do .env e toda prova têm registro em docs/provas; logos só em SVG', () => {
+    const site = createSiteConfig(parseEnv(read('.env')));
     const items = [
+      ...site.clients.filter((client) => client.authorized),
       ...proofs.testimonials,
-      ...proofs.clientLogos,
       ...(proofs.googleRating ? [{ id: 'google', ...proofs.googleRating }] : []),
     ];
     for (const item of items) {
-      assert.ok(item.authorized === true || item.demo === true, `${item.id}: sem autorização`);
-      if (item.authorized) {
-        assert.ok(existsSync(`${ROOT}docs/provas/${item.id}.md`), `${item.id}: falta docs/provas`);
-      }
+      assert.equal(item.authorized, true, `${item.id}: sem autorização`);
+      assert.ok(existsSync(`${ROOT}docs/provas/${item.id}.md`), `${item.id}: falta docs/provas`);
     }
-    for (const logo of proofs.clientLogos) assert.match(logo.src, /\.svg$/);
+    for (const { logo } of site.clients.filter((client) => client.logo)) {
+      assert.match(logo, /^[\w-]+\.svg$/);
+      assert.ok(existsSync(`${ROOT}public/clientes/${logo}`), `${logo} falta em public/clientes`);
+    }
   });
 
   test('o menu leva às seções e o link para uma seção que saiu da página sai junto', () => {

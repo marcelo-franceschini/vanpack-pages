@@ -1,7 +1,14 @@
 // Dados "reais" só para os testes: tudo diferente do .env.example (menos o que já é real por natureza,
-// como cidade e UF), para exercitar o modo production sem mexer no .env do projeto.
+// como cidade e UF, e os diferenciais), para exercitar o modo production sem mexer no .env do projeto.
+// Os clientes de exemplo saem (production sem cliente autorizado); um teste que precise de cliente o
+// acrescenta.
 export const realEnv = (example) => ({
   ...example,
+  ...Object.fromEntries(
+    Object.keys(example)
+      .filter((key) => /^VITE_CLIENT_\d+_/.test(key))
+      .map((key) => [key, '']),
+  ),
   VITE_DATA_MODE: 'production',
   VITE_WHATSAPP: '5511987654321',
   VITE_PHONE: '+551147001234',

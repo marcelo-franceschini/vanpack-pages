@@ -9,7 +9,7 @@
 //   JSON-LD                  montado inteiro a partir da config
 //   modo demo                <meta name="robots" content="noindex,nofollow">
 
-import { visibleProofs } from '../site.config.js';
+import { visibleClients, visibleProofs } from '../site.config.js';
 
 export const escapeHtml = (s) =>
   String(s)
@@ -228,26 +228,43 @@ const BLOCKS = {
       )
       .join('\n'),
 
-  // Prova social: só o autorizado (e, em demo, os exemplos com o rótulo "Exemplo").
+  // Diferenciais do .env (VITE_DIFF_<n>_*): título, texto e ícone (um <symbol> do index.html).
+  diferenciais: (site) =>
+    site.differentials
+      .map(
+        ({ title, text, icon }) =>
+          `<article class="pillar">${
+            icon ? `<svg aria-hidden="true"><use href="#i-${escapeHtml(icon)}" /></svg>` : ''
+          }<h3>${escapeHtml(title)}</h3>${text ? `<p>${escapeHtml(text)}</p>` : ''}</article>`,
+      )
+      .join('\n'),
+
+  // Prova social: a faixa de logos dos clientes do .env (em production só os que autorizaram; em
+  // demo também os exemplos, com o rótulo "Exemplo") e os depoimentos e a nota do Google autorizados.
+  // O logo é relativo à página (./clientes/…): o render roda depois de o Vite reescrever as URLs, e
+  // um caminho absoluto quebraria no subcaminho do GitHub Pages.
   clientes: (site) => {
-    const { testimonials, clientLogos, googleRating } = visibleProofs(
-      site.content.proofs,
-      site.dataMode,
-    );
+    const clients = visibleClients(site.clients, site.dataMode);
+    const { testimonials, googleRating } = visibleProofs(site.content.proofs);
+    const client = ({ name, logo, authorized }) =>
+      `<li>${
+        logo
+          ? `<img src="./clientes/${escapeHtml(logo)}" alt="${escapeHtml(name)}" width="160" height="64" loading="lazy" decoding="async" />`
+          : `<span class="logo-name">${escapeHtml(name)}</span>`
+      }${authorized ? '' : '<span class="tag">Exemplo</span>'}</li>`;
     return [
-      ...testimonials.map(
-        ({ quote, author, demo }) =>
-          `<figure class="proof"><p class="proof-quote">“${escapeHtml(quote)}”</p><figcaption>${escapeHtml(author)}${
-            demo ? ' <span class="tag">Exemplo</span>' : ''
-          }</figcaption></figure>`,
-      ),
-      clientLogos.length
-        ? `<ul class="logos" aria-label="Clientes">${clientLogos
+      clients.length
+        ? `<div class="logo-strip"><div class="logo-scroll" role="region" aria-label="Logos de clientes" tabindex="0"><ul class="logos">${clients
+            .map(client)
+            .join('')}</ul></div></div>`
+        : '',
+      testimonials.length
+        ? `<div class="proofs">${testimonials
             .map(
-              ({ name, src, width = 120, height = 40 }) =>
-                `<li><img src="${escapeHtml(src)}" alt="${escapeHtml(name)}" width="${width}" height="${height}" loading="lazy" decoding="async" /></li>`,
+              ({ quote, author }) =>
+                `<figure class="proof"><p class="proof-quote">“${escapeHtml(quote)}”</p><figcaption>${escapeHtml(author)}</figcaption></figure>`,
             )
-            .join('')}</ul>`
+            .join('')}</div>`
         : '',
       googleRating
         ? `<p class="rating"><a href="${escapeHtml(googleRating.url)}" target="_blank" rel="noopener">${escapeHtml(
@@ -260,7 +277,7 @@ const BLOCKS = {
   },
 };
 
-/** <!--render:nome--> vira o bloco gerado do conteúdo (produtos, prova social). */
+/** <!--render:nome--> vira o bloco gerado do conteúdo (produtos, diferenciais, prova social). */
 function renderBlocks(html, site) {
   return html.replace(/<!--render:(\w+)-->/g, (_, name) => {
     if (!(name in BLOCKS)) throw new Error(`bloco desconhecido: <!--render:${name}-->`);

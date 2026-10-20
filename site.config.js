@@ -38,39 +38,44 @@ export const models = [
 ];
 
 /**
- * Prova social: nada inventado. Só entra na página o item com `authorized: true` (e registro em
- * docs/provas/<id>.md). Itens `demo: true` são de exemplo: só aparecem em modo demo, com o rótulo
- * "Exemplo", e nunca em production. A nota do Google só vale com `authorized` (sem versão demo).
- * Logos de clientes só em SVG (public/clientes/<id>.svg), sempre com autorização.
+ * Depoimentos e nota do Google: nada inventado. Só entra na página o item com `authorized: true` (e
+ * registro em docs/provas/<id>.md), em qualquer modo; o JSON-LD nunca leva nota própria. Os clientes
+ * da faixa de logos vêm do .env (VITE_CLIENT_<n>_*).
  */
 export const proofs = {
-  testimonials: [
-    {
-      id: 'exemplo-ecommerce',
-      demo: true,
-      quote: 'As caixas chegaram na medida certa e com a nossa marca bem impressa.',
-      author: 'Loja virtual de cosméticos',
-    },
-    {
-      id: 'exemplo-industria',
-      demo: true,
-      quote: 'Pedimos a mesma caixa várias vezes e o padrão nunca mudou.',
-      author: 'Indústria de alimentos',
-    },
-  ],
-  clientLogos: [], // { id, name, src: '/clientes/<id>.svg', authorized: true }
+  testimonials: [], // { id, quote, author, authorized: true }
   googleRating: null, // { value, count, url, authorized: true }
 };
 
-/** O que a página mostra da prova social neste modo (demo mostra os exemplos; production só o autorizado). */
-export function visibleProofs(items, dataMode) {
-  const shown = (item) => item.authorized === true || (item.demo === true && dataMode === 'demo');
+/** Depoimentos e nota do Google que a página mostra: só os autorizados. */
+export function visibleProofs(items) {
   return {
-    testimonials: items.testimonials.filter(shown),
-    clientLogos: items.clientLogos.filter(shown),
+    testimonials: items.testimonials.filter((item) => item.authorized === true),
     googleRating: items.googleRating?.authorized === true ? items.googleRating : null,
   };
 }
+
+/** Ícones dos diferenciais (VITE_DIFF_<n>_ICON): cada um é um <symbol id="i-<nome>"> do index.html. */
+export const DIFF_ICONS = ['fabrica', 'lotes', 'conversa', 'caixa'];
+
+/** Quantos diferenciais (VITE_DIFF_1_* a VITE_DIFF_6_*) e clientes (até VITE_CLIENT_12_*) o .env aceita. */
+export const LIMITS = { diffs: 6, clients: 12 };
+
+/** "Café & Cia." → "cafe-cia": o id do cliente, que nomeia o registro em docs/provas/<id>.md. */
+export const slug = (name) =>
+  name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+
+/**
+ * Clientes que a página mostra: em production só os que autorizaram (AUTH=sim); em demo todos, e o
+ * não autorizado leva o rótulo "Exemplo".
+ */
+export const visibleClients = (clients, dataMode) =>
+  clients.filter((client) => client.authorized || dataMode === 'demo');
 
 /**
  * Experimentos A/B (src/experiments.js). Todos desligados: ligue com `enabled: true` e uma data fixa em
@@ -94,6 +99,19 @@ function hostOf(url) {
   } catch {
     return '';
   }
+}
+
+/**
+ * Itens numerados do .env (VITE_<prefixo>_<n>_<CAMPO>, de 1 a `max`). Item sem o campo principal
+ * (título do diferencial, nome do cliente) não existe.
+ */
+function numbered(env, prefix, max, main, read) {
+  const items = [];
+  for (let n = 1; n <= max; n++) {
+    const field = (name) => text(env[`VITE_${prefix}_${n}_${name}`]);
+    if (field(main)) items.push(read(field));
+  }
+  return items;
 }
 
 /** (11) 4700-1234 a partir de +551147001234; vazio se o telefone não tiver o formato do Brasil. */
@@ -150,6 +168,18 @@ export function createSiteConfig(
     minOrder: text(env.VITE_MIN_ORDER),
     serviceArea: text(env.VITE_SERVICE_AREA),
     paymentMethods: text(env.VITE_PAYMENT_METHODS),
+    // "Por que a Vanpack" e a faixa de logos
+    differentials: numbered(env, 'DIFF', LIMITS.diffs, 'TITLE', (field) => ({
+      title: field('TITLE'),
+      text: field('TEXT'),
+      icon: field('ICON'),
+    })),
+    clients: numbered(env, 'CLIENT', LIMITS.clients, 'NAME', (field) => ({
+      id: slug(field('NAME')),
+      name: field('NAME'),
+      logo: field('LOGO'),
+      authorized: field('AUTH').toLowerCase() === 'sim',
+    })),
     analytics: {
       provider: text(env.VITE_ANALYTICS_PROVIDER),
       site: text(env.VITE_ANALYTICS_SITE),
@@ -200,11 +230,11 @@ export function createSiteConfig(
     noAnalytics: site.analytics.provider ? '' : 'sim',
     // seções que só existem se tiverem algo a mostrar
     hasFacts: site.minOrder || site.serviceArea ? 'sim' : '',
+    hasDiffs: site.differentials.length ? 'sim' : '',
     hasProofs: (() => {
-      const shown = visibleProofs(content.proofs, text(env.VITE_DATA_MODE));
-      return shown.testimonials.length || shown.clientLogos.length || shown.googleRating
-        ? 'sim'
-        : '';
+      const shown = visibleProofs(content.proofs);
+      const clients = visibleClients(site.clients, site.dataMode);
+      return clients.length || shown.testimonials.length || shown.googleRating ? 'sim' : '';
     })(),
     // a faixa de confiança só existe se tiver ao menos um item
     hasTrust: [cityState, site.cnpj, foundedYear, site.mapUrl, phone, site.paymentMethods].some(

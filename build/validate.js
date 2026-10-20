@@ -1,5 +1,6 @@
 // Trava de go-live: a página só pode ir ao ar com dados reais. `VITE_DATA_MODE=demo` aceita os dados
 // fictícios do `.env.example` (e o site sai com noindex); `production` exige dado real e completo.
+import { DIFF_ICONS, LIMITS } from '../site.config.js';
 
 const MODES = ['demo', 'production'];
 
@@ -15,6 +16,9 @@ const REAL_BY_NATURE = new Set([
   'VITE_ANALYTICS_SITE',
   'VITE_ANALYTICS_ENDPOINT',
 ]);
+// Os diferenciais (VITE_DIFF_<n>_*) também ficam de fora: são texto, e o dono confere cada um antes
+// do go-live (docs/go-live.md).
+const realByNature = (key) => REAL_BY_NATURE.has(key) || /^VITE_DIFF_\d+_/.test(key);
 
 // Obrigatórios em produção (WhatsApp e URL do site valem nos dois modos).
 const REQUIRED_IN_PRODUCTION = [
@@ -98,6 +102,33 @@ export function validateSite({ site, env, example, now = new Date() }) {
     );
   }
 
+  // Diferenciais e clientes numerados: número dentro do limite, ícone conhecido, logo em SVG
+  // (só o nome do arquivo em public/clientes/) e autorização "sim" ou vazia.
+  for (const [key, raw] of Object.entries(env)) {
+    const value = String(raw ?? '').trim();
+    const numbered = /^VITE_(DIFF|CLIENT)_(\d+)_/.exec(key);
+    if (numbered) {
+      const [kind, max] =
+        numbered[1] === 'DIFF' ? ['diferenciais', LIMITS.diffs] : ['clientes', LIMITS.clients];
+      const n = Number(numbered[2]);
+      if (n < 1 || n > max) errors.push(`${key}: os ${kind} vão de 1 a ${max}.`);
+    }
+    if (!value) continue;
+    if (/^VITE_DIFF_\d+_ICON$/.test(key) && !DIFF_ICONS.includes(value)) {
+      errors.push(`${key}="${value}" não existe: use ${DIFF_ICONS.join(', ')} ou deixe vazio.`);
+    }
+    if (/^VITE_CLIENT_\d+_LOGO$/.test(key) && !/^[\w-]+\.svg$/.test(value)) {
+      errors.push(
+        `${key}="${value}" precisa ser o nome de um arquivo SVG em public/clientes/, ex.: loja.svg.`,
+      );
+    }
+    if (/^VITE_CLIENT_\d+_AUTH$/.test(key) && value.toLowerCase() !== 'sim') {
+      errors.push(
+        `${key}="${value}": use "sim" (o cliente autorizou, com registro em docs/provas/) ou deixe vazio.`,
+      );
+    }
+  }
+
   if (site.dataMode === 'demo') {
     warnings.push(
       'VITE_DATA_MODE=demo: dados fictícios no site e noindex ligado. Para ir ao ar, siga docs/go-live.md.',
@@ -126,7 +157,7 @@ export function validateSite({ site, env, example, now = new Date() }) {
       errors.push(`VITE_SITE_URL="${site.siteUrl}" precisa ser https em production.`);
     }
     for (const [key, sample] of Object.entries(example)) {
-      if (REAL_BY_NATURE.has(key) || !sample) continue;
+      if (realByNature(key) || !sample) continue;
       if (env[key] === sample) {
         errors.push(
           `${key}="${sample}" ainda é o valor fictício do .env.example: troque pelo real.`,
