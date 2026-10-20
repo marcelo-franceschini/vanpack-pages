@@ -393,6 +393,13 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
     assert.equal(cards.length, models.length);
     for (const [i, model] of models.entries()) {
       assert.ok(cards[i][0].includes(`<h3>${model.name}</h3>`), model.name);
+      // a área do 3D vem antes do título, com o modelo e a descrição da peça
+      assert.ok(
+        cards[i][0].startsWith(
+          `<article class="model">\n  <div class="model-3d" data-modelo="${model.id}" data-peca="${model.peca}"></div>\n  <h3>`,
+        ),
+        `${model.id}: área do 3D no topo`,
+      );
       const text = new URL(cards[i][0].match(/href="([^"]+)"/)[1]).searchParams.get('text');
       assert.equal(
         text,

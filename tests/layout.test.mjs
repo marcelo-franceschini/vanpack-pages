@@ -221,6 +221,73 @@ describe('seções depois da história', () => {
   });
 });
 
+describe('seção de produtos', () => {
+  /** Caixas dos cartões e das partes de cada um, em pixels da página. */
+  const cards = (page) =>
+    page.evaluate(() =>
+      [...document.querySelectorAll('.model')].map((card) => {
+        const rect = (el) => {
+          const r = el.getBoundingClientRect();
+          return { left: r.left, right: r.right, top: r.top + scrollY, bottom: r.bottom + scrollY };
+        };
+        return {
+          card: rect(card),
+          area: rect(card.querySelector('.model-3d')),
+          title: rect(card.querySelector('h3')),
+          text: rect(card.querySelector('p')),
+          button: rect(card.querySelector('.btn')),
+        };
+      }),
+    );
+  for (const screen of SCREENS.filter((s) =>
+    ['1440×900', '390×844 (celular em pé)'].includes(s.name),
+  )) {
+    test(`${screen.name}: ${screen.mobile ? '1 coluna' : '3 colunas'}, área 4:3 no topo antes e depois do 3D, nada sobreposto`, async () => {
+      const { page, context } = await openPage(browser, server.url, {
+        viewport: { width: screen.width, height: screen.height },
+        reducedMotion: 'reduce',
+        ...(screen.mobile ? { hasTouch: true, isMobile: true, deviceScaleFactor: 2 } : {}),
+      });
+      const before = await cards(page);
+      assert.equal(before.length, 3);
+      if (screen.mobile) {
+        for (let i = 1; i < 3; i++) {
+          assert.ok(Math.abs(before[i].card.left - before[0].card.left) < 1, 'mesma coluna');
+          assert.ok(before[i].card.top >= before[i - 1].card.bottom, 'um embaixo do outro');
+        }
+      } else {
+        for (let i = 1; i < 3; i++) {
+          assert.ok(Math.abs(before[i].card.top - before[0].card.top) < 1, 'mesma linha');
+          assert.ok(before[i].card.left >= before[i - 1].card.right, 'lado a lado');
+        }
+      }
+      for (const { card, area, title, text, button } of before) {
+        const ratio = (area.bottom - area.top) / (area.right - area.left);
+        assert.ok(Math.abs(ratio - 0.75) < 0.01, `área 4:3 (${ratio.toFixed(3)})`);
+        assert.ok(area.top >= card.top && area.bottom <= title.top, 'a área vem antes do título');
+        assert.ok(title.bottom <= text.top + 0.5 && text.bottom <= button.top + 0.5, 'em ordem');
+        assert.ok(button.bottom - button.top >= 44 - 0.5, 'botão com 44 px');
+        assert.ok(card.right <= screen.width + 0.5 && card.left >= -0.5, 'dentro da tela');
+      }
+      // depois do 3D (ou da ilustração) carregar, nada mudou de lugar
+      await page.evaluate(() =>
+        document.querySelector('.models').scrollIntoView({ block: 'center' }),
+      );
+      await page.waitForFunction(
+        (n) => document.querySelectorAll('.model-3d.pronto').length >= n,
+        screen.mobile ? 1 : 3,
+        { timeout: 60_000 },
+      );
+      assert.deepEqual(await cards(page), before, 'sem salto de layout');
+      assert.ok(
+        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+        'sem rolagem horizontal',
+      );
+      await context.close();
+    });
+  }
+});
+
 describe('barra fixa do WhatsApp (celular)', () => {
   // a barra vale até 768 px de largura; o celular deitado (844 px) segue o botão redondo
   for (const screen of SCREENS.filter((s) => s.mobile && s.width <= 768)) {
