@@ -14,25 +14,30 @@ export const brand = {
 /**
  * Produtos da seção "O que fabricamos": texto genérico e sem números; o dono confere no go-live
  * (docs/go-live.md). O `id` vira o código de origem do botão ([site-produtos-<id>]) e o `subject`
- * completa a mensagem do WhatsApp ("Olá! Quero um orçamento de <subject>.").
+ * completa a mensagem do WhatsApp ("Olá! Quero um orçamento de <subject>."). O `id` também escolhe
+ * o modelo 3D do cartão (src/produtos/modelos.js) e a ilustração (public/produtos/<id>.svg); a `peca`
+ * descreve os dois para leitor de tela ("Modelo 3D de <peca> girando").
  */
 export const models = [
   {
     id: 'corte-e-vinco',
     name: 'Corte e vinco',
     subject: 'caixas com corte e vinco',
+    peca: 'caixa com corte e vinco',
     text: 'Caixas com corte e vinco sob medida, para encaixe, tampa e formatos especiais.',
   },
   {
     id: 'divisorias',
     name: 'Divisórias, tabuleiros e separadores',
     subject: 'divisórias, tabuleiros e separadores',
+    peca: 'divisórias encaixadas num tabuleiro',
     text: 'Separam, organizam e protegem o que vai dentro da caixa.',
   },
   {
     id: 'chapas',
     name: 'Chapas de papelão ondulado',
     subject: 'chapas de papelão ondulado',
+    peca: 'pilha de chapas de papelão ondulado',
     text: 'Chapas para embalar, proteger e forrar.',
   },
 ];

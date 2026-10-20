@@ -214,11 +214,13 @@ export function buildJsonLd(site) {
 }
 
 const BLOCKS = {
-  // Produtos: cada um com o seu botão de orçamento (código [site-produtos-<id>]).
+  // Produtos: cada um com a área do 3D no topo (preenchida por src/produtos/, com o espaço já
+  // reservado) e o seu botão de orçamento (código [site-produtos-<id>]).
   produtos: (site) =>
     site.content.models
       .map(
-        ({ id, name, subject, text }) => `<article class="model">
+        ({ id, name, subject, text, peca }) => `<article class="model">
+  <div class="model-3d" data-modelo="${escapeHtml(id)}" data-peca="${escapeHtml(peca ?? name)}"></div>
   <h3>${escapeHtml(name)}</h3>
   <p>${escapeHtml(text)}</p>
   <a class="btn btn-soft" data-cta="produtos-${escapeHtml(id)}" data-wa="${escapeHtml(

@@ -4,6 +4,7 @@ import { sinceLoad, track, trackOnce } from './analytics.js';
 import { mountCarousel } from './carrossel.js';
 import { startExperiments, variant } from './experiments.js';
 import { createHandoff, inAppBrowser } from './handoff.js';
+import { observeProdutos } from './produtos/gatilho.js';
 import { mountStage } from './render/stage.js';
 import { createStory } from './story.js';
 import { createTour } from './tour.js';
@@ -234,7 +235,9 @@ if (fab && quote) {
   ).observe(quote);
 }
 
-// ---------- Clientes ----------
+// ---------- Produtos e clientes ----------
+// O 3D de cada produto só é baixado quando a seção chega perto (src/produtos/gatilho.js).
+observeProdutos();
 mountCarousel($('[data-carrossel]'));
 
 // ---------- Uso da página ----------
