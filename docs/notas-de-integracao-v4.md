@@ -1,4 +1,4 @@
-# Vanpack — notas de integração da v4
+# Vanpack: notas de integração da v4
 
 A v4 (pacote do Claude Design) foi integrada ao fluxo do repositório: `three` via npm, Vite, cena num
 Web Worker (`OffscreenCanvas`) com fallback na thread principal, e a história ligada ao scroll com um
@@ -8,24 +8,24 @@ tour automático que rola a página sozinho.
 
 `index.html` é a única página. O que o JS usa (não renomear):
 
-| Seletor                                                                                    | Papel                                                                                                                                                                                                                                                                                   |
-| ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.story[data-tour="idle\|playing\|paused\|done"]`                                          | seção da história (altura 560 svh; o scroll útil é 460 svh; no celular, 400 svh e 300 svh)                                                                                                                                                                                              |
-| `.stage#stage` › `canvas#gl` + `.loader` + `.steps` + `#cue`                               | cena fixa na tela (`position: sticky`)                                                                                                                                                                                                                                                  |
-| `.steps › .step › .wrap › .card`                                                           | 5 cartões, um por capítulo; o ativo tem `.on` e os demais `inert`                                                                                                                                                                                                                       |
-| `#hdr` e `#hdr .btn`                                                                       | cabeçalho; o botão pulsa (`.pulse`) quando o tour termina (no celular, com a barra à vista, ele sai e quem pulsa é a barra)                                                                                                                                                             |
-| `#fab`                                                                                     | botão do WhatsApp (div com `.fab-wa` e `.fab-tel`): no desktop só aparece depois do fim da história; em ≤ 768 px é uma barra de largura total com o telefone, à vista do 2º capítulo em diante (os cartões 2 a 5 reservam o espaço dela); some (`.away`) com `#orcamento` ≥ 30% visível |
-| `#zap-ajuda`                                                                               | folha "O WhatsApp não abriu?" (`src/handoff.js`): sobe se a página continua à vista 2,5 s depois do toque num botão do WhatsApp; copiar número, ligar e, em navegador embutido, como abrir no navegador                                                                                 |
-| `a[data-cta][data-wa]`                                                                     | botões do WhatsApp; o build troca `data-wa` por `href="https://wa.me/…"`                                                                                                                                                                                                                |
-| `#tour-start` (`data-tour-ui`)                                                             | "Ver como fazemos": toca o tour (ou, sem tour, leva ao capítulo 2); no celular é um link, não um 2º bloco                                                                                                                                                                               |
-| `#processo`, `#confianca`, `#produtos`, `#diferenciais`, `#clientes`, `#faq`, `#orcamento` | seções e âncoras do menu; as sem dado somem com os links                                                                                                                                                                                                                                |
-| `<!--render:produtos\|faq\|clientes-->`                                                    | blocos gerados do conteúdo do `site.config.js` (`.model`, `details[data-faq]`, `.proof`)                                                                                                                                                                                                |
-| `[data-field="slogan\|razao\|cnpj\|endereco\|horario\|telefone\|email\|mapa"]`             | rodapé: preenchido com o dado do `.env` ou removido do HTML quando não há dado                                                                                                                                                                                                          |
-| `[data-need="chave outra"]` e `{{variavel}}`                                               | o elemento sai se alguma chave estiver vazia; `{{variavel}}` vazia fora de um `data-need` é erro de build                                                                                                                                                                               |
-| `[data-year]` e `[data-since]`                                                             | ano do © e anos de mercado: o build escreve o valor e o `main.js` o recalcula no navegador                                                                                                                                                                                              |
-| `a[data-contact="phone\|email\|map"]` e `details[data-faq]`                                | links de contato e perguntas do FAQ: viram os eventos `phone_click`, `email_click`, `map_click` e `faq_open`                                                                                                                                                                            |
-| `html[data-exp_quote_wizard="B"]` e `.wizard`                                              | experimento `quote_wizard` na variante B: o `#orcamento` troca o CTA final pelo assistente de 3 passos (montado por `src/wizard.js`); a A é a página como está                                                                                                                          |
-| `.optional`                                                                                | trechos opcionais do hero (fim do eyebrow e da subheadline, selo de prazo); somem nos layouts compacto e de celular                                                                                                                                                                     |
+| Seletor                                                                            | Papel                                                                                                                                                                                                                                                                                   |
+| ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.story[data-tour="idle\|playing\|paused\|done"]`                                  | seção da história (altura 560 svh; o scroll útil é 460 svh; no celular, 400 svh e 300 svh)                                                                                                                                                                                              |
+| `.stage#stage` › `canvas#gl` + `.loader` + `.steps` + `#cue`                       | cena fixa na tela (`position: sticky`)                                                                                                                                                                                                                                                  |
+| `.steps › .step › .wrap › .card`                                                   | 5 cartões, um por capítulo; o ativo tem `.on` e os demais `inert`                                                                                                                                                                                                                       |
+| `#hdr` e `#hdr .btn`                                                               | cabeçalho; o botão pulsa (`.pulse`) quando o tour termina (no celular, com a barra à vista, ele sai e quem pulsa é a barra)                                                                                                                                                             |
+| `#fab`                                                                             | botão do WhatsApp (div com `.fab-wa` e `.fab-tel`): no desktop só aparece depois do fim da história; em ≤ 768 px é uma barra de largura total com o telefone, à vista do 2º capítulo em diante (os cartões 2 a 5 reservam o espaço dela); some (`.away`) com `#orcamento` ≥ 30% visível |
+| `#zap-ajuda`                                                                       | folha "O WhatsApp não abriu?" (`src/handoff.js`): sobe se a página continua à vista 2,5 s depois do toque num botão do WhatsApp; copiar número, ligar e, em navegador embutido, como abrir no navegador                                                                                 |
+| `a[data-cta][data-wa]`                                                             | botões do WhatsApp; o build troca `data-wa` por `href="https://wa.me/…"`                                                                                                                                                                                                                |
+| `#processo`, `#confianca`, `#produtos`, `#diferenciais`, `#clientes`, `#orcamento` | seções e âncoras do menu; as sem dado somem com os links (os 5 cartões de `#processo` nunca somem)                                                                                                                                                                                      |
+| `<!--render:produtos\|diferenciais\|clientes-->`                                   | blocos gerados: produtos do `site.config.js` (`.model`), diferenciais do `.env` (`.pillar`) e clientes do `.env` com os depoimentos autorizados (`.logo-strip`, `.proof`)                                                                                                               |
+| `[data-field="slogan\|razao\|cnpj\|endereco\|horario\|telefone\|mapa"]`            | rodapé: preenchido com o dado do `.env` ou removido do HTML quando não há dado                                                                                                                                                                                                          |
+| `[data-need="chave outra"]`, `[data-need="!chave"]` e `{{variavel}}`               | o elemento sai se alguma chave estiver vazia; com `!`, sai se a chave tiver valor (o texto de quando falta o dado, nos cartões); `{{variavel}}` vazia fora de um `data-need` é erro de build                                                                                            |
+| `[data-year]` e `[data-since]`                                                     | ano do © e anos de mercado: o build escreve o valor e o `main.js` o recalcula no navegador                                                                                                                                                                                              |
+| `a[data-contact="phone\|map"]`                                                     | links de contato: viram os eventos `phone_click` e `map_click`                                                                                                                                                                                                                          |
+| `html[data-exp_quote_wizard="B"]` e `.wizard`                                      | experimento `quote_wizard` na variante B: o `#orcamento` troca o CTA final pelo assistente de 3 passos (montado por `src/wizard.js`); a A é a página como está                                                                                                                          |
+| `.optional`                                                                        | trechos opcionais do hero (fim do eyebrow e do parágrafo); somem nos layouts compacto e de celular                                                                                                                                                                                      |
+| `.logo-scroll[role="region"]`                                                      | faixa de logos dos clientes: rola na horizontal com scroll-snap no celular (CSS puro, recebe foco) e vira grade no desktop                                                                                                                                                              |
 
 Estados da página: `.stage.ready` (cena desenhada: o canvas entra por fade), `.stage.no-gl` (sem
 WebGL: fica o fundo Papel, o símbolo e os cartões) e, enquanto o contexto está perdido, o `ready` sai
@@ -76,13 +76,13 @@ resolução em 0,25 (até 1×) e depois para a sombra em tempo real, sem recompi
 Centros fixos em 0, 0,25, 0,5, 0,75 e 1; cartão ativo = `round(p × 4)`; a câmera fica parada ~12%
 em torno de cada centro.
 
-| Cap.                | Faixa     | O que acontece                                                      | Quadro de pausa                      |
-| ------------------- | --------- | ------------------------------------------------------------------- | ------------------------------------ |
-| 1 Medida            | 0–0,12    | pilha de chapas; a de cima entra na máquina                         | pilha + entrada da máquina           |
-| 2 Impressão e corte | 0,12–0,38 | a chapa sai impressa, vincada e recortada; aparas no recolhimento   | chapa fora, aparas no ar (0,25)      |
-| 3 Cola              | 0,38–0,60 | cola na aba, os painéis dobram, sai o tubo achatado                 | painel a 90°, fio de cola (0,5)      |
-| 4 Caixa             | 0,60–0,82 | o tubo abre e gira na mesa, fecha e sobe na pilha do palete; cinta  | caixa aberta, marca de frente (0,75) |
-| 5 Entrega           | 0,82–1    | o palete entra no baú, a porta fecha, o caminhão parte pela estrada | caminhão ao longe na estrada (1)     |
+| Cap.                | Faixa       | O que acontece                                                      | Quadro de pausa                      |
+| ------------------- | ----------- | ------------------------------------------------------------------- | ------------------------------------ |
+| 1 Medida            | 0 a 0,12    | pilha de chapas; a de cima entra na máquina                         | pilha + entrada da máquina           |
+| 2 Impressão e corte | 0,12 a 0,38 | a chapa sai impressa, vincada e recortada; aparas no recolhimento   | chapa fora, aparas no ar (0,25)      |
+| 3 Cola              | 0,38 a 0,60 | cola na aba, os painéis dobram, sai o tubo achatado                 | painel a 90°, fio de cola (0,5)      |
+| 4 Caixa             | 0,60 a 0,82 | o tubo abre e gira na mesa, fecha e sobe na pilha do palete; cinta  | caixa aberta, marca de frente (0,75) |
+| 5 Entrega           | 0,82 a 1    | o palete entra no baú, a porta fecha, o caminhão parte pela estrada | caminhão ao longe na estrada (1)     |
 
 A máquina A (`src/scene/machine.js`, trechos em `MACHINE_A`) tem duas janelas na frente (+z) que
 mostram os cilindros de impressão (com a luva Floresta) e de corte. Os cilindros giram junto com a
@@ -110,7 +110,7 @@ não começa, o console diz o motivo (`[vanpack] autoplay não iniciou: …`).
   hex no `:root` de `index.html`): `#0D3C2A`, `#454440` (texto secundário, 9,2:1 sobre Papel),
   `#ECE9E3`, `#DFDCD7`, `#D0CDC8`, `#2A5D47` (passos "Como pedir", 7,2:1 com texto Papel). Sem cor de
   acento (a exceção é o amarelo e o verde de sinalização da lâmpada da máquina, na ilustração da linha de produção).
-- Tipografia: só Archivo (`public/fonts/archivo-latin.woff2`, 400–900). Tudo em `rem`.
+- Tipografia: só Archivo (`public/fonts/archivo-latin.woff2`, 400 a 900). Tudo em `rem`.
 - Alvos de toque ≥ 44 px; foco visível de 3 px; quebras: `(max-width: 760px), (max-aspect-ratio: 1/1)`
   = celular (cartões embaixo); `(max-height: 700px)` em paisagem = compacto.
 
@@ -130,6 +130,10 @@ não começa, o console diz o motivo (`[vanpack] autoplay não iniciou: …`).
 - **Autoplay sem espera, em qualquer tela** (decisão do dono): o tour nunca é desligado por largura de
   tela nem por Save-Data; só o movimento reduzido do sistema o desliga (acessibilidade).
 - **Sem fotos** (decisão do dono): só SVG; a única foto real permitida seria a da fachada, e o dono prefere não usá-la. Depoimentos, logos e nota do Google só com autorização em `docs/provas/`.
+- **Página sem e-mail, prazo, promessa de tempo de resposta nem texto de processo** (decisão do dono): os
+  cartões falam do que importa a quem pede e a cena mostra a fabricação sem narrá-la. O
+  `tests/conteudo.test.mjs` confere texto, atributos de acessibilidade, metas, JSON-LD e mensagens do
+  WhatsApp. O 3D principal é travado por hash (`tests/trava-3d.test.mjs`).
 - **Sem PWA** (decisão do dono): landing de um só objetivo, então não há manifest, service worker nem
   instalação como app. Ficam `theme-color`, favicons, `apple-touch-icon` e o `icon-512.png` (logo do
   JSON-LD). O `brand.test` confere que o Chrome acusa `no-manifest`.
@@ -138,7 +142,7 @@ não começa, o console diz o motivo (`[vanpack] autoplay não iniciou: …`).
 
 - Confirmar o `vanpack-horizontal-negativo.svg` (horizontal em Papel sobre Floresta): o manual só traz
   o símbolo em negativo. É o horizontal oficial com a cor trocada, sem mais nada.
-- Textos dos cartões 2–5 e das mensagens do WhatsApp são rascunho.
+- Textos dos 5 cartões e dos diferenciais são rascunho: podem mudar depois da pesquisa de posicionamento.
 - Dados institucionais (endereço, horário, CNPJ, mapa) e o número do WhatsApp (`VITE_WHATSAPP`).
 
 ## 9. Medidas
@@ -155,7 +159,7 @@ Como medir: `npm run audit:bundle`, `audit:scene`, `audit:runtime`, `audit:light
 | Draw calls desktop (p = 0 / .25 / .5 / .75 / 1)                                  | 14 / 23 / 24 / 32 / 20                | **12 / 22 / 23 / 31 / 19** (orçamento 90)            |
 | Draw calls celular                                                               | 13 / 20 / 21 / 30 / 14                | **11 / 19 / 20 / 29 / 13** (orçamento 60)            |
 | Triângulos (máx.)                                                                | 6,6 mil                               | 6,7 mil                                              |
-| Lighthouse mobile (mediana de 5)                                                 | 97 · TBT 149–206 ms · LCP 1,5 s       | **100/100/100/100** · TBT 48 ms · LCP 1,36 s · CLS 0 |
+| Lighthouse mobile (mediana de 5)                                                 | 97 · TBT 149 a 206 ms · LCP 1,5 s     | **100/100/100/100** · TBT 48 ms · LCP 1,36 s · CLS 0 |
 | Lighthouse desktop                                                               | 100 / 100 / 92 / 100                  | **100/100/100/100** · TBT 0 · LCP 0,33 s             |
 | Custo por quadro (SwiftShader, mediana de 5 rodadas × 5 quadros)                 | 1179 ms (desktop) · 424 ms (celular)  | −19% · −23%                                          |
 | 1º quadro em que o herói aparece, versus o quadro seguinte                       | +680 ms (desktop) · +415 ms (celular) | +110 ms · +50 ms                                     |
