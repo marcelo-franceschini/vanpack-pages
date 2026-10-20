@@ -33,7 +33,7 @@ const B = '&exp_quote_wizard=B';
 /** Percorre os 3 passos até a mensagem pronta. */
 async function fill(page, { medida = true } = {}) {
   await page.locator('.wizard').getByText('Corte e vinco', { exact: true }).click();
-  await page.getByRole('button', { name: 'Próximo' }).click();
+  await page.locator('.wizard').getByRole('button', { name: 'Próximo' }).click();
   if (medida) {
     await page.getByLabel('Comprimento (cm)').fill('30');
     await page.getByLabel('Largura (cm)').fill('20');
@@ -90,12 +90,12 @@ describe('variante B (assistente de 3 passos)', () => {
   test('valida cada passo no lugar, marca o campo com problema e leva o foco até ele', async () => {
     const { page, context } = await open(B);
     await page.waitForSelector('.wizard');
-    await page.getByRole('button', { name: 'Próximo' }).click();
+    await page.locator('.wizard').getByRole('button', { name: 'Próximo' }).click();
     assert.match(await page.locator('.wiz-error').textContent(), /Escolha um produto/);
     await page.locator('.wizard').getByText('Corte e vinco', { exact: true }).click();
     assert.equal(await page.locator('.wiz-error').textContent(), '', 'o erro some ao escolher');
-    await page.getByRole('button', { name: 'Próximo' }).click();
-    await page.getByRole('button', { name: 'Próximo' }).click();
+    await page.locator('.wizard').getByRole('button', { name: 'Próximo' }).click();
+    await page.locator('.wizard').getByRole('button', { name: 'Próximo' }).click();
     assert.match(await page.locator('.wiz-error').textContent(), /comprimento, largura e altura/);
     assert.equal(
       await page.evaluate(() => document.activeElement.getAttribute('aria-invalid')),
@@ -103,7 +103,7 @@ describe('variante B (assistente de 3 passos)', () => {
       'o foco vai para o primeiro campo com problema',
     );
     await page.getByLabel('Comprimento (cm)').fill('999');
-    await page.getByRole('button', { name: 'Próximo' }).click();
+    await page.locator('.wizard').getByRole('button', { name: 'Próximo' }).click();
     assert.match(await page.locator('.wiz-error').textContent(), /de 1 a 300/);
     await context.close();
   });
@@ -155,7 +155,7 @@ describe('variante B (assistente de 3 passos)', () => {
     const { page, context } = await open(B);
     await page.waitForSelector('.wizard');
     await page.locator('.wizard').getByText('Corte e vinco', { exact: true }).click();
-    await page.getByRole('button', { name: 'Próximo' }).click();
+    await page.locator('.wizard').getByRole('button', { name: 'Próximo' }).click();
     assert.equal(await page.evaluate(() => document.activeElement.className), 'wiz-step');
     const info = await page.evaluate(() => {
       const luminance = ([r, g, b]) => {
