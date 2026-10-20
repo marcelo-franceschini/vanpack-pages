@@ -48,7 +48,7 @@ anunciado. Depois do deploy, peça a indexação no Search Console.
 | `VITE_DIFF_<n>_TITLE`     | Título do diferencial `<n>` (de 1 a 6) em "Por que a Vanpack" | não           | Sem título, o diferencial some; sem nenhum, a seção some             |
 | `VITE_DIFF_<n>_TEXT`      | Texto do diferencial                                          | não           | Sem promessa de prazo nem de tempo de resposta                       |
 | `VITE_DIFF_<n>_ICON`      | Ícone: `fabrica`, `lotes`, `conversa` ou `caixa`              | não           | O build recusa outro nome                                            |
-| `VITE_CLIENT_<n>_NAME`    | Nome do cliente `<n>` (de 1 a 12) na faixa de logos           | não           | "Cliente 1" a "Cliente 6" são exemplos: o build de production recusa |
+| `VITE_CLIENT_<n>_NAME`    | Nome do cliente `<n>` (de 1 a 12) no carrossel de clientes    | não           | "Cliente 1" a "Cliente 6" são exemplos: o build de production recusa |
 | `VITE_CLIENT_<n>_LOGO`    | Arquivo SVG do logo, em `public/clientes/` (ex.: `loja.svg`)  | não           | Só SVG; vazio, aparece o nome em texto                               |
 | `VITE_CLIENT_<n>_AUTH`    | `sim` quando o cliente autorizou a divulgação                 | para aparecer | Registro em `docs/provas/<id>.md` (veja lá)                          |
 | `VITE_ANALYTICS_PROVIDER` | `umami` ou vazio (sem medição)                                | não           | Medição sem cookies, sem pop-up                                      |
@@ -65,7 +65,7 @@ responsável antes de publicar.
 
 Estes textos estão em `site.config.js` e foram escritos como rascunho: confira cada um com quem sabe.
 
-- **Produtos** (3 cartões em "O que fabricamos"): nomes, descrições e a mensagem de cada botão.
+- **Produtos** (3 cartões em "O que fabricamos"): nomes, descrições, a mensagem de cada botão e a descrição de cada 3D para leitor de tela (`peca`, em `site.config.js`).
 - **Textos dos 5 cartões da história** (`index.html`) e **diferenciais** (`.env`): são rascunho e podem mudar depois da pesquisa de posicionamento. Nenhum pode falar de prazo, de tempo de resposta ou do processo de fabricação (o `tests/conteudo.test.mjs` confere).
 - **Faixa de confiança**: "Nunca pedimos pagamento para conta de pessoa física" é promessa; confirme com o financeiro.
 - **Clientes**: os 6 "Cliente N" são exemplos. Para publicar um cliente, ponha o nome, o logo em SVG (em `public/clientes/`) e `AUTH=sim`, com a autorização registrada; siga [`docs/provas/README.md`](provas/README.md). Depoimentos (`site.config.js`) também só com autorização.

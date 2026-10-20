@@ -393,6 +393,13 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
     assert.equal(cards.length, models.length);
     for (const [i, model] of models.entries()) {
       assert.ok(cards[i][0].includes(`<h3>${model.name}</h3>`), model.name);
+      // a área do 3D vem antes do título, com o modelo e a descrição da peça
+      assert.ok(
+        cards[i][0].startsWith(
+          `<article class="model">\n  <div class="model-3d" data-modelo="${model.id}" data-peca="${model.peca}"></div>\n  <h3>`,
+        ),
+        `${model.id}: área do 3D no topo`,
+      );
       const text = new URL(cards[i][0].match(/href="([^"]+)"/)[1]).searchParams.get('text');
       assert.equal(
         text,
@@ -459,11 +466,21 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
 
   test('clientes vêm do .env: demo mostra os 6 exemplos rotulados; production só os autorizados', () => {
     const strip = (site) =>
-      renderPage(html, site).match(/<div class="logo-strip">[\s\S]*?<\/ul><\/div><\/div>/)?.[0] ??
-      '';
+      renderPage(html, site).match(
+        /<div class="carrossel" data-carrossel>[\s\S]*?<\/button><\/div><\/div>/,
+      )?.[0] ?? '';
     const emDemo = strip(demo);
-    assert.match(emDemo, /<div class="logo-scroll" role="region" aria-label="[^"]+" tabindex="0">/);
-    assert.equal((emDemo.match(/<li>/g) ?? []).length, 6);
+    assert.match(
+      emDemo,
+      /<div class="carrossel-janela" role="region" aria-roledescription="carrossel" aria-label="[^"]+" tabindex="0">/,
+    );
+    assert.equal((emDemo.match(/<li class="cliente">/g) ?? []).length, 6, 'só os originais');
+    assert.ok(!/<li[^>]*aria-hidden/.test(emDemo), 'as cópias do loop são do JS, não do build');
+    // controles escondidos até o JS ver que os itens não cabem na largura
+    assert.match(emDemo, /<div class="carrossel-controles" hidden>/);
+    assert.match(emDemo, /data-acao="pausa" aria-pressed="false">[\s\S]*?<span>Pausar<\/span>/);
+    assert.match(emDemo, /data-acao="anterior" aria-label="Anterior"/);
+    assert.match(emDemo, /data-acao="proximo" aria-label="Próximo"/);
     assert.equal((emDemo.match(/<span class="tag">Exemplo<\/span>/g) ?? []).length, 6);
     assert.ok(emDemo.includes('<span class="logo-name">Cliente 1</span>'));
     assert.ok(!emDemo.includes('<img'), 'exemplo sem logo real');

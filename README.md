@@ -3,6 +3,7 @@
 Landing page oficial da **Vanpack** (caixas de papelão sob medida, divisórias e chapas, fábrica em Santo André-SP). Uma página, uma ação: pedir orçamento pelo WhatsApp, atendido por um assistente. No topo, uma cena 3D ligada ao scroll (a fabricação de uma caixa, da chapa ao caminhão) acompanha 5 cartões que falam do que importa a quem pede: a chamada, anos de mercado, qualidade, orçamento e entrega. A página rola sozinha (tour automático) e a pessoa assume o controle a qualquer momento.
 
 - **Manual da marca e diretrizes:** [`docs/manual-da-marca.md`](docs/manual-da-marca.md).
+- **3D de cada produto** (referência, decisões e como funciona): [`docs/produtos-3d.md`](docs/produtos-3d.md).
 - **Contratos, faixas do scroll, tokens e decisões da v4:** [`docs/notas-de-integracao-v4.md`](docs/notas-de-integracao-v4.md).
 - **Slogan:** "Do projeto à entrega".
 - **Passo a passo para ir ao ar com dados reais:** [`docs/go-live.md`](docs/go-live.md).
@@ -31,6 +32,7 @@ Auditorias (medem; os orçamentos estão no cabeçalho de cada script):
 ```bash
 npm run audit:bundle      # gzip/brotli por arquivo, JS inicial (≤ 165 KB gzip), maiores módulos
 npm run audit:scene       # draw calls e triângulos nos 5 centros (≤ 90 desktop, ≤ 60 celular)
+npm run audit:produtos    # draw calls do 3D de cada produto (≤ 60 por modelo) e memória ao rolar (precisa do build:audit)
 npm run audit:runtime     # tarefas longas e quadros ao rolar a história, com CPU 1× e 4×
 npm run audit:lighthouse  # Lighthouse mobile e desktop (mediana de 3 execuções; baixa via npx)
 npm run audit:capturas    # capturas da história e das seções, em docs/capturas/ (fora do git)
@@ -43,13 +45,14 @@ node scripts/brand.mjs   # regenera os SVGs de public/brand/, a fonte e src/bran
 node scripts/icons.mjs   # regenera favicon, apple-touch-icon e icon-512 (logo do JSON-LD) a partir do símbolo
 npm run amostra -- 0.05 0.06   # tamanho de amostra por variante de um teste A/B
 npm run og               # regenera public/og.jpg (imagem de compartilhamento) a partir do 1º quadro
+node scripts/produtos-svg.mjs   # regenera as ilustrações dos produtos (public/produtos/), o fallback do 3D
 ```
 
 ---
 
 ## Seções da página
 
-Cabeçalho fixo, a história 3D (`#processo`, com 5 cartões que nunca somem), a faixa de confiança (`#confianca`: cidade, CNPJ, "Nunca pedimos pagamento para conta de pessoa física", anos de mercado, formas de pagamento, mapa e telefone), "O que fabricamos" (`#produtos`: Corte e vinco; Divisórias, tabuleiros e separadores; Chapas de papelão ondulado, cada um com o seu botão de orçamento, e pedido mínimo e região), os diferenciais (`#diferenciais`, do `.env`), os clientes (`#clientes`: faixa de logos do `.env`, só cliente autorizado em production e exemplos em demo, e depoimentos autorizados), o CTA final (`#orcamento`) e o rodapé. As seções alternam Papel, tint e Floresta, com a onda de papelão como divisor. A página não tem e-mail, prazo, promessa de tempo de resposta nem texto sobre o processo de fabricação (o `tests/conteudo.test.mjs` confere). O botão do WhatsApp fica fixo: no desktop é redondo e aparece depois da história; em telas de até 768 px é uma barra de largura total com o telefone, que aparece já no 2º capítulo (o botão do cabeçalho sai enquanto ela está à vista); os dois somem com o CTA final à vista. Se a página continua à vista 2,5 s depois do toque num botão do WhatsApp, sobe a folha "O WhatsApp não abriu?" (`#zap-ajuda`): copiar o número, ligar e, dentro do Instagram, Facebook ou TikTok, como abrir no navegador. Cada seção sem dado (e o link para ela) some sozinha.
+Cabeçalho fixo, a história 3D (`#processo`, com 5 cartões que nunca somem), a faixa de confiança (`#confianca`: cidade, CNPJ, "Nunca pedimos pagamento para conta de pessoa física", anos de mercado, formas de pagamento, mapa e telefone), "O que fabricamos" (`#produtos`: Corte e vinco; Divisórias, tabuleiros e separadores; Chapas de papelão ondulado, cada um com um 3D da peça girando no topo do cartão e o seu botão de orçamento, e pedido mínimo e região; o 3D só é baixado quando a seção chega perto e, em aparelho sem condição, vira uma ilustração em SVG: [`docs/produtos-3d.md`](docs/produtos-3d.md)), os diferenciais (`#diferenciais`, do `.env`), os clientes (`#clientes`: carrossel de logos do `.env` em qualquer largura, uma esteira lenta da direita para a esquerda com botão Pausar/Retomar, setas, teclado e arrasto, que fica parada e centralizada quando os logos cabem na largura; só cliente autorizado em production e exemplos em demo; e depoimentos autorizados), o CTA final (`#orcamento`) e o rodapé. As seções alternam Papel, tint e Floresta, com a onda de papelão como divisor. A página não tem e-mail, prazo, promessa de tempo de resposta nem texto sobre o processo de fabricação (o `tests/conteudo.test.mjs` confere). O botão do WhatsApp fica fixo: no desktop é redondo e aparece depois da história; em telas de até 768 px é uma barra de largura total com o telefone, que aparece já no 2º capítulo (o botão do cabeçalho sai enquanto ela está à vista); os dois somem com o CTA final à vista. Se a página continua à vista 2,5 s depois do toque num botão do WhatsApp, sobe a folha "O WhatsApp não abriu?" (`#zap-ajuda`): copiar o número, ligar e, dentro do Instagram, Facebook ou TikTok, como abrir no navegador. Cada seção sem dado (e o link para ela) some sozinha.
 
 ---
 
@@ -107,6 +110,8 @@ src/vitals.js              Core Web Vitals reais (web-vitals, carregado com o na
 src/experiments.js         Experimentos A/B (variante por visita no sessionStorage, ?exp_<nome>=B força)
 src/wizard.js              Assistente de orçamento da variante B do experimento quote_wizard
 src/handoff.js             "O WhatsApp não abriu?": folha de ajuda e navegador embutido (Instagram, Facebook, TikTok)
+src/carrossel.js           Carrossel de clientes: esteira na Web Animations API, pausa, setas, teclado e arrasto
+src/produtos/              3D de cada produto: gatilho (JS inicial), montagem na página, worker com um WebGL só e os 3 modelos
 build/csp.js               CSP por hash dos <style> (e o servidor da medição, se houver)
 politica-de-privacidade.html  2ª página: política de privacidade com os dados do .env
 src/render/stage.js        Liga o canvas ao render: Web Worker (OffscreenCanvas) ou thread principal
@@ -145,7 +150,9 @@ docs/                      Manual da marca e notas da v4
 - `tests/site-url.test.mjs`: build em production com domínio próprio: canonical, Open Graph, JSON-LD, robots, sitemap e medição derivam todos da `VITE_SITE_URL`.
 - `tests/experiments.test.mjs` e `tests/wizard.test.mjs`: sorteio, persistência, data de término e variante forçada; o assistente de 3 passos (mensagem, validação, teclado, rótulos, contraste e celular).
 - `tests/tour.test.mjs`: início automático, percurso e parada no fim da história, interrupções (roda, tecla, clique, toque, scroll, aba oculta e o link "Ver produtos ↓"), `?tour=0`, `#hash`, movimento reduzido e, no celular, o pulso da barra no fim. Usa o relógio falso do Playwright.
-- `tests/layout.test.mjs`: cartão × cabeçalho × botão flutuante × dica sem sobreposição em 1440×900, 1366×768, 924×540, 720×450, 360×640, 390×844 e 844×390, nos 5 capítulos; alvos de toque ≥ 44 px; no celular, a barra do 2º capítulo em diante e a 1ª tela com título, pedido mínimo, botão e linha de risco sem rolar.
+- `tests/carrossel.test.mjs`: carrossel de clientes em 1440×900 e 390×844: anda sozinho para a esquerda, pausa com o mouse, com foco de teclado, ao tocar e pelo botão (que só volta pelo botão), setas, teclado e arrasto movem, movimento reduzido sem movimento automático, poucos clientes parados e centralizados sem cópias nem controles, cópias com `aria-hidden` e `inert`, sem sobreposição, sem rolagem horizontal e alvos de 44 px.
+- `tests/produtos.test.mjs`: 3D de cada produto: nenhum chunk antes de a seção chegar perto, monta ao rolar e não fica em branco, gira, só desenha o que está à vista, longe libera tudo e o worker sai, movimento reduzido parado, no máximo 1 contexto WebGL além do da história, sem vazamento ao rolar para dentro e para fora, contexto perdido e restaurado, ilustração em SVG sem WebGL, com economia de dados, rede 3g ou 2 GB de memória (sem salto de layout), e os 3 botões de orçamento funcionando.
+- `tests/layout.test.mjs`: cartão × cabeçalho × botão flutuante × dica sem sobreposição em 1440×900, 1366×768, 924×540, 720×450, 360×640, 390×844 e 844×390, nos 5 capítulos; alvos de toque ≥ 44 px; no celular, a barra do 2º capítulo em diante e a 1ª tela com título, pedido mínimo, botão e linha de risco sem rolar; produtos em 3 colunas no desktop e 1 no celular, com a área 4:3 do 3D no topo de cada cartão, sem salto de layout ao carregar.
 - `tests/a11y.test.mjs`: estrutura, ordem e visibilidade do foco, cartões `inert`, movimento reduzido e contraste calculado nos estilos reais.
 - `tests/robustness.test.mjs`: sem WebGL, worker bloqueado (fallback na thread principal) e contexto WebGL perdido e restaurado.
 - `tests/brand.test.mjs`: paleta, tipografia, efeitos proibidos, ausência de raster/rota/pinos/formulário, SVGs da marca, CSP e requisições.
