@@ -738,57 +738,65 @@
         white-space: normal;
       }
 
-      /* clientes: só prova autorizada (ou exemplo, em demo). A faixa de logos se arrasta no celular
-         (scroll-snap, sem JS) e vira grade no desktop; o 3º logo aparece cortado e um degradê em
-         Papel na borda direita mostra que há mais. A região recebe foco e rola pelas setas. */
-      .logo-strip {
+      /* clientes: só prova autorizada (ou exemplo, em demo), num carrossel (src/carrossel.js) em
+         qualquer largura. Sem JS a janela rola na horizontal; com JS (.on) os itens andam devagar da
+         direita para a esquerda numa esteira sem fim (transform, no compositor), com degradê Papel
+         nas bordas, botão de pausa e setas. Se os itens cabem na largura (.estatico), ficam parados,
+         centralizados e sem controles. A largura fixa do item faz os 6 exemplos passarem da largura
+         máxima do .wrap: o demo anima também no desktop. */
+      .carrossel-janela {
         position: relative;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
       }
-      .logo-strip::after {
+      .carrossel.on .carrossel-janela {
+        overflow: hidden;
+        touch-action: pan-y; /* o arrasto na horizontal é do carrossel; na vertical, da página */
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      .carrossel.on:not(.estatico) .carrossel-janela::before,
+      .carrossel.on:not(.estatico) .carrossel-janela::after {
         content: '';
         position: absolute;
         top: 0;
-        right: 0;
         bottom: 0;
+        z-index: 1;
         width: 2.5rem;
-        background: linear-gradient(90deg, rgb(251 248 242/0), var(--papel));
         pointer-events: none;
       }
-      .logo-scroll {
-        overflow-x: auto;
-        overscroll-behavior-x: contain;
-        scroll-snap-type: x mandatory;
-        scroll-padding-inline-start: 0.25rem;
+      .carrossel.on:not(.estatico) .carrossel-janela::before {
+        left: 0;
+        background: linear-gradient(90deg, var(--papel), rgb(251 248 242/0));
       }
-      .logo-scroll:focus-visible {
-        position: relative;
-        z-index: 1; /* o contorno de foco fica por cima do degradê */
+      .carrossel.on:not(.estatico) .carrossel-janela::after {
+        right: 0;
+        background: linear-gradient(270deg, var(--papel), rgb(251 248 242/0));
       }
-      .logos {
+      .carrossel-trilho {
         display: flex;
         gap: 1rem;
-        padding: 0.25rem 0.25rem 0.75rem;
+        width: max-content;
       }
-      /* espaço no fim para o último logo sair de baixo do degradê */
-      .logos::after {
-        content: '';
-        flex: 0 0 1.5rem;
+      .carrossel.estatico .carrossel-trilho {
+        width: auto;
+        justify-content: center;
       }
-      .logos li {
-        flex: 0 0 38%;
-        scroll-snap-align: start;
+      .cliente {
+        flex: none;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
+        width: 10rem;
         min-height: 6.5rem;
         padding: 1rem;
         border-radius: 0.5rem;
-        background: var(--tint);
+        background: var(--tint); /* cartão tint sobre a faixa Papel */
         text-align: center;
       }
-      .logos img {
+      .cliente img {
         width: 100%;
         max-width: 10rem;
         height: 4rem;
@@ -799,25 +807,49 @@
         font-weight: 800;
         line-height: 1.2;
       }
-      .logos .tag {
+      .cliente .tag {
         margin-left: 0;
       }
+      .carrossel-controles {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        margin-top: 1rem;
+      }
+      .carrossel-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        padding: 0;
+        border: 0;
+        border-radius: 0.375rem;
+        background: var(--tint-2);
+        color: var(--carvao);
+        font: 700 0.9375rem/1 var(--font);
+        cursor: pointer;
+      }
+      .carrossel-btn:hover {
+        background: var(--soft-hover);
+      }
+      /* largura de "Retomar": trocar o texto não empurra as setas */
+      .carrossel-btn[data-acao='pausa'] {
+        min-width: 7.5rem;
+        padding: 0 1rem;
+      }
+      .carrossel-btn svg {
+        flex: none;
+        width: 1.25rem;
+        height: 1.25rem;
+      }
       @media (min-width: 861px) {
-        .logo-strip::after,
-        .logos::after {
-          display: none;
-        }
-        .logo-scroll {
-          overflow: visible;
-        }
-        .logos {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
-          gap: 1.25rem;
-          padding: 0;
+        .cliente {
+          width: 12.5rem;
         }
       }
-      .logo-strip + .proofs {
+      .carrossel + .proofs {
         margin-top: 2rem;
       }
       .proofs {
@@ -1418,6 +1450,31 @@
           fill="none"
           stroke="currentColor"
           stroke-width="1.6"
+          stroke-linecap="square"
+        />
+      </symbol>
+      <!-- controles do carrossel de clientes -->
+      <symbol id="i-pausa" viewBox="0 0 24 24">
+        <path d="M6 4h4v16H6zM14 4h4v16h-4z" fill="currentColor" />
+      </symbol>
+      <symbol id="i-retomar" viewBox="0 0 24 24">
+        <path d="M7 4l13 8-13 8z" fill="currentColor" />
+      </symbol>
+      <symbol id="i-anterior" viewBox="0 0 24 24">
+        <path
+          d="M15 4l-8 8 8 8"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.4"
+          stroke-linecap="square"
+        />
+      </symbol>
+      <symbol id="i-proximo" viewBox="0 0 24 24">
+        <path
+          d="M9 4l8 8-8 8"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.4"
           stroke-linecap="square"
         />
       </symbol>

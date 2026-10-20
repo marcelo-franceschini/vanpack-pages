@@ -1,6 +1,7 @@
 // Orquestra a página: liga o scroll à cena 3D, roda o tour automático e mede o uso.
 // Tudo que é 3D fica em ./render e ./scene.
 import { sinceLoad, track, trackOnce } from './analytics.js';
+import { mountCarousel } from './carrossel.js';
 import { startExperiments, variant } from './experiments.js';
 import { createHandoff, inAppBrowser } from './handoff.js';
 import { mountStage } from './render/stage.js';
@@ -232,6 +233,9 @@ if (fab && quote) {
     },
   ).observe(quote);
 }
+
+// ---------- Clientes ----------
+mountCarousel($('[data-carrossel]'));
 
 // ---------- Uso da página ----------
 // section_view: a seção conta quando metade dela está à vista, ou metade da tela nas seções mais altas

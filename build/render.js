@@ -239,24 +239,32 @@ const BLOCKS = {
       )
       .join('\n'),
 
-  // Prova social: a faixa de logos dos clientes do .env (em production só os que autorizaram; em
+  // Prova social: o carrossel de logos dos clientes do .env (em production só os que autorizaram; em
   // demo também os exemplos, com o rótulo "Exemplo") e os depoimentos e a nota do Google autorizados.
-  // O logo é relativo à página (./clientes/…): o render roda depois de o Vite reescrever as URLs, e
-  // um caminho absoluto quebraria no subcaminho do GitHub Pages.
+  // O HTML leva só os itens originais e os controles escondidos: as cópias do loop e os controles são
+  // do src/carrossel.js. O logo é relativo à página (./clientes/…): o render roda depois de o Vite
+  // reescrever as URLs, e um caminho absoluto quebraria no subcaminho do GitHub Pages.
   clientes: (site) => {
     const clients = visibleClients(site.clients, site.dataMode);
     const { testimonials, googleRating } = visibleProofs(site.content.proofs);
     const client = ({ name, logo, authorized }) =>
-      `<li>${
+      `<li class="cliente">${
         logo
-          ? `<img src="./clientes/${escapeHtml(logo)}" alt="${escapeHtml(name)}" width="160" height="64" loading="lazy" decoding="async" />`
+          ? `<img src="./clientes/${escapeHtml(logo)}" alt="${escapeHtml(name)}" width="160" height="64" loading="lazy" decoding="async" draggable="false" />`
           : `<span class="logo-name">${escapeHtml(name)}</span>`
       }${authorized ? '' : '<span class="tag">Exemplo</span>'}</li>`;
+    const button = (action, content, extra = '') =>
+      `<button type="button" class="carrossel-btn" data-acao="${action}"${extra}>${content}</button>`;
+    const icon = (id) => `<svg aria-hidden="true"><use href="#i-${id}" /></svg>`;
     return [
       clients.length
-        ? `<div class="logo-strip"><div class="logo-scroll" role="region" aria-label="Logos de clientes" tabindex="0"><ul class="logos">${clients
+        ? `<div class="carrossel" data-carrossel><div class="carrossel-janela" role="region" aria-roledescription="carrossel" aria-label="Logos de clientes" tabindex="0"><ul class="carrossel-trilho">${clients
             .map(client)
-            .join('')}</ul></div></div>`
+            .join('')}</ul></div><div class="carrossel-controles" hidden>${[
+            button('pausa', `${icon('pausa')}<span>Pausar</span>`, ' aria-pressed="false"'),
+            button('anterior', icon('anterior'), ' aria-label="Anterior"'),
+            button('proximo', icon('proximo'), ' aria-label="Próximo"'),
+          ].join('')}</div></div>`
         : '',
       testimonials.length
         ? `<div class="proofs">${testimonials
