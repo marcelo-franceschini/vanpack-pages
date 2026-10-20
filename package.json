@@ -20,6 +20,7 @@
     "audit:runtime": "node scripts/audit/runtime.mjs",
     "audit:lighthouse": "node scripts/audit/lighthouse.mjs",
     "audit:capturas": "node scripts/audit/capturas.mjs",
+    "audit:produtos": "node scripts/audit/produtos-stats.mjs",
     "og": "node scripts/og.mjs",
     "amostra": "node scripts/amostra.mjs"
   },

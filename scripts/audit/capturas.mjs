@@ -1,6 +1,6 @@
 // Capturas reais (tamanho real, sem simulação por zoom) em 1440×900 e em 390×844 (celular,
 // densidade 2), gravadas em docs/capturas/: os 5 centros da história (p = 0, .25, .5, .75, 1) e o
-// topo de cada seção depois dela (as que existem com os dados do .env).
+// topo de cada seção depois dela (as que existem com os dados do .env), com o 3D dos produtos pronto.
 // Usa o build de produção; movimento reduzido faz a cena saltar direto ao quadro pedido.
 import { mkdirSync } from 'node:fs';
 import { ROOT, launch, openPage, scrollToProgress, startServer } from '../lib.mjs';
@@ -47,6 +47,17 @@ for (const [name, device] of Object.entries(DEVICES)) {
       return Boolean(section);
     }, id);
     if (!found) continue;
+    if (id === 'produtos') {
+      // o 3D de cada produto (ou a ilustração) carrega quando a seção chega perto
+      await page.waitForFunction(
+        () =>
+          [...document.querySelectorAll('.model-3d')]
+            .filter((area) => area.getBoundingClientRect().top < innerHeight)
+            .every((area) => area.classList.contains('pronto')),
+        null,
+        { timeout: 60_000 },
+      );
+    }
     await page.waitForTimeout(600); // barra do WhatsApp e cabeçalho terminam de entrar ou sair
     const file = `${OUT}${name}-secao-${id}.jpg`;
     await page.screenshot({ path: file, type: 'jpeg', quality: 86 });

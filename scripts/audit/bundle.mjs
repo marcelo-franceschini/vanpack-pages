@@ -1,6 +1,7 @@
 // Peso do build (rode `npm run build` antes): gzip e brotli por arquivo, o JS carregado no caminho
-// normal (página + worker) e no fallback, o CSS inline, a carga inicial e os maiores módulos.
-// Sai com erro se o JS inicial passar do orçamento de 165 KB gzip.
+// normal (página + worker) e no fallback, o CSS inline, a carga inicial, o 3D dos produtos (baixado só
+// perto da seção, fora da carga inicial) e os maiores módulos. Sai com erro se o JS inicial passar do
+// orçamento de 165 KB gzip ou se o script da página levar o three.js.
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { brotliCompressSync, constants, gzipSync } from 'node:zlib';
 import { build } from 'vite';
@@ -26,6 +27,9 @@ const files = {
   main: find(/^assets\/index-.*\.js$/),
   worker: find(/^assets\/worker-.*\.js$/),
   fallback: find(/^assets\/controller-.*\.js$/),
+  // 3D dos produtos: só quando a seção chega perto (src/produtos/gatilho.js)
+  produtos: find(/^assets\/montar-.*\.js$/),
+  produtosWorker: find(/^assets\/produtos-worker-.*\.js$/),
 };
 
 const html = read(files.html).toString('utf8');
@@ -56,6 +60,10 @@ console.log('\nResumo (KB, gzip)');
 console.log(`  JS no caminho normal (página + worker) : ${kb(jsInitial)}   orçamento ${BUDGET_KB}`);
 console.log(`  JS se o worker falhar (+ thread principal): ${kb(jsFallbackPath)}`);
 console.log(`  Carga inicial (HTML + JS + fonte + logos): ${kb(initial)}`);
+const lazy = sizes.produtos.gzip + sizes.produtosWorker.gzip;
+console.log(`  3D dos produtos, só perto da seção (montar + worker): ${kb(lazy)}`);
+const threeInMain = /WebGLRenderer|WEBGL_lose_context/.test(read(files.main).toString('utf8'));
+console.log(`  three.js no script da página: ${threeInMain ? 'SIM (erro)' : 'não'}`);
 
 // Maiores módulos: tamanho renderizado (antes da minificação, depois do tree-shaking).
 const rows = [];
@@ -90,6 +98,10 @@ for (const [id, size] of [...grouped].sort((a, b) => b[1] - a[1]).slice(0, 5)) {
   console.log(`  ${kb(size)}  ${id}`);
 }
 
+if (threeInMain) {
+  console.error('\nO script da página não pode levar o three.js (o 3D dos produtos é preguiçoso).');
+  process.exit(1);
+}
 if (jsInitial / 1024 > BUDGET_KB) {
   console.error(`\nJS inicial acima do orçamento de ${BUDGET_KB} KB gzip.`);
   process.exit(1);
