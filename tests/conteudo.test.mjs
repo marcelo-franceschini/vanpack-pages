@@ -33,7 +33,7 @@ const FORBIDDEN = [
     'processo industrial',
     /imprim|\bcort(ar|amos|ada|ado)\b|\bdobr|\bcol(a|ar|amos|ada|ado|agem)\b|vincad|m[áa]quina|linha de produção|\bprodução\b|chapa entra|como fazemos|processo|fabricação/i,
   ],
-  ['travessão longo ou meio travessão', /[–—]/],
+  ['travessão longo ou meio travessão', /[\u2013\u2014]/],
 ];
 
 /** Textos de um valor do JSON-LD, em qualquer profundidade. */
@@ -108,7 +108,7 @@ describe('conteúdo que não pode estar na página', () => {
       'Imprimimos e cortamos de uma vez',
       'Dobramos e colamos',
       'Ver como fazemos',
-      'Caixas — sob medida',
+      'Caixas \u2014 sob medida',
     ]) {
       assert.throws(() => assertClean(page(filler + sample), 'amostra'), sample);
     }
