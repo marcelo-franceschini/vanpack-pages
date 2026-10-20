@@ -1,5 +1,6 @@
-// Capturas reais da história (tamanho real, sem simulação por zoom): os 5 centros (p = 0, .25, .5,
-// .75, 1) em 1440×900 e em 390×844 (celular, densidade 2), gravadas em docs/capturas/.
+// Capturas reais (tamanho real, sem simulação por zoom) em 1440×900 e em 390×844 (celular,
+// densidade 2), gravadas em docs/capturas/: os 5 centros da história (p = 0, .25, .5, .75, 1) e o
+// topo de cada seção depois dela (as que existem com os dados do .env).
 // Usa o build de produção; movimento reduzido faz a cena saltar direto ao quadro pedido.
 import { mkdirSync } from 'node:fs';
 import { ROOT, launch, openPage, scrollToProgress, startServer } from '../lib.mjs';
@@ -12,6 +13,7 @@ const CENTERS = [
   [0.75, 'caixa'],
   [1, 'entrega-ultimo-quadro'],
 ];
+const SECTIONS = ['confianca', 'produtos', 'diferenciais', 'clientes', 'orcamento'];
 const DEVICES = {
   'desktop-1440x900': { viewport: { width: 1440, height: 900 } },
   'celular-390x844': {
@@ -35,6 +37,18 @@ for (const [name, device] of Object.entries(DEVICES)) {
     // a cena (no worker) desenha o quadro pedido e assenta
     await page.waitForTimeout(2500);
     const file = `${OUT}${name}-p${String(Math.round(p * 100)).padStart(3, '0')}-${label}.jpg`;
+    await page.screenshot({ path: file, type: 'jpeg', quality: 86 });
+    console.log(file.replace(ROOT, ''));
+  }
+  for (const id of SECTIONS) {
+    const found = await page.evaluate((id) => {
+      const section = document.getElementById(id);
+      section?.scrollIntoView({ block: 'start' });
+      return Boolean(section);
+    }, id);
+    if (!found) continue;
+    await page.waitForTimeout(600); // barra do WhatsApp e cabeçalho terminam de entrar ou sair
+    const file = `${OUT}${name}-secao-${id}.jpg`;
     await page.screenshot({ path: file, type: 'jpeg', quality: 86 });
     console.log(file.replace(ROOT, ''));
   }
