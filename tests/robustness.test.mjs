@@ -85,17 +85,11 @@ describe('sem WebGL', () => {
     await context.close();
   });
 
-  test('a navegação funciona: rolar troca os cartões e o "Ver como fazemos" leva ao capítulo 2', async () => {
+  test('a navegação funciona: rolar troca os cartões e "Ver produtos ↓" leva aos produtos', async () => {
     const { page, context } = await openPage(noGl, prod.url, { reducedMotion: 'reduce' }, settled);
-    await page.click('#tour-start');
-    await page.waitForFunction(
-      () => document.querySelectorAll('.card')[1].classList.contains('on'),
-      null,
-      {
-        timeout: 10_000,
-      },
-    );
-    for (const p of [0.5, 0.75, 1, 0]) await scrollToProgress(page, p);
+    for (const p of [0.25, 0.5, 0.75, 1, 0]) await scrollToProgress(page, p);
+    await page.click('.card.on .actions a[href="#produtos"]');
+    await page.waitForFunction(() => location.hash === '#produtos', null, { timeout: 10_000 });
     // o botão do WhatsApp do cabeçalho continua com link
     const href = await page.getAttribute('#hdr .btn', 'href');
     assert.match(href, /^https:\/\/wa\.me\//);

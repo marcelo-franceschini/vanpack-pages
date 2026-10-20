@@ -221,12 +221,17 @@ describe('interrupção', () => {
     await context.close();
   });
 
-  test('controles do próprio tour ("Ver como fazemos") não o interrompem', async () => {
-    const { page, context } = await open('?tour=0');
-    await page.click('#tour-start');
+  test('"Ver produtos ↓" não é controle do tour: interrompe e leva aos produtos', async () => {
+    const { page, context } = await open();
     assert.equal(await tourState(page), 'playing');
-    await advance(page, 3000);
-    assert.equal(await tourState(page), 'playing');
+    await page.click('.card.on .actions a[href="#produtos"]');
+    await page.waitForFunction(() => location.hash === '#produtos');
+    assert.equal(await tourState(page), 'paused');
+    await page.waitForFunction(
+      () => document.querySelector('#produtos').getBoundingClientRect().top < 200,
+    );
+    await advance(page, 10_000);
+    assert.equal(await tourState(page), 'paused', 'não retoma sozinho');
     await context.close();
   });
 });
@@ -331,23 +336,15 @@ describe('quando não começa sozinho', () => {
     await context.close();
   });
 
-  test('prefers-reduced-motion: sem autoplay; "Ver como fazemos" leva ao capítulo 2', async () => {
+  test('prefers-reduced-motion: sem autoplay; "Ver produtos ↓" leva aos produtos', async () => {
     const { page, context } = await open('', { reducedMotion: 'reduce' });
     await advance(page, 10_000);
     assert.equal(await tourState(page), 'idle');
     assert.equal(await scrollY(page), 0);
     assert.equal(await page.evaluate(() => document.querySelector('.scrollcue') !== null), true);
-    await page.click('#tour-start');
-    // o scroll chega por um evento do navegador (tempo real) e o quadro que troca o cartão é um rAF
-    // falso: avança o relógio e espera um pouco de tempo real, até 10 s
-    for (let i = 0; i < 100 && (await activeCard(page)) !== 2; i++) {
-      await advance(page, 100);
-      await page.waitForTimeout(100);
-    }
-    assert.equal(await activeCard(page), 2);
+    await page.click('.card.on .actions a[href="#produtos"]');
+    await page.waitForFunction(() => location.hash === '#produtos');
     assert.equal(await tourState(page), 'idle', 'o tour não é usado com movimento reduzido');
-    const target = await yAtProgress(page, 0.25);
-    assert.ok(Math.abs((await scrollY(page)) - target) <= 3, 'rolou direto ao capítulo 2');
     await context.close();
   });
 

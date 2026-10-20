@@ -107,7 +107,6 @@ describe('produto', () => {
 
   test('sem números, datas, velocidades, capacidades ou alegações ambientais inventados', () => {
     const visible = text(html.slice(html.indexOf('<body>')))
-      .replace(/\b0[2-5] · /g, '') // numeração dos capítulos
       .replace(/© 2026 /, '')
       .replace(/<b>\d<\/b>/g, '');
     const digits = visible.match(/\d+/g) ?? [];

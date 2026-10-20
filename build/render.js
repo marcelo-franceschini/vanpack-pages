@@ -4,7 +4,8 @@
 //   data-wa="mensagem"       o link vira https://wa.me/<número>?text=<mensagem> (nunca sem número)
 //   data-field="nome"        rodapé: recebe o valor da config; sem valor, o elemento sai do HTML
 //   data-need="chave outra"  o elemento sai se qualquer chave estiver vazia (e o atributo some)
-//   {{variavel}}             valor da config; vazio fora de um data-need é erro de build
+//   data-need="!chave"       o contrário: sai se a chave tiver valor (o texto de quando falta o dado)
+//   {{variavel}}           valor da config; vazio fora de um data-need é erro de build
 //   JSON-LD                  montado inteiro a partir da config
 //   modo demo                <meta name="robots" content="noindex,nofollow">
 
@@ -109,8 +110,11 @@ function applyMarks(html, { fields, vars }) {
       keep = Boolean(value);
     } else {
       const keys = key.trim().split(/\s+/);
-      for (const k of keys) if (!(k in vars)) throw new Error(`data-need desconhecido: "${k}"`);
-      keep = keys.every((k) => vars[k]);
+      const name = (k) => k.replace(/^!/, '');
+      for (const k of keys) {
+        if (!(name(k) in vars)) throw new Error(`data-need desconhecido: "${name(k)}"`);
+      }
+      keep = keys.every((k) => (k.startsWith('!') ? !vars[name(k)] : vars[k]));
     }
     const end = elementEnd(out, m.index, tag);
     if (!keep) {

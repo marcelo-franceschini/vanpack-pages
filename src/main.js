@@ -84,14 +84,7 @@ function pulseDock() {
   target.addEventListener('animationend', () => target.classList.remove('pulse'), { once: true });
 }
 
-function goToChapter(index) {
-  tour.pause('stop');
-  scrollTo({
-    top: story.yAt(index / story.lastChapter),
-    behavior: reducedMotion.matches ? 'auto' : 'smooth',
-  });
-}
-
+// A página não tem controle do tour: qualquer clique (inclusive em "Ver produtos ↓") o interrompe.
 tour = createTour({
   getProgress: story.progress,
   yAt: story.yAt,
@@ -100,14 +93,6 @@ tour = createTour({
     if (state === 'done') pulseDock();
   },
   onEvent: track,
-  isUi: (el) => Boolean(el?.closest?.('[data-tour-ui]')),
-});
-
-// "Ver como fazemos": com o tour disponível, toca o passo a passo; sem ele, leva ao capítulo 2.
-$('#tour-start').addEventListener('click', (e) => {
-  e.preventDefault();
-  if (tourAvailable()) tour.start({ auto: false });
-  else goToChapter(1);
 });
 
 reducedMotion.addEventListener('change', () => {

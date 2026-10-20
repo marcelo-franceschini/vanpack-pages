@@ -59,7 +59,7 @@ describe('estrutura', () => {
       };
     });
     assert.equal(info.role, 'img');
-    assert.match(info.label, /chapa de papelão/);
+    assert.match(info.label, /caixas de papelão/);
     assert.equal(info.loaderHidden, 'true');
     for (const img of info.images) {
       assert.notEqual(img.alt, null, `${img.src} tem alt (vazio quando decorativa)`);
@@ -123,19 +123,18 @@ describe('teclado', () => {
         }),
       );
     }
-    assert.deepEqual(order.slice(0, 9), [
+    assert.deepEqual(order.slice(0, 8), [
       'Pular para o conteúdo',
       'Vanpack · início',
-      'Como fazemos',
       'Produtos',
       'Diferenciais',
       'FAQ',
       'Pedir orçamento',
       'Pedir orçamento no WhatsApp',
-      'Ver como fazemos',
+      'Ver produtos ↓',
     ]);
     // depois do cartão ativo o foco segue para o conteúdo seguinte, sem passar pelos cartões inert
-    assert.notEqual(order[9], 'Veja por que a Vanpack ↓');
+    assert.notEqual(order[8], 'Veja por que a Vanpack ↓');
     await context.close();
   });
 

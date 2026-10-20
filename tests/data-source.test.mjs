@@ -100,10 +100,6 @@ describe('.env é a fonte única', () => {
       '1', // passos "Como pedir": 1, 2 e 3
       '2',
       '3',
-      '02', // numeração dos capítulos da história
-      '03',
-      '04',
-      '05',
       String(new Date().getFullYear()), // © do rodapé
       String(yearsSince(env.VITE_FOUNDED_YEAR)), // anos de mercado
     ]);

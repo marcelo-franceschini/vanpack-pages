@@ -171,11 +171,11 @@ describe('render', () => {
     assert.match(out, /<p class="slogan">Do projeto à entrega<\/p>/, 'o slogan do manual fica');
     assert.ok(!/<dl|<dt|<dd/.test(out), 'sem campos de rodapé vazios');
     assert.ok(!out.includes('Fábrica própria'), 'sem cidade o eyebrow some');
-    assert.ok(!out.includes('Atendemos'));
+    assert.ok(!/Atendemos (?!lojas)/.test(out), 'sem região, nenhum "Atendemos" da região');
     assert.match(
       out,
-      /Da nossa fábrica até o seu endereço/,
-      'o trecho da cidade some sem sobrar espaço',
+      /<span>Da nossa fábrica até o seu endereço\.<\/span>/,
+      'sem região, o cartão 5 mostra o texto alternativo',
     );
     assert.ok(!out.includes('noindex'), 'só o modo demo leva noindex');
     const ld = JSON.parse(
@@ -228,11 +228,29 @@ describe('render', () => {
     assert.ok(!/anos de mercado|tel:|mailto:|Fábrica própria/.test(strip), strip);
   });
 
-  test('sem ano de fundação não há anos de mercado nem "Desde" no rodapé', () => {
+  test('sem ano de fundação não há anos de mercado nem "Desde"; o cartão 2 usa o texto alternativo', () => {
     const semAno = createSiteConfig({ ...example, VITE_FOUNDED_YEAR: '' });
     const out = renderPage(html, semAno);
-    assert.ok(!/anos de mercado|Desde/.test(out));
-    assert.ok(renderPage(html, demo).includes('Desde 2010'));
+    assert.ok(!/data-since|anos de\s+mercado<|Desde/.test(out));
+    assert.ok(out.includes('Experiência em caixas de papelão'));
+    const comAno = renderPage(html, demo);
+    assert.ok(comAno.includes('Desde 2010'));
+    assert.match(comAno, /<span data-since="2010">\d+<\/span> anos de\s+mercado/);
+    assert.ok(!comAno.includes('Experiência em caixas de papelão'));
+  });
+
+  test('os 5 cartões da história ficam com qualquer config (o scroll depende deles)', () => {
+    for (const site of [empty, demo, createSiteConfig(REAL)]) {
+      const cards = renderPage(html, site).match(/<div class="card(?: on)?">/g) ?? [];
+      assert.equal(cards.length, 5, site.dataMode || 'vazia');
+    }
+  });
+
+  test('data-need="!chave" mostra o texto de quando falta o dado', () => {
+    const snippet = '<p data-need="cnpj">com</p><p data-need="!cnpj">sem</p>';
+    assert.equal(renderPage(snippet, empty), '<p>sem</p>');
+    assert.equal(renderPage(snippet, demo), '<p>com</p>');
+    assert.throws(() => renderPage('<p data-need="!inventada">x</p>', empty), /desconhecido/);
   });
 
   test('elemento removido leva junto o que tem dentro, mesmo com a mesma tag aninhada', () => {
@@ -423,9 +441,10 @@ describe('conteúdo: modelos, FAQ, prova social e menus', () => {
 
   test('o menu leva às seções e o link para uma seção que saiu da página sai junto', () => {
     const out = renderPage(html, production);
-    for (const id of ['processo', 'produtos', 'diferenciais', 'faq']) {
+    for (const id of ['produtos', 'diferenciais', 'faq']) {
       assert.ok(out.includes(`<a href="#${id}">`), `link #${id}`);
     }
+    assert.ok(!out.includes('href="#processo"'), 'sem "Como fazemos" no menu');
     assert.equal(
       renderPage('<a href="#x">x</a><a href="#y">y</a><p id="y"></p><a href="#">topo</a>', empty),
       '<a href="#y">y</a><p id="y"></p><a href="#">topo</a>',

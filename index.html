@@ -22,7 +22,7 @@
     <meta property="og:image:height" content="630" />
     <meta
       property="og:image:alt"
-      content="Linha de produção da Vanpack transformando chapas de papelão em caixas impressas."
+      content="Ilustração 3D da Vanpack com papelão kraft e a chamada 'Caixas de papelão sob medida, com a sua marca'."
     />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="{{title}}" />
@@ -563,7 +563,7 @@
         .actions .btn {
           flex: 1 1 100%;
         }
-        /* o 2º chamado ("Ver como fazemos") é um link: um só bloco de largura total na 1ª tela */
+        /* o 2º chamado ("Ver produtos ↓") é um link: um só bloco de largura total na 1ª tela */
         .actions .btn-soft {
           flex: 0 0 auto;
           min-height: 2.75rem;
@@ -1385,7 +1385,6 @@
           ><img src="/brand/vanpack-horizontal.svg" alt="" width="136" height="34"
         /></a>
         <nav class="nav" aria-label="Principal">
-          <a href="#processo">Como fazemos</a>
           <a href="#produtos">Produtos</a>
           <a href="#diferenciais">Diferenciais</a>
           <a href="#faq">FAQ</a>
@@ -1400,12 +1399,12 @@
     </header>
 
     <main id="conteudo">
-      <section class="story" id="processo" aria-label="Como fazemos a sua caixa" data-tour="idle">
+      <section class="story" id="processo" aria-label="Apresentação da Vanpack" data-tour="idle">
         <div class="stage" id="stage">
           <canvas
             id="gl"
             role="img"
-            aria-label="Animação 3D: uma chapa de papelão entra na máquina, sai impressa e cortada, é dobrada e colada, vira caixa, é empilhada dobrada e segue no caminhão da Vanpack."
+            aria-label="Animação 3D da Vanpack com caixas de papelão e o caminhão de entrega"
           ></canvas>
           <div class="loader" aria-hidden="true">
             <img src="/brand/vanpack-simbolo.svg" alt="" width="80" height="80" />
@@ -1422,9 +1421,8 @@
                   </div>
                   <h1>Caixas de papelão sob medida, com a sua marca</h1>
                   <p>
-                    Você manda medida e quantidade. A gente fabrica, imprime e entrega<span
-                      class="optional"
-                      >, direto da fábrica, sem intermediário</span
+                    Você manda a medida e a quantidade. A gente cuida do resto<span class="optional"
+                      >, direto da fábrica e sem intermediário</span
                     >.
                   </p>
                   <div class="actions">
@@ -1435,9 +1433,7 @@
                       ><svg aria-hidden="true"><use href="#i-wa" /></svg>Pedir orçamento no
                       WhatsApp</a
                     >
-                    <a class="btn btn-soft" id="tour-start" data-tour-ui href="#passo-2"
-                      >Ver como fazemos</a
-                    >
+                    <a class="btn btn-soft" href="#produtos">Ver produtos ↓</a>
                   </div>
                   <p class="cta-note">Sem compromisso</p>
                   <ul class="seals" aria-label="Diferenciais" data-need="hasFacts">
@@ -1447,31 +1443,38 @@
                 </div>
               </div>
             </div>
-            <div class="step" id="passo-2">
+            <!-- Os 5 cartões ficam sempre (o scroll da história depende deles): o que depende de dado
+                 fica só em trechos, sempre com o texto de quando o dado falta. -->
+            <div class="step">
               <div class="wrap">
                 <div class="card">
-                  <div class="k">02 · Impressão e corte</div>
-                  <h2>Imprimimos e cortamos de uma vez</h2>
-                  <p>A chapa recebe a sua marca e já sai cortada e vincada, na mesma passada.</p>
+                  <div class="k">Anos de mercado</div>
+                  <h2>
+                    <span data-need="foundedYear"
+                      ><span data-since="{{foundedYear}}">{{yearsInBusiness}}</span> anos de
+                      mercado</span
+                    ><span data-need="!foundedYear">Experiência em caixas de papelão</span>
+                  </h2>
+                  <p>Atendemos lojas, vendedores de marketplace e indústrias.</p>
                 </div>
               </div>
             </div>
             <div class="step">
               <div class="wrap">
                 <div class="card">
-                  <div class="k">03 · Cola</div>
-                  <h2>Dobramos e colamos</h2>
-                  <p>A chapa é dobrada e a emenda é colada: nasce a caixa.</p>
+                  <div class="k">Qualidade</div>
+                  <h2>Caixas na medida que você pediu</h2>
+                  <p>Do primeiro ao último pedido, a mesma medida e a mesma impressão.</p>
                 </div>
               </div>
             </div>
             <div class="step">
               <div class="wrap">
                 <div class="card">
-                  <div class="k">04 · Caixa</div>
-                  <h2>A caixa toma forma</h2>
+                  <div class="k">Orçamento</div>
+                  <h2>Peça o seu pelo WhatsApp</h2>
                   <p>
-                    Ela abre na medida certa e segue empilhada e dobrada, ocupando pouco espaço.
+                    Mande medida, quantidade e o que vai impresso. Sem formulário e sem compromisso.
                   </p>
                 </div>
               </div>
@@ -1479,10 +1482,11 @@
             <div class="step">
               <div class="wrap">
                 <div class="card">
-                  <div class="k">05 · Entrega</div>
-                  <h2>Entregamos rápido</h2>
+                  <div class="k">Entrega</div>
+                  <h2>Entregamos até você</h2>
                   <p>
-                    Da nossa fábrica<span data-need="city"> em {{city}}</span> até o seu endereço.
+                    <span data-need="serviceArea">Atendemos {{serviceArea}}.</span
+                    ><span data-need="!serviceArea">Da nossa fábrica até o seu endereço.</span>
                   </p>
                   <a class="more" href="#diferenciais">Veja por que a Vanpack ↓</a>
                 </div>
@@ -1668,9 +1672,8 @@
           </div>
         </dl>
         <nav class="foot-nav" aria-label="Rodapé">
-          <a href="#processo">Como fazemos</a><a href="#produtos">Produtos</a
-          ><a href="#diferenciais">Diferenciais</a><a href="#clientes">Clientes</a
-          ><a href="#faq">FAQ</a><a href="#orcamento">Orçamento</a
+          <a href="#produtos">Produtos</a><a href="#diferenciais">Diferenciais</a
+          ><a href="#clientes">Clientes</a><a href="#faq">FAQ</a><a href="#orcamento">Orçamento</a
           ><a href="./politica-de-privacidade.html">Privacidade</a>
         </nav>
         <p class="legal">
