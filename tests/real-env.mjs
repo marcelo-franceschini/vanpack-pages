@@ -6,7 +6,6 @@ export const realEnv = (example) => ({
   VITE_WHATSAPP: '5511987654321',
   VITE_PHONE: '+551147001234',
   VITE_PHONE_DISPLAY: '(11) 4700-1234',
-  VITE_EMAIL: 'vendas@empresa.com.br',
   VITE_CNPJ: '11.222.333/0001-81',
   VITE_LEGAL_NAME: 'Vanpack Embalagens LTDA',
   VITE_STREET: 'Av. das Caixas, 500',

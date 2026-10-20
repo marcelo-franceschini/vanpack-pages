@@ -209,7 +209,7 @@ document.addEventListener('click', (e) => {
     track('whatsapp_click', { cta: link.dataset.cta });
     handoff.watch(link, e);
   }
-  // telefone, e-mail e mapa (data-contact="phone|email|map"); cta é o lugar da página do link
+  // telefone e mapa (data-contact="phone|map"); cta é o lugar da página do link
   const contact = e.target.closest?.('a[data-contact]');
   if (contact) {
     const place = contact.closest('footer') ? 'rodape' : (contact.closest('[id]')?.id ?? 'pagina');

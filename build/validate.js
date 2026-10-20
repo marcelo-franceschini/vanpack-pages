@@ -22,7 +22,6 @@ const REAL_BY_NATURE = new Set([
 const REQUIRED_IN_PRODUCTION = [
   ['VITE_CNPJ', 'CNPJ'],
   ['VITE_PHONE', 'telefone'],
-  ['VITE_EMAIL', 'e-mail'],
   ['VITE_STREET', 'rua e número'],
   ['VITE_CITY', 'cidade'],
   ['VITE_STATE', 'UF'],
@@ -118,9 +117,6 @@ export function validateSite({ site, env, example, now = new Date() }) {
       errors.push(
         `VITE_PHONE="${site.phone}" inválido: use +55 + DDD + número, ex.: +5511912345678.`,
       );
-    }
-    if (site.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(site.email)) {
-      errors.push(`VITE_EMAIL="${site.email}" não parece um e-mail.`);
     }
     if (site.address.state && !/^[A-Z]{2}$/.test(site.address.state)) {
       errors.push(`VITE_STATE="${site.address.state}" precisa ser a sigla da UF, ex.: SP.`);

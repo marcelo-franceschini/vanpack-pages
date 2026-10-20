@@ -1532,7 +1532,6 @@
             </li>
             <li data-field="mapa" hidden></li>
             <li data-field="telefone" hidden></li>
-            <li data-field="email" hidden></li>
           </ul>
         </div>
       </section>
@@ -1650,14 +1649,8 @@
               <span data-need="whatsappHours">Resposta na hora, {{whatsappHours}} · </span>Sem
               compromisso
             </p>
-            <p class="alt" data-need="contactAlt">
-              <span data-need="phone"
-                >Prefere ligar?
-                <a href="tel:{{phone}}" data-contact="phone">{{phoneDisplay}}</a></span
-              ><span data-need="phone email"> · </span
-              ><span data-need="email"
-                >E-mail: <a href="mailto:{{email}}" data-contact="email">{{email}}</a></span
-              >
+            <p class="alt" data-need="phone">
+              Prefere ligar? <a href="tel:{{phone}}" data-contact="phone">{{phoneDisplay}}</a>
             </p>
           </div>
           <ol class="how" aria-label="Como pedir">
@@ -1701,10 +1694,6 @@
           </div>
           <div data-field="telefone" hidden>
             <dt>Telefone</dt>
-            <dd></dd>
-          </div>
-          <div data-field="email" hidden>
-            <dt>E-mail</dt>
             <dd></dd>
           </div>
           <div data-field="mapa" hidden>

@@ -33,7 +33,6 @@ describe('.env é a fonte única', () => {
       'VITE_PHONE',
       'VITE_PHONE_DISPLAY',
       'VITE_WHATSAPP',
-      'VITE_EMAIL',
       'VITE_STREET',
       'VITE_CEP',
       'VITE_LEGAL_NAME',
@@ -69,7 +68,6 @@ describe('.env é a fonte única', () => {
     for (const key of [
       'VITE_CNPJ',
       'VITE_LEGAL_NAME',
-      'VITE_EMAIL',
       'VITE_HOURS',
       'VITE_PHONE_DISPLAY',
       'VITE_STREET',

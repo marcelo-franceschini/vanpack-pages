@@ -52,7 +52,7 @@ describe('createSiteConfig', () => {
 
   test('com o env vazio todo campo da empresa fica vazio (nada inventado)', () => {
     const site = createSiteConfig({});
-    for (const key of ['cnpj', 'phone', 'email', 'whatsapp', 'legalName', 'hours', 'mapUrl']) {
+    for (const key of ['cnpj', 'phone', 'whatsapp', 'legalName', 'hours', 'mapUrl']) {
       assert.equal(site[key], '', key);
     }
     assert.ok(site.vars.description.length > 20, 'a descrição tem texto mesmo sem cidade');
@@ -96,7 +96,6 @@ describe('trava de go-live', () => {
     for (const key of [
       'VITE_WHATSAPP',
       'VITE_PHONE',
-      'VITE_EMAIL',
       'VITE_CNPJ',
       'VITE_LEGAL_NAME',
       'VITE_STREET',
@@ -132,7 +131,6 @@ describe('trava de go-live', () => {
       ['VITE_CNPJ', ''],
       ['VITE_CNPJ', '11.222.333/0001-82'],
       ['VITE_PHONE', '11 4700-1234'],
-      ['VITE_EMAIL', 'sem-arroba'],
       ['VITE_STATE', 'sp'],
       ['VITE_CEP', '123'],
       ['VITE_HOURS', ''],
@@ -200,16 +198,11 @@ describe('render', () => {
     const out = renderPage(html, demo);
     const flat = out.replace(/\s+/g, ' ');
     assert.ok(!/data-need|data-field|\{\{/.test(out));
-    for (const value of [
-      example.VITE_CNPJ,
-      example.VITE_LEGAL_NAME,
-      example.VITE_HOURS,
-      example.VITE_EMAIL,
-    ]) {
+    for (const value of [example.VITE_CNPJ, example.VITE_LEGAL_NAME, example.VITE_HOURS]) {
       assert.ok(flat.includes(value), value);
     }
     assert.ok(flat.includes(`href="tel:${example.VITE_PHONE}"`));
-    assert.ok(flat.includes(`href="mailto:${example.VITE_EMAIL}"`));
+    assert.ok(!flat.includes('mailto:'), 'sem e-mail na página');
     assert.ok(flat.includes('Fábrica própria em Santo André-SP'));
     assert.ok(flat.includes('Atendemos Santo André, ABC e Grande São Paulo'));
     assert.match(out, /<meta name="robots" content="noindex,nofollow" \/>/);

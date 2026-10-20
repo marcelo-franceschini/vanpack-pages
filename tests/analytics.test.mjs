@@ -94,12 +94,12 @@ describe('Umami Cloud', () => {
     await context.close();
   });
 
-  test('os cliques de WhatsApp, telefone, e-mail e mapa saem com o lugar certo', async () => {
+  test('os cliques de WhatsApp, telefone e mapa saem com o lugar certo', async () => {
     const { page, context, calls } = await open();
     await page.click('[data-cta="hero"]');
     const whatsapp = await waitFor(calls, named('whatsapp_click'));
     assert.deepEqual(whatsapp.payload.data, { cta: 'hero' });
-    for (const kind of ['phone', 'email', 'map']) {
+    for (const kind of ['phone', 'map']) {
       await page.locator(`#confianca a[data-contact="${kind}"]`).click();
       const click = await waitFor(calls, named(`${kind}_click`));
       assert.deepEqual(click.payload.data, { cta: 'confianca' }, kind);

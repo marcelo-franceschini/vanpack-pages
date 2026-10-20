@@ -90,7 +90,6 @@ export function footerFields(site) {
     telefone:
       site.phone &&
       link(`tel:${site.phone}`, site.phoneDisplay || site.phone, ' data-contact="phone"'),
-    email: site.email && link(`mailto:${site.email}`, site.email, ' data-contact="email"'),
     mapa:
       site.mapUrl &&
       link(site.mapUrl, 'Ver no mapa', ' data-contact="map" target="_blank" rel="noopener"'),
@@ -202,7 +201,6 @@ export function buildJsonLd(site) {
     image: `${site.siteUrl}og.jpg`,
     logo: `${site.siteUrl}icon-512.png`,
     ...(site.phone && { telephone: site.phone }),
-    ...(site.email && { email: site.email }),
     ...(site.cnpj && { taxID: site.cnpj }),
     ...(site.foundedYear && { foundingDate: site.foundedYear }),
     ...(site.hoursSchema && { openingHours: site.hoursSchema }),

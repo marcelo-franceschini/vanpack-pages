@@ -23,7 +23,7 @@ const open = (options = {}, setup) =>
   openPage(browser, `${server.url}?tour=0`, { reducedMotion: 'reduce', ...options }, { setup });
 
 describe('faixa de confiança', () => {
-  test('mostra cidade, CNPJ, anos de mercado, mapa, telefone e e-mail do .env', async () => {
+  test('mostra cidade, CNPJ, anos de mercado, mapa e telefone do .env, sem e-mail', async () => {
     const { page, context } = await open();
     const strip = await page.evaluate(() => {
       const el = document.querySelector('#confianca');
@@ -39,9 +39,10 @@ describe('faixa de confiança', () => {
     );
     assert.ok(strip.text.includes(`CNPJ ${env.VITE_CNPJ}`), strip.text);
     assert.ok(strip.text.includes(`${years} anos de mercado`), strip.text);
-    for (const href of [`tel:${env.VITE_PHONE}`, `mailto:${env.VITE_EMAIL}`, env.VITE_MAP_URL]) {
+    for (const href of [`tel:${env.VITE_PHONE}`, env.VITE_MAP_URL]) {
       assert.ok(strip.hrefs.includes(href), `${href} falta nos links: ${strip.hrefs}`);
     }
+    assert.ok(!strip.hrefs.some((href) => href.startsWith('mailto:')), 'sem e-mail');
     await context.close();
   });
 
@@ -77,7 +78,7 @@ describe('faixa de confiança', () => {
         ),
       }));
       assert.ok(result.overflow <= 0, `rolagem horizontal de ${result.overflow}px`);
-      assert.ok(result.heights.length >= 3);
+      assert.ok(result.heights.length >= 2);
       for (const h of result.heights) assert.ok(h >= 43.5, `link com ${h}px de altura`);
       await context.close();
     });

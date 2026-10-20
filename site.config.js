@@ -182,7 +182,6 @@ export function createSiteConfig(
     whatsappDisplay: whatsapp ? formatPhone(`+${whatsapp}`) || `+${whatsapp}` : '',
     phone,
     phoneDisplay: text(env.VITE_PHONE_DISPLAY) || formatPhone(phone) || phone,
-    email: text(env.VITE_EMAIL),
     cnpj: text(env.VITE_CNPJ),
     legalName,
     address: {
@@ -241,7 +240,6 @@ export function createSiteConfig(
     cityState,
     postalCode: site.address.postalCode,
     phoneDisplay: site.phoneDisplay,
-    email: site.email,
     phone,
     whatsapp, // folha "O WhatsApp não abriu?": o número para copiar
     whatsappDisplay: site.whatsappDisplay,
@@ -253,8 +251,6 @@ export function createSiteConfig(
     // política de privacidade: a ferramenta de medição (ou a ausência dela)
     analyticsName: site.analytics.provider === 'umami' ? 'Umami Cloud' : '',
     noAnalytics: site.analytics.provider ? '' : 'sim',
-    // telefone e e-mail do CTA final: a linha só existe se tiver um dos dois
-    contactAlt: phone || site.email ? 'sim' : '',
     // seções que só existem se tiverem algo a mostrar
     hasFacts: [
       text(env.VITE_MIN_ORDER),
@@ -270,9 +266,7 @@ export function createSiteConfig(
         : '';
     })(),
     // a faixa de confiança só existe se tiver ao menos um item
-    hasTrust: [cityState, site.cnpj, foundedYear, site.mapUrl, phone, site.email].some(Boolean)
-      ? 'sim'
-      : '',
+    hasTrust: [cityState, site.cnpj, foundedYear, site.mapUrl, phone].some(Boolean) ? 'sim' : '',
     minOrder: site.minOrder,
     leadTimeDays: site.leadTimeDays,
     serviceArea: site.serviceArea,
