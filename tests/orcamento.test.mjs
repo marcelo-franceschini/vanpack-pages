@@ -1,0 +1,110 @@
+// Orçamento de bytes do dist/ (o que o visitante baixa). Tetos em KB, medidos como o GitHub Pages
+// entrega: gzip (nível 9) nos textos e o tamanho do arquivo na fonte e nas imagens (já comprimidas).
+// Os tetos partem da linha de base de 20/10/2026 com uma folga curta (editar um texto da página
+// mexe em alguns bytes do HTML) e só DESCEM: cada ganho de performance baixa o teto correspondente.
+// Subir um teto, ou dar teto a um arquivo novo maior, é decisão do dono e vai no PR com a medição.
+// O teto antigo de 165 KB de JS inicial (npm run audit:bundle) continua valendo.
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { describe, test } from 'node:test';
+import { gzipSync } from 'node:zlib';
+
+const ROOT = new URL('..', import.meta.url).pathname;
+const DIST = `${ROOT}dist/`;
+const KB = 1024;
+
+// Cada arquivo de assets/ tem o prefixo do nome sem o hash (index-BsPmJb_d.js → index).
+const JS = {
+  index: 8.5, // o script da página (sem o three.js)
+  worker: 135.5, // three.js e a cena da história, no Web Worker
+  controller: 135, // o mesmo render, só se o worker falhar (thread principal)
+  'produtos-worker': 133.5, // three.js e a vitrine dos produtos, baixados perto da seção
+  montar: 1.7, // montagem do 3D dos produtos
+  'web-vitals': 3.3,
+  wizard: 2.4, // assistente do experimento (só na variante B)
+};
+const FILES = {
+  'index.html': 11.5,
+  'politica-de-privacidade.html': 3.6,
+  '404.html': 2,
+  'fonts/archivo-latin.woff2': 31.5,
+  'og.jpg': 65,
+  'icon-512.png': 7.5,
+  'apple-touch-icon.png': 3.5,
+};
+const SVG_TOTAL = 14; // todos os SVGs de brand/ e produtos/
+const TOTAL = {
+  jsInicial: 143.5, // script da página + worker da história
+  carga: 187, // HTML + JS inicial + fonte + os 2 logos do topo e da cena
+  visita: 322.5, // a carga + o 3D dos produtos + o logo do CTA final
+};
+
+const built = existsSync(`${DIST}index.html`);
+const size = (file) => statSync(`${DIST}${file}`).size;
+const gzip = (file) => gzipSync(readFileSync(`${DIST}${file}`), { level: 9 }).length;
+const kb = (bytes) => (bytes / KB).toFixed(1).replace('.', ',');
+const prefix = (name) => /^(.+?)-[\w-]{8}\.js$/.exec(name)?.[1];
+const over = (what, bytes, limit) =>
+  `${what}: ${kb(bytes)} KB passou do teto de ${limit} KB. O teto só desce: reduza o arquivo ` +
+  '(ou, com a aprovação do dono, suba o teto neste teste junto com a medição).';
+
+describe('orçamento de bytes', { skip: !built && 'sem dist/: rode `npm run build`' }, () => {
+  const assets = built ? readdirSync(`${DIST}assets`) : [];
+  const bytes = {};
+  for (const name of assets) bytes[prefix(name)] = gzip(`assets/${name}`);
+
+  test('cada arquivo de JS tem teto e está abaixo dele', () => {
+    for (const name of assets) {
+      assert.ok(prefix(name), `assets/${name}: nome fora do padrão <nome>-<hash>.js`);
+      assert.ok(
+        JS[prefix(name)],
+        `assets/${name} é um arquivo novo sem teto: dê um teto a "${prefix(name)}" em tests/orcamento.test.mjs`,
+      );
+      assert.ok(
+        bytes[prefix(name)] <= JS[prefix(name)] * KB,
+        over(name, bytes[prefix(name)], JS[prefix(name)]),
+      );
+    }
+  });
+
+  test('HTML, fonte e imagens abaixo dos tetos', () => {
+    for (const [file, limit] of Object.entries(FILES)) {
+      const actual = /\.(html|svg)$/.test(file) ? gzip(file) : size(file);
+      assert.ok(actual <= limit * KB, over(file, actual, limit));
+    }
+  });
+
+  test('SVGs (marca e produtos) somam até o teto', () => {
+    const files = ['brand', 'produtos'].flatMap((dir) =>
+      readdirSync(`${DIST}${dir}`)
+        .filter((name) => name.endsWith('.svg'))
+        .map((name) => `${dir}/${name}`),
+    );
+    const total = files.reduce((sum, file) => sum + gzip(file), 0);
+    assert.ok(total <= SVG_TOTAL * KB, over('SVGs', total, SVG_TOTAL));
+  });
+
+  test('o que o visitante baixa: JS inicial, carga inicial e visita completa', () => {
+    const jsInicial = bytes.index + bytes.worker;
+    const carga =
+      gzip('index.html') +
+      jsInicial +
+      size('fonts/archivo-latin.woff2') +
+      gzip('brand/vanpack-horizontal.svg') +
+      gzip('brand/vanpack-simbolo.svg');
+    const visita =
+      carga +
+      bytes.montar +
+      bytes['produtos-worker'] +
+      gzip('brand/vanpack-horizontal-negativo.svg');
+    assert.ok(jsInicial <= TOTAL.jsInicial * KB, over('JS inicial', jsInicial, TOTAL.jsInicial));
+    assert.ok(carga <= TOTAL.carga * KB, over('carga inicial', carga, TOTAL.carga));
+    assert.ok(visita <= TOTAL.visita * KB, over('visita completa', visita, TOTAL.visita));
+  });
+
+  test('o three.js não entra no script da página', () => {
+    const page = assets.find((name) => prefix(name) === 'index');
+    const code = readFileSync(`${DIST}assets/${page}`, 'utf8');
+    assert.ok(!/WebGLRenderer|WEBGL_lose_context/.test(code), 'three.js no script da página');
+  });
+});
