@@ -213,18 +213,6 @@ export function buildJsonLd(site) {
   };
 }
 
-/** Perguntas do FAQ prontas: a resposta ganha os dados do .env e a pergunta sem dado some. */
-export function faqItems(site) {
-  return site.content.faq.flatMap(({ id, q, a }) => {
-    const keys = [...a.matchAll(/\{\{\s*(\w+)\s*\}\}/g)].map((m) => m[1]);
-    for (const key of keys) {
-      if (!(key in site.vars)) throw new Error(`FAQ "${id}": variável desconhecida {{${key}}}`);
-    }
-    if (keys.some((key) => !site.vars[key])) return [];
-    return [{ id, q, a: interpolate(a, site.vars, `FAQ "${id}"`) }];
-  });
-}
-
 const BLOCKS = {
   // Produtos: cada um com o seu botão de orçamento (código [site-produtos-<id>]).
   produtos: (site) =>
@@ -237,14 +225,6 @@ const BLOCKS = {
     `Olá! Quero um orçamento de ${subject}.`,
   )}">Pedir orçamento deste produto</a>
 </article>`,
-      )
-      .join('\n'),
-
-  faq: (site) =>
-    faqItems(site)
-      .map(
-        ({ id, q, a }) =>
-          `<details class="faq-item" data-faq="${escapeHtml(id)}"><summary>${escapeHtml(q)}</summary><p>${a}</p></details>`,
       )
       .join('\n'),
 
@@ -280,7 +260,7 @@ const BLOCKS = {
   },
 };
 
-/** <!--render:nome--> vira o bloco gerado do conteúdo (modelos, FAQ, prova social). */
+/** <!--render:nome--> vira o bloco gerado do conteúdo (produtos, prova social). */
 function renderBlocks(html, site) {
   return html.replace(/<!--render:(\w+)-->/g, (_, name) => {
     if (!(name in BLOCKS)) throw new Error(`bloco desconhecido: <!--render:${name}-->`);

@@ -7,7 +7,7 @@ import { describe, test } from 'node:test';
 import { parseEnv } from '../build/env.js';
 import { contentSecurityPolicy } from '../build/csp.js';
 import { robotsTxt, sitemapXml } from '../build/files.js';
-import { buildJsonLd, faqItems, interpolate, renderPage } from '../build/render.js';
+import { buildJsonLd, interpolate, renderPage } from '../build/render.js';
 import { isValidCnpj, validateSite } from '../build/validate.js';
 import { createSiteConfig, models, proofs } from '../site.config.js';
 import { yearsSince } from '../src/years.js';
@@ -225,7 +225,8 @@ describe('render', () => {
     });
     const strip = renderPage(html, onlyCnpj).match(/<section class="trust"[\s\S]*?<\/section>/)[0];
     assert.ok(strip.includes(`CNPJ ${REAL.VITE_CNPJ}`));
-    assert.ok(!/anos de mercado|tel:|mailto:|Fábrica própria/.test(strip), strip);
+    assert.ok(strip.includes('Nunca pedimos pagamento para conta de pessoa física'));
+    assert.ok(!/anos de mercado|tel:|mailto:|Fábrica própria|Pagamento:/.test(strip), strip);
   });
 
   test('sem ano de fundação não há anos de mercado nem "Desde"; o cartão 2 usa o texto alternativo', () => {
@@ -346,11 +347,10 @@ describe('medição e CSP', () => {
   });
 });
 
-describe('conteúdo: modelos, FAQ, prova social e menus', () => {
+describe('conteúdo: produtos, prova social e menus', () => {
   const demo = createSiteConfig(example);
   const production = createSiteConfig(REAL);
   const empty = createSiteConfig({ VITE_WHATSAPP: '5511912345678' });
-  const ids = (site) => faqItems(site).map((item) => item.id);
 
   test('os 3 produtos têm cada um o seu botão, com o produto na mensagem e o código de origem', () => {
     assert.deepEqual(
@@ -371,24 +371,15 @@ describe('conteúdo: modelos, FAQ, prova social e menus', () => {
     }
   });
 
-  test('o FAQ mostra as 8 perguntas com os dados do .env e esconde a que não tem dado', () => {
-    assert.equal(ids(production).length, 8);
-    const out = renderPage(html, production);
-    assert.ok(out.includes('A partir de 300 caixas por modelo.'));
-    assert.ok(out.includes(`CNPJ ${REAL.VITE_CNPJ}`));
-    assert.deepEqual(ids(empty), ['medida', 'logo', 'onda'], 'só as sem placeholder');
-    const semPagamento = createSiteConfig({ ...REAL, VITE_PAYMENT_METHODS: '' });
-    assert.ok(!ids(semPagamento).includes('pagamento'));
-    assert.equal(ids(semPagamento).length, 7);
-  });
-
-  test('placeholder desconhecido no FAQ é erro, não uma pergunta que some em silêncio', () => {
-    const content = {
-      models,
-      proofs,
-      faq: [{ id: 'x', q: 'Pergunta?', a: 'Vale {{inventada}}.' }],
-    };
-    assert.throws(() => faqItems(createSiteConfig(REAL, new Date(), content)), /inventada/);
+  test('a regra do pagamento fica na faixa de confiança, com as formas de pagamento quando há', () => {
+    const strip = (site) =>
+      renderPage(html, site).match(/<section class="trust"[\s\S]*?<\/section>/)?.[0] ?? '';
+    const rule = 'Nunca pedimos pagamento para conta de pessoa física';
+    assert.ok(strip(production).includes(rule));
+    assert.ok(strip(production).includes(`Pagamento: ${REAL.VITE_PAYMENT_METHODS}`));
+    const semPagamento = strip(createSiteConfig({ ...REAL, VITE_PAYMENT_METHODS: '' }));
+    assert.ok(semPagamento.includes(rule) && !semPagamento.includes('Pagamento:'));
+    assert.ok(!strip(createSiteConfig({ ...REAL, VITE_CNPJ: '' })).includes(rule), 'só com CNPJ');
   });
 
   test('prova social: demo mostra os exemplos rotulados; production só o autorizado', () => {
@@ -400,7 +391,7 @@ describe('conteúdo: modelos, FAQ, prova social e menus', () => {
       clientLogos: [],
       googleRating: { value: 4.8, count: 37, url: 'https://g.page/r/exemplo', authorized: true },
     };
-    const content = { models, faq: [], proofs: own };
+    const content = { models, proofs: own };
     const emDemo = renderPage(html, createSiteConfig(example, new Date(), content));
     assert.ok(
       emDemo.includes('Texto de exemplo.') && emDemo.includes('<span class="tag">Exemplo</span>'),
@@ -419,7 +410,6 @@ describe('conteúdo: modelos, FAQ, prova social e menus', () => {
   test('a nota do Google nunca aparece como exemplo', () => {
     const content = {
       models,
-      faq: [],
       proofs: {
         testimonials: [],
         clientLogos: [],
@@ -448,10 +438,11 @@ describe('conteúdo: modelos, FAQ, prova social e menus', () => {
 
   test('o menu leva às seções e o link para uma seção que saiu da página sai junto', () => {
     const out = renderPage(html, production);
-    for (const id of ['produtos', 'diferenciais', 'faq']) {
+    for (const id of ['produtos', 'diferenciais']) {
       assert.ok(out.includes(`<a href="#${id}">`), `link #${id}`);
     }
     assert.ok(!out.includes('href="#processo"'), 'sem "Como fazemos" no menu');
+    assert.ok(!/id="faq"|href="#faq"/.test(out), 'sem FAQ');
     assert.equal(
       renderPage('<a href="#x">x</a><a href="#y">y</a><p id="y"></p><a href="#">topo</a>', empty),
       '<a href="#y">y</a><p id="y"></p><a href="#">topo</a>',

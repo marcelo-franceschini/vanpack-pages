@@ -251,18 +251,6 @@ for (const section of document.querySelectorAll('main section[id]:not(#processo)
   sectionView.observe(section);
 }
 
-// faq_open: o evento `toggle` do <details> não borbulha, então só chega em fase de captura.
-document.addEventListener(
-  'toggle',
-  (e) => {
-    const question = e.target;
-    if (question.open && question.dataset?.faq) {
-      track('faq_open', { question_id: question.dataset.faq });
-    }
-  },
-  true,
-);
-
 watchVitals((name, value) => {
   track('web_vitals', {
     name,

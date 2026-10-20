@@ -39,6 +39,10 @@ describe('faixa de confiança', () => {
     );
     assert.ok(strip.text.includes(`CNPJ ${env.VITE_CNPJ}`), strip.text);
     assert.ok(strip.text.includes(`${years} anos de mercado`), strip.text);
+    assert.ok(strip.text.includes('Nunca pedimos pagamento para conta de pessoa física'));
+    if (env.VITE_PAYMENT_METHODS) {
+      assert.ok(strip.text.includes(`Pagamento: ${env.VITE_PAYMENT_METHODS}`), strip.text);
+    }
     for (const href of [`tel:${env.VITE_PHONE}`, env.VITE_MAP_URL]) {
       assert.ok(strip.hrefs.includes(href), `${href} falta nos links: ${strip.hrefs}`);
     }

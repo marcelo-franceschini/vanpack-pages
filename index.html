@@ -781,57 +781,6 @@
         font-weight: 700;
       }
 
-      /* perguntas frequentes */
-      .faq {
-        max-width: 52rem;
-        border-bottom: 1px solid var(--tint-2);
-      }
-      .faq-item {
-        border-top: 1px solid var(--tint-2);
-      }
-      .faq-item summary {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        min-height: 3.5rem;
-        padding: 0.5rem 0;
-        font-size: 1.1875rem;
-        font-weight: 700;
-        line-height: 1.3;
-        cursor: pointer;
-        list-style: none;
-      }
-      .faq-item summary::-webkit-details-marker {
-        display: none;
-      }
-      .faq-item summary::after {
-        content: '+';
-        flex: none;
-        font-size: 1.75rem;
-        font-weight: 600;
-        line-height: 1;
-        color: var(--floresta);
-      }
-      .faq-item[open] summary::after {
-        content: '\2212';
-      }
-      .faq-item p {
-        max-width: 44rem;
-        padding-bottom: 1.25rem;
-        font-size: 1.125rem;
-        line-height: 1.55;
-        color: var(--carvao-muted);
-      }
-      .faq-more {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.75rem 1.25rem;
-        margin-top: 2rem;
-        font-weight: 600;
-      }
-
       @media (max-width: 860px) {
         .grid3 {
           grid-template-columns: minmax(0, 1fr);
@@ -1387,7 +1336,6 @@
         <nav class="nav" aria-label="Principal">
           <a href="#produtos">Produtos</a>
           <a href="#diferenciais">Diferenciais</a>
-          <a href="#faq">FAQ</a>
         </nav>
         <a
           class="btn btn-primary"
@@ -1513,9 +1461,11 @@
           <ul class="trust-list">
             <li data-need="cityState">Fábrica própria em {{cityState}}</li>
             <li data-need="cnpj">CNPJ {{cnpj}}</li>
+            <li data-need="cnpj">Nunca pedimos pagamento para conta de pessoa física</li>
             <li data-need="foundedYear">
               <span data-since="{{foundedYear}}">{{yearsInBusiness}}</span> anos de mercado
             </li>
+            <li data-need="paymentMethods">Pagamento: {{paymentMethods}}</li>
             <li data-field="mapa" hidden></li>
             <li data-field="telefone" hidden></li>
           </ul>
@@ -1571,27 +1521,6 @@
           <div class="proofs">
             <!--render:clientes-->
           </div>
-        </div>
-      </section>
-
-      <section class="block" id="faq">
-        <div class="wrap">
-          <div class="sec-head">
-            <span class="k">Perguntas frequentes</span>
-            <h2>O que perguntam antes de pedir</h2>
-          </div>
-          <div class="faq">
-            <!--render:faq-->
-          </div>
-          <p class="faq-more">
-            Não achou a sua dúvida?
-            <a
-              class="btn btn-primary"
-              data-cta="faq"
-              data-wa="Olá! Tenho uma dúvida sobre as caixas de papelão."
-              ><svg aria-hidden="true"><use href="#i-wa" /></svg>Tirar dúvida no WhatsApp</a
-            >
-          </p>
         </div>
       </section>
 
@@ -1673,7 +1602,7 @@
         </dl>
         <nav class="foot-nav" aria-label="Rodapé">
           <a href="#produtos">Produtos</a><a href="#diferenciais">Diferenciais</a
-          ><a href="#clientes">Clientes</a><a href="#faq">FAQ</a><a href="#orcamento">Orçamento</a
+          ><a href="#clientes">Clientes</a><a href="#orcamento">Orçamento</a
           ><a href="./politica-de-privacidade.html">Privacidade</a>
         </nav>
         <p class="legal">

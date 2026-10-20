@@ -38,50 +38,6 @@ export const models = [
 ];
 
 /**
- * Perguntas do FAQ. Os {{placeholders}} das respostas vêm do .env; a pergunta cujo dado falta some.
- * "Nunca pedimos pagamento para conta de pessoa física" também funciona como defesa contra golpe.
- */
-export const faq = [
-  { id: 'minimo', q: 'Qual o pedido mínimo?', a: 'A partir de {{minOrder}} caixas por modelo.' },
-  {
-    id: 'entrega',
-    q: 'Entregam na minha cidade?',
-    a: 'Entregamos em {{serviceArea}}. Para outras regiões, consulte o frete.',
-  },
-  {
-    id: 'medida',
-    q: 'Não sei a medida da caixa. E agora?',
-    a: 'Mande a medida do produto ou uma foto dele com uma régua ao lado, que a gente ajuda.',
-  },
-  {
-    id: 'logo',
-    q: 'Como envio minha logo?',
-    a: 'Pelo próprio WhatsApp, em PDF, SVG ou PNG de boa resolução, com prova aprovada antes da produção.',
-  },
-  {
-    id: 'pagamento',
-    q: 'Formas de pagamento?',
-    a: '{{paymentMethods}}. Nunca pedimos pagamento para conta de pessoa física.',
-  },
-  {
-    id: 'confianca',
-    q: 'Como sei que a Vanpack é confiável?',
-    a: 'Somos a {{legalName}}, CNPJ {{cnpj}}, com fábrica em {{street}}, {{city}}. Pode nos visitar.',
-  },
-  {
-    // o WhatsApp é atendido pelo assistente; a saída para uma pessoa é o telefone
-    id: 'pessoa',
-    q: 'Posso falar com uma pessoa?',
-    a: 'Pode. Ligue para {{phoneDisplay}}, {{hours}}.',
-  },
-  {
-    id: 'onda',
-    q: 'Onda simples ou dupla?',
-    a: 'A dupla é mais resistente, indicada para produtos pesados ou empilhamento alto. Ajudamos a escolher.',
-  },
-];
-
-/**
  * Prova social: nada inventado. Só entra na página o item com `authorized: true` (e registro em
  * docs/provas/<id>.md). Itens `demo: true` são de exemplo: só aparecem em modo demo, com o rótulo
  * "Exemplo", e nunca em production. A nota do Google só vale com `authorized` (sem versão demo).
@@ -155,7 +111,7 @@ function formatPhone(phone) {
 export function createSiteConfig(
   env = {},
   now = new Date(),
-  content = { models, faq, proofs, experiments },
+  content = { models, proofs, experiments },
 ) {
   const city = text(env.VITE_CITY);
   const state = text(env.VITE_STATE);
@@ -217,8 +173,8 @@ export function createSiteConfig(
         : null,
   };
 
-  // Variáveis dos {{...}} do HTML (e, adiante, das respostas do FAQ). Vazia = o trecho que a usa tem
-  // de estar dentro de um elemento com data-need.
+  // Variáveis dos {{...}} do HTML. Vazia = o trecho que a usa tem de estar dentro de um elemento com
+  // data-need.
   site.vars = {
     name: site.name,
     slogan: site.slogan,
@@ -251,7 +207,11 @@ export function createSiteConfig(
         : '';
     })(),
     // a faixa de confiança só existe se tiver ao menos um item
-    hasTrust: [cityState, site.cnpj, foundedYear, site.mapUrl, phone].some(Boolean) ? 'sim' : '',
+    hasTrust: [cityState, site.cnpj, foundedYear, site.mapUrl, phone, site.paymentMethods].some(
+      Boolean,
+    )
+      ? 'sim'
+      : '',
     minOrder: site.minOrder,
     serviceArea: site.serviceArea,
     paymentMethods: site.paymentMethods,

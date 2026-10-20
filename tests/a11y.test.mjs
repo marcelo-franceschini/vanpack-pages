@@ -123,18 +123,17 @@ describe('teclado', () => {
         }),
       );
     }
-    assert.deepEqual(order.slice(0, 8), [
+    assert.deepEqual(order.slice(0, 7), [
       'Pular para o conteúdo',
       'Vanpack · início',
       'Produtos',
       'Diferenciais',
-      'FAQ',
       'Pedir orçamento',
       'Pedir orçamento no WhatsApp',
       'Ver produtos ↓',
     ]);
     // depois do cartão ativo o foco segue para o conteúdo seguinte, sem passar pelos cartões inert
-    assert.notEqual(order[8], 'Veja por que a Vanpack ↓');
+    assert.notEqual(order[7], 'Veja por que a Vanpack ↓');
     await context.close();
   });
 
@@ -226,8 +225,6 @@ describe('contraste (calculado nos estilos reais)', () => {
     ['.model p', 7],
     ['.proof-quote', 7],
     ['.proof figcaption', 7],
-    ['.faq-item summary', 7],
-    ['.faq-item p', 7],
     ['.cta .alt a', 7],
     ['.fab-wa', 7],
     ['.fab-tel a', 7],
