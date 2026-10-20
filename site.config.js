@@ -1,5 +1,5 @@
-// Configuração do site. Todo dado da empresa (CNPJ, telefone, endereço, prazos…) vive só no `.env`, a
-// fonte única; aqui ficam as constantes da marca e a função que monta a config a partir dele.
+// Configuração do site. Todo dado da empresa (CNPJ, telefone, endereço, pedido mínimo…) vive só no
+// `.env`, a fonte única; aqui ficam as constantes da marca e a função que monta a config a partir dele.
 // Valor vazio = sem dado: o trecho correspondente sai do HTML (nada é inventado nem fica vazio).
 import { yearsSince } from './src/years.js';
 
@@ -12,115 +12,70 @@ export const brand = {
 };
 
 /**
- * Modelos de caixa da seção "O que fabricamos": texto genérico e sem números; o dono confere no
- * go-live (docs/go-live.md). O `id` vira o código de origem do botão ([site-produtos-<id>]).
+ * Produtos da seção "O que fabricamos": texto genérico e sem números; o dono confere no go-live
+ * (docs/go-live.md). O `id` vira o código de origem do botão ([site-produtos-<id>]) e o `subject`
+ * completa a mensagem do WhatsApp ("Olá! Quero um orçamento de <subject>.").
  */
 export const models = [
   {
-    id: 'padrao',
-    name: 'Caixa padrão',
-    text: 'A mais usada: fecha com fita e serve para quase tudo, do e-commerce ao estoque.',
+    id: 'corte-e-vinco',
+    name: 'Corte e vinco',
+    subject: 'caixas com corte e vinco',
+    text: 'Caixas com corte e vinco sob medida, para encaixe, tampa e formatos especiais.',
   },
   {
-    id: 'envio',
-    name: 'Caixa para envio',
-    text: 'Resistente para correio e transportadora, com a sua marca impressa por fora.',
+    id: 'divisorias',
+    name: 'Divisórias, tabuleiros e separadores',
+    subject: 'divisórias, tabuleiros e separadores',
+    text: 'Separam, organizam e protegem o que vai dentro da caixa.',
   },
   {
-    id: 'faca',
-    name: 'Caixa com faca',
-    text: 'Corte e vinco sob medida para encaixe, tampa e formatos especiais.',
-  },
-  {
-    id: 'automatica',
-    name: 'Caixa de fundo automático',
-    text: 'Monta num gesto e fecha com firmeza, ideal para quem embala em volume.',
+    id: 'chapas',
+    name: 'Chapas de papelão ondulado',
+    subject: 'chapas de papelão ondulado',
+    text: 'Chapas para embalar, proteger e forrar.',
   },
 ];
 
 /**
- * Perguntas do FAQ. Os {{placeholders}} das respostas vêm do .env; a pergunta cujo dado falta some.
- * "Nunca pedimos pagamento para conta de pessoa física" também funciona como defesa contra golpe.
- */
-export const faq = [
-  { id: 'minimo', q: 'Qual o pedido mínimo?', a: 'A partir de {{minOrder}} caixas por modelo.' },
-  {
-    id: 'prazo',
-    q: 'Qual o prazo?',
-    a: 'Em média {{leadTimeDays}} dias úteis após a aprovação da arte, por escrito no orçamento.',
-  },
-  {
-    id: 'entrega',
-    q: 'Entregam na minha cidade?',
-    a: 'Entregamos em {{serviceArea}}. Para outras regiões, consulte o frete.',
-  },
-  {
-    id: 'medida',
-    q: 'Não sei a medida da caixa. E agora?',
-    a: 'Mande a medida do produto ou uma foto dele com uma régua ao lado, que a gente ajuda.',
-  },
-  {
-    id: 'logo',
-    q: 'Como envio minha logo?',
-    a: 'Pelo próprio WhatsApp, em PDF, SVG ou PNG de boa resolução, com prova aprovada antes da produção.',
-  },
-  {
-    id: 'pagamento',
-    q: 'Formas de pagamento?',
-    a: '{{paymentMethods}}. Nunca pedimos pagamento para conta de pessoa física.',
-  },
-  {
-    id: 'confianca',
-    q: 'Como sei que a Vanpack é confiável?',
-    a: 'Somos a {{legalName}}, CNPJ {{cnpj}}, com fábrica em {{street}}, {{city}}. Pode nos visitar.',
-  },
-  {
-    // o WhatsApp é atendido pelo assistente; a saída para uma pessoa é o telefone
-    id: 'pessoa',
-    q: 'Posso falar com uma pessoa?',
-    a: 'Pode. Ligue para {{phoneDisplay}}, {{hours}}.',
-  },
-  {
-    id: 'onda',
-    q: 'Onda simples ou dupla?',
-    a: 'A dupla é mais resistente, indicada para produtos pesados ou empilhamento alto. Ajudamos a escolher.',
-  },
-];
-
-/**
- * Prova social: nada inventado. Só entra na página o item com `authorized: true` (e registro em
- * docs/provas/<id>.md). Itens `demo: true` são de exemplo: só aparecem em modo demo, com o rótulo
- * "Exemplo", e nunca em production. A nota do Google só vale com `authorized` (sem versão demo).
- * Logos de clientes só em SVG (public/clientes/<id>.svg), sempre com autorização.
+ * Depoimentos e nota do Google: nada inventado. Só entra na página o item com `authorized: true` (e
+ * registro em docs/provas/<id>.md), em qualquer modo; o JSON-LD nunca leva nota própria. Os clientes
+ * da faixa de logos vêm do .env (VITE_CLIENT_<n>_*).
  */
 export const proofs = {
-  testimonials: [
-    {
-      id: 'exemplo-ecommerce',
-      demo: true,
-      quote: 'As caixas chegaram na medida certa e com a nossa marca bem impressa.',
-      author: 'Loja virtual de cosméticos',
-    },
-    {
-      id: 'exemplo-industria',
-      demo: true,
-      quote: 'Pedimos a mesma caixa várias vezes e o padrão nunca mudou.',
-      author: 'Indústria de alimentos',
-    },
-  ],
-  clientLogos: [], // { id, name, src: '/clientes/<id>.svg', authorized: true }
+  testimonials: [], // { id, quote, author, authorized: true }
   googleRating: null, // { value, count, url, authorized: true }
 };
 
-/** O que a página mostra da prova social neste modo (demo mostra os exemplos; production só o autorizado). */
-export function visibleProofs(items, dataMode) {
-  const shown = (item) => item.authorized === true || (item.demo === true && dataMode === 'demo');
+/** Depoimentos e nota do Google que a página mostra: só os autorizados. */
+export function visibleProofs(items) {
   return {
-    testimonials: items.testimonials.filter(shown),
-    clientLogos: items.clientLogos.filter(shown),
+    testimonials: items.testimonials.filter((item) => item.authorized === true),
     googleRating: items.googleRating?.authorized === true ? items.googleRating : null,
   };
 }
+
+/** Ícones dos diferenciais (VITE_DIFF_<n>_ICON): cada um é um <symbol id="i-<nome>"> do index.html. */
+export const DIFF_ICONS = ['fabrica', 'lotes', 'conversa', 'caixa'];
+
+/** Quantos diferenciais (VITE_DIFF_1_* a VITE_DIFF_6_*) e clientes (até VITE_CLIENT_12_*) o .env aceita. */
+export const LIMITS = { diffs: 6, clients: 12 };
+
+/** "Café & Cia." → "cafe-cia": o id do cliente, que nomeia o registro em docs/provas/<id>.md. */
+export const slug = (name) =>
+  name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+
+/**
+ * Clientes que a página mostra: em production só os que autorizaram (AUTH=sim); em demo todos, e o
+ * não autorizado leva o rótulo "Exemplo".
+ */
+export const visibleClients = (clients, dataMode) =>
+  clients.filter((client) => client.authorized || dataMode === 'demo');
 
 /**
  * Experimentos A/B (src/experiments.js). Todos desligados: ligue com `enabled: true` e uma data fixa em
@@ -146,6 +101,19 @@ function hostOf(url) {
   }
 }
 
+/**
+ * Itens numerados do .env (VITE_<prefixo>_<n>_<CAMPO>, de 1 a `max`). Item sem o campo principal
+ * (título do diferencial, nome do cliente) não existe.
+ */
+function numbered(env, prefix, max, main, read) {
+  const items = [];
+  for (let n = 1; n <= max; n++) {
+    const field = (name) => text(env[`VITE_${prefix}_${n}_${name}`]);
+    if (field(main)) items.push(read(field));
+  }
+  return items;
+}
+
 /** (11) 4700-1234 a partir de +551147001234; vazio se o telefone não tiver o formato do Brasil. */
 function formatPhone(phone) {
   const match = /^\+55(\d{2})(\d{4,5})(\d{4})$/.exec(phone);
@@ -161,7 +129,7 @@ function formatPhone(phone) {
 export function createSiteConfig(
   env = {},
   now = new Date(),
-  content = { models, faq, proofs, experiments },
+  content = { models, proofs, experiments },
 ) {
   const city = text(env.VITE_CITY);
   const state = text(env.VITE_STATE);
@@ -182,7 +150,6 @@ export function createSiteConfig(
     whatsappDisplay: whatsapp ? formatPhone(`+${whatsapp}`) || `+${whatsapp}` : '',
     phone,
     phoneDisplay: text(env.VITE_PHONE_DISPLAY) || formatPhone(phone) || phone,
-    email: text(env.VITE_EMAIL),
     cnpj: text(env.VITE_CNPJ),
     legalName,
     address: {
@@ -195,14 +162,24 @@ export function createSiteConfig(
     },
     cityState,
     hours: text(env.VITE_HOURS),
-    whatsappHours: text(env.VITE_WHATSAPP_HOURS), // o assistente (chatbot) do WhatsApp
     hoursSchema: text(env.VITE_HOURS_SCHEMA),
     mapUrl: text(env.VITE_MAP_URL),
     foundedYear,
     minOrder: text(env.VITE_MIN_ORDER),
-    leadTimeDays: text(env.VITE_LEAD_TIME_DAYS),
     serviceArea: text(env.VITE_SERVICE_AREA),
     paymentMethods: text(env.VITE_PAYMENT_METHODS),
+    // "Por que a Vanpack" e a faixa de logos
+    differentials: numbered(env, 'DIFF', LIMITS.diffs, 'TITLE', (field) => ({
+      title: field('TITLE'),
+      text: field('TEXT'),
+      icon: field('ICON'),
+    })),
+    clients: numbered(env, 'CLIENT', LIMITS.clients, 'NAME', (field) => ({
+      id: slug(field('NAME')),
+      name: field('NAME'),
+      logo: field('LOGO'),
+      authorized: field('AUTH').toLowerCase() === 'sim',
+    })),
     analytics: {
       provider: text(env.VITE_ANALYTICS_PROVIDER),
       site: text(env.VITE_ANALYTICS_SITE),
@@ -226,8 +203,8 @@ export function createSiteConfig(
         : null,
   };
 
-  // Variáveis dos {{...}} do HTML (e, adiante, das respostas do FAQ). Vazia = o trecho que a usa tem
-  // de estar dentro de um elemento com data-need.
+  // Variáveis dos {{...}} do HTML. Vazia = o trecho que a usa tem de estar dentro de um elemento com
+  // data-need.
   site.vars = {
     name: site.name,
     slogan: site.slogan,
@@ -241,40 +218,31 @@ export function createSiteConfig(
     cityState,
     postalCode: site.address.postalCode,
     phoneDisplay: site.phoneDisplay,
-    email: site.email,
     phone,
     whatsapp, // folha "O WhatsApp não abriu?": o número para copiar
     whatsappDisplay: site.whatsappDisplay,
     hours: site.hours,
-    whatsappHours: site.whatsappHours, // linha de risco: "Resposta na hora, 24 horas"
     foundedYear,
     yearsInBusiness: site.yearsInBusiness,
     year: site.year,
     // política de privacidade: a ferramenta de medição (ou a ausência dela)
     analyticsName: site.analytics.provider === 'umami' ? 'Umami Cloud' : '',
     noAnalytics: site.analytics.provider ? '' : 'sim',
-    // telefone e e-mail do CTA final: a linha só existe se tiver um dos dois
-    contactAlt: phone || site.email ? 'sim' : '',
     // seções que só existem se tiverem algo a mostrar
-    hasFacts: [
-      text(env.VITE_MIN_ORDER),
-      text(env.VITE_LEAD_TIME_DAYS),
-      text(env.VITE_SERVICE_AREA),
-    ].some(Boolean)
-      ? 'sim'
-      : '',
+    hasFacts: site.minOrder || site.serviceArea ? 'sim' : '',
+    hasDiffs: site.differentials.length ? 'sim' : '',
     hasProofs: (() => {
-      const shown = visibleProofs(content.proofs, text(env.VITE_DATA_MODE));
-      return shown.testimonials.length || shown.clientLogos.length || shown.googleRating
-        ? 'sim'
-        : '';
+      const shown = visibleProofs(content.proofs);
+      const clients = visibleClients(site.clients, site.dataMode);
+      return clients.length || shown.testimonials.length || shown.googleRating ? 'sim' : '';
     })(),
     // a faixa de confiança só existe se tiver ao menos um item
-    hasTrust: [cityState, site.cnpj, foundedYear, site.mapUrl, phone, site.email].some(Boolean)
+    hasTrust: [cityState, site.cnpj, foundedYear, site.mapUrl, phone, site.paymentMethods].some(
+      Boolean,
+    )
       ? 'sim'
       : '',
     minOrder: site.minOrder,
-    leadTimeDays: site.leadTimeDays,
     serviceArea: site.serviceArea,
     paymentMethods: site.paymentMethods,
     // título e descrição da página (title, og e twitter); a cidade entra só se houver

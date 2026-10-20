@@ -172,8 +172,9 @@ describe('1ª tela do celular', () => {
             .filter((li) => getComputedStyle(li).display !== 'none')
             .map((li) => li.textContent.trim()),
           link: {
-            ...rect(document.querySelector('#tour-start')),
-            background: getComputedStyle(document.querySelector('#tour-start')).backgroundColor,
+            ...rect(card.querySelector('.actions a[href="#produtos"]')),
+            background: getComputedStyle(card.querySelector('.actions a[href="#produtos"]'))
+              .backgroundColor,
           },
         };
       });
@@ -181,11 +182,11 @@ describe('1ª tela do celular', () => {
         assert.ok(part.shown, `${name} à vista`);
         assert.ok(
           part.top >= first.header - 0.5 && part.bottom <= first.height + 0.5,
-          `${name} inteiro na 1ª tela (${part.top}–${part.bottom} de ${first.height})`,
+          `${name} inteiro na 1ª tela (${part.top} a ${part.bottom} de ${first.height})`,
         );
       }
       assert.match(first.seals[0], /^Pedido mínimo/);
-      assert.ok(!first.seals.some((s) => s.startsWith('Prazo')), 'o prazo já está no parágrafo');
+      assert.ok(!first.seals.some((s) => /prazo/i.test(s)), 'sem selo de prazo');
       assert.ok(
         first.link.width < first.parts.botão.width * 0.75,
         'o 2º chamado não é outro bloco',

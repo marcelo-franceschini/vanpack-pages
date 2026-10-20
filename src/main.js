@@ -84,14 +84,7 @@ function pulseDock() {
   target.addEventListener('animationend', () => target.classList.remove('pulse'), { once: true });
 }
 
-function goToChapter(index) {
-  tour.pause('stop');
-  scrollTo({
-    top: story.yAt(index / story.lastChapter),
-    behavior: reducedMotion.matches ? 'auto' : 'smooth',
-  });
-}
-
+// A página não tem controle do tour: qualquer clique (inclusive em "Ver produtos ↓") o interrompe.
 tour = createTour({
   getProgress: story.progress,
   yAt: story.yAt,
@@ -100,14 +93,6 @@ tour = createTour({
     if (state === 'done') pulseDock();
   },
   onEvent: track,
-  isUi: (el) => Boolean(el?.closest?.('[data-tour-ui]')),
-});
-
-// "Ver como fazemos": com o tour disponível, toca o passo a passo; sem ele, leva ao capítulo 2.
-$('#tour-start').addEventListener('click', (e) => {
-  e.preventDefault();
-  if (tourAvailable()) tour.start({ auto: false });
-  else goToChapter(1);
 });
 
 reducedMotion.addEventListener('change', () => {
@@ -209,7 +194,7 @@ document.addEventListener('click', (e) => {
     track('whatsapp_click', { cta: link.dataset.cta });
     handoff.watch(link, e);
   }
-  // telefone, e-mail e mapa (data-contact="phone|email|map"); cta é o lugar da página do link
+  // telefone e mapa (data-contact="phone|map"); cta é o lugar da página do link
   const contact = e.target.closest?.('a[data-contact]');
   if (contact) {
     const place = contact.closest('footer') ? 'rodape' : (contact.closest('[id]')?.id ?? 'pagina');
@@ -265,18 +250,6 @@ const sectionView = new IntersectionObserver(
 for (const section of document.querySelectorAll('main section[id]:not(#processo)')) {
   sectionView.observe(section);
 }
-
-// faq_open: o evento `toggle` do <details> não borbulha, então só chega em fase de captura.
-document.addEventListener(
-  'toggle',
-  (e) => {
-    const question = e.target;
-    if (question.open && question.dataset?.faq) {
-      track('faq_open', { question_id: question.dataset.faq });
-    }
-  },
-  true,
-);
 
 watchVitals((name, value) => {
   track('web_vitals', {

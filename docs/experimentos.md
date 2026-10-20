@@ -27,7 +27,7 @@ só experimento configurado, o `quote_wizard`. Não existe experimento que tire 
 
 ## `quote_wizard`
 
-- **Hipótese:** trocar o CTA final por um assistente de 3 passos (tipo de caixa, medidas e quantidade,
+- **Hipótese:** trocar o CTA final por um assistente de 3 passos (produto, medidas e quantidade,
   impressão) que monta a mensagem do WhatsApp aumenta as **conversas qualificadas por 100 visitas**,
   mesmo que o número de cliques caia: quem chega ao WhatsApp já traz medida, quantidade e impressão.
 - **Variante A:** o CTA final de hoje (botão de WhatsApp com a mensagem curta, sem campos para preencher).

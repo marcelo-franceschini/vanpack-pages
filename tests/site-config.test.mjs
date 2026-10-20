@@ -7,9 +7,9 @@ import { describe, test } from 'node:test';
 import { parseEnv } from '../build/env.js';
 import { contentSecurityPolicy } from '../build/csp.js';
 import { robotsTxt, sitemapXml } from '../build/files.js';
-import { buildJsonLd, faqItems, interpolate, renderPage } from '../build/render.js';
+import { buildJsonLd, interpolate, renderPage } from '../build/render.js';
 import { isValidCnpj, validateSite } from '../build/validate.js';
-import { createSiteConfig, models, proofs } from '../site.config.js';
+import { DIFF_ICONS, createSiteConfig, models, proofs, slug } from '../site.config.js';
 import { yearsSince } from '../src/years.js';
 import { realEnv } from './real-env.mjs';
 
@@ -52,7 +52,7 @@ describe('createSiteConfig', () => {
 
   test('com o env vazio todo campo da empresa fica vazio (nada inventado)', () => {
     const site = createSiteConfig({});
-    for (const key of ['cnpj', 'phone', 'email', 'whatsapp', 'legalName', 'hours', 'mapUrl']) {
+    for (const key of ['cnpj', 'phone', 'whatsapp', 'legalName', 'hours', 'mapUrl']) {
       assert.equal(site[key], '', key);
     }
     assert.ok(site.vars.description.length > 20, 'a descrição tem texto mesmo sem cidade');
@@ -96,16 +96,18 @@ describe('trava de go-live', () => {
     for (const key of [
       'VITE_WHATSAPP',
       'VITE_PHONE',
-      'VITE_EMAIL',
       'VITE_CNPJ',
       'VITE_LEGAL_NAME',
       'VITE_STREET',
       'VITE_CEP',
       'VITE_HOURS',
       'VITE_SERVICE_AREA',
+      'VITE_CLIENT_1_NAME',
+      'VITE_CLIENT_6_NAME',
     ]) {
       assert.match(all, new RegExp(`${key}`), `${key} sobrou no .env`);
     }
+    assert.ok(!/VITE_DIFF_/.test(all), 'os diferenciais não contam como fictícios');
     assert.match(all, /CNPJ válido|não é um CNPJ válido/, 'o CNPJ fictício também é inválido');
   });
 
@@ -132,7 +134,6 @@ describe('trava de go-live', () => {
       ['VITE_CNPJ', ''],
       ['VITE_CNPJ', '11.222.333/0001-82'],
       ['VITE_PHONE', '11 4700-1234'],
-      ['VITE_EMAIL', 'sem-arroba'],
       ['VITE_STATE', 'sp'],
       ['VITE_CEP', '123'],
       ['VITE_HOURS', ''],
@@ -143,6 +144,33 @@ describe('trava de go-live', () => {
         errors.some((e) => e.includes(key)),
         `${key}="${value}" deveria falhar`,
       );
+    }
+  });
+
+  test('diferenciais e clientes: ícone, logo, autorização e numeração inválidos falham nos dois modos', () => {
+    for (const [key, value] of [
+      ['VITE_DIFF_1_ICON', 'estrela'],
+      ['VITE_CLIENT_1_LOGO', 'logo.png'],
+      ['VITE_CLIENT_1_LOGO', '../logo.svg'],
+      ['VITE_CLIENT_1_LOGO', '/clientes/logo.svg'],
+      ['VITE_CLIENT_1_AUTH', 'talvez'],
+      ['VITE_DIFF_7_TITLE', 'Sétimo'],
+      ['VITE_DIFF_0_TITLE', 'Zero'],
+      ['VITE_CLIENT_13_NAME', 'Décimo terceiro'],
+    ]) {
+      for (const env of [example, REAL]) {
+        assert.ok(
+          validate({ ...env, [key]: value }).errors.some((e) => e.includes(key)),
+          `${key}="${value}" deveria falhar (${env.VITE_DATA_MODE})`,
+        );
+      }
+    }
+    for (const [key, value] of [
+      ['VITE_DIFF_6_ICON', 'caixa'],
+      ['VITE_CLIENT_12_LOGO', 'loja-1.svg'],
+      ['VITE_CLIENT_12_AUTH', 'Sim'],
+    ]) {
+      assert.deepEqual(validate({ ...REAL, [key]: value }).errors, [], `${key}="${value}"`);
     }
   });
 
@@ -173,11 +201,11 @@ describe('render', () => {
     assert.match(out, /<p class="slogan">Do projeto à entrega<\/p>/, 'o slogan do manual fica');
     assert.ok(!/<dl|<dt|<dd/.test(out), 'sem campos de rodapé vazios');
     assert.ok(!out.includes('Fábrica própria'), 'sem cidade o eyebrow some');
-    assert.ok(!out.includes('Atendemos'));
+    assert.ok(!/Atendemos (?!lojas)/.test(out), 'sem região, nenhum "Atendemos" da região');
     assert.match(
       out,
-      /Da nossa fábrica até o seu endereço/,
-      'o trecho da cidade some sem sobrar espaço',
+      /<span>Da nossa fábrica até o seu endereço\.<\/span>/,
+      'sem região, o cartão 5 mostra o texto alternativo',
     );
     assert.ok(!out.includes('noindex'), 'só o modo demo leva noindex');
     const ld = JSON.parse(
@@ -200,16 +228,11 @@ describe('render', () => {
     const out = renderPage(html, demo);
     const flat = out.replace(/\s+/g, ' ');
     assert.ok(!/data-need|data-field|\{\{/.test(out));
-    for (const value of [
-      example.VITE_CNPJ,
-      example.VITE_LEGAL_NAME,
-      example.VITE_HOURS,
-      example.VITE_EMAIL,
-    ]) {
+    for (const value of [example.VITE_CNPJ, example.VITE_LEGAL_NAME, example.VITE_HOURS]) {
       assert.ok(flat.includes(value), value);
     }
     assert.ok(flat.includes(`href="tel:${example.VITE_PHONE}"`));
-    assert.ok(flat.includes(`href="mailto:${example.VITE_EMAIL}"`));
+    assert.ok(!flat.includes('mailto:'), 'sem e-mail na página');
     assert.ok(flat.includes('Fábrica própria em Santo André-SP'));
     assert.ok(flat.includes('Atendemos Santo André, ABC e Grande São Paulo'));
     assert.match(out, /<meta name="robots" content="noindex,nofollow" \/>/);
@@ -232,14 +255,33 @@ describe('render', () => {
     });
     const strip = renderPage(html, onlyCnpj).match(/<section class="trust"[\s\S]*?<\/section>/)[0];
     assert.ok(strip.includes(`CNPJ ${REAL.VITE_CNPJ}`));
-    assert.ok(!/anos de mercado|tel:|mailto:|Fábrica própria/.test(strip), strip);
+    assert.ok(strip.includes('Nunca pedimos pagamento para conta de pessoa física'));
+    assert.ok(!/anos de mercado|tel:|mailto:|Fábrica própria|Pagamento:/.test(strip), strip);
   });
 
-  test('sem ano de fundação não há anos de mercado nem "Desde" no rodapé', () => {
+  test('sem ano de fundação não há anos de mercado nem "Desde"; o cartão 2 usa o texto alternativo', () => {
     const semAno = createSiteConfig({ ...example, VITE_FOUNDED_YEAR: '' });
     const out = renderPage(html, semAno);
-    assert.ok(!/anos de mercado|Desde/.test(out));
-    assert.ok(renderPage(html, demo).includes('Desde 2010'));
+    assert.ok(!/data-since|anos de\s+mercado<|Desde/.test(out));
+    assert.ok(out.includes('Experiência em caixas de papelão'));
+    const comAno = renderPage(html, demo);
+    assert.ok(comAno.includes('Desde 2010'));
+    assert.match(comAno, /<span data-since="2010">\d+<\/span> anos de\s+mercado/);
+    assert.ok(!comAno.includes('Experiência em caixas de papelão'));
+  });
+
+  test('os 5 cartões da história ficam com qualquer config (o scroll depende deles)', () => {
+    for (const site of [empty, demo, createSiteConfig(REAL)]) {
+      const cards = renderPage(html, site).match(/<div class="card(?: on)?">/g) ?? [];
+      assert.equal(cards.length, 5, site.dataMode || 'vazia');
+    }
+  });
+
+  test('data-need="!chave" mostra o texto de quando falta o dado', () => {
+    const snippet = '<p data-need="cnpj">com</p><p data-need="!cnpj">sem</p>';
+    assert.equal(renderPage(snippet, empty), '<p>sem</p>');
+    assert.equal(renderPage(snippet, demo), '<p>com</p>');
+    assert.throws(() => renderPage('<p data-need="!inventada">x</p>', empty), /desconhecido/);
   });
 
   test('elemento removido leva junto o que tem dentro, mesmo com a mesma tag aninhada', () => {
@@ -271,6 +313,11 @@ describe('render', () => {
       () => renderPage('<a data-wa="oi"></a>', createSiteConfig({})),
       /VITE_WHATSAPP vazio/,
     );
+  });
+
+  test('o link morto sai sozinho, mesmo com o fechamento quebrado pelo Prettier', () => {
+    const nav = '<a href="#y">y</a\n><a href="#x">x</a\n><a href="#y">z</a><p id="y"></p>';
+    assert.equal(renderPage(nav, empty), '<a href="#y">y</a\n><a href="#y">z</a><p id="y"></p>');
   });
 });
 
@@ -330,63 +377,136 @@ describe('medição e CSP', () => {
   });
 });
 
-describe('conteúdo: modelos, FAQ, prova social e menus', () => {
+describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', () => {
   const demo = createSiteConfig(example);
   const production = createSiteConfig(REAL);
   const empty = createSiteConfig({ VITE_WHATSAPP: '5511912345678' });
-  const ids = (site) => faqItems(site).map((item) => item.id);
 
-  test('cada modelo tem o seu botão de orçamento, com o modelo na mensagem e o código de origem', () => {
+  test('os 3 produtos têm cada um o seu botão, com o produto na mensagem e o código de origem', () => {
+    assert.deepEqual(
+      models.map(({ id }) => id),
+      ['corte-e-vinco', 'divisorias', 'chapas'],
+    );
     const cards = [
       ...renderPage(html, demo).matchAll(/<article class="model">[\s\S]*?<\/article>/g),
     ];
     assert.equal(cards.length, models.length);
     for (const [i, model] of models.entries()) {
+      assert.ok(cards[i][0].includes(`<h3>${model.name}</h3>`), model.name);
       const text = new URL(cards[i][0].match(/href="([^"]+)"/)[1]).searchParams.get('text');
-      assert.ok(text.includes(`da ${model.name}.`), text);
-      assert.ok(text.endsWith(`[site-produtos-${model.id}]`), text);
+      assert.equal(
+        text,
+        `Olá! Quero um orçamento de ${model.subject}. [site-produtos-${model.id}]`,
+      );
     }
   });
 
-  test('o FAQ mostra as 9 perguntas com os dados do .env e esconde a que não tem dado', () => {
-    assert.equal(ids(production).length, 9);
-    const out = renderPage(html, production);
-    assert.ok(out.includes('A partir de 300 caixas por modelo.'));
-    assert.ok(out.includes(`CNPJ ${REAL.VITE_CNPJ}`));
-    assert.deepEqual(ids(empty), ['medida', 'logo', 'onda'], 'só as sem placeholder');
-    const semPagamento = createSiteConfig({ ...REAL, VITE_PAYMENT_METHODS: '' });
-    assert.ok(!ids(semPagamento).includes('pagamento'));
-    assert.equal(ids(semPagamento).length, 8);
+  test('a regra do pagamento fica na faixa de confiança, com as formas de pagamento quando há', () => {
+    const strip = (site) =>
+      renderPage(html, site).match(/<section class="trust"[\s\S]*?<\/section>/)?.[0] ?? '';
+    const rule = 'Nunca pedimos pagamento para conta de pessoa física';
+    assert.ok(strip(production).includes(rule));
+    assert.ok(strip(production).includes(`Pagamento: ${REAL.VITE_PAYMENT_METHODS}`));
+    const semPagamento = strip(createSiteConfig({ ...REAL, VITE_PAYMENT_METHODS: '' }));
+    assert.ok(semPagamento.includes(rule) && !semPagamento.includes('Pagamento:'));
+    assert.ok(!strip(createSiteConfig({ ...REAL, VITE_CNPJ: '' })).includes(rule), 'só com CNPJ');
   });
 
-  test('placeholder desconhecido no FAQ é erro, não uma pergunta que some em silêncio', () => {
-    const content = {
-      models,
-      proofs,
-      faq: [{ id: 'x', q: 'Pergunta?', a: 'Vale {{inventada}}.' }],
-    };
-    assert.throws(() => faqItems(createSiteConfig(REAL, new Date(), content)), /inventada/);
+  test('diferenciais vêm do .env: item sem título some e, sem nenhum, a seção e os links somem', () => {
+    const pillars = (site) =>
+      [...renderPage(html, site).matchAll(/<article class="pillar">[\s\S]*?<\/article>/g)].map(
+        (m) => m[0],
+      );
+    const shown = pillars(demo);
+    assert.equal(shown.length, 3);
+    assert.equal(
+      shown[0],
+      `<article class="pillar"><svg aria-hidden="true"><use href="#i-fabrica" /></svg><h3>${example.VITE_DIFF_1_TITLE}</h3><p>${example.VITE_DIFF_1_TEXT}</p></article>`,
+    );
+    assert.equal(pillars(createSiteConfig({ ...example, VITE_DIFF_2_TITLE: '' })).length, 2);
+    const semIcone = pillars(createSiteConfig({ ...example, VITE_DIFF_1_ICON: '' }))[0];
+    assert.ok(!semIcone.includes('<svg') && semIcone.includes(example.VITE_DIFF_1_TITLE));
+    const semTexto = pillars(createSiteConfig({ ...example, VITE_DIFF_1_TEXT: '' }))[0];
+    assert.ok(!semTexto.includes('<p>'));
+    assert.deepEqual(
+      createSiteConfig({
+        VITE_DIFF_6_TITLE: 'Sexto',
+        VITE_DIFF_7_TITLE: 'Sétimo',
+      }).differentials.map(({ title }) => title),
+      ['Sexto'],
+      'até 6',
+    );
+    const nenhum = renderPage(
+      html,
+      createSiteConfig({
+        ...example,
+        VITE_DIFF_1_TITLE: '',
+        VITE_DIFF_2_TITLE: '',
+        VITE_DIFF_3_TITLE: '',
+      }),
+    );
+    assert.ok(!nenhum.includes('id="diferenciais"') && !nenhum.includes('href="#diferenciais"'));
+    assert.equal(
+      (nenhum.match(/<div class="card(?: on)?">/g) ?? []).length,
+      5,
+      'os 5 cartões ficam',
+    );
   });
 
-  test('prova social: demo mostra os exemplos rotulados; production só o autorizado', () => {
+  test('cada ícone de diferencial tem o seu <symbol> no index.html', () => {
+    for (const icon of DIFF_ICONS) assert.ok(html.includes(`<symbol id="i-${icon}"`), icon);
+  });
+
+  test('clientes vêm do .env: demo mostra os 6 exemplos rotulados; production só os autorizados', () => {
+    const strip = (site) =>
+      renderPage(html, site).match(/<div class="logo-strip">[\s\S]*?<\/ul><\/div><\/div>/)?.[0] ??
+      '';
+    const emDemo = strip(demo);
+    assert.match(emDemo, /<div class="logo-scroll" role="region" aria-label="[^"]+" tabindex="0">/);
+    assert.equal((emDemo.match(/<li>/g) ?? []).length, 6);
+    assert.equal((emDemo.match(/<span class="tag">Exemplo<\/span>/g) ?? []).length, 6);
+    assert.ok(emDemo.includes('<span class="logo-name">Cliente 1</span>'));
+    assert.ok(!emDemo.includes('<img'), 'exemplo sem logo real');
+    const site = createSiteConfig({
+      ...REAL,
+      VITE_CLIENT_1_NAME: 'Padaria Real',
+      VITE_CLIENT_1_LOGO: 'padaria-real.svg',
+      VITE_CLIENT_1_AUTH: 'sim',
+      VITE_CLIENT_2_NAME: 'Mercado Sem Autorização',
+    });
+    assert.deepEqual(
+      site.clients.map(({ id, authorized }) => [id, authorized]),
+      [
+        ['padaria-real', true],
+        ['mercado-sem-autorizacao', false],
+      ],
+    );
+    const emProducao = strip(site);
+    assert.ok(
+      emProducao.includes(
+        '<img src="./clientes/padaria-real.svg" alt="Padaria Real" width="160" height="64"',
+      ),
+      'logo com caminho relativo à página',
+    );
+    assert.ok(!emProducao.includes('Mercado') && !emProducao.includes('Exemplo'));
+    assert.equal(slug('Café & Cia. Ltda'), 'cafe-cia-ltda');
+  });
+
+  test('depoimento e nota do Google só aparecem autorizados, em qualquer modo', () => {
     const own = {
       testimonials: [
-        { id: 'cliente-a', authorized: true, quote: 'Entrega no prazo.', author: 'Cliente A' },
+        { id: 'cliente-a', authorized: true, quote: 'Caixa sempre igual.', author: 'Cliente A' },
         { id: 'exemplo-x', demo: true, quote: 'Texto de exemplo.', author: 'Cliente X' },
       ],
-      clientLogos: [],
       googleRating: { value: 4.8, count: 37, url: 'https://g.page/r/exemplo', authorized: true },
     };
-    const content = { models, faq: [], proofs: own };
-    const emDemo = renderPage(html, createSiteConfig(example, new Date(), content));
-    assert.ok(
-      emDemo.includes('Texto de exemplo.') && emDemo.includes('<span class="tag">Exemplo</span>'),
-    );
-    assert.ok(emDemo.includes('Entrega no prazo.'));
-    const emProducao = renderPage(html, createSiteConfig(REAL, new Date(), content));
-    assert.ok(emProducao.includes('Entrega no prazo.'));
-    assert.ok(!emProducao.includes('Texto de exemplo.') && !emProducao.includes('Exemplo</span>'));
-    assert.ok(emProducao.includes('4,8 de 5 no Google (37 avaliações)'));
+    const content = { models, proofs: own };
+    for (const env of [example, REAL]) {
+      const out = renderPage(html, createSiteConfig(env, new Date(), content));
+      assert.ok(out.includes('Caixa sempre igual.'), env.VITE_DATA_MODE);
+      assert.ok(!out.includes('Texto de exemplo.'), env.VITE_DATA_MODE);
+      assert.ok(out.includes('4,8 de 5 no Google (37 avaliações)'), env.VITE_DATA_MODE);
+    }
     // sem prova autorizada a seção e os links para ela somem
     const semProva = renderPage(html, production);
     assert.ok(!semProva.includes('id="clientes"') && !semProva.includes('href="#clientes"'));
@@ -396,10 +516,8 @@ describe('conteúdo: modelos, FAQ, prova social e menus', () => {
   test('a nota do Google nunca aparece como exemplo', () => {
     const content = {
       models,
-      faq: [],
       proofs: {
         testimonials: [],
-        clientLogos: [],
         googleRating: { value: 5, count: 1, url: 'https://g.page/r/x', demo: true },
       },
     };
@@ -408,26 +526,30 @@ describe('conteúdo: modelos, FAQ, prova social e menus', () => {
     );
   });
 
-  test('todo item de prova é autorizado (com registro em docs/provas) ou de exemplo; logos só em SVG', () => {
+  test('todo cliente autorizado do .env e toda prova têm registro em docs/provas; logos só em SVG', () => {
+    const site = createSiteConfig(parseEnv(read('.env')));
     const items = [
+      ...site.clients.filter((client) => client.authorized),
       ...proofs.testimonials,
-      ...proofs.clientLogos,
       ...(proofs.googleRating ? [{ id: 'google', ...proofs.googleRating }] : []),
     ];
     for (const item of items) {
-      assert.ok(item.authorized === true || item.demo === true, `${item.id}: sem autorização`);
-      if (item.authorized) {
-        assert.ok(existsSync(`${ROOT}docs/provas/${item.id}.md`), `${item.id}: falta docs/provas`);
-      }
+      assert.equal(item.authorized, true, `${item.id}: sem autorização`);
+      assert.ok(existsSync(`${ROOT}docs/provas/${item.id}.md`), `${item.id}: falta docs/provas`);
     }
-    for (const logo of proofs.clientLogos) assert.match(logo.src, /\.svg$/);
+    for (const { logo } of site.clients.filter((client) => client.logo)) {
+      assert.match(logo, /^[\w-]+\.svg$/);
+      assert.ok(existsSync(`${ROOT}public/clientes/${logo}`), `${logo} falta em public/clientes`);
+    }
   });
 
   test('o menu leva às seções e o link para uma seção que saiu da página sai junto', () => {
     const out = renderPage(html, production);
-    for (const id of ['processo', 'produtos', 'diferenciais', 'faq']) {
+    for (const id of ['produtos', 'diferenciais']) {
       assert.ok(out.includes(`<a href="#${id}">`), `link #${id}`);
     }
+    assert.ok(!out.includes('href="#processo"'), 'sem "Como fazemos" no menu');
+    assert.ok(!/id="faq"|href="#faq"/.test(out), 'sem FAQ');
     assert.equal(
       renderPage('<a href="#x">x</a><a href="#y">y</a><p id="y"></p><a href="#">topo</a>', empty),
       '<a href="#y">y</a><p id="y"></p><a href="#">topo</a>',

@@ -22,7 +22,7 @@
     <meta property="og:image:height" content="630" />
     <meta
       property="og:image:alt"
-      content="Linha de produção da Vanpack transformando chapas de papelão em caixas impressas."
+      content="Ilustração 3D da Vanpack com papelão kraft e a chamada 'Caixas de papelão sob medida, com a sua marca'."
     />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="{{title}}" />
@@ -438,7 +438,7 @@
         gap: 0.75rem;
         margin-top: 1.75rem;
       }
-      /* microcopy de risco ao lado do botão: resposta na hora (o assistente do WhatsApp, 24 horas) e sem compromisso */
+      /* microcopy de risco ao lado do botão: sem compromisso */
       .card .cta-note {
         margin-top: 0.875rem;
         font-size: 0.9375rem;
@@ -563,7 +563,7 @@
         .actions .btn {
           flex: 1 1 100%;
         }
-        /* o 2º chamado ("Ver como fazemos") é um link: um só bloco de largura total na 1ª tela */
+        /* o 2º chamado ("Ver produtos ↓") é um link: um só bloco de largura total na 1ª tela */
         .actions .btn-soft {
           flex: 0 0 auto;
           min-height: 2.75rem;
@@ -577,7 +577,7 @@
           background: none;
           color: var(--floresta-dark);
         }
-        /* pedido mínimo e região antes do clique, numa linha compacta (o prazo já está no parágrafo) */
+        /* pedido mínimo e região antes do clique, numa linha compacta */
         .seals {
           gap: 0.25rem 1rem;
           margin-top: 0.75rem;
@@ -607,6 +607,11 @@
         letter-spacing: -0.025em;
         line-height: 1.05;
         text-wrap: balance;
+      }
+      /* faixas: as seções alternam Papel, tint e Floresta (o CTA final), e a onda de papelão (Kraft,
+         o material) divide a história da faixa de confiança e os produtos dos diferenciais */
+      .tint {
+        background: var(--tint);
       }
       .wave {
         width: 100%;
@@ -658,7 +663,7 @@
       .pillar {
         padding: clamp(1.75rem, 3vw, 2.5rem);
         border-radius: 0.5rem;
-        background: var(--tint);
+        background: var(--papel); /* cartão Papel sobre a faixa tint */
       }
       .pillar svg {
         width: 2.5rem;
@@ -733,7 +738,88 @@
         white-space: normal;
       }
 
-      /* clientes: só prova autorizada (ou exemplo, em demo) */
+      /* clientes: só prova autorizada (ou exemplo, em demo). A faixa de logos se arrasta no celular
+         (scroll-snap, sem JS) e vira grade no desktop; o 3º logo aparece cortado e um degradê em
+         Papel na borda direita mostra que há mais. A região recebe foco e rola pelas setas. */
+      .logo-strip {
+        position: relative;
+      }
+      .logo-strip::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 2.5rem;
+        background: linear-gradient(90deg, rgb(251 248 242/0), var(--papel));
+        pointer-events: none;
+      }
+      .logo-scroll {
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x mandatory;
+        scroll-padding-inline-start: 0.25rem;
+      }
+      .logo-scroll:focus-visible {
+        position: relative;
+        z-index: 1; /* o contorno de foco fica por cima do degradê */
+      }
+      .logos {
+        display: flex;
+        gap: 1rem;
+        padding: 0.25rem 0.25rem 0.75rem;
+      }
+      /* espaço no fim para o último logo sair de baixo do degradê */
+      .logos::after {
+        content: '';
+        flex: 0 0 1.5rem;
+      }
+      .logos li {
+        flex: 0 0 38%;
+        scroll-snap-align: start;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 6.5rem;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        background: var(--tint);
+        text-align: center;
+      }
+      .logos img {
+        width: 100%;
+        max-width: 10rem;
+        height: 4rem;
+        object-fit: contain;
+      }
+      .logo-name {
+        font-size: 1.125rem;
+        font-weight: 800;
+        line-height: 1.2;
+      }
+      .logos .tag {
+        margin-left: 0;
+      }
+      @media (min-width: 861px) {
+        .logo-strip::after,
+        .logos::after {
+          display: none;
+        }
+        .logo-scroll {
+          overflow: visible;
+        }
+        .logos {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+          gap: 1.25rem;
+          padding: 0;
+        }
+      }
+      .logo-strip + .proofs {
+        margin-top: 2rem;
+      }
       .proofs {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
@@ -766,70 +852,12 @@
         letter-spacing: 0.09em;
         text-transform: uppercase;
       }
-      .logos {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 1.5rem 2.5rem;
-        margin-top: 2rem;
-      }
       .rating a {
         display: inline-flex;
         align-items: center;
         min-height: 2.75rem;
         margin-top: 1.5rem;
         font-weight: 700;
-      }
-
-      /* perguntas frequentes */
-      .faq {
-        max-width: 52rem;
-        border-bottom: 1px solid var(--tint-2);
-      }
-      .faq-item {
-        border-top: 1px solid var(--tint-2);
-      }
-      .faq-item summary {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        min-height: 3.5rem;
-        padding: 0.5rem 0;
-        font-size: 1.1875rem;
-        font-weight: 700;
-        line-height: 1.3;
-        cursor: pointer;
-        list-style: none;
-      }
-      .faq-item summary::-webkit-details-marker {
-        display: none;
-      }
-      .faq-item summary::after {
-        content: '+';
-        flex: none;
-        font-size: 1.75rem;
-        font-weight: 600;
-        line-height: 1;
-        color: var(--floresta);
-      }
-      .faq-item[open] summary::after {
-        content: '\2212';
-      }
-      .faq-item p {
-        max-width: 44rem;
-        padding-bottom: 1.25rem;
-        font-size: 1.125rem;
-        line-height: 1.55;
-        color: var(--carvao-muted);
-      }
-      .faq-more {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0.75rem 1.25rem;
-        margin-top: 2rem;
-        font-weight: 600;
       }
 
       @media (max-width: 860px) {
@@ -1340,18 +1368,7 @@
           d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"
         />
       </symbol>
-      <symbol id="i-prazo" viewBox="0 0 24 24">
-        <path
-          d="M1 4h14v11H1zM15 8h4l3 3v4h-7z"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
-          stroke-linecap="square"
-        />
-        <circle cx="5.5" cy="18.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.6" />
-        <circle cx="17.5" cy="18.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.6" />
-      </symbol>
-      <symbol id="i-confianca" viewBox="0 0 24 24">
+      <symbol id="i-fabrica" viewBox="0 0 24 24">
         <path
           d="M2 21V9l6 4V9l6 4V4h8v17H2z"
           fill="none"
@@ -1367,7 +1384,7 @@
           stroke-linecap="square"
         />
       </symbol>
-      <symbol id="i-consistencia" viewBox="0 0 24 24">
+      <symbol id="i-lotes" viewBox="0 0 24 24">
         <rect
           x="3"
           y="3"
@@ -1386,6 +1403,24 @@
           stroke-linecap="square"
         />
       </symbol>
+      <symbol id="i-conversa" viewBox="0 0 24 24">
+        <path
+          d="M3 4h18v12H10l-5 4v-4H3zM7 9h10M7 12h6"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="square"
+        />
+      </symbol>
+      <symbol id="i-caixa" viewBox="0 0 24 24">
+        <path
+          d="M3 8l9-4 9 4v9l-9 4-9-4zM3 8l9 4 9-4M12 12v9"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="square"
+        />
+      </symbol>
     </svg>
 
     <a class="skip" href="#conteudo">Pular para o conteúdo</a>
@@ -1396,10 +1431,8 @@
           ><img src="/brand/vanpack-horizontal.svg" alt="" width="136" height="34"
         /></a>
         <nav class="nav" aria-label="Principal">
-          <a href="#processo">Como fazemos</a>
           <a href="#produtos">Produtos</a>
           <a href="#diferenciais">Diferenciais</a>
-          <a href="#faq">FAQ</a>
         </nav>
         <a
           class="btn btn-primary"
@@ -1411,12 +1444,12 @@
     </header>
 
     <main id="conteudo">
-      <section class="story" id="processo" aria-label="Como fazemos a sua caixa" data-tour="idle">
+      <section class="story" id="processo" aria-label="Apresentação da Vanpack" data-tour="idle">
         <div class="stage" id="stage">
           <canvas
             id="gl"
             role="img"
-            aria-label="Animação 3D: uma chapa de papelão entra na máquina, sai impressa e cortada, é dobrada e colada, vira caixa, é empilhada dobrada e segue no caminhão da Vanpack."
+            aria-label="Animação 3D da Vanpack com caixas de papelão e o caminhão de entrega"
           ></canvas>
           <div class="loader" aria-hidden="true">
             <img src="/brand/vanpack-simbolo.svg" alt="" width="80" height="80" />
@@ -1433,11 +1466,9 @@
                   </div>
                   <h1>Caixas de papelão sob medida, com a sua marca</h1>
                   <p>
-                    Você manda medida e quantidade. A gente fabrica, imprime e entrega<span
-                      data-need="leadTimeDays"
-                    >
-                      em {{leadTimeDays}} dias úteis</span
-                    ><span class="optional">, direto da fábrica, sem intermediário</span>.
+                    Você manda a medida e a quantidade. A gente cuida do resto<span class="optional"
+                      >, direto da fábrica e sem intermediário</span
+                    >.
                   </p>
                   <div class="actions">
                     <a
@@ -1447,49 +1478,48 @@
                       ><svg aria-hidden="true"><use href="#i-wa" /></svg>Pedir orçamento no
                       WhatsApp</a
                     >
-                    <a class="btn btn-soft" id="tour-start" data-tour-ui href="#passo-2"
-                      >Ver como fazemos</a
-                    >
+                    <a class="btn btn-soft" href="#produtos">Ver produtos ↓</a>
                   </div>
-                  <p class="cta-note">
-                    <span data-need="whatsappHours">Resposta na hora, {{whatsappHours}} · </span>Sem
-                    compromisso
-                  </p>
+                  <p class="cta-note">Sem compromisso</p>
                   <ul class="seals" aria-label="Diferenciais" data-need="hasFacts">
                     <li data-need="minOrder">Pedido mínimo a partir de {{minOrder}} unidades</li>
-                    <li class="optional" data-need="leadTimeDays">
-                      Prazo de {{leadTimeDays}} dias úteis
-                    </li>
                     <li data-need="serviceArea">Atendemos {{serviceArea}}</li>
                   </ul>
                 </div>
               </div>
             </div>
-            <div class="step" id="passo-2">
+            <!-- Os 5 cartões ficam sempre (o scroll da história depende deles): o que depende de dado
+                 fica só em trechos, sempre com o texto de quando o dado falta. -->
+            <div class="step">
               <div class="wrap">
                 <div class="card">
-                  <div class="k">02 · Impressão e corte</div>
-                  <h2>Imprimimos e cortamos de uma vez</h2>
-                  <p>A chapa recebe a sua marca e já sai cortada e vincada, na mesma passada.</p>
+                  <div class="k">Anos de mercado</div>
+                  <h2>
+                    <span data-need="foundedYear"
+                      ><span data-since="{{foundedYear}}">{{yearsInBusiness}}</span> anos de
+                      mercado</span
+                    ><span data-need="!foundedYear">Experiência em caixas de papelão</span>
+                  </h2>
+                  <p>Atendemos lojas, vendedores de marketplace e indústrias.</p>
                 </div>
               </div>
             </div>
             <div class="step">
               <div class="wrap">
                 <div class="card">
-                  <div class="k">03 · Cola</div>
-                  <h2>Dobramos e colamos</h2>
-                  <p>A chapa é dobrada e a emenda é colada: nasce a caixa.</p>
+                  <div class="k">Qualidade</div>
+                  <h2>Caixas na medida que você pediu</h2>
+                  <p>Do primeiro ao último pedido, a mesma medida e a mesma impressão.</p>
                 </div>
               </div>
             </div>
             <div class="step">
               <div class="wrap">
                 <div class="card">
-                  <div class="k">04 · Caixa</div>
-                  <h2>A caixa toma forma</h2>
+                  <div class="k">Orçamento</div>
+                  <h2>Peça o seu pelo WhatsApp</h2>
                   <p>
-                    Ela abre na medida certa e segue empilhada e dobrada, ocupando pouco espaço.
+                    Mande medida, quantidade e o que vai impresso. Sem formulário e sem compromisso.
                   </p>
                 </div>
               </div>
@@ -1497,10 +1527,11 @@
             <div class="step">
               <div class="wrap">
                 <div class="card">
-                  <div class="k">05 · Entrega</div>
-                  <h2>Entregamos rápido</h2>
+                  <div class="k">Entrega</div>
+                  <h2>Entregamos até você</h2>
                   <p>
-                    Da nossa fábrica<span data-need="city"> em {{city}}</span> até o seu endereço.
+                    <span data-need="serviceArea">Atendemos {{serviceArea}}.</span
+                    ><span data-need="!serviceArea">Da nossa fábrica até o seu endereço.</span>
                   </p>
                   <a class="more" href="#diferenciais">Veja por que a Vanpack ↓</a>
                 </div>
@@ -1527,12 +1558,13 @@
           <ul class="trust-list">
             <li data-need="cityState">Fábrica própria em {{cityState}}</li>
             <li data-need="cnpj">CNPJ {{cnpj}}</li>
+            <li data-need="cnpj">Nunca pedimos pagamento para conta de pessoa física</li>
             <li data-need="foundedYear">
               <span data-since="{{foundedYear}}">{{yearsInBusiness}}</span> anos de mercado
             </li>
+            <li data-need="paymentMethods">Pagamento: {{paymentMethods}}</li>
             <li data-field="mapa" hidden></li>
             <li data-field="telefone" hidden></li>
-            <li data-field="email" hidden></li>
           </ul>
         </div>
       </section>
@@ -1541,13 +1573,10 @@
         <div class="wrap">
           <div class="sec-head">
             <span class="k">O que fabricamos</span>
-            <h2>Caixas sob medida, do modelo à impressão</h2>
+            <h2>Caixas, divisórias e chapas sob medida</h2>
           </div>
           <ul class="facts" data-need="hasFacts">
             <li data-need="minOrder"><b>Pedido mínimo</b>{{minOrder}} unidades</li>
-            <li data-need="leadTimeDays">
-              <b>Prazo</b>{{leadTimeDays}} dias úteis, por escrito no orçamento
-            </li>
             <li data-need="serviceArea"><b>Atendemos</b>{{serviceArea}}</li>
           </ul>
           <div class="models">
@@ -1556,36 +1585,25 @@
         </div>
       </section>
 
-      <section class="block" id="diferenciais">
+      <div class="wave" aria-hidden="true" data-need="hasDiffs">
+        <svg viewBox="0 0 1200 20" preserveAspectRatio="none">
+          <path
+            d="M0,10 Q15,0 30,10 T60,10 T90,10 T120,10 T150,10 T180,10 T210,10 T240,10 T270,10 T300,10 T330,10 T360,10 T390,10 T420,10 T450,10 T480,10 T510,10 T540,10 T570,10 T600,10 T630,10 T660,10 T690,10 T720,10 T750,10 T780,10 T810,10 T840,10 T870,10 T900,10 T930,10 T960,10 T990,10 T1020,10 T1050,10 T1080,10 T1110,10 T1140,10 T1170,10 T1200,10"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          />
+        </svg>
+      </div>
+
+      <section class="block tint" id="diferenciais" data-need="hasDiffs">
         <div class="wrap">
           <div class="sec-head">
             <span class="k">Diferenciais</span>
             <h2>Por que a Vanpack</h2>
           </div>
           <div class="grid3">
-            <article class="pillar">
-              <svg aria-hidden="true"><use href="#i-prazo" /></svg>
-              <h3>Prazo por escrito no orçamento</h3>
-              <p>
-                <span data-need="leadTimeDays"
-                  >Entrega em {{leadTimeDays}} dias úteis depois de aprovar a arte.
-                </span>
-                Combinamos o prazo já no orçamento, para você não ficar sem caixa.
-              </p>
-            </article>
-            <article class="pillar">
-              <svg aria-hidden="true"><use href="#i-confianca" /></svg>
-              <h3>Fale direto com quem fabrica</h3>
-              <p>Sem intermediário: você sabe o que vai receber, quando e como.</p>
-            </article>
-            <article class="pillar">
-              <svg aria-hidden="true"><use href="#i-consistencia" /></svg>
-              <h3>Mesma medida e impressão em todos os lotes</h3>
-              <p>
-                Do primeiro ao último lote, a caixa sai com a mesma medida, a mesma resistência e a
-                mesma impressão.
-              </p>
-            </article>
+            <!--render:diferenciais-->
           </div>
         </div>
       </section>
@@ -1596,30 +1614,7 @@
             <span class="k">Clientes</span>
             <h2>Quem já pede com a gente</h2>
           </div>
-          <div class="proofs">
-            <!--render:clientes-->
-          </div>
-        </div>
-      </section>
-
-      <section class="block" id="faq">
-        <div class="wrap">
-          <div class="sec-head">
-            <span class="k">Perguntas frequentes</span>
-            <h2>O que perguntam antes de pedir</h2>
-          </div>
-          <div class="faq">
-            <!--render:faq-->
-          </div>
-          <p class="faq-more">
-            Não achou a sua dúvida?
-            <a
-              class="btn btn-primary"
-              data-cta="faq"
-              data-wa="Olá! Tenho uma dúvida sobre as caixas de papelão."
-              ><svg aria-hidden="true"><use href="#i-wa" /></svg>Tirar dúvida no WhatsApp</a
-            >
-          </p>
+          <!--render:clientes-->
         </div>
       </section>
 
@@ -1635,7 +1630,7 @@
               loading="lazy"
               decoding="async"
             />
-            <h2>Conte sua medida e receba o orçamento hoje</h2>
+            <h2>Conte sua medida e receba o seu orçamento</h2>
             <p class="lead">
               Mande medida (C x L x A), quantidade e o que vai impresso. Não tem a medida? Mande a
               foto do produto que a gente ajuda.
@@ -1646,18 +1641,9 @@
               data-wa="Olá! Quero um orçamento de caixas de papelão."
               ><svg aria-hidden="true"><use href="#i-wa" /></svg>Pedir orçamento no WhatsApp</a
             >
-            <p class="cta-note">
-              <span data-need="whatsappHours">Resposta na hora, {{whatsappHours}} · </span>Sem
-              compromisso
-            </p>
-            <p class="alt" data-need="contactAlt">
-              <span data-need="phone"
-                >Prefere ligar?
-                <a href="tel:{{phone}}" data-contact="phone">{{phoneDisplay}}</a></span
-              ><span data-need="phone email"> · </span
-              ><span data-need="email"
-                >E-mail: <a href="mailto:{{email}}" data-contact="email">{{email}}</a></span
-              >
+            <p class="cta-note">Sem compromisso</p>
+            <p class="alt" data-need="phone">
+              Prefere ligar? <a href="tel:{{phone}}" data-contact="phone">{{phoneDisplay}}</a>
             </p>
           </div>
           <ol class="how" aria-label="Como pedir">
@@ -1703,19 +1689,14 @@
             <dt>Telefone</dt>
             <dd></dd>
           </div>
-          <div data-field="email" hidden>
-            <dt>E-mail</dt>
-            <dd></dd>
-          </div>
           <div data-field="mapa" hidden>
             <dt>Mapa</dt>
             <dd></dd>
           </div>
         </dl>
         <nav class="foot-nav" aria-label="Rodapé">
-          <a href="#processo">Como fazemos</a><a href="#produtos">Produtos</a
-          ><a href="#diferenciais">Diferenciais</a><a href="#clientes">Clientes</a
-          ><a href="#faq">FAQ</a><a href="#orcamento">Orçamento</a
+          <a href="#produtos">Produtos</a><a href="#diferenciais">Diferenciais</a
+          ><a href="#clientes">Clientes</a><a href="#orcamento">Orçamento</a
           ><a href="./politica-de-privacidade.html">Privacidade</a>
         </nav>
         <p class="legal">

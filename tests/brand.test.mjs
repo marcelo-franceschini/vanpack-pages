@@ -107,7 +107,6 @@ describe('produto', () => {
 
   test('sem números, datas, velocidades, capacidades ou alegações ambientais inventados', () => {
     const visible = text(html.slice(html.indexOf('<body>')))
-      .replace(/\b0[2-5] · /g, '') // numeração dos capítulos
       .replace(/© 2026 /, '')
       .replace(/<b>\d<\/b>/g, '');
     const digits = visible.match(/\d+/g) ?? [];
@@ -226,7 +225,7 @@ describe('build: CSP, requisições e marca na página', () => {
   test('política de privacidade: dados do .env, CSP própria, só as cores da marca e abre sem erro', async () => {
     const page = read('dist/politica-de-privacidade.html');
     assert.ok(!/\{\{|data-need|data-field/.test(page), 'marcas e placeholders resolvidos');
-    for (const key of ['VITE_LEGAL_NAME', 'VITE_CNPJ', 'VITE_EMAIL']) {
+    for (const key of ['VITE_LEGAL_NAME', 'VITE_CNPJ']) {
       if (env[key]) assert.ok(page.includes(env[key]), `${key} na política`);
     }
     const csp = page.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)"/)?.[1];

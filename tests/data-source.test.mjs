@@ -33,7 +33,6 @@ describe('.env é a fonte única', () => {
       'VITE_PHONE',
       'VITE_PHONE_DISPLAY',
       'VITE_WHATSAPP',
-      'VITE_EMAIL',
       'VITE_STREET',
       'VITE_CEP',
       'VITE_LEGAL_NAME',
@@ -69,11 +68,12 @@ describe('.env é a fonte única', () => {
     for (const key of [
       'VITE_CNPJ',
       'VITE_LEGAL_NAME',
-      'VITE_EMAIL',
       'VITE_HOURS',
       'VITE_PHONE_DISPLAY',
       'VITE_STREET',
       'VITE_CEP',
+      'VITE_DIFF_1_TITLE',
+      'VITE_CLIENT_1_NAME',
     ]) {
       if (env[key]) assert.ok(flat.includes(escapeHtml(env[key])), `${key} não chegou ao dist`);
     }
@@ -102,10 +102,6 @@ describe('.env é a fonte única', () => {
       '1', // passos "Como pedir": 1, 2 e 3
       '2',
       '3',
-      '02', // numeração dos capítulos da história
-      '03',
-      '04',
-      '05',
       String(new Date().getFullYear()), // © do rodapé
       String(yearsSince(env.VITE_FOUNDED_YEAR)), // anos de mercado
     ]);
@@ -116,8 +112,11 @@ describe('.env é a fonte única', () => {
 
   test('docs/go-live.md explica cada chave do .env.example', () => {
     const doc = read('docs/go-live.md');
+    // as chaves numeradas (VITE_DIFF_1_TITLE, VITE_CLIENT_2_NAME…) são explicadas pelo padrão,
+    // VITE_DIFF_<n>_TITLE
     for (const key of Object.keys(parseEnv(read('.env.example')))) {
-      assert.ok(doc.includes(key), `${key} falta no docs/go-live.md`);
+      const documented = key.replace(/_\d+_/, '_<n>_');
+      assert.ok(doc.includes(documented), `${documented} falta no docs/go-live.md`);
     }
   });
 });

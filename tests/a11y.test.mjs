@@ -59,7 +59,7 @@ describe('estrutura', () => {
       };
     });
     assert.equal(info.role, 'img');
-    assert.match(info.label, /chapa de papelão/);
+    assert.match(info.label, /caixas de papelão/);
     assert.equal(info.loaderHidden, 'true');
     for (const img of info.images) {
       assert.notEqual(img.alt, null, `${img.src} tem alt (vazio quando decorativa)`);
@@ -123,19 +123,17 @@ describe('teclado', () => {
         }),
       );
     }
-    assert.deepEqual(order.slice(0, 9), [
+    assert.deepEqual(order.slice(0, 7), [
       'Pular para o conteúdo',
       'Vanpack · início',
-      'Como fazemos',
       'Produtos',
       'Diferenciais',
-      'FAQ',
       'Pedir orçamento',
       'Pedir orçamento no WhatsApp',
-      'Ver como fazemos',
+      'Ver produtos ↓',
     ]);
     // depois do cartão ativo o foco segue para o conteúdo seguinte, sem passar pelos cartões inert
-    assert.notEqual(order[9], 'Veja por que a Vanpack ↓');
+    assert.notEqual(order[7], 'Veja por que a Vanpack ↓');
     await context.close();
   });
 
@@ -214,7 +212,9 @@ describe('contraste (calculado nos estilos reais)', () => {
     ['.scrollcue', 7],
     ['.sec-head h2', 7],
     ['.sec-head .k', 7],
-    ['.pillar h3', 7],
+    ['#diferenciais .sec-head .k', 7], // faixa tint
+    ['#diferenciais .sec-head h2', 7],
+    ['.pillar h3', 7], // cartão Papel sobre a faixa tint
     ['.pillar p', 7],
     ['.cta h2', 7],
     ['.cta p.lead', 7],
@@ -225,10 +225,8 @@ describe('contraste (calculado nos estilos reais)', () => {
     ['.facts b', 7],
     ['.model h3', 7],
     ['.model p', 7],
-    ['.proof-quote', 7],
-    ['.proof figcaption', 7],
-    ['.faq-item summary', 7],
-    ['.faq-item p', 7],
+    ['.logo-name', 7],
+    ['.logos .tag', 7],
     ['.cta .alt a', 7],
     ['.fab-wa', 7],
     ['.fab-tel a', 7],

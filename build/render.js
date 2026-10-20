@@ -4,11 +4,12 @@
 //   data-wa="mensagem"       o link vira https://wa.me/<número>?text=<mensagem> (nunca sem número)
 //   data-field="nome"        rodapé: recebe o valor da config; sem valor, o elemento sai do HTML
 //   data-need="chave outra"  o elemento sai se qualquer chave estiver vazia (e o atributo some)
-//   {{variavel}}             valor da config; vazio fora de um data-need é erro de build
+//   data-need="!chave"       o contrário: sai se a chave tiver valor (o texto de quando falta o dado)
+//   {{variavel}}           valor da config; vazio fora de um data-need é erro de build
 //   JSON-LD                  montado inteiro a partir da config
 //   modo demo                <meta name="robots" content="noindex,nofollow">
 
-import { visibleProofs } from '../site.config.js';
+import { visibleClients, visibleProofs } from '../site.config.js';
 
 export const escapeHtml = (s) =>
   String(s)
@@ -79,18 +80,10 @@ export function footerFields(site) {
     razao: site.legalName && escapeHtml(site.legalName),
     cnpj: site.cnpj && escapeHtml(site.cnpj),
     endereco: place && escapeHtml(place),
-    // o assistente do WhatsApp tem o horário dele (VITE_WHATSAPP_HOURS); o VITE_HOURS é o do telefone
-    horario:
-      site.hours &&
-      escapeHtml(
-        site.whatsappHours
-          ? `WhatsApp: ${site.whatsappHours} · Telefone: ${site.hours}`
-          : site.hours,
-      ),
+    horario: site.hours && escapeHtml(site.hours),
     telefone:
       site.phone &&
       link(`tel:${site.phone}`, site.phoneDisplay || site.phone, ' data-contact="phone"'),
-    email: site.email && link(`mailto:${site.email}`, site.email, ' data-contact="email"'),
     mapa:
       site.mapUrl &&
       link(site.mapUrl, 'Ver no mapa', ' data-contact="map" target="_blank" rel="noopener"'),
@@ -117,8 +110,11 @@ function applyMarks(html, { fields, vars }) {
       keep = Boolean(value);
     } else {
       const keys = key.trim().split(/\s+/);
-      for (const k of keys) if (!(k in vars)) throw new Error(`data-need desconhecido: "${k}"`);
-      keep = keys.every((k) => vars[k]);
+      const name = (k) => k.replace(/^!/, '');
+      for (const k of keys) {
+        if (!(name(k) in vars)) throw new Error(`data-need desconhecido: "${name(k)}"`);
+      }
+      keep = keys.every((k) => (k.startsWith('!') ? !vars[name(k)] : vars[k]));
     }
     const end = elementEnd(out, m.index, tag);
     if (!keep) {
@@ -202,7 +198,6 @@ export function buildJsonLd(site) {
     image: `${site.siteUrl}og.jpg`,
     logo: `${site.siteUrl}icon-512.png`,
     ...(site.phone && { telephone: site.phone }),
-    ...(site.email && { email: site.email }),
     ...(site.cnpj && { taxID: site.cnpj }),
     ...(site.foundedYear && { foundingDate: site.foundedYear }),
     ...(site.hoursSchema && { openingHours: site.hoursSchema }),
@@ -218,61 +213,58 @@ export function buildJsonLd(site) {
   };
 }
 
-/** Perguntas do FAQ prontas: a resposta ganha os dados do .env e a pergunta sem dado some. */
-export function faqItems(site) {
-  return site.content.faq.flatMap(({ id, q, a }) => {
-    const keys = [...a.matchAll(/\{\{\s*(\w+)\s*\}\}/g)].map((m) => m[1]);
-    for (const key of keys) {
-      if (!(key in site.vars)) throw new Error(`FAQ "${id}": variável desconhecida {{${key}}}`);
-    }
-    if (keys.some((key) => !site.vars[key])) return [];
-    return [{ id, q, a: interpolate(a, site.vars, `FAQ "${id}"`) }];
-  });
-}
-
 const BLOCKS = {
-  // Modelos de caixa: cada um com o seu botão de orçamento (código [site-produtos-<id>]).
+  // Produtos: cada um com o seu botão de orçamento (código [site-produtos-<id>]).
   produtos: (site) =>
     site.content.models
       .map(
-        ({ id, name, text }) => `<article class="model">
+        ({ id, name, subject, text }) => `<article class="model">
   <h3>${escapeHtml(name)}</h3>
   <p>${escapeHtml(text)}</p>
   <a class="btn btn-soft" data-cta="produtos-${escapeHtml(id)}" data-wa="${escapeHtml(
-    `Olá! Quero um orçamento da ${name}.`,
-  )}">Pedir orçamento deste modelo</a>
+    `Olá! Quero um orçamento de ${subject}.`,
+  )}">Pedir orçamento deste produto</a>
 </article>`,
       )
       .join('\n'),
 
-  faq: (site) =>
-    faqItems(site)
+  // Diferenciais do .env (VITE_DIFF_<n>_*): título, texto e ícone (um <symbol> do index.html).
+  diferenciais: (site) =>
+    site.differentials
       .map(
-        ({ id, q, a }) =>
-          `<details class="faq-item" data-faq="${escapeHtml(id)}"><summary>${escapeHtml(q)}</summary><p>${a}</p></details>`,
+        ({ title, text, icon }) =>
+          `<article class="pillar">${
+            icon ? `<svg aria-hidden="true"><use href="#i-${escapeHtml(icon)}" /></svg>` : ''
+          }<h3>${escapeHtml(title)}</h3>${text ? `<p>${escapeHtml(text)}</p>` : ''}</article>`,
       )
       .join('\n'),
 
-  // Prova social: só o autorizado (e, em demo, os exemplos com o rótulo "Exemplo").
+  // Prova social: a faixa de logos dos clientes do .env (em production só os que autorizaram; em
+  // demo também os exemplos, com o rótulo "Exemplo") e os depoimentos e a nota do Google autorizados.
+  // O logo é relativo à página (./clientes/…): o render roda depois de o Vite reescrever as URLs, e
+  // um caminho absoluto quebraria no subcaminho do GitHub Pages.
   clientes: (site) => {
-    const { testimonials, clientLogos, googleRating } = visibleProofs(
-      site.content.proofs,
-      site.dataMode,
-    );
+    const clients = visibleClients(site.clients, site.dataMode);
+    const { testimonials, googleRating } = visibleProofs(site.content.proofs);
+    const client = ({ name, logo, authorized }) =>
+      `<li>${
+        logo
+          ? `<img src="./clientes/${escapeHtml(logo)}" alt="${escapeHtml(name)}" width="160" height="64" loading="lazy" decoding="async" />`
+          : `<span class="logo-name">${escapeHtml(name)}</span>`
+      }${authorized ? '' : '<span class="tag">Exemplo</span>'}</li>`;
     return [
-      ...testimonials.map(
-        ({ quote, author, demo }) =>
-          `<figure class="proof"><p class="proof-quote">“${escapeHtml(quote)}”</p><figcaption>${escapeHtml(author)}${
-            demo ? ' <span class="tag">Exemplo</span>' : ''
-          }</figcaption></figure>`,
-      ),
-      clientLogos.length
-        ? `<ul class="logos" aria-label="Clientes">${clientLogos
+      clients.length
+        ? `<div class="logo-strip"><div class="logo-scroll" role="region" aria-label="Logos de clientes" tabindex="0"><ul class="logos">${clients
+            .map(client)
+            .join('')}</ul></div></div>`
+        : '',
+      testimonials.length
+        ? `<div class="proofs">${testimonials
             .map(
-              ({ name, src, width = 120, height = 40 }) =>
-                `<li><img src="${escapeHtml(src)}" alt="${escapeHtml(name)}" width="${width}" height="${height}" loading="lazy" decoding="async" /></li>`,
+              ({ quote, author }) =>
+                `<figure class="proof"><p class="proof-quote">“${escapeHtml(quote)}”</p><figcaption>${escapeHtml(author)}</figcaption></figure>`,
             )
-            .join('')}</ul>`
+            .join('')}</div>`
         : '',
       googleRating
         ? `<p class="rating"><a href="${escapeHtml(googleRating.url)}" target="_blank" rel="noopener">${escapeHtml(
@@ -285,7 +277,7 @@ const BLOCKS = {
   },
 };
 
-/** <!--render:nome--> vira o bloco gerado do conteúdo (modelos, FAQ, prova social). */
+/** <!--render:nome--> vira o bloco gerado do conteúdo (produtos, diferenciais, prova social). */
 function renderBlocks(html, site) {
   return html.replace(/<!--render:(\w+)-->/g, (_, name) => {
     if (!(name in BLOCKS)) throw new Error(`bloco desconhecido: <!--render:${name}-->`);
@@ -293,10 +285,14 @@ function renderBlocks(html, site) {
   });
 }
 
-/** Link interno para uma seção que saiu da página (sem dado) sai junto: nada de âncora morta. */
+/**
+ * Link interno para uma seção que saiu da página (sem dado) sai junto: nada de âncora morta. O
+ * fechamento pode vir quebrado pelo Prettier (`</a` e o `>` na linha seguinte): sem aceitar isso, o
+ * link morto engolia o link vizinho.
+ */
 function dropDeadAnchors(html) {
   const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]));
-  return html.replace(/<a\b[^>]*\shref="#([A-Za-z][\w-]*)"[^>]*>[\s\S]*?<\/a>/g, (link, id) =>
+  return html.replace(/<a\b[^>]*\shref="#([A-Za-z][\w-]*)"[^>]*>[\s\S]*?<\/a\s*>/g, (link, id) =>
     ids.has(id) ? link : '',
   );
 }

@@ -26,10 +26,8 @@ const FORWARD = new Set([
   'handoff_fail',
   'whatsapp_copy',
   'phone_click',
-  'email_click',
   'map_click',
   'cta_view',
-  'faq_open',
 ]);
 
 const umami = typeof __SITE__ === 'undefined' ? null : __SITE__.analytics;

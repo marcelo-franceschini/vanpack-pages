@@ -182,9 +182,12 @@
           O responsável pelos dados é a {{holder}}<span data-need="cnpj">, CNPJ {{cnpj}}</span
           ><span data-need="street cityState">, com sede em {{street}}, {{cityState}}</span>.
         </p>
-        <p data-need="email">
-          Para falar sobre privacidade:
-          <a href="mailto:{{email}}" data-contact="email">{{email}}</a>.
+        <p data-need="whatsapp">
+          Para falar sobre privacidade, chame no
+          <a data-cta="privacidade" data-wa="Olá! Quero falar sobre os meus dados pessoais."
+            >WhatsApp<span data-need="whatsappDisplay"> {{whatsappDisplay}}</span></a
+          ><span data-need="phone"> ou ligue para <a href="tel:{{phone}}">{{phoneDisplay}}</a></span
+          >.
         </p>
 
         <h2>Cookies e armazenamento</h2>
@@ -197,10 +200,9 @@
           <h2>Medição do uso do site</h2>
           <p>
             Para entender como o site é usado, medimos de forma agregada: as páginas vistas, os
-            cliques nos botões de WhatsApp, telefone, e-mail e mapa, se o WhatsApp abriu depois do
-            clique, se o site foi aberto dentro de um aplicativo (como o Instagram), as perguntas
-            abertas do FAQ, até que ponto da página a pessoa foi e o tempo de carregamento. Nada
-            disso identifica você.
+            cliques nos botões de WhatsApp, telefone e mapa, se o WhatsApp abriu depois do clique,
+            se o site foi aberto dentro de um aplicativo (como o Instagram), até que ponto da página
+            a pessoa foi e o tempo de carregamento. Nada disso identifica você.
           </p>
           <p>
             A medição é feita pelo {{analyticsName}}, que não usa cookies e informa que não coleta
@@ -236,10 +238,9 @@
           A lei garante a você, entre outros, a confirmação de que tratamos dados seus, o acesso, a
           correção, a eliminação e a informação sobre com quem os dados são compartilhados (art. 18
           da LGPD). Como a medição do site é anônima, não temos como identificar dados seus nela; se
-          você nos enviou dados pelo WhatsApp<span data-need="email"> ou por e-mail</span>, pode
-          pedir para acessá-los ou eliminá-los falando com a gente<span data-need="email">
-            em <a href="mailto:{{email}}" data-contact="email">{{email}}</a></span
-          >.
+          você nos enviou dados pelo WhatsApp, pode pedir para acessá-los ou eliminá-los pelo mesmo
+          WhatsApp<span data-need="whatsappDisplay"> {{whatsappDisplay}}</span
+          ><span data-need="phone"> ou pelo telefone {{phoneDisplay}}</span>.
         </p>
 
         <h2>Mudanças</h2>
