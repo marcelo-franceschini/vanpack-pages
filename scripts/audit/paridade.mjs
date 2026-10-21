@@ -7,8 +7,11 @@
 // canonicalHtml), robots.txt e sitemap.xml. Byte igual passa direto; se os bytes diferem, conta-se por pixel: a tolerância
 // é de 2/255 por canal (ruído de rasterização nas bordas suavizadas de ícones e sublinhados, medido em
 // 1/255 entre duas séries da mesma base) e nenhuma mudança de tamanho. Nenhuma mudança visual real cabe
-// nisso: trocar uma cor, mover algo em 1 px ou mudar um texto passa de 2/255 nas bordas. Quando reprova,
-// as duas imagens vão para dist-paridade/.
+// nisso: trocar uma cor, mover algo em 1 px ou mudar um texto passa de 2/255 nas bordas. O renderizador
+// do runner do CI às vezes erra um ou dois pixels de borda (2 pixels a 14/255 num sublinhado, em pontos
+// diferentes a cada execução): por isso uma diferença acima da tolerância só reprova se se repetir nos
+// mesmos pixels numa segunda captura dos dois lados; mudança real é determinística e se repete, o erro
+// do renderizador não. Quando reprova, as duas imagens vão para dist-paridade/.
 //
 // Uso: node scripts/audit/paridade.mjs [--base=<ref do git>] [--telas=1440x900,390x844] [--html=aviso]
 // (sai com 1 se algo mudou). --html=aviso: diferença só na estrutura do HTML (tags, atributos, texto) é
@@ -123,7 +126,10 @@ async function capture(browser, url, screen) {
   return { shots, problems: [...problems, ...extra] };
 }
 
-/** Pixels que mudaram, quantos passam da tolerância e a maior diferença de canal, contados no navegador. */
+/**
+ * Pixels que mudaram, quantos passam da tolerância (`over`, e a posição dos primeiros em `at`) e a maior
+ * diferença de canal, contados no navegador.
+ */
 const pixelDiff = (page, a, b) =>
   page.evaluate(
     async ([left, right, tolerance]) => {
@@ -143,6 +149,7 @@ const pixelDiff = (page, a, b) =>
       let pixels = 0;
       let over = 0;
       let max = 0;
+      const at = [];
       for (let i = 0; i < p.data.length; i += 4) {
         const delta = Math.max(
           Math.abs(p.data[i] - q.data[i]),
@@ -150,10 +157,13 @@ const pixelDiff = (page, a, b) =>
           Math.abs(p.data[i + 2] - q.data[i + 2]),
         );
         if (delta) pixels += 1;
-        if (delta > tolerance) over += 1;
+        if (delta > tolerance) {
+          over += 1;
+          if (at.length < 5000) at.push(i / 4);
+        }
         max = Math.max(max, delta);
       }
-      return { pixels, over, max };
+      return { pixels, over, max, at };
     },
     [a.toString('base64'), b.toString('base64'), TOLERANCE],
   );
@@ -260,6 +270,8 @@ for (const screen of screens) {
   const before = await capture(browser, anterior.url, screen);
   const changed = [];
   const noise = [];
+  /** A 2ª captura da tela (só se algo passar da tolerância), para confirmar que a diferença se repete. */
+  let second;
   for (const name of new Set([...now.shots.keys(), ...before.shots.keys()])) {
     const a = now.shots.get(name);
     const b = before.shots.get(name);
@@ -272,6 +284,24 @@ for (const screen of screens) {
         noise.push(`${name} (${diff.pixels} pixels, no máximo ${diff.max}/255)`);
         noisy += 1;
         continue;
+      }
+      if (!diff.size) {
+        second ??= {
+          now: await capture(browser, atual.url, screen),
+          before: await capture(browser, anterior.url, screen),
+        };
+        const again =
+          second.now.shots.get(name) && second.before.shots.get(name)
+            ? await pixelDiff(diffPage, second.now.shots.get(name), second.before.shots.get(name))
+            : { size: 'sumiu na 2ª captura' };
+        const repeated = again.size || again.at.some((pixel) => diff.at.includes(pixel));
+        if (!repeated) {
+          noise.push(
+            `${name} (${diff.over} pixels acima de ${TOLERANCE}/255, máximo ${diff.max}/255, não se repetiu na 2ª captura)`,
+          );
+          noisy += 1;
+          continue;
+        }
       }
       detail = diff.size ?? `${diff.over} pixels acima de ${TOLERANCE}/255, máximo ${diff.max}/255`;
     } else if (a && b) {

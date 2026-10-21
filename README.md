@@ -222,7 +222,7 @@ Eventos do `dataLayer`: `whatsapp_click{cta}`, `handoff_fail{cta}`, `whatsapp_co
 
 A verificação (lint, tipos e a suíte inteira de testes) mora em [`verificar.yml`](.github/workflows/verificar.yml), um workflow reutilizável chamado pelos dois fluxos abaixo; o Node vem do `.nvmrc` e as actions são fixadas por SHA (o [Dependabot](.github/dependabot.yml) propõe as atualizações, uma por assunto, toda segunda-feira).
 
-- **Pull request** ([`ci.yml`](.github/workflows/ci.yml)): `verificar` e `paridade`. A paridade compara, pixel a pixel, o PR com a branch de destino em 6 tamanhos de tela e compara a estrutura do HTML (`npm run audit:paridade`). O rótulo `muda-visual` no PR deixa a diferença de pixels passar (as imagens ficam num artefato do CI); `muda-html` deixa passar só a diferença no HTML, que vira aviso.
+- **Pull request** ([`ci.yml`](.github/workflows/ci.yml)): `verificar` e `paridade`. A paridade compara, pixel a pixel, o PR com a branch de destino em 6 tamanhos de tela e compara a estrutura do HTML (`npm run audit:paridade`). Uma diferença de pixel só reprova se se repetir nos mesmos pixels numa segunda captura: o renderizador do CI às vezes erra um ou dois pixels de borda, em pontos diferentes a cada execução, e uma mudança real é determinística. O rótulo `muda-visual` no PR deixa a diferença de pixels passar (as imagens ficam num artefato do CI); `muda-html` deixa passar só a diferença no HTML, que vira aviso.
 - **Push na `master`** ([`deploy.yml`](.github/workflows/deploy.yml)): roda `verificar` de novo e só publica se passar.
 - **Proteção da `master`**: o check `verificar` é obrigatório no merge.
 
