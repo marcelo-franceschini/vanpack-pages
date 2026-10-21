@@ -190,6 +190,45 @@ describe('trava de go-live', () => {
     );
   });
 
+  test('valor real igual ao de exemplo (horário, pedido mínimo, região, pagamento) só passa se confirmado', () => {
+    // um horário comercial como "Seg a Sex, 8h às 17h" pode ser o real: sem confirmação o build recusa
+    // (para pegar o que ficou esquecido) e diz como confirmar
+    const igual = {
+      ...realEmpresa,
+      horario: DEMO_EMPRESA.horario,
+      horario_schema: DEMO_EMPRESA.horario_schema,
+      pedido_minimo: DEMO_EMPRESA.pedido_minimo,
+    };
+    const clientes = { ...baseContent.clientes, clientes: [] };
+    const content = (empresa) => withEmpresa(empresa, { clientes });
+    const sem = errorsOf({ env: PRODUCTION, content: content(igual) });
+    assert.match(sem, /› horario \("Seg a Sex, 8h às 17h"\) ainda é o valor fictício/);
+    assert.match(sem, /liste "horario" em "confirmados" no content\/empresa\.yaml/);
+    assert.match(sem, /› pedido_minimo /);
+    // confirmar só o horário: sobra o pedido mínimo
+    const parcial = errorsOf({
+      env: PRODUCTION,
+      content: content({ ...igual, confirmados: ['horario', 'horario_schema'] }),
+    });
+    assert.doesNotMatch(parcial, /› horario/);
+    assert.match(parcial, /› pedido_minimo /);
+    // confirmados os três: passa
+    assert.deepEqual(
+      validate({
+        env: PRODUCTION,
+        content: content({ ...igual, confirmados: ['horario', 'horario_schema', 'pedido_minimo'] }),
+      }).errors,
+      [],
+    );
+    // dado que identifica a empresa nunca é confirmável: sem dica, e a confirmação não o salva
+    const cnpj = errorsOf({
+      env: PRODUCTION,
+      content: content({ ...realEmpresa, cnpj: DEMO_EMPRESA.cnpj, confirmados: ['horario'] }),
+    });
+    assert.match(cnpj, /› cnpj \("00\.000\.000\/0001-00"\) ainda é o valor fictício/);
+    assert.doesNotMatch(cnpj, /liste "cnpj"/);
+  });
+
   test('production exige os campos obrigatórios e os formatos', () => {
     for (const [path, value] of [
       ['cnpj', ''],

@@ -116,6 +116,17 @@ describe('campos e tipos', () => {
     );
   });
 
+  test('confirmados aceita só os campos que podem coincidir com o exemplo', () => {
+    assert.deepEqual(
+      errorsWith({ 'empresa.yaml': stringify({ ...empresa, confirmados: ['horario', 'regiao'] }) }),
+      [],
+    );
+    assert.match(
+      joined({ 'empresa.yaml': stringify({ ...empresa, confirmados: ['horario', 'cnpj'] }) }),
+      /› confirmados\[1\]: valor não aceito; use um destes: horario, horario_schema, pedido_minimo, regiao, pagamento/,
+    );
+  });
+
   test('texto maior que o limite, UF e link fora do formato', () => {
     const all = joined({
       'empresa.yaml': stringify({

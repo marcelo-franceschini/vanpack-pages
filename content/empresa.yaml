@@ -39,3 +39,8 @@ ano_fundacao: 2010
 pedido_minimo: 500
 regiao: "Santo André, ABC e Grande São Paulo"
 pagamento: "Pix, boleto faturado e cartão"
+
+# Só no go-live: se o valor REAL de horário, horario_schema, pedido_minimo, regiao ou pagamento for igual ao
+# de exemplo acima (é comum: "Seg a Sex, 8h às 17h", 500 unidades...), o build de production recusa por
+# achar que sobrou dado fictício. Liste aqui os campos que você conferiu e são mesmo assim:
+#   confirmados: [horario, pedido_minimo]

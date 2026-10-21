@@ -19,7 +19,9 @@ README ("Como editar o conteúdo").
 4. Rode `npm run build`. Em `production` o build **falha** e lista o que ainda não está pronto, com o
    arquivo, a linha e o campo: dado obrigatório vazio, formato inválido (CNPJ com dígito verificador
    errado, telefone sem `+55`, URL sem `https`), qualquer valor que ainda seja o fictício de
-   `content/exemplo/empresa.yaml` e os clientes de exemplo que sobraram.
+   `content/exemplo/empresa.yaml` e os clientes de exemplo que sobraram. Se o valor **real** de horário,
+   pedido mínimo, região ou pagamento for igual ao de exemplo (é comum), o build também recusa, mas a
+   mensagem diz como confirmar: liste o campo em `confirmados` no `content/empresa.yaml`.
 5. Confira a página com `npm run preview`: rodapé, faixa de confiança, botões do WhatsApp, diferenciais
    e clientes.
 6. Abra um pull request e, com o CI verde, faça o merge na `master`. Os valores de `content/` e do
@@ -49,6 +51,7 @@ anunciado. Depois do deploy, peça a indexação no Search Console.
 | `pedido_minimo`     | Pedido mínimo, em unidades                                 | não         | Confirme com a produção                             |
 | `regiao`            | Região atendida                                            | não         | Confirme com o comercial                            |
 | `pagamento`         | Formas de pagamento                                        | não         | Confirme com o financeiro                           |
+| `confirmados`       | Campos cujo valor real é igual ao de exemplo (lista)       | não         | Ex.: `[horario, pedido_minimo]`; só esses cinco     |
 
 Os outros arquivos de `content/` (os textos da página: `site.yaml`, `historia.yaml`, `confianca.yaml`, `orcamento.yaml`, `whatsapp.yaml`, `rodape.yaml` e o texto da política em `privacidade.md`, além destes):
 
