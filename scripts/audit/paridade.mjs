@@ -150,8 +150,8 @@ const pixelDiff = (page, a, b) =>
 /**
  * A estrutura do HTML publicado como uma lista de linhas, para comparar dois builds sem se perder em
  * detalhes que não aparecem: o HTML é lido por um DOMParser (nada roda), os atributos saem em ordem
- * alfabética, o espaço em branco vira um só e some nas pontas dos elementos, os nomes de arquivo com
- * hash perdem o hash e o conteúdo do <style> e da meta da CSP (que deriva dele) não entra. O texto, as
+ * alfabética, o espaço em branco vira um só e some nas pontas dos elementos, <div> e <span> sem
+ * atributo são ignorados, os nomes de arquivo com hash perdem o hash e o conteúdo do <style> e da meta da CSP (que deriva dele) não entra. O texto, as
  * tags e os atributos entram todos: trocar uma palavra, uma classe ou um link muda a lista.
  */
 const canonicalHtml = (page, source) =>
@@ -172,24 +172,36 @@ const canonicalHtml = (page, source) =>
           return `${name}="${text}"`;
         })
         .join(' ');
+    // texto vizinho (separado só por <span> sem atributo) vira um texto só
+    let pending = '';
+    const flush = () => {
+      const text = pending.replace(/\s+/g, ' ').trim();
+      pending = '';
+      if (text) lines.push(JSON.stringify(text));
+    };
     const walk = (node) => {
       if (node.nodeType === Node.TEXT_NODE) {
-        let text = node.data.replace(/\s+/g, ' ');
-        if (!node.previousSibling) text = text.trimStart();
-        if (!node.nextSibling) text = text.trimEnd();
-        if (text) lines.push(JSON.stringify(text));
+        pending += node.data;
         return;
       }
       if (node.nodeType !== Node.ELEMENT_NODE) return;
       const tag = node.localName;
       const attrs = attributes(node);
+      // <div> e <span> sem atributo não têm efeito sozinhos: eram só o gatilho do data-need de um trecho
+      if (!attrs && (tag === 'div' || tag === 'span')) {
+        node.childNodes.forEach(walk);
+        return;
+      }
+      flush();
       lines.push(`<${tag}${attrs ? ` ${attrs}` : ''}>`);
       if (tag === 'style') lines.push('(css)');
       else if (tag === 'script') lines.push(node.textContent.replace(/\s+/g, ' ').trim());
       else node.childNodes.forEach(walk);
+      flush();
       lines.push(`</${tag}>`);
     };
     walk(doc.documentElement);
+    flush();
     return lines;
   }, source);
 

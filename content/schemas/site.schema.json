@@ -5,7 +5,7 @@
   "description": "Nome da marca, título e descrição da página e links do menu.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["nome", "slogan", "descricao", "pagina", "menu"],
+  "required": ["nome", "slogan", "descricao", "pagina", "menu", "privacidade"],
   "properties": {
     "nome": {
       "type": "string",
@@ -88,6 +88,32 @@
         }
       },
       "description": "Os links do menu do topo e do rodapé."
+    },
+    "privacidade": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["titulo", "descricao", "voltar"],
+      "description": "A página da política de privacidade (o texto dela está em privacidade.md).",
+      "properties": {
+        "titulo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Título da página (aba do navegador)."
+        },
+        "descricao": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 180,
+          "description": "Descrição da página para o Google."
+        },
+        "voltar": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "description": "Link para voltar ao site, no topo da página."
+        }
+      }
     }
   }
 }

@@ -63,11 +63,145 @@ Os dados da empresa e todos os textos do site vivem na pasta [`content/`](conten
 
 - `content/empresa.yaml`: razão social, CNPJ, WhatsApp, telefone, endereço, horário, mapa, ano de fundação (o "N anos de mercado" e o © são calculados dele, no build e de novo no navegador, então não precisam de edição anual), pedido mínimo, região e formas de pagamento. É a fonte única do rodapé, do JSON-LD, dos links do WhatsApp, do `robots.txt` e do `sitemap.xml`. O WhatsApp é obrigatório nos dois modos (`55` + DDD + número); o build nunca gera `wa.me/?text=…` sem número.
 - `content/site.yaml` (nome, slogan, título e descrição da página, texto da imagem de compartilhamento e menus), `historia.yaml` (os 5 cartões da história), `confianca.yaml`, `orcamento.yaml` (a seção final), `whatsapp.yaml` (mensagem e texto de cada botão e a folha "O WhatsApp não abriu?") e `rodape.yaml`: os textos da página. Nos textos, `{{cidade}}` puxa um dado da empresa e `{{#se cidade}}...{{/se}}` só aparece se houver o dado (a lista de variáveis está na mensagem de erro de uma variável errada). O `index.html` só tem a estrutura e `{{arquivo.campo}}` no lugar de cada texto; um teste (`tests/template.test.mjs`) prova que nenhum texto de negócio ficou escrito à mão nele nem no `build/render.js`. Ficam no código só os rótulos de interface ("Pular para o conteúdo", "Fechar", os controles do carrossel, os `aria-label` dos menus).
+- `content/privacidade.md`: o texto da política de privacidade, em Markdown mínimo (`# título`, `## seção`, parágrafos, links `[texto](https://...)`, `[texto](tel:{{telefone}})` e `[texto](wa:privacidade)`), com as mesmas `{{variáveis}}` e `{{#se}}...{{/se}}` dos outros textos (`{{#se rua cidade_uf}}` vale quando todas têm valor). HTML escrito à mão, título `###` ou outro tipo de link é erro de build. O interpretador é o `build/privacidade.js` (sem dependência).
 - `content/produtos.yaml`, `diferenciais.yaml` (até 6; ícone `fabrica`, `lotes`, `conversa` ou `caixa`), `clientes.yaml` e `clientes/` (até 12; logo só em SVG, até 20 KB, que o build otimiza com o svgo; em production só aparece o cliente com `autorizado: true`, que precisa de registro em [`docs/provas/`](docs/provas/README.md)) e `provas.yaml` (depoimentos e nota do Google, só autorizados). Seção sem item some, junto com o link para ela.
 - `content/exemplo/empresa.yaml`: os valores fictícios de referência. Em production o build recusa um valor de `empresa.yaml` que ainda seja igual ao daqui (cidade, UF e ano de fundação ficam de fora: já são reais).
 - `.env`: `VITE_DATA_MODE` (`demo`: dados fictícios, o HTML sai com `noindex` e o `robots.txt` bloqueia tudo; `production`: o build falha se faltar dado obrigatório, se o formato for inválido, se sobrar valor fictício ou cliente de exemplo), `VITE_SITE_URL` (termina em `/`: canonical, Open Graph, JSON-LD, robots e sitemap) e a medição sem cookies: `VITE_ANALYTICS_PROVIDER` (`umami` ou vazio), `VITE_ANALYTICS_SITE` e `VITE_ANALYTICS_ENDPOINT`. O [`.env.example`](.env.example) comenta cada chave.
 
 No build, o `build/content.js` lê e valida `content/` contra os schemas (erro em português, com arquivo, linha e campo), o `site.config.js` monta a config (`createSiteConfig`), o `build/validate.js` confere a trava de go-live, o `build/render.js` escreve os dados no HTML (links `wa.me`, campos `data-field` do rodapé, trechos `data-need` e o texto alternativo `data-need="!chave"`, `{{variáveis}}`, produtos, diferenciais, clientes, JSON-LD e o `noindex` em demo) e o `build/files.js` gera `robots.txt` e `sitemap.xml`. `{{variável}}` vazia fora de um `data-need` é erro de build. Tudo isso roda só no build: o navegador recebe o mesmo HTML estático, sem YAML, sem validador e sem `fetch`.
+
+---
+
+## Como editar o conteúdo (sem programar)
+
+Quem edita: qualquer pessoa que consiga abrir um arquivo de texto. Você **não precisa** mexer em HTML, CSS nem JavaScript: tudo que a pessoa lê no site está em `content/`. Uma analogia com Python: os arquivos `content/*.yaml` são os **dados**; os arquivos `content/schemas/*.schema.json` são os **modelos** que dizem o que é válido (o papel de um modelo Pydantic); e o `npm run build` é o script que lê os dados, valida contra os modelos e escreve o HTML final. Se algo estiver errado, o build **não publica** e diz em português o arquivo, a linha e o campo.
+
+### O que instalar (uma vez)
+
+1. Node.js 24 (o arquivo `.nvmrc` diz qual) e, dentro da pasta do projeto, `npm ci`.
+2. O VS Code, com as extensões que ele sugere ao abrir a pasta (YAML, Prettier, ESLint). A extensão YAML sublinha o erro e autocompleta os campos, porque `.vscode/settings.json` já liga cada arquivo ao seu schema.
+
+### As regras do YAML (cinco linhas)
+
+- Ponha **sempre os textos entre aspas**: `titulo: "Caixas de papelão"`. Sem aspas, `:` no meio do texto, números e símbolos como `{` ou `[` no começo dão erro.
+- O recuo é de **2 espaços** (nunca Tab) e cada nível de recuo é um bloco dentro do outro.
+- Uma lista tem um item por linha, começando com `- `.
+- Tudo depois de `#` é comentário: o site ignora.
+- Campo vazio (`""`) ou apagado: o trecho some da página (nada é inventado). Os campos obrigatórios são avisados no build.
+
+### Onde está cada coisa
+
+| Para mudar...                                                                          | Edite                                         |
+| -------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Telefone, WhatsApp, endereço, CNPJ, horário, mapa, ano de fundação, pedido mínimo      | `content/empresa.yaml`                        |
+| Nome, slogan, título e descrição da página, texto da imagem de compartilhamento, menus | `content/site.yaml`                           |
+| Os 5 cartões da história (a abertura da página)                                        | `content/historia.yaml`                       |
+| A faixa "Quem somos"                                                                   | `content/confianca.yaml`                      |
+| Os 3 produtos                                                                          | `content/produtos.yaml`                       |
+| "Por que a Vanpack" (até 6 cartões)                                                    | `content/diferenciais.yaml`                   |
+| Clientes (até 12) e seus logos                                                         | `content/clientes.yaml` e `content/clientes/` |
+| Depoimentos e nota do Google (só com autorização)                                      | `content/provas.yaml`                         |
+| A seção final do orçamento e os 3 passos de "Como pedir"                               | `content/orcamento.yaml`                      |
+| A mensagem de cada botão do WhatsApp e a folha "O WhatsApp não abriu?"                 | `content/whatsapp.yaml`                       |
+| Rótulos do rodapé                                                                      | `content/rodape.yaml`                         |
+| A política de privacidade                                                              | `content/privacidade.md`                      |
+| Modo demo × production, endereço do site, medição                                      | `.env`                                        |
+
+### Passo a passo
+
+**Trocar um texto.** Abra o arquivo da tabela, ache o texto (use a busca do editor), troque o que está entre aspas e salve. Exemplo: para mudar o título da abertura, em `content/historia.yaml`:
+
+```yaml
+hero:
+  titulo: 'Caixas de papelão sob medida, com a sua marca' # troque só o que está entre aspas
+```
+
+Passe o mouse sobre um campo para ver a explicação dele e o tamanho máximo. Texto maior que o máximo é recusado, porque quebraria o layout.
+
+**Trocar telefone, WhatsApp ou endereço.** Em `content/empresa.yaml`:
+
+```yaml
+whatsapp: '5511987654321' # 55 + DDD + número, só dígitos
+telefone: '+551147001234' # +55 + DDD + número
+telefone_exibicao: '(11) 4700-1234' # como aparece na página
+endereco:
+  rua: 'Av. das Caixas, 500'
+  bairro: 'Distrito Industrial'
+  cidade: 'Santo André'
+  uf: 'SP'
+  cep: '09000-100'
+```
+
+Troque aqui e pronto: o rodapé, os botões, o JSON-LD do Google e o mapa usam esses dados. Nada precisa ser mudado em outro lugar.
+
+**Adicionar um cliente.**
+
+1. Peça ao cliente a **autorização por escrito** (e-mail ou WhatsApp) para mostrar o logo.
+2. Ponha o logo em `content/clientes/`: só **SVG** (vetor), com nome em minúsculas, sem acento e com hífens (`padaria-real.svg`), até **20 KB**, com `viewBox`, sem script nem imagem embutida. O site otimiza o arquivo ao publicar, sem mudar o desenho.
+3. Em `content/clientes.yaml`, troque um dos clientes de exemplo (ou acrescente, até 12):
+
+   ```yaml
+   clientes:
+     - nome: 'Padaria Real'
+       logo: 'padaria-real.svg' # sem logo, aparece o nome em texto
+       alt: 'Logo da Padaria Real' # opcional; sem ele, vale o nome
+       autorizado: true
+   ```
+
+4. Registre a autorização em `docs/provas/padaria-real.md` (o nome do arquivo é o nome do cliente em minúsculas, sem acento e com hífens; o modelo está em [`docs/provas/README.md`](docs/provas/README.md)). Sem esse arquivo, o build recusa.
+
+**Remover um cliente.** Apague as linhas dele (o `- nome:` e o que vem recuado embaixo) em `content/clientes.yaml`. Se quiser, apague também o SVG de `content/clientes/`. Sem nenhum cliente (nem depoimento), a seção "Clientes" e o link para ela somem sozinhos.
+
+**Trocar uma imagem.**
+
+- _Logo de cliente_: veja "Adicionar um cliente".
+- _Imagem de compartilhamento_ (a prévia no WhatsApp e no Google): `public/og.jpg`, 1200 × 630 px, JPG, no máximo cerca de 65 KB. `npm run og` gera de novo a partir da primeira cena do 3D. Troque o texto que a descreve em `content/site.yaml` (`pagina.imagem_alt`).
+- _As marcas (logo da Vanpack) e as ilustrações dos produtos_ são geradas e protegidas (manual da marca); não troque à mão.
+- _Fotos_: o site não usa nenhuma (decisão do dono).
+
+**Trocar título, descrição ou imagem de compartilhamento.** Em `content/site.yaml`, bloco `pagina`: `titulo`, `descricao` (cerca de 155 caracteres) e `imagem_alt`.
+
+**Ver o resultado no seu computador.** `npm run dev` e abra `http://localhost:5173`. Ao salvar um arquivo de `content/`, a página recarrega sozinha. Se houver erro, aparece na tela e no terminal, por exemplo:
+
+```text
+content/clientes.yaml, linha 14 › clientes[1].logo: o arquivo content/clientes/padaria-real.svg não existe
+content/historia.yaml, linha 12 › hero.titulo: tem 71 caracteres; o máximo é 65 (um texto maior quebraria o layout)
+content/empresa.yaml, linha 4 › telefone: precisa ser um texto (entre aspas); o valor 551147001234 foi lido como número, ponha-o entre aspas
+```
+
+Cada linha diz **o arquivo, a linha, o campo e o problema**. `npm run build` mostra os mesmos erros.
+
+**Publicar.** (1) Salve e confira com `npm run dev` e `npm run build`. (2) `git checkout -b conteudo/minha-mudanca`, `git add content`, `git commit -m "feat(conteudo): troca o telefone"` e `git push`. (3) Abra um _pull request_ no GitHub e espere o CI ficar verde (lint, build, testes e a conferência visual). (4) Faça o _merge_: o deploy roda sozinho em poucos minutos. (5) Em **Actions**, confira que o workflow "Deploy" terminou em verde e abra o site para ver.
+
+### Variáveis que os textos podem usar
+
+Dentro de qualquer texto de `content/`, `{{nome}}` puxa o dado. `{{#se cidade}} Fábrica em {{cidade}}.{{/se}}` só aparece se houver cidade (`{{#se rua cidade_uf}}` vale quando todas têm valor; `{{#senao cidade}}...{{/senao}}` é o contrário). Uma variável com nome errado é recusada e o erro lista os nomes certos.
+
+| Variável                                                   | O que é                                                                             |
+| ---------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `{{nome}}`, `{{slogan}}`                                   | Nome e slogan da marca (`content/site.yaml`)                                        |
+| `{{razao_social}}`, `{{titular}}`                          | Razão social; `titular` é a razão social ou, sem ela, o nome da marca               |
+| `{{cnpj}}`                                                 | CNPJ                                                                                |
+| `{{rua}}`, `{{bairro}}`, `{{cidade}}`, `{{uf}}`, `{{cep}}` | Endereço, em pedaços                                                                |
+| `{{cidade_uf}}`                                            | "Santo André-SP"                                                                    |
+| `{{telefone}}`, `{{telefone_exibicao}}`                    | Telefone em `+55...` e como aparece na página                                       |
+| `{{whatsapp}}`, `{{whatsapp_exibicao}}`                    | WhatsApp só com dígitos e como aparece: (11) 91234-5678                             |
+| `{{horario}}`                                              | Horário de atendimento                                                              |
+| `{{ano_fundacao}}`                                         | Ano de fundação                                                                     |
+| `{{anos}}`, `{{ano}}`, `{{ano_atual}}`                     | Anos de mercado e ano atual, que se atualizam sozinhos (`ano_atual`: texto simples) |
+| `{{pedido_minimo}}`, `{{regiao}}`, `{{pagamento}}`         | Dados operacionais                                                                  |
+| `{{medicao_nome}}`, `{{sem_medicao}}`                      | Para a política de privacidade: a ferramenta de medição, ou "não há"                |
+
+### O que NÃO mexer (sem falar com quem programa)
+
+- `index.html` e `politica-de-privacidade.html`: são o **layout** (estrutura, CSS e a animação). Só têm `{{arquivo.campo}}` no lugar de cada texto.
+- `src/`, `build/`, `site.config.js`, `vite.config.js`, `scripts/`, `tests/`: o código.
+- `content/schemas/`: as regras do que é válido (limites de tamanho, listas de valores). Se um limite atrapalha, peça para mudar e conferir o layout.
+- `content/exemplo/empresa.yaml`: os dados fictícios de referência.
+- `public/brand/`, `public/produtos/`, `src/brand/marks.js`: arte da marca e dos produtos, geradas.
+- `tests/fixtures/3d-lock.json`: trava da animação 3D.
+
+**O que fica no código, de propósito (rótulos de interface, não são texto de negócio):** o link "Pular para o conteúdo", "ROLE ↓" da abertura, "Fechar" na folha do WhatsApp, os controles do carrossel (Pausar, Retomar, Anterior, Próximo, o rótulo "Exemplo"), os `aria-label` dos menus e das regiões da página (para leitor de tela), os textos do assistente de orçamento (experimento desligado) e as mensagens de "número copiado". Se um dia precisarem mudar, é com quem programa.
 
 ---
 
@@ -98,6 +232,7 @@ site.config.js             Marca, variáveis dos textos e createSiteConfig({ env
 content/                   Dados da empresa e textos editáveis (YAML + JSON Schema em content/schemas/)
 build/content.js           Lê e valida content/ (erros em português, com arquivo, linha e campo)
 build/texto.js             Linguagem dos textos: {{variável}} e {{#se}}...{{/se}}
+build/privacidade.js       Markdown mínimo da política de privacidade (content/privacidade.md)
 build/render.js            Escreve os dados no HTML (WhatsApp, rodapé, {{variáveis}}, diferenciais, clientes, JSON-LD)
 build/validate.js          Trava de go-live: demo × production
 build/files.js             robots.txt e sitemap.xml gerados da URL do site
@@ -149,6 +284,8 @@ docs/                      Manual da marca e notas da v4
 - `tests/conteudo.test.mjs`: nada de e-mail, prazo, promessa de tempo de resposta, texto de processo industrial ou travessão no que a página mostra ou faz um leitor de tela ler (texto, aria-label, alt, title, metas, JSON-LD e mensagens do WhatsApp), em demo, em production e no build publicado; puro.
 - `tests/trava-3d.test.mjs`: o 3D principal é intocável: compara o sha256 de `src/scene/`, `src/render/` e `tests/scene.test.mjs` com `tests/fixtures/3d-lock.json`.
 - `tests/data-source.test.mjs`: nenhum dado de `content/empresa.yaml` escrito à mão no código, o conteúdo chega à página publicada, todo número visível vem de `content/` e o `.env` guarda só o que muda por ambiente.
+- `tests/template.test.mjs`: prova que nenhum texto de negócio ficou escrito à mão no `index.html`, na política ou no `build/render.js` (todo texto de `content/` vira um marcador, a página é renderizada e, tirados os marcadores, os dados da empresa e os rótulos de interface, não sobra letra).
+- `tests/privacidade.test.mjs`: o Markdown da política (título, resumo, seções, links, trechos condicionais, as duas versões da seção de medição e os erros de build).
 - `tests/content.test.mjs` e `tests/texto.test.mjs`: o carregador de `content/` (YAML mal formado, campo que falta ou não existe, tipo errado, tamanho, lista, valor fora da lista, travessão, variável inexistente: cada um vira mensagem em português com arquivo, linha e campo) e a linguagem dos textos.
 - `tests/site-url.test.mjs`: build em production com domínio próprio: canonical, Open Graph, JSON-LD, robots, sitemap e medição derivam todos da `VITE_SITE_URL`.
 - `tests/experiments.test.mjs` e `tests/wizard.test.mjs`: sorteio, persistência, data de término e variante forçada; o assistente de 3 passos (mensagem, validação, teclado, rótulos, contraste e celular).

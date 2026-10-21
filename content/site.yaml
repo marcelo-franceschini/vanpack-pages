@@ -19,3 +19,7 @@ menu:
   clientes: "Clientes"
   orcamento: "Orçamento"
   privacidade: "Privacidade"
+privacidade:
+  titulo: "Política de privacidade | {{nome}}"
+  descricao: "Como o site da {{titular}} trata dados: sem cookies, sem formulário e com medição anônima."
+  voltar: "Voltar ao site"

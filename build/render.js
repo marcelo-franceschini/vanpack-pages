@@ -12,6 +12,7 @@
 //   modo demo                <meta name="robots" content="noindex,nofollow">
 
 import { RICH_VARS, visibleClients, visibleProofs } from '../site.config.js';
+import { renderPolicy } from './privacidade.js';
 import { renderText } from './texto.js';
 
 export const escapeHtml = (s) =>
@@ -244,6 +245,9 @@ export function buildJsonLd(site) {
 const text = (site, value) => renderText(value, site.vars, { rich: RICH_VARS, where: 'conteúdo' });
 
 const BLOCKS = {
+  // A política de privacidade, de content/privacidade.md (Markdown mínimo, build/privacidade.js).
+  politica: (site) => renderPolicy(site.content.privacidade, site),
+
   // Produtos: cada um com a área do 3D no topo (preenchida por src/produtos/, com o espaço já
   // reservado) e o seu botão de orçamento (código [site-produtos-<id>]).
   produtos: (site) =>
@@ -318,7 +322,7 @@ const BLOCKS = {
   },
 };
 
-/** <!--render:nome--> vira o bloco gerado do conteúdo (produtos, diferenciais, prova social). */
+/** <!--render:nome--> vira o bloco gerado do conteúdo (produtos, diferenciais, prova social, política). */
 function renderBlocks(html, site) {
   return html.replace(/<!--render:(\w+)-->/g, (_, name) => {
     if (!(name in BLOCKS)) throw new Error(`bloco desconhecido: <!--render:${name}-->`);

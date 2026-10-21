@@ -7,6 +7,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { LineCounter, isMap, parseDocument } from 'yaml';
 import { VAR_NAMES } from '../site.config.js';
+import { policyProblems } from './privacidade.js';
 import { textProblem, textVariables } from './texto.js';
 
 /** Os arquivos YAML de content/ (cada um tem content/schemas/<nome>.schema.json). */
@@ -192,6 +193,37 @@ export function readContent(dir) {
   const ajv = new Ajv2020({ allErrors: true, strict: true, verbose: true, allowUnionTypes: true });
   ajv.addKeyword({ keyword: 'dica', schemaType: 'string' });
 
+  /** content/privacidade.md: o texto da política (Markdown mínimo, ver build/privacidade.js). */
+  const readPolicy = () => {
+    const file = join(dir, 'privacidade.md');
+    if (!existsSync(file)) {
+      errors.push('content/privacidade.md: o arquivo não existe');
+      return undefined;
+    }
+    const markdown = readFileSync(file, 'utf8');
+    for (const problem of policyProblems(markdown))
+      errors.push(`content/privacidade.md, ${problem}`);
+    const problem = textProblem(markdown);
+    if (problem) errors.push(`content/privacidade.md: ${problem}`);
+    else {
+      for (const name of textVariables(markdown)) {
+        if (!VAR_NAMES.includes(name)) {
+          errors.push(
+            `content/privacidade.md: a variável {{${name}}} não existe; use: ${VAR_NAMES.join(', ')}`,
+          );
+        }
+      }
+    }
+    for (const [i, line] of markdown.split('\n').entries()) {
+      if (LONG_DASH.test(line)) {
+        errors.push(
+          `content/privacidade.md, linha ${i + 1}: tem travessão longo (— ou –); use dois-pontos, vírgula, ponto ou hífen`,
+        );
+      }
+    }
+    return markdown;
+  };
+
   const readYaml = (name, folder = '') => {
     const label = `content/${folder}${name}.yaml`;
     const file = join(dir, folder, `${name}.yaml`);
@@ -233,6 +265,7 @@ export function readContent(dir) {
   };
 
   for (const name of CONTENT_FILES) content[name] = readYaml(name);
+  content.privacidade = readPolicy();
   for (const name of EXAMPLE_FILES) content.exemplo[name] = readYaml(name, 'exemplo/');
   return { content, errors };
 }

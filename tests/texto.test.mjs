@@ -27,6 +27,14 @@ describe('renderText', () => {
     assert.equal(renderText(text, { cidade: '', cnpj: '1' }), 'Título');
   });
 
+  test('{{#se a b}} exige todas as variáveis; {{#senao a b}} vale se alguma faltar', () => {
+    const text = '{{#se cidade cnpj}}sede{{/se}}{{#senao cidade cnpj}}sem sede{{/senao}}';
+    assert.equal(renderText(text, vars), 'sem sede', 'o CNPJ está vazio');
+    assert.equal(renderText(text, { ...vars, cnpj: '1' }), 'sede');
+    assert.throws(() => renderText('{{cidade cnpj}}', vars), /só uma variável por vez/);
+    assert.throws(() => renderText('{{#se cidade cnpj}}x{{/se cidade}}', vars), /não fecha/);
+  });
+
   test('variável vazia fora de {{#se}} e variável desconhecida são erro, com o nome de quem usa', () => {
     assert.throws(
       () => renderText('CNPJ {{cnpj}}', vars, { where: 'historia.yaml › hero.titulo' }),

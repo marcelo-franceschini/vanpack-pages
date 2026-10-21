@@ -50,7 +50,7 @@ anunciado. Depois do deploy, peça a indexação no Search Console.
 | `regiao`            | Região atendida                                            | não         | Confirme com o comercial                            |
 | `pagamento`         | Formas de pagamento                                        | não         | Confirme com o financeiro                           |
 
-Os outros arquivos de `content/` (os textos da página: `site.yaml`, `historia.yaml`, `confianca.yaml`, `orcamento.yaml`, `whatsapp.yaml` e `rodape.yaml`, além destes):
+Os outros arquivos de `content/` (os textos da página: `site.yaml`, `historia.yaml`, `confianca.yaml`, `orcamento.yaml`, `whatsapp.yaml`, `rodape.yaml` e o texto da política em `privacidade.md`, além destes):
 
 - `produtos.yaml`: os 3 produtos (nome, descrição, mensagem do botão e descrição do 3D para leitor de tela).
 - `diferenciais.yaml`: até 6 cartões de "Por que a Vanpack" (título, texto e ícone: `fabrica`, `lotes`,

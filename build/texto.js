@@ -3,8 +3,10 @@
 //
 //   {{variavel}}                 o dado da empresa (cidade, telefone...); o build lista os nomes
 //                                válidos se você errar um
-//   {{#se variavel}}...{{/se}}   o trecho só aparece se a variável tiver valor
-//   {{#senao variavel}}...{{/senao}}   o contrário: só aparece se ela estiver vazia
+//   {{#se variavel}}...{{/se}}   o trecho só aparece se a variável tiver valor ({{#se rua cidade}}: só
+//                                se todas as listadas tiverem valor)
+//   {{#senao variavel}}...{{/senao}}   o contrário: só aparece se ela estiver vazia (ou, com várias,
+//                                se alguma estiver vazia)
 //
 // Tudo é escapado para HTML (aspas, &, <, >), exceto as variáveis "ricas" (`anos`, `ano`), que o próprio
 // build monta como HTML (o número que o navegador recalcula). Sem dependências: roda só no build.
@@ -16,7 +18,8 @@ export const escapeHtml = (s) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 
-const TAG = /\{\{\s*(?:(#senao|#se|\/senao|\/se)(?!\w)\s*)?([A-Za-z_]\w*)?\s*\}\}/g;
+const TAG =
+  /\{\{\s*(?:(#senao|#se|\/senao|\/se)(?!\w)\s*)?([A-Za-z_]\w*(?:\s+[A-Za-z_]\w*)*)?\s*\}\}/g;
 
 /**
  * Lê o texto em partes: texto puro, variáveis e trechos condicionais. Lança um erro em português se a
@@ -33,17 +36,20 @@ function parse(text, where) {
     throw new Error(`${where}: ${problem}`);
   };
   for (const match of text.matchAll(TAG)) {
-    const [raw, command, name] = match;
+    const [raw, command, listed] = match;
+    const name = listed?.trim().replace(/\s+/g, ' ');
     if (match.index > last) push({ text: text.slice(last, match.index) });
     last = match.index + raw.length;
     if (!command) {
       if (!name) fail(`chaves vazias ({{}}) em "${text}"`);
+      if (name.includes(' '))
+        fail(`{{${name}}}: só uma variável por vez fora de {{#se}}, em "${text}"`);
       names.add(name);
       push({ variable: name });
     } else if (command.startsWith('#')) {
       if (!name) fail(`falta o nome depois de {{${command}}} em "${text}"`);
       if (open) fail(`{{#se}} dentro de {{#se}} não é aceito, em "${text}"`);
-      names.add(name);
+      for (const each of name.split(' ')) names.add(each);
       open = { when: command === '#se', name, parts: [] };
     } else {
       const wanted = command === '/se';
@@ -115,7 +121,8 @@ export function renderText(text, vars, { rich = new Set(), where = 'texto' } = {
           return rich.has(part.variable) ? v : escapeHtml(v);
         }
         const { when, name, parts: inner } = part.conditional;
-        return Boolean(value(name)) === when ? out(inner) : '';
+        const all = name.split(' ').every((each) => Boolean(value(each)));
+        return all === when ? out(inner) : '';
       })
       .join('');
   return out(parts);

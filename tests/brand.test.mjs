@@ -109,7 +109,8 @@ describe('produto', () => {
   test('sem números, datas, velocidades, capacidades ou alegações ambientais inventados', () => {
     const visible = text(html.slice(html.indexOf('<body>')))
       .replace(/© 2026 /, '')
-      .replace(/<b>\d<\/b>/g, '');
+      .replace(/<b>\d<\/b>/g, '')
+      .replace(/\{\{[^}]*\}\}/g, ' '); // o que está dentro de {{ }} é o caminho do texto em content/
     const digits = visible.match(/\d+/g) ?? [];
     // só os números 1, 2 e 3 dos passos "Como pedir"
     assert.deepEqual(
@@ -117,11 +118,26 @@ describe('produto', () => {
       ['1', '2', '3'],
       `números no texto: ${visible.match(/.{0,20}\d+.{0,20}/g)}`,
     );
-    // "dias" e "horas" só ao lado de um {{placeholder}}: o número vem do .env, nunca é digitado
-    const claims = visible.replace(/\{\{\w+\}\}\s+(dias|horas)\b/gi, ' ');
+    // os textos da página vivem em content/ (o template não tem texto de negócio: tests/template.test.mjs)
+    const collect = (value, into) => {
+      if (typeof value === 'string') into.push(value);
+      else if (Array.isArray(value)) value.forEach((item) => collect(item, into));
+      else if (value && typeof value === 'object') {
+        Object.values(value).forEach((item) => collect(item, into));
+      }
+    };
+    const all = [];
+    const withoutLegal = []; // sem os nomes dos clientes de exemplo (Cliente 1...), a política (art. 7, art. 18) e "de 5 no Google"
+    for (const [name, value] of Object.entries(baseContent)) {
+      if (name === 'empresa' || name === 'exemplo') continue;
+      collect(value, all);
+      if (!['clientes', 'privacidade', 'provas'].includes(name)) collect(value, withoutLegal);
+    }
+    const plain = (list) => `${visible} ${list.join(' ').replace(/\{\{[^}]*\}\}/g, ' ')}`;
+    assert.deepEqual([...new Set(plain(withoutLegal).match(/\d+/g) ?? [])].sort(), ['1', '2', '3']);
     assert.ok(
       !/ecol[óo]gic|sustent[áa]vel|recicl|ambient|carbono|verde|certifica|iso\s?\d|dias|horas|\b\d+\s?%/i.test(
-        claims,
+        plain(all),
       ),
     );
   });

@@ -53,9 +53,23 @@ function poisoned(paths = {}) {
     return value;
   };
   const content = { ...baseContent };
+  // a política é um texto só: um modelo com um bloco de cada tipo (título, resumo, seção, links)
+  const token = () => {
+    paths[`⟦${++n}⟧`] = 'privacidade.md';
+    return `⟦${n}⟧`;
+  };
+  const policy = [
+    `# ${token()}`,
+    token(),
+    `## ${token()}`,
+    `${token()} [${token()}](wa:privacidade) [${token()}](tel:{{telefone}})`,
+  ];
   for (const name of Object.keys(content)) {
-    if (name !== 'empresa' && name !== 'exemplo') content[name] = walk(content[name], name, name);
+    if (name !== 'empresa' && name !== 'exemplo' && name !== 'privacidade') {
+      content[name] = walk(content[name], name, name);
+    }
   }
+  content.privacidade = policy.join('\n\n');
   return content;
 }
 
@@ -132,6 +146,17 @@ describe('nenhum texto de negócio escrito à mão', () => {
     }
   });
 
+  test('a página da política renderizada também só tem texto de content/', () => {
+    const page = shown(
+      renderPage(readFileSync(`${ROOT}politica-de-privacidade.html`, 'utf8'), site),
+      data,
+    );
+    assert.ok(!letters.test(page.text), `texto fixo na política ou no render: "${page.text}"`);
+    for (const value of page.attributes) {
+      assert.ok(!letters.test(value), `atributo com texto fixo: "${value}"`);
+    }
+  });
+
   test('o teste enxerga um texto escrito à mão (se não, ele não prova nada)', () => {
     const template = readFileSync(`${ROOT}index.html`, 'utf8').replace(
       '<h1>{{historia.hero.titulo}}</h1>',
@@ -147,24 +172,25 @@ describe('nenhum texto de negócio escrito à mão', () => {
     assert.ok(shown(renderPage(attribute, site), data).attributes.some((v) => /Pedir já/.test(v)));
   });
 
-  test('todo marcador de content/ aparece em algum lugar da página (nenhum texto fica sem uso)', () => {
-    const html = renderPage(readFileSync(`${ROOT}index.html`, 'utf8'), site);
+  test('todo marcador de content/ aparece em algum lugar das duas páginas (nenhum texto fica sem uso)', () => {
+    const pages = ['index.html', 'politica-de-privacidade.html'].map((file) =>
+      renderPage(readFileSync(`${ROOT}${file}`, 'utf8'), site),
+    );
     // as mensagens do WhatsApp vão codificadas no link
-    const decoded = [...html.matchAll(/href="(https:\/\/wa\.me\/[^"]*)"/g)]
-      .map(([, link]) => decodeURIComponent(link))
-      .join(' ');
-    const used = new Set(`${html} ${decoded}`.match(/⟦\d+⟧/g));
+    const decoded = pages
+      .flatMap((html) => [...html.matchAll(/href="(https:\/\/wa\.me\/[^"]*)"/g)])
+      .map(([, link]) => decodeURIComponent(link));
+    const used = new Set([...pages, ...decoded].join(' ').match(/⟦\d+⟧/g));
     const unused = Object.entries(paths)
       .filter(([token]) => !used.has(token))
       .map(([, path]) => path);
-    // só os textos que dependem de um dado que a demonstração não tem (o título alternativo do cartão 2, o
-    // texto alternativo do cartão 5 e as palavras da nota do Google) e o da política de privacidade
+    // só os textos que dependem de um dado que a demonstração não tem: o título alternativo do cartão 2,
+    // o texto alternativo do cartão 5 e as palavras da nota do Google
     assert.deepEqual(unused.sort(), [
       'historia.anos.titulo_sem_ano',
       'historia.entrega.texto_sem_regiao',
       'provas.textos.avaliacoes',
       'provas.textos.nota',
-      'whatsapp.mensagens.privacidade',
     ]);
   });
 });
