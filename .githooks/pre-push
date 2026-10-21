@@ -1,0 +1,9 @@
+#!/bin/sh
+# Antes de cada push: lint e tipos (uns 5 s). O CI roda isto e mais (testes e paridade visual); o hook só
+# poupa a ida e volta de um erro bobo. Ativar uma vez: npm run hooks:instalar.
+# Numa emergência, pula com: git push --no-verify
+set -e
+cd "$(git rev-parse --show-toplevel)"
+echo "pre-push: lint e tipos (npm run lint, npm run typecheck)"
+npm run --silent lint
+npm run --silent typecheck

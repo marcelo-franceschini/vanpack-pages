@@ -10,6 +10,7 @@ a seção "Como editar o conteúdo (sem programar)" do [README](README.md): bast
 nvm use            # Node 24 (arquivo .nvmrc); o mínimo aceito é o 22.12
 npm ci
 npm run dev        # servidor de desenvolvimento; mexer em content/ recarrega a página
+npm run hooks:instalar   # opcional: antes de cada push roda lint e tipos (uns 5 s), sem dependência
 ```
 
 Os testes de navegador usam o Chrome do sistema (`CHROME_PATH`, padrão `/usr/bin/google-chrome-stable`).
