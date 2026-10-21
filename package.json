@@ -16,6 +16,7 @@
     "format": "prettier --write .",
     "typecheck": "tsc -p jsconfig.json && tsc -p jsconfig.pagina.json",
     "test": "npm run build && npm run build:audit && node --test --test-concurrency=1 tests/*.test.mjs",
+    "test:parte": "npm run build && npm run build:audit && node scripts/test-parte.mjs",
     "audit:bundle": "node scripts/audit/bundle.mjs",
     "audit:scene": "node scripts/audit/scene-stats.mjs",
     "audit:runtime": "node scripts/audit/runtime.mjs",
