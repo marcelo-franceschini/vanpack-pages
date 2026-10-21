@@ -2,8 +2,8 @@
 // A base é extraída com `git archive` para uma pasta temporária (a árvore de trabalho não é tocada) e
 // construída com o próprio `.env` e a própria configuração dela. Os dois builds são capturados nos 6
 // tamanhos de tela do projeto, com movimento reduzido e ?tour=0 (a cena salta direto ao quadro pedido):
-// os 5 quadros da história (p = 0, .25, .5, .75, 1), o topo de cada seção, a política de privacidade e a
-// altura total da página, mais a estrutura do HTML publicado (index.html e a política de privacidade, ver
+// os 5 quadros da história (p = 0, .25, .5, .75, 1), o topo de cada seção, o 3D de cada produto (um por vez),
+// a política de privacidade e a altura total da página, mais a estrutura do HTML publicado (index.html e a política de privacidade, ver
 // canonicalHtml), robots.txt e sitemap.xml. Byte igual passa direto; se os bytes diferem, conta-se por pixel: a tolerância
 // é de 2/255 por canal (ruído de rasterização nas bordas suavizadas de ícones e sublinhados, medido em
 // 1/255 entre duas séries da mesma base) e nenhuma mudança de tamanho. Nenhuma mudança visual real cabe
@@ -100,6 +100,23 @@ async function capture(browser, url, screen) {
     }
     await page.waitForTimeout(1200); // barra do WhatsApp e cabeçalho terminam de entrar ou sair
     shots.set(`${name}-secao-${id}.png`, await page.screenshot());
+  }
+  // O 3D de cada produto, um por vez (a imagem da seção mostra só os cartões que cabem na tela: em coluna
+  // única, só o 1º, e em 844x390 nenhum). Em movimento reduzido o modelo fica numa pose fixa.
+  const modelos = await page.$$eval('.model-3d[data-modelo]', (areas) =>
+    areas.map((area) => /** @type {HTMLElement} */ (area).dataset.modelo),
+  );
+  for (const modelo of modelos) {
+    const area = page.locator(`.model-3d[data-modelo="${modelo}"]`);
+    await area.scrollIntoViewIfNeeded();
+    await page.waitForFunction(
+      (modelo) =>
+        document.querySelector(`.model-3d[data-modelo="${modelo}"]`)?.classList.contains('pronto'),
+      modelo,
+      { timeout: 60_000 },
+    );
+    await page.waitForTimeout(1200); // o worker devolve o quadro do cartão que acabou de chegar perto
+    shots.set(`${name}-produto-${modelo}.png`, await area.screenshot());
   }
   const height = await page.evaluate(() => document.documentElement.scrollHeight);
   shots.set(`${name}-altura.txt`, Buffer.from(`${height}\n`));

@@ -42,10 +42,10 @@ export function plate(points, t, holes = []) {
 
   const faces = { a: [[], [], []], b: [[], [], []] };
   for (const [i, j, k] of ShapeUtils.triangulateShape(outline, inner)) {
-    for (const [side, z, order] of [
+    for (const [side, z, order] of /** @type {[string, number, number[]][]} */ ([
       ['a', h, [i, j, k]],
       ['b', -h, [i, k, j]],
-    ]) {
+    ])) {
       const [position, normal, uv] = faces[side];
       for (const index of order) {
         const p = all[index];
@@ -135,6 +135,10 @@ export class Pieces {
   /**
    * Placa (ver `plate`) posta no lugar por `matrix`; `a` e `b` dizem o material de cada face
    * (por exemplo 'externa' e 'interna').
+   * @param {number[][]} points contorno
+   * @param {number} t espessura
+   * @param {import('three').Matrix4} matrix
+   * @param {{ a?: string, b?: string, edge?: string, holes?: number[][][] }} [options]
    */
   plate(points, t, matrix, { a = 'externa', b = 'interna', edge = 'borda', holes } = {}) {
     const pieces = plate(points, t, holes);

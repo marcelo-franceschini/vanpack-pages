@@ -46,7 +46,14 @@ after(async () => {
  * o evento "load" da página e cada envio aconteceram ('load', 'pageview' ou o nome do evento).
  * `init` roda na página antes de qualquer script dela.
  */
-async function open({ url = server.url, query = '?tour=0', reply = {}, init, ...options } = {}) {
+async function open({
+  url = server.url,
+  query = '?tour=0',
+  reply = {},
+  init,
+  automated = false,
+  ...options
+} = {}) {
   const calls = [];
   const order = [];
   const opened = await openPage(
@@ -56,6 +63,13 @@ async function open({ url = server.url, query = '?tour=0', reply = {}, init, ...
     {
       setup: async ({ context, page }) => {
         page.on('load', () => order.push('load'));
+        // O Chrome do Playwright se declara automatizado (navigator.webdriver = true) e a medição ignora
+        // navegador automatizado: o teste faz o Chrome se passar por um visitante, salvo o que testa a guarda.
+        if (!automated) {
+          await page.addInitScript(() =>
+            Object.defineProperty(navigator, 'webdriver', { get: () => false }),
+          );
+        }
         if (init) await page.addInitScript(init);
         await context.route(`${UMAMI}/**`, (route) => {
           const request = route.request();
@@ -92,6 +106,31 @@ async function waitFor(calls, match) {
 const named = (name) => (call) => call.payload.name === name;
 
 describe('Umami Cloud', () => {
+  test('navegador automatizado (Lighthouse, testes) não envia nada, mas o dataLayer segue completo', async () => {
+    // sem esta guarda, cada execução de teste no site publicado entra na medição e gasta a cota do plano
+    const { page, context, calls } = await open({ automated: true });
+    assert.equal(
+      await page.evaluate(() => navigator.webdriver),
+      true,
+      'o Chrome do teste é automatizado',
+    );
+    await page.click('[data-cta="hero"]');
+    await scrollToProgress(page, 0.25);
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        get: () => 'hidden',
+      });
+      document.dispatchEvent(new Event('visibilitychange', { bubbles: true }));
+      dispatchEvent(new Event('pagehide'));
+    });
+    await page.waitForTimeout(1500);
+    assert.deepEqual(calls, [], 'nenhum envio ao Umami');
+    const events = await page.evaluate(() => window.dataLayer.map((item) => item.event));
+    assert.ok(events.includes('whatsapp_click') && events.includes('chapter_view'), events.join());
+    await context.close();
+  });
+
   test('a visualização da página sai no formato do tracker oficial', async () => {
     const { context, calls } = await open();
     const view = await waitFor(calls, (call) => !call.payload.name);

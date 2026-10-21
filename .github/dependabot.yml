@@ -1,4 +1,7 @@
 # Atualizações semanais, uma por assunto. Cada PR passa pelo mesmo CI (lint, testes e paridade visual).
+# Só atualização de versão (minor e patch) é agrupada: um major vem sempre num PR só dele, para um major
+# arriscado não segurar os outros. O cooldown espera 7 dias depois do lançamento de uma versão antes de
+# propô-la (uma versão publicada por engano ou comprometida costuma ser retirada nesse prazo).
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -6,22 +9,27 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns: ['*']
+        update-types: [minor, patch]
 
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
       day: monday
+    cooldown:
+      default-days: 7
     groups:
       ferramentas:
         dependency-type: development
         update-types: [minor, patch]
     ignore:
       # O three.js fica fixo de propósito: uma versão nova pode mudar o desenho da cena 3D (a cena
-      # principal é travada por hash, tests/trava-3d.test.mjs). Subir de versão é decisão do dono,
-      # com as capturas de paridade comparadas; só correções de segurança entram sozinhas.
+      # principal é travada por hash, tests/trava-3d.test.mjs) e o aparo dos shaders de
+      # build/three-compartilhado.js foi verificado só com a versão fixada. Subir de versão é decisão do
+      # dono, com as capturas de paridade comparadas e o teste de build/three-compartilhado conferido.
       - dependency-name: three
-        update-types: ['version-update:semver-major', 'version-update:semver-minor']

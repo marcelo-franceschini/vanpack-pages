@@ -96,6 +96,12 @@
       "type": "string",
       "maxLength": 80,
       "description": "Formas de pagamento, ex.: Pix, boleto faturado e cartão."
+    },
+    "confirmados": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "enum": ["horario", "horario_schema", "pedido_minimo", "regiao", "pagamento"] },
+      "description": "Só no go-live. Se o valor REAL de um destes campos for igual ao valor de exemplo (acontece com horário, pedido mínimo, região e pagamento), liste o campo aqui para o build aceitar: é a sua confirmação de que o valor foi conferido. Ex.: [horario, pedido_minimo]. CNPJ, telefones, WhatsApp e endereço nunca podem ser iguais ao exemplo."
     }
   }
 }

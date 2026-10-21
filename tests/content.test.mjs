@@ -45,6 +45,31 @@ describe('YAML mal formado', () => {
     );
   });
 
+  test('texto com ":" no meio e sem aspas: a causa em português, não a frase do YAML em inglês', () => {
+    const all = joined({ 'historia.yaml': 'hero:\n  titulo: Caixas: sob medida\n' });
+    assert.match(
+      all,
+      /linha 2, coluna \d+: erro de formatação do YAML: o texto tem ":" no meio e o YAML o leu como outro campo; ponha o texto inteiro entre aspas/,
+    );
+    assert.doesNotMatch(all, /Nested mappings/);
+  });
+
+  test('Tab no recuo: as linhas seguintes com a mesma causa viram uma mensagem só', () => {
+    const errors = errorsWith({
+      'historia.yaml': 'hero:\n\tetiqueta: "x"\n    titulo: "y"\n    texto: "z"\n    botao: "w"\n',
+    });
+    // antes eram 1 linha por linha seguinte (5 mensagens para um Tab só)
+    assert.ok(errors.length <= 2, errors.join('\n'));
+    assert.match(
+      errors.join('\n'),
+      /linha 2, coluna 1: erro de formatação do YAML: o recuo usa Tab/,
+    );
+    assert.match(
+      errors.join('\n'),
+      /linhas 3 a 5, coluna \d+: erro de formatação do YAML: recuo errado/,
+    );
+  });
+
   test('arquivo que falta é dito', () => {
     const { dir, remove } = contentCopy();
     try {
@@ -70,10 +95,35 @@ describe('campos e tipos', () => {
     );
   });
 
-  test('telefone sem aspas vira número: a mensagem manda pôr entre aspas', () => {
+  test('número sem aspas: a mensagem mostra o que foi digitado e manda pôr entre aspas', () => {
+    // sinal e zeros à esquerda somem na leitura: sem o texto digitado, "o valor 100" não bate com o arquivo
+    const all = joined({
+      'empresa.yaml':
+        'whatsapp: "5511955554444"\ntelefone: +551147009999\ncnpj: 00000000000100\nendereco:\n  cep: 123\n',
+    });
     assert.match(
-      joined({ 'empresa.yaml': 'whatsapp: "5511955554444"\ntelefone: +551147009999\n' }),
-      /› telefone: precisa ser um texto \(entre aspas\); o valor 551147009999 foi lido como número, ponha-o entre aspas/,
+      all,
+      /› telefone: precisa ser um texto \(entre aspas\); você escreveu \+551147009999, que o YAML leu como o número 551147009999; ponha-o entre aspas/,
+    );
+    assert.match(
+      all,
+      /› cnpj: .*você escreveu 00000000000100, que o YAML leu como o número 100; ponha-o entre aspas/,
+    );
+    // sem diferença entre o digitado e o lido, a frase curta de sempre
+    assert.match(
+      all,
+      /› endereco\.cep: precisa ser um texto \(entre aspas\); o valor 123 foi lido como número, ponha-o entre aspas/,
+    );
+  });
+
+  test('confirmados aceita só os campos que podem coincidir com o exemplo', () => {
+    assert.deepEqual(
+      errorsWith({ 'empresa.yaml': stringify({ ...empresa, confirmados: ['horario', 'regiao'] }) }),
+      [],
+    );
+    assert.match(
+      joined({ 'empresa.yaml': stringify({ ...empresa, confirmados: ['horario', 'cnpj'] }) }),
+      /› confirmados\[1\]: valor não aceito; use um destes: horario, horario_schema, pedido_minimo, regiao, pagamento/,
     );
   });
 

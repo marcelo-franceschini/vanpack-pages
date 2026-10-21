@@ -29,7 +29,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       # a base é o commit de destino do PR (o git archive do script só precisa desse commit)
       - name: Busca a branch de destino
         env:
@@ -49,3 +49,31 @@ jobs:
           name: paridade-diferencas
           path: dist-paridade/diferencas
           if-no-files-found: ignore
+
+  # Informativo: não bloqueia o merge (continue-on-error). Mostra no resumo do run o Lighthouse (mobile e
+  # desktop, mediana de 3, com os tetos de scripts/audit/lighthouse.mjs) e os bytes do build, para uma
+  # regressão de LCP ou de peso aparecer no PR. Vira bloqueante só depois de ver o ruído do runner.
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - name: Bytes do build
+        run: |
+          {
+            echo '### Bytes do build (KB, gzip e brotli)'
+            echo '```text'
+            node scripts/audit/bundle.mjs
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Lighthouse
+        env:
+          CHROME_PATH: /usr/bin/google-chrome-stable
+        run: node scripts/audit/lighthouse.mjs 3

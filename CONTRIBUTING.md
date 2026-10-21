@@ -10,6 +10,7 @@ a seção "Como editar o conteúdo (sem programar)" do [README](README.md): bast
 nvm use            # Node 24 (arquivo .nvmrc); o mínimo aceito é o 22.12
 npm ci
 npm run dev        # servidor de desenvolvimento; mexer em content/ recarrega a página
+npm run hooks:instalar   # opcional: antes de cada push roda lint e tipos (uns 5 s), sem dependência
 ```
 
 Os testes de navegador usam o Chrome do sistema (`CHROME_PATH`, padrão `/usr/bin/google-chrome-stable`).
@@ -25,14 +26,25 @@ Os testes de navegador usam o Chrome do sistema (`CHROME_PATH`, padrão `/usr/bi
 
    ```bash
    npm run lint        # ESLint + Prettier
-   npm run typecheck   # tsc --checkJs (JSDoc) em build/, site.config.js e src/
-   npm test            # build + testes (leva uns 10 minutos)
+   npm run typecheck   # tsc --checkJs (JSDoc) em build/, site.config.js e src/ (menos os erros do 3D travado)
+   npm test            # build + testes (leva uns 9 minutos)
    ```
 
-4. Abra o pull request para a `master`. O CI (`verificar` e `paridade`) precisa estar verde. O merge
-   publica o site sozinho (GitHub Pages, por Actions) depois de os testes passarem de novo.
+4. Abra o pull request para a `master`. O CI (`verificar`, que roda lint, tipos e os testes em 3 partes
+   paralelas, e `paridade`) precisa estar verde; o job `lighthouse` é só informativo. O merge publica o
+   site sozinho (GitHub Pages, por Actions) depois de os testes passarem de novo.
 
-Nunca faça push direto na `master`.
+Nunca faça push direto na `master`: ela é protegida (os checks `verificar / verificar` e `paridade` são
+obrigatórios; force-push e exclusão são recusados).
+
+## Versionamento e como desfazer
+
+- O histórico é o changelog: commits pequenos no padrão acima e, em cada PR, a tabela "commit, o que muda,
+  métrica antes e depois". Não há releases nem `CHANGELOG.md`: o site é de entrega contínua.
+- Ao ir ao ar com dados reais (`docs/go-live.md`), ponha uma tag no commit do merge, como ponto de retorno
+  conhecido: `git tag -a go-live-AAAA-MM-DD -m "Site no ar com dados reais"` e `git push origin --tags`.
+- Para desfazer um merge ruim: `git revert -m 1 <commit do merge>` num PR; o merge do revert publica de
+  novo o site anterior (uns 8 minutos). Enquanto isso o site que está no ar não é derrubado.
 
 ## O que não pode mudar sem combinar antes
 
@@ -45,7 +57,7 @@ Nunca faça push direto na `master`.
 - **O 3D principal.** `src/scene/`, `src/render/` e `tests/scene.test.mjs` são travados por hash
   (`tests/trava-3d.test.mjs` e `tests/fixtures/3d-lock.json`). Mexer neles é decisão do dono do projeto.
 - **O tour automático.** Ele começa sozinho, sem espera, assim que a cena fica pronta (ver README).
-- **Os orçamentos de desempenho.** O JS inicial não passa de 165 KB gzip, e `tests/orcamento.test.mjs`
+- **Os orçamentos de desempenho.** O JS inicial não passa de 140 KB gzip, e `tests/orcamento.test.mjs`
   trava os bytes por arquivo: os tetos só descem. Nunca afrouxe um teto nem altere um teste para fazê-lo
   passar; se um teste falha, entenda a causa.
 - **A marca.** Só as cores Floresta, Carvão, Papel e Kraft; só a fonte Archivo; sem foto; sem

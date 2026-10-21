@@ -1,8 +1,10 @@
 name: Verificar
 
-# Lint, build e testes de navegador. É chamado pelo CI dos pull requests (ci.yml) e pelo deploy
-# (deploy.yml), que só publica depois que isto passa. O Chrome já vem na imagem do ubuntu-latest; o
-# WebGL roda por software (SwiftShader).
+# Lint, tipos e testes de navegador. É chamado pelo CI dos pull requests (ci.yml) e pelo deploy
+# (deploy.yml), que só publica depois que isto passa. Os testes (sequenciais, com WebGL por software
+# no Chrome da imagem do ubuntu-latest) levam ~7 minutos em fila; aqui rodam em 3 partes paralelas, cada
+# uma num runner (node --test-shard). O job `verificar` no fim é o único que a proteção da master exige:
+# ele só passa se a qualidade e as 3 partes passarem, e o nome dele não muda se as partes mudarem.
 on:
   workflow_call:
 
@@ -10,18 +12,50 @@ permissions:
   contents: read
 
 jobs:
-  verificar:
+  qualidade:
+    name: qualidade (lint e tipos)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm test
+
+  testes:
+    name: testes (parte ${{ matrix.parte }} de 3)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        parte: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run test:parte
         env:
           CHROME_PATH: /usr/bin/google-chrome-stable
+          PARTE: ${{ matrix.parte }}
+
+  verificar:
+    needs: [qualidade, testes]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Tudo passou?
+        env:
+          QUALIDADE: ${{ needs.qualidade.result }}
+          TESTES: ${{ needs.testes.result }}
+        run: |
+          echo "qualidade: $QUALIDADE; testes: $TESTES"
+          test "$QUALIDADE" = success && test "$TESTES" = success

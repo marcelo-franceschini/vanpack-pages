@@ -31,7 +31,9 @@ const FORWARD = new Set([
 ]);
 
 const umami = typeof __SITE__ === 'undefined' ? null : __SITE__.analytics;
-const live = Boolean(umami) && location.hostname === umami.host;
+// Navegador controlado por automação (Lighthouse, Playwright, Selenium) não é visitante: sem esta guarda,
+// cada execução de teste no site publicado entra na medição e gasta a cota do plano grátis.
+const live = Boolean(umami) && location.hostname === umami.host && !navigator.webdriver;
 
 let cache = ''; // devolvido pelo servidor: poupa trabalho nas próximas chamadas
 let disabled = false; // o servidor pediu para parar (ex.: cota esgotada)

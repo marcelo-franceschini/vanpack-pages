@@ -24,21 +24,24 @@ npm run build          # gera dist/ (CSP por hash, workers da cena, three.js num
 npm run build:audit    # build de auditoria em dist-audit/ (expõe contadores do renderer)
 npm run preview        # serve o dist/ localmente
 npm run lint           # ESLint + Prettier (o mesmo do CI)
-npm run typecheck      # tipos por JSDoc (tsc --checkJs) em build/, site.config.js e src/, sem converter nada para .ts
+npm run typecheck      # tipos por JSDoc (tsc --checkJs) em build/, site.config.js e src/ (inclusive main.js e o 3D dos produtos), sem converter nada para .ts; src/scene/ e src/render/ (travados por hash) só entram por serem importados e os erros deles não contam
 npm run format         # formata tudo com o Prettier
-npm test               # build + build de auditoria + testes de navegador (Playwright)
+npm test               # build + build de auditoria + testes de navegador (Playwright), em fila
+PARTE=1 npm run test:parte   # só a 1ª de 3 partes da suíte (é o que o CI roda em paralelo; PARTE=2 e PARTE=3 são as outras)
+npm run hooks:instalar # opcional: pre-push que roda lint e tipos antes de cada push
 ```
 
 Auditorias (medem; os orçamentos estão no cabeçalho de cada script):
 
 ```bash
-npm run audit:bundle      # gzip/brotli por arquivo, JS inicial (≤ 165 KB gzip), visita completa, maiores módulos
+npm run audit:bundle      # gzip/brotli por arquivo, JS inicial (≤ 140 KB gzip), visita completa, maiores módulos
 npm run audit:scene       # draw calls e triângulos nos 5 centros (≤ 90 desktop, ≤ 60 celular)
 npm run audit:produtos    # draw calls do 3D de cada produto (≤ 60 por modelo) e memória ao rolar (precisa do build:audit)
 npm run audit:runtime     # tarefas longas e quadros ao rolar a história, com CPU 1× e 4×
 npm run audit:lighthouse  # Lighthouse mobile e desktop (mediana de 3 execuções; baixa via npx)
+npm run audit:carga       # celular com rede lenta (150 ms, 1,6 Mbps) e CPU 4x: FCP, LCP, tempo até a cena 3D e fila de pedidos (mediana de 11; tetos no cabeçalho)
 npm run audit:capturas    # capturas da história e das seções, em docs/capturas/ (fora do git)
-npm run audit:paridade    # compara com a master (ou --base=<ref>): pixels em 6 tamanhos (5 quadros, 5 seções) e a estrutura do HTML; diferenças em dist-paridade/
+npm run audit:paridade    # compara com a master (ou --base=<ref>): pixels em 6 tamanhos (5 quadros, 5 seções e o 3D de cada produto) e a estrutura do HTML; diferenças em dist-paridade/
 ```
 
 Manutenção da marca (rodam à mão, não fazem parte do build):
@@ -167,8 +170,8 @@ Troque aqui e pronto: o rodapé, os botões, o JSON-LD do Google e o mapa usam e
 
 ```text
 content/clientes.yaml, linha 14 › clientes[1].logo: o arquivo content/clientes/padaria-real.svg não existe
-content/historia.yaml, linha 12 › hero.titulo: tem 71 caracteres; o máximo é 65 (um texto maior quebraria o layout)
-content/empresa.yaml, linha 4 › telefone: precisa ser um texto (entre aspas); o valor 551147001234 foi lido como número, ponha-o entre aspas
+content/historia.yaml, linha 12 › hero.titulo: tem 71 caracteres; o máximo é 48 (um texto maior quebraria o layout)
+content/empresa.yaml, linha 4 › telefone: precisa ser um texto (entre aspas); você escreveu +551147001234, que o YAML leu como o número 551147001234; ponha-o entre aspas
 ```
 
 Cada linha diz **o arquivo, a linha, o campo e o problema**. `npm run build` mostra os mesmos erros.
@@ -210,7 +213,7 @@ Dentro de qualquer texto de `content/`, `{{nome}}` puxa o dado. `{{#se cidade}} 
 
 ## Medição (Umami Cloud, sem cookies)
 
-Todo evento vai para o `dataLayer`. Com `VITE_ANALYTICS_PROVIDER=umami`, os de negócio também vão ao Umami Cloud pelo nosso próprio JS (nenhum script de terceiro), só na página publicada: o host da `VITE_SITE_URL`, então dev, preview e testes nunca sujam a medição. Para caber nos 100 mil eventos por mês do plano grátis, o Umami recebe só a visualização da página (enviada depois do carregamento, com o navegador ocioso, para não disputar a largada com a cena 3D; se a pessoa sai antes ou clica antes, ela vai primeiro), `whatsapp_click`, `handoff_fail` (o WhatsApp não abriu depois do clique), `whatsapp_copy` (copiou o número na folha de ajuda), `phone_click`, `map_click`, `cta_view` e um `visit_summary` por visita (capítulo e rolagem máximos, tour, `scene` (ms até a cena aparecer, que o LCP não mede; 0 = sem 3D), LCP, INP e CLS). Dentro do navegador do Instagram, Facebook ou TikTok todo evento leva `inapp` (`ig`, `fb` ou `tt`).
+Todo evento vai para o `dataLayer`. Com `VITE_ANALYTICS_PROVIDER=umami`, os de negócio também vão ao Umami Cloud pelo nosso próprio JS (nenhum script de terceiro), só na página publicada: o host da `VITE_SITE_URL`, então dev, preview e testes nunca sujam a medição, e um navegador controlado por automação (`navigator.webdriver`: Lighthouse, Playwright, Selenium) não envia nada, para as execuções de teste no site publicado não gastarem a cota do plano grátis (o `dataLayer` segue completo). Para caber nos 100 mil eventos por mês do plano grátis, o Umami recebe só a visualização da página (enviada depois do carregamento, com o navegador ocioso, para não disputar a largada com a cena 3D; se a pessoa sai antes ou clica antes, ela vai primeiro), `whatsapp_click`, `handoff_fail` (o WhatsApp não abriu depois do clique), `whatsapp_copy` (copiou o número na folha de ajuda), `phone_click`, `map_click`, `cta_view` e um `visit_summary` por visita (capítulo e rolagem máximos, tour, `scene` (ms até a cena aparecer, que o LCP não mede; 0 = sem 3D), LCP, INP e CLS). Dentro do navegador do Instagram, Facebook ou TikTok todo evento leva `inapp` (`ig`, `fb` ou `tt`).
 
 Eventos do `dataLayer`: `whatsapp_click{cta}`, `handoff_fail{cta}`, `whatsapp_copy{ok}`, `scene_ready{ms}`, `phone_click` e `map_click` (`{cta}` é o lugar do link), `cta_view`, `chapter_view`, `scroll_depth`, `section_view{section_id}`, `web_vitals{name,value}`, `first_interaction` e os do tour. Sem cookies, sem storage e sem banner; a [política de privacidade](politica-de-privacidade.html) explica. Criação da conta: [`docs/go-live.md`](docs/go-live.md).
 
@@ -220,11 +223,11 @@ Eventos do `dataLayer`: `whatsapp_click{cta}`, `handoff_fail{cta}`, `whatsapp_co
 
 ## Publicação contínua (GitHub Pages)
 
-A verificação (lint, tipos e a suíte inteira de testes) mora em [`verificar.yml`](.github/workflows/verificar.yml), um workflow reutilizável chamado pelos dois fluxos abaixo; o Node vem do `.nvmrc` e as actions são fixadas por SHA (o [Dependabot](.github/dependabot.yml) propõe as atualizações, uma por assunto, toda segunda-feira).
+A verificação (lint, tipos e a suíte inteira de testes) mora em [`verificar.yml`](.github/workflows/verificar.yml), um workflow reutilizável chamado pelos dois fluxos abaixo; os testes rodam em 3 partes paralelas, cada uma num runner (`npm run test:parte`, repartidas pelo tempo em `scripts/test-parte.mjs`), e o job `verificar` no fim, o que a proteção da `master` exige, só passa se a qualidade e as 3 partes passarem; o Node vem do `.nvmrc` e as actions são fixadas por SHA (o [Dependabot](.github/dependabot.yml) propõe as atualizações, uma por assunto, toda segunda-feira).
 
-- **Pull request** ([`ci.yml`](.github/workflows/ci.yml)): `verificar` e `paridade`. A paridade compara, pixel a pixel, o PR com a branch de destino em 6 tamanhos de tela e compara a estrutura do HTML (`npm run audit:paridade`). Uma diferença de pixel só reprova se se repetir nos mesmos pixels numa segunda captura: o renderizador do CI às vezes erra um ou dois pixels de borda, em pontos diferentes a cada execução, e uma mudança real é determinística. O rótulo `muda-visual` no PR deixa a diferença de pixels passar (as imagens ficam num artefato do CI); `muda-html` deixa passar só a diferença no HTML, que vira aviso.
+- **Pull request** ([`ci.yml`](.github/workflows/ci.yml)): `verificar`, `paridade` e `lighthouse` (este é informativo e não bloqueia o merge: mostra no resumo do run o Lighthouse, com os tetos de `scripts/audit/lighthouse.mjs`, e os bytes do build). A paridade compara, pixel a pixel, o PR com a branch de destino em 6 tamanhos de tela e compara a estrutura do HTML (`npm run audit:paridade`). Uma diferença de pixel só reprova se se repetir nos mesmos pixels numa segunda captura: o renderizador do CI às vezes erra um ou dois pixels de borda, em pontos diferentes a cada execução, e uma mudança real é determinística. O rótulo `muda-visual` no PR deixa a diferença de pixels passar (as imagens ficam num artefato do CI); `muda-html` deixa passar só a diferença no HTML, que vira aviso.
 - **Push na `master`** ([`deploy.yml`](.github/workflows/deploy.yml)): roda `verificar` de novo e só publica se passar.
-- **Proteção da `master`**: o check `verificar` é obrigatório no merge.
+- **Proteção da `master`** (GitHub, Settings › Branches): os checks `verificar / verificar` e `paridade` são obrigatórios no merge; ninguém, além de quem administra o repositório, empurra direto na `master`, e force-push e exclusão da branch são recusados.
 
 > [!IMPORTANT]
 > Em **Settings → Pages**, selecione **Source: GitHub Actions**. Isso impede que o builder legado (Jekyll) publique o código-fonte cru.
@@ -264,13 +267,13 @@ src/render/stage.js        Liga o canvas ao render: Web Worker (OffscreenCanvas)
 src/render/worker.js       Ponto de entrada do worker
 src/render/controller.js   Loop de render sob demanda, suavização, qualidade adaptativa, contexto perdido
 src/scene/                 Cena 3D procedural: factory/truck/hero/timeline/camera/geometry/textures
-src/brand/marks.js         Caminhos da marca em curvas (gerado por scripts/brand.py)
+src/brand/marks.js         Caminhos da marca em curvas (gerado por `node scripts/brand.mjs`, que roda scripts/brand.py com uv)
 public/brand/              SVGs oficiais da marca (Floresta, Carvão, Papel e negativos)
 public/fonts/              Archivo (WOFF2, pesos 400 a 900)
 scripts/audit/             Auditorias: bundle, cena, runtime, Lighthouse, capturas e paridade visual
 jsconfig*.json, src/types.d.ts  Checagem de tipos por JSDoc (npm run typecheck)
 tests/                     Testes de navegador (Playwright) e da cena (node:test)
-docs/                      Manual da marca e notas da v4
+docs/                      Manual da marca, notas da v4, 3D dos produtos, experimentos A/B, go-live e provas/ (autorizações)
 ```
 
 ### Como a história funciona
@@ -289,7 +292,7 @@ docs/                      Manual da marca e notas da v4
 - `tests/conversion.test.mjs`: nenhum botão do WhatsApp sem número, código de origem `[site-…]` na mensagem, mensagem curta (sem lacunas) e campanha (`utm_*`) no texto, sem cookie nem storage.
 - `tests/handoff.test.mjs`: folha "O WhatsApp não abriu?" (sobe em 2,5 s com a página à vista, não sobe se o app abre, fecha sozinha se ele abre depois, Esc, "Fechar", Ctrl+clique e copiar número) e navegador embutido (user agent, código `[site-hero-ig]` e a instrução). Usa o relógio falso do Playwright.
 - `tests/trust.test.mjs`: faixa de confiança (com a regra do pagamento) e anos de mercado/© recalculados no navegador (relógio em 2031).
-- `tests/analytics.test.mjs`: eventos no Umami (interceptado, nenhum tráfego real), resumo da visita, sem cookie nem storage e nada enviado fora do host do site.
+- `tests/analytics.test.mjs`: eventos no Umami (interceptado, nenhum tráfego real), resumo da visita, sem cookie nem storage, nada enviado fora do host do site e nada enviado por navegador automatizado (`navigator.webdriver`), com o `dataLayer` completo.
 - `tests/site-config.test.mjs`: config, trava de go-live (demo × production), render com a config vazia, os 5 cartões com qualquer config, produtos, diferenciais e clientes de `content/`, logos e registros de autorização, JSON-LD, robots e sitemap; puro, sem navegador.
 - `tests/conteudo.test.mjs`: nada de e-mail, prazo, promessa de tempo de resposta, texto de processo industrial ou travessão no que a página mostra ou faz um leitor de tela ler (texto, aria-label, alt, title, metas, JSON-LD e mensagens do WhatsApp), em demo, em production e no build publicado; puro.
 - `tests/trava-3d.test.mjs`: o 3D principal é intocável: compara o sha256 de `src/scene/`, `src/render/` e `tests/scene.test.mjs` com `tests/fixtures/3d-lock.json`.
@@ -312,8 +315,14 @@ docs/                      Manual da marca e notas da v4
 - `tests/axe.test.mjs`: axe-core com as regras WCAG 2.0 a 2.2 A e AA na página principal e na política: sem violação.
 - `tests/html.test.mjs`: html-validate (`.htmlvalidate.json`) nas páginas publicadas, com as exceções justificadas.
 - `tests/docs.test.mjs`: sem travessão longo em README, guias, `docs/`, `content/` e workflows; README com toda variável dos textos e todo comando de auditoria.
-- `tests/orcamento.test.mjs`: tetos de bytes do `dist/` (gzip por arquivo, JS inicial, carga inicial e visita completa); os tetos só descem.
-- `tests/three-compartilhado.test.mjs`: o three.js é um arquivo só (`assets/three-*.js`), importado pelos dois workers e pelo render de reserva, que não levam cópia; os imports do `src/` só por nome.
+- `tests/orcamento.test.mjs`: tetos de bytes do `dist/` (gzip por arquivo, JS inicial, carga inicial e visita completa); os tetos só descem (hoje: JS inicial 139,1 KB, carga inicial 178,6 KB, visita completa 188,2 KB).
+- `tests/three-compartilhado.test.mjs`: o three.js é um arquivo só (`assets/three-*.js`), importado pelos dois workers e pelo render de reserva, que não levam cópia; os imports do `src/` só por nome. O aparo dos shaders (só os dos materiais que a cena usa; versão do three.js e material fora da tabela derrubam o build) e o `<link rel="modulepreload">` do three.js no `index.html` também são conferidos aqui.
+- `tests/erro-de-build.test.mjs`: conteúdo errado derruba o `vite build` só com a mensagem (arquivo, linha, campo), sem rastro de pilha do Node e sem erro falso em cascata.
+- `tests/subcaminho.test.mjs`: o `dist/` servido em `/vanpack-pages/`, como no GitHub Pages, por um servidor que devolve 404 de verdade: nenhum pedido pode falhar (um endereço que virasse absoluto reprovaria).
+- `tests/servidor-lento.test.mjs`: o servidor de laboratório do `audit:carga` (latência, banda compartilhada, gzip, 404).
+- `tests/partes.test.mjs`: cada arquivo de teste roda em exatamente uma das partes paralelas do CI, e as partes ficam equilibradas.
+- `tests/typecheck.test.mjs`: o filtro do `npm run typecheck` só deixa de fora os erros de tipo de `src/scene/` e `src/render/` (travados por hash); o resto, inclusive `src/main.js`, continua reprovando.
+- `tests/hooks.test.mjs`: o hook de pre-push opcional recusa o push quando o lint ou os tipos falham.
 
 ---
 

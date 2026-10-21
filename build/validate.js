@@ -11,6 +11,14 @@ import { renderText } from './texto.js';
 
 const MODES = ['demo', 'production'];
 
+/**
+ * A configuração não pode ir ao ar. A mensagem já diz tudo (arquivo, linha, campo e o que fazer), então o
+ * build a mostra sozinha, sem o rastro de pilha do Node (vite.config.js).
+ */
+export class SiteConfigError extends Error {
+  name = 'SiteConfigError';
+}
+
 // Textos que, depois de trocadas as {{variáveis}}, não podem passar de um tamanho, senão o cartão da
 // abertura estoura no celular deitado (844 x 390), onde ele tem 2 px de folga. O tamanho de cada campo
 // em si é do schema; aqui conta o texto pronto (ex.: a cidade entra na linha "Fábrica própria em ...").
@@ -28,6 +36,10 @@ const MAX_LOGO_BYTES = 20 * 1024;
 // Campos que podem ter o mesmo valor do exemplo mesmo em produção: já são reais desde já (cidade, UF,
 // ano de fundação).
 const REAL_BY_NATURE = new Set(['endereco.cidade', 'endereco.uf', 'ano_fundacao']);
+// Campos cujo valor real pode coincidir com o de exemplo (horário comercial, pedido mínimo, região,
+// pagamento): o dono confirma listando-os em `confirmados` no empresa.yaml (o schema aceita só estes).
+// Dado que identifica a empresa (CNPJ, telefones, WhatsApp, endereço) nunca pode ser igual ao exemplo.
+const CONFIRMABLE = new Set(['horario', 'horario_schema', 'pedido_minimo', 'regiao', 'pagamento']);
 
 // Obrigatórios em produção (o WhatsApp e a URL do site valem nos dois modos).
 const REQUIRED_IN_PRODUCTION = [
@@ -124,7 +136,8 @@ export function validateSite({
       `VITE_DATA_MODE="${site.dataMode}" não existe: use "demo" (dados fictícios, noindex) ou "production".`,
     );
   }
-  if (!/^55\d{10,11}$/.test(site.whatsapp)) {
+  // sem content/empresa.yaml válido o erro já está na lista do carregador: não repete como "whatsapp ()"
+  if (content.empresa && !/^55\d{10,11}$/.test(site.whatsapp)) {
     errors.push(
       `${field('empresa', 'whatsapp')} (${content.empresa?.whatsapp ?? ''}) inválido ou vazio: use 55 + DDD + número, ex.: 5511912345678.`,
     );
@@ -212,7 +225,7 @@ export function validateSite({
   if (site.dataMode === 'production') {
     const empresa = content.empresa ?? {};
     for (const [path, label] of REQUIRED_IN_PRODUCTION) {
-      if (!String(get(empresa, path) ?? '').trim()) {
+      if (content.empresa && !String(get(empresa, path) ?? '').trim()) {
         errors.push(`${field('empresa', path)} (${label}) é obrigatório em production.`);
       }
     }
@@ -239,11 +252,15 @@ export function validateSite({
     if (!/^https:\/\//.test(site.siteUrl)) {
       errors.push(`VITE_SITE_URL="${site.siteUrl}" precisa ser https em production.`);
     }
+    const confirmed = new Set(empresa.confirmados ?? []);
     for (const [path, sample] of flatten(content.exemplo?.empresa)) {
-      if (REAL_BY_NATURE.has(path) || !String(sample ?? '').trim()) continue;
+      if (REAL_BY_NATURE.has(path) || confirmed.has(path) || !String(sample ?? '').trim()) continue;
       if (String(get(content.empresa, path) ?? '').trim() === String(sample).trim()) {
+        const confirm = CONFIRMABLE.has(path)
+          ? ` Se o valor real for mesmo esse, liste "${path}" em "confirmados" no content/empresa.yaml.`
+          : '';
         errors.push(
-          `${field('empresa', path)} ("${sample}") ainda é o valor fictício de content/exemplo/empresa.yaml: troque pelo real.`,
+          `${field('empresa', path)} ("${sample}") ainda é o valor fictício de content/exemplo/empresa.yaml: troque pelo real.${confirm}`,
         );
       }
     }
@@ -270,7 +287,9 @@ export function assertValidSite({ contentErrors = [], ...input }) {
   const { errors, warnings } = validateSite(input);
   const all = [...contentErrors, ...errors];
   if (all.length) {
-    throw new Error(`Configuração do site inválida (veja docs/go-live.md):\n- ${all.join('\n- ')}`);
+    throw new SiteConfigError(
+      `Configuração do site inválida (veja docs/go-live.md):\n- ${all.join('\n- ')}`,
+    );
   }
   return warnings;
 }

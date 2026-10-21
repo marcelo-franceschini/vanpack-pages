@@ -19,7 +19,9 @@ README ("Como editar o conteúdo").
 4. Rode `npm run build`. Em `production` o build **falha** e lista o que ainda não está pronto, com o
    arquivo, a linha e o campo: dado obrigatório vazio, formato inválido (CNPJ com dígito verificador
    errado, telefone sem `+55`, URL sem `https`), qualquer valor que ainda seja o fictício de
-   `content/exemplo/empresa.yaml` e os clientes de exemplo que sobraram.
+   `content/exemplo/empresa.yaml` e os clientes de exemplo que sobraram. Se o valor **real** de horário,
+   pedido mínimo, região ou pagamento for igual ao de exemplo (é comum), o build também recusa, mas a
+   mensagem diz como confirmar: liste o campo em `confirmados` no `content/empresa.yaml`.
 5. Confira a página com `npm run preview`: rodapé, faixa de confiança, botões do WhatsApp, diferenciais
    e clientes.
 6. Abra um pull request e, com o CI verde, faça o merge na `master`. Os valores de `content/` e do
@@ -49,6 +51,7 @@ anunciado. Depois do deploy, peça a indexação no Search Console.
 | `pedido_minimo`     | Pedido mínimo, em unidades                                 | não         | Confirme com a produção                             |
 | `regiao`            | Região atendida                                            | não         | Confirme com o comercial                            |
 | `pagamento`         | Formas de pagamento                                        | não         | Confirme com o financeiro                           |
+| `confirmados`       | Campos cujo valor real é igual ao de exemplo (lista)       | não         | Ex.: `[horario, pedido_minimo]`; só esses cinco     |
 
 Os outros arquivos de `content/` (os textos da página: `site.yaml`, `historia.yaml`, `confianca.yaml`, `orcamento.yaml`, `whatsapp.yaml`, `rodape.yaml` e o texto da política em `privacidade.md`, além destes):
 
@@ -105,7 +108,7 @@ A medição é sem cookies, então o site não precisa de banner. Para ligá-la:
 3. Copie o **Website ID** (Settings do site) para `VITE_ANALYTICS_SITE` e deixe `VITE_ANALYTICS_PROVIDER=umami`.
 4. **Não** cole o "Tracking code" do Umami no HTML: o nosso JS já chama a API deles, e a CSP bloquearia o script.
 
-O site só envia eventos quando o host da página é o da `VITE_SITE_URL`: ao trocar de domínio, mude a URL no `.env` e o domínio do site no Umami. Os dados passam por servidores dos EUA e da UE; a [política de privacidade](../politica-de-privacidade.html) do site explica isso e cita o plano atual (se mudar de plano, ajuste o texto de retenção nela). Vale uma checagem rápida dessa política com o jurídico antes do go-live.
+Navegador automatizado (Lighthouse, Playwright, Selenium) não envia nada: as execuções de teste no site publicado não entram na medição nem gastam a cota. O site só envia eventos quando o host da página é o da `VITE_SITE_URL`: ao trocar de domínio, mude a URL no `.env` e o domínio do site no Umami. Os dados passam por servidores dos EUA e da UE; a [política de privacidade](../politica-de-privacidade.html) do site explica isso e cita o plano atual (se mudar de plano, ajuste o texto de retenção nela). Vale uma checagem rápida dessa política com o jurídico antes do go-live.
 
 ## Checklist final
 
@@ -120,5 +123,12 @@ O site só envia eventos quando o host da página é o da `VITE_SITE_URL`: ao tr
 - [ ] Depois do deploy, abra o link de dentro do Instagram (e do Facebook) num celular: o botão abre o WhatsApp? Se não abrir, a folha "O WhatsApp não abriu?" aparece?
 - [ ] `npm run og` gera de novo `public/og.jpg`: a imagem atual ainda mostra o texto antigo do hero ("A gente fabrica, imprime e entrega") e precisa ser refeita antes do go-live.
 - [ ] `npm run audit:lighthouse`: SEO 100 só é possível em `production` (em demo o `noindex` reprova o
-      item "página bloqueada para indexação", como esperado).
+      item "página bloqueada para indexação", como esperado). O orçamento do script (desempenho 99 no
+      mobile, LCP 2,2 s) vale nos dois modos: o 99, e não 100, é o preço do `modulepreload` do three.js.
+- [ ] `npm run audit:carga`: cena pronta ≤ 1,75 s e FCP/LCP ≤ 0,70 s no celular com rede lenta.
+- [ ] Depois do deploy verde, ponha a tag do go-live no commit do merge
+      (`git tag -a go-live-AAAA-MM-DD -m "Site no ar com dados reais"`, `git push origin --tags`): é o ponto de
+      retorno conhecido (como desfazer: [CONTRIBUTING.md](../CONTRIBUTING.md), "Versionamento e como
+      desfazer").
+- [ ] A `master` está protegida (checks `verificar / verificar` e `paridade`): confira em Settings › Branches.
 - [ ] `npm run lint` e `npm test` passam.

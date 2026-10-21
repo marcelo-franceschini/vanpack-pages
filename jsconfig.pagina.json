@@ -23,7 +23,12 @@
     "src/carrossel.js",
     "src/wizard.js",
     "src/vitals.js",
+    "src/main.js",
     "src/produtos/gatilho.js",
+    "src/produtos/cena.js",
+    "src/produtos/modelos.js",
+    "src/produtos/papelao.js",
+    "src/produtos/produtos-worker.js",
     "src/types.d.ts"
   ],
   "exclude": ["node_modules", "dist*"]
