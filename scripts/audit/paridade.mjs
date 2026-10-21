@@ -3,7 +3,8 @@
 // construída com o próprio `.env` e a própria configuração dela. Os dois builds são capturados nos 6
 // tamanhos de tela do projeto, com movimento reduzido e ?tour=0 (a cena salta direto ao quadro pedido):
 // os 5 quadros da história (p = 0, .25, .5, .75, 1), o topo de cada seção, a política de privacidade e a
-// altura total da página. Byte igual passa direto; se os bytes diferem, conta-se por pixel: a tolerância
+// altura total da página, mais a estrutura do HTML publicado (index.html e a política de privacidade, ver
+// canonicalHtml), robots.txt e sitemap.xml. Byte igual passa direto; se os bytes diferem, conta-se por pixel: a tolerância
 // é de 2/255 por canal (ruído de rasterização nas bordas suavizadas de ícones e sublinhados, medido em
 // 1/255 entre duas séries da mesma base) e nenhuma mudança de tamanho. Nenhuma mudança visual real cabe
 // nisso: trocar uma cor, mover algo em 1 px ou mudar um texto passa de 2/255 nas bordas. Quando reprova,
@@ -146,6 +147,77 @@ const pixelDiff = (page, a, b) =>
     [a.toString('base64'), b.toString('base64'), TOLERANCE],
   );
 
+/**
+ * A estrutura do HTML publicado como uma lista de linhas, para comparar dois builds sem se perder em
+ * detalhes que não aparecem: o HTML é lido por um DOMParser (nada roda), os atributos saem em ordem
+ * alfabética, o espaço em branco vira um só e some nas pontas dos elementos, os nomes de arquivo com
+ * hash perdem o hash e o conteúdo do <style> e da meta da CSP (que deriva dele) não entra. O texto, as
+ * tags e os atributos entram todos: trocar uma palavra, uma classe ou um link muda a lista.
+ */
+const canonicalHtml = (page, source) =>
+  page.evaluate((source) => {
+    const doc = new DOMParser().parseFromString(source, 'text/html');
+    const lines = [];
+    const attributes = (el) =>
+      [...el.attributes]
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map(({ name, value }) => {
+          let text = value
+            .replace(/\s+/g, ' ')
+            .trim()
+            .replace(/-[\w-]{8}\.(js|css)\b/g, '-HASH.$1');
+          if (el.localName === 'meta' && el.hasAttribute('http-equiv') && name === 'content') {
+            text = '(CSP)';
+          }
+          return `${name}="${text}"`;
+        })
+        .join(' ');
+    const walk = (node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        let text = node.data.replace(/\s+/g, ' ');
+        if (!node.previousSibling) text = text.trimStart();
+        if (!node.nextSibling) text = text.trimEnd();
+        if (text) lines.push(JSON.stringify(text));
+        return;
+      }
+      if (node.nodeType !== Node.ELEMENT_NODE) return;
+      const tag = node.localName;
+      const attrs = attributes(node);
+      lines.push(`<${tag}${attrs ? ` ${attrs}` : ''}>`);
+      if (tag === 'style') lines.push('(css)');
+      else if (tag === 'script') lines.push(node.textContent.replace(/\s+/g, ' ').trim());
+      else node.childNodes.forEach(walk);
+      lines.push(`</${tag}>`);
+    };
+    walk(doc.documentElement);
+    return lines;
+  }, source);
+
+const PAGES = ['index.html', 'politica-de-privacidade.html'];
+const FILES = ['robots.txt', 'sitemap.xml'];
+
+/** Compara a estrutura das páginas e os arquivos de texto; devolve as diferenças, uma por linha. */
+async function compareHtml(page, nowUrl, beforeUrl) {
+  const changes = [];
+  const get = async (url, file) => (await fetch(`${url}${file}`)).text();
+  for (const file of PAGES) {
+    const a = await canonicalHtml(page, await get(nowUrl, file));
+    const b = await canonicalHtml(page, await get(beforeUrl, file));
+    const at = a.findIndex((line, i) => line !== b[i]);
+    if (at === -1 && a.length === b.length) continue;
+    const from = Math.max(0, at - 2);
+    changes.push(
+      `${file}: primeira diferença na linha ${at + 1} de ${Math.max(a.length, b.length)}\n` +
+        `    base : ${b.slice(from, at + 3).join(' ')}\n    atual: ${a.slice(from, at + 3).join(' ')}`,
+    );
+  }
+  for (const file of FILES) {
+    const [a, b] = [await get(nowUrl, file), await get(beforeUrl, file)];
+    if (a !== b) changes.push(`${file}: o conteúdo mudou`);
+  }
+  return changes;
+}
+
 console.log(`Paridade visual: site de agora contra ${BASE_REF}`);
 mkdirSync(OUT, { recursive: true });
 rmSync(`${OUT}diferencas`, { recursive: true, force: true });
@@ -198,6 +270,11 @@ for (const screen of screens) {
   for (const line of noise) console.log(`  ruído  ${line}`);
   for (const issue of issues) console.log(`  aviso da página: ${issue}`);
 }
+const markup = await compareHtml(diffPage, atual.url, anterior.url);
+compared += PAGES.length + FILES.length;
+different += markup.length;
+console.log(`HTML      ${markup.length ? `${markup.length} mudou` : 'preservado'}`);
+for (const line of markup) console.log(`  MUDOU ${line}`);
 await browser.close();
 await atual.close();
 await anterior.close();
@@ -205,7 +282,7 @@ rmSync(baseBuild.dir, { recursive: true, force: true });
 
 if (different) {
   console.error(
-    `\n${different} de ${compared} itens mudaram (imagens em dist-paridade/diferencas/). Se a mudança é intencional, revise as imagens e aprove.`,
+    `\n${different} de ${compared} itens mudaram (imagens em dist-paridade/diferencas/). Se a mudança é intencional, revise e aprove.`,
   );
   process.exit(1);
 }

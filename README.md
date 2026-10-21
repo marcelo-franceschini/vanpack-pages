@@ -36,7 +36,7 @@ npm run audit:produtos    # draw calls do 3D de cada produto (≤ 60 por modelo)
 npm run audit:runtime     # tarefas longas e quadros ao rolar a história, com CPU 1× e 4×
 npm run audit:lighthouse  # Lighthouse mobile e desktop (mediana de 3 execuções; baixa via npx)
 npm run audit:capturas    # capturas da história e das seções, em docs/capturas/ (fora do git)
-npm run audit:paridade    # compara pixel a pixel com a master (ou --base=<ref>): 6 tamanhos, 5 quadros, 5 seções; diferenças em dist-paridade/
+npm run audit:paridade    # compara com a master (ou --base=<ref>): pixels em 6 tamanhos (5 quadros, 5 seções) e a estrutura do HTML; diferenças em dist-paridade/
 ```
 
 Manutenção da marca (rodam à mão, não fazem parte do build):
