@@ -5,10 +5,10 @@ on:
     branches: [master]
   workflow_dispatch:
 
+# Só leitura por padrão: os jobs que instalam dependências (verificar e build) não precisam e não têm
+# permissão de publicar. `pages: write` e `id-token: write` ficam só no job `deploy`, que não instala nada.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -24,6 +24,7 @@ jobs:
   build:
     needs: verificar
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -44,6 +45,10 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write # publicar no GitHub Pages
+      id-token: write # provar ao Pages que a publicação sai deste workflow
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
