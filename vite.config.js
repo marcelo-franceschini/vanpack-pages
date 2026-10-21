@@ -166,8 +166,6 @@ export default defineConfig(({ mode, command }) => {
         },
       },
       modulePreload: { polyfill: false },
-      // O three.js fica no seu próprio arquivo (~520 kB, ~130 kB gzip), de propósito.
-      chunkSizeWarningLimit: 700,
     },
   };
 });
