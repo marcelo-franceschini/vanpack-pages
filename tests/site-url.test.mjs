@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { before, describe, test } from 'node:test';
 import { build } from 'vite';
 import { ROOT } from '../scripts/lib.mjs';
-import { contentCopy, realEmpresa } from './dados.mjs';
+import { contentCopy, readYaml, realEmpresa } from './dados.mjs';
 
 const FINAL = 'https://vanpack.com.br/';
 const OLD_HOST = 'marcelo-franceschini.github.io';
@@ -17,7 +17,10 @@ const read = (file) => readFileSync(`${OUT}${file}`, 'utf8');
 before(async () => {
   const saved = { ...process.env };
   // production: dados reais de teste e sem os clientes de exemplo, numa cópia de content/
-  const copy = contentCopy({ 'empresa.yaml': realEmpresa, 'clientes.yaml': { clientes: [] } });
+  const copy = contentCopy({
+    'empresa.yaml': realEmpresa,
+    'clientes.yaml': { ...readYaml('clientes.yaml'), clientes: [] },
+  });
   Object.assign(process.env, {
     VITE_DATA_MODE: 'production',
     VANPACK_CONTENT: copy.dir,
