@@ -53,7 +53,7 @@ export const withEmpresa = (empresa, extra = {}) => ({ ...baseContent, empresa, 
 
 /** O conteúdo em production: dados reais e sem os clientes de exemplo (os testes acrescentam o que precisam). */
 export const realContent = (extra = {}) =>
-  withEmpresa(realEmpresa, { clientes: { clientes: [] }, ...extra });
+  withEmpresa(realEmpresa, { clientes: { ...baseContent.clientes, clientes: [] }, ...extra });
 
 /** A config do site com o que o teste quiser trocar: `env`, `content` (padrão: o de verdade) e `now`. */
 export const siteWith = ({ env = exampleEnv, content = baseContent, now, experiments } = {}) =>

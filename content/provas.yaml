@@ -19,5 +19,10 @@
 #     url: "https://g.page/r/exemplo"
 #     autorizado: true
 
+# As palavras da linha da nota do Google, que sai assim: 4,8 de 5 no Google (37 avaliações).
+textos:
+  nota: "de 5 no Google"
+  avaliacoes: "avaliações"
+
 depoimentos: []
 nota_google: null

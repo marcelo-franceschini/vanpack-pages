@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=./schemas/historia.schema.json
+#
+# Os 5 cartões da história 3D, na ordem em que aparecem ao rolar a página: abertura, anos de mercado,
+# qualidade, orçamento e entrega. Os 5 cartões ficam sempre (o scroll da história depende deles).
+# Nenhum texto pode falar de prazo, de tempo de resposta nem do processo de fabricação (um teste confere).
+#
+# Ponha sempre os textos entre aspas. {{cidade}}, {{regiao}} e as outras {{variáveis}} puxam os dados
+# da empresa (content/empresa.yaml); {{#se variavel}}trecho{{/se}} só aparece se a variável tiver valor.
+
+hero:
+  etiqueta: "Fábrica própria em {{cidade_uf}}"
+  etiqueta_regiao: "Atendemos {{regiao}}"
+  titulo: "Caixas de papelão sob medida, com a sua marca"
+  texto: "Você manda a medida e a quantidade. A gente cuida do resto"
+  texto_extra: ", direto da fábrica e sem intermediário"
+  botao: "Pedir orçamento no WhatsApp"
+  link_produtos: "Ver produtos ↓"
+  nota: "Sem compromisso"
+  selo_pedido_minimo: "Pedido mínimo a partir de {{pedido_minimo}} unidades"
+  selo_regiao: "Atendemos {{regiao}}"
+anos:
+  etiqueta: "Anos de mercado"
+  titulo: "{{anos}} anos de mercado"
+  titulo_sem_ano: "Experiência em caixas de papelão"
+  texto: "Atendemos lojas, vendedores de marketplace e indústrias."
+qualidade:
+  etiqueta: "Qualidade"
+  titulo: "Caixas na medida que você pediu"
+  texto: "Do primeiro ao último pedido, a mesma medida e a mesma impressão."
+orcamento:
+  etiqueta: "Orçamento"
+  titulo: "Peça o seu pelo WhatsApp"
+  texto: "Mande medida, quantidade e o que vai impresso. Sem formulário e sem compromisso."
+entrega:
+  etiqueta: "Entrega"
+  titulo: "Entregamos até você"
+  texto: "Atendemos {{regiao}}."
+  texto_sem_regiao: "Da nossa fábrica até o seu endereço."
+  link: "Veja por que a {{nome}} ↓"

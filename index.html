@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-    <title>{{titulo_pagina}}</title>
-    <meta name="description" content="{{descricao_pagina}}" />
+    <title>{{site.pagina.titulo}}</title>
+    <meta name="description" content="{{site.pagina.descricao}}" />
     <meta name="theme-color" content="#FBF8F2" />
     <meta name="color-scheme" content="light" />
     <link rel="canonical" href="%VITE_SITE_URL%" />
@@ -13,20 +13,17 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="pt_BR" />
-    <meta property="og:site_name" content="Vanpack" />
-    <meta property="og:title" content="{{titulo_pagina}}" />
-    <meta property="og:description" content="{{descricao_pagina}}" />
+    <meta property="og:site_name" content="{{nome}}" />
+    <meta property="og:title" content="{{site.pagina.titulo}}" />
+    <meta property="og:description" content="{{site.pagina.descricao}}" />
     <meta property="og:url" content="%VITE_SITE_URL%" />
     <meta property="og:image" content="%VITE_SITE_URL%og.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta
-      property="og:image:alt"
-      content="Ilustração 3D da Vanpack com papelão kraft e a chamada 'Caixas de papelão sob medida, com a sua marca'."
-    />
+    <meta property="og:image:alt" content="{{site.pagina.imagem_alt}}" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="{{titulo_pagina}}" />
-    <meta name="twitter:description" content="{{descricao_pagina}}" />
+    <meta name="twitter:title" content="{{site.pagina.titulo}}" />
+    <meta name="twitter:description" content="{{site.pagina.descricao}}" />
     <link
       rel="preload"
       href="/fonts/archivo-latin.woff2"
@@ -1509,29 +1506,26 @@
 
     <header class="hdr" id="hdr">
       <div class="wrap">
-        <a class="logo" href="#" aria-label="Vanpack · início"
+        <a class="logo" href="#" aria-label="{{nome}} · início"
           ><img src="/brand/vanpack-horizontal.svg" alt="" width="136" height="34"
         /></a>
         <nav class="nav" aria-label="Principal">
-          <a href="#produtos">Produtos</a>
-          <a href="#diferenciais">Diferenciais</a>
+          <a href="#produtos">{{site.menu.produtos}}</a>
+          <a href="#diferenciais">{{site.menu.diferenciais}}</a>
         </nav>
-        <a
-          class="btn btn-primary"
-          data-cta="header"
-          data-wa="Olá! Vim pelo site e gostaria de um orçamento de caixas de papelão."
-          ><svg aria-hidden="true"><use href="#i-wa" /></svg>Pedir orçamento</a
+        <a class="btn btn-primary" data-cta="header" data-wa="{{whatsapp.mensagens.header}}"
+          ><svg aria-hidden="true"><use href="#i-wa" /></svg>{{whatsapp.botoes.cabecalho}}</a
         >
       </div>
     </header>
 
     <main id="conteudo">
-      <section class="story" id="processo" aria-label="Apresentação da Vanpack" data-tour="idle">
+      <section class="story" id="processo" aria-label="Apresentação da {{nome}}" data-tour="idle">
         <div class="stage" id="stage">
           <canvas
             id="gl"
             role="img"
-            aria-label="Animação 3D da Vanpack com caixas de papelão e o caminhão de entrega"
+            aria-label="Animação 3D da {{nome}} com caixas de papelão e o caminhão de entrega"
           ></canvas>
           <div class="loader" aria-hidden="true">
             <img src="/brand/vanpack-simbolo.svg" alt="" width="80" height="80" />
@@ -1542,32 +1536,26 @@
               <div class="wrap">
                 <div class="card on">
                   <div class="k" data-need="cidade_uf">
-                    Fábrica própria em {{cidade_uf}}<span class="optional" data-need="regiao">
-                      · Atendemos {{regiao}}</span
+                    {{historia.hero.etiqueta}}<span class="optional" data-need="regiao">
+                      · {{historia.hero.etiqueta_regiao}}</span
                     >
                   </div>
-                  <h1>Caixas de papelão sob medida, com a sua marca</h1>
+                  <h1>{{historia.hero.titulo}}</h1>
                   <p>
-                    Você manda a medida e a quantidade. A gente cuida do resto<span class="optional"
-                      >, direto da fábrica e sem intermediário</span
+                    {{historia.hero.texto}}<span class="optional"
+                      >{{historia.hero.texto_extra}}</span
                     >.
                   </p>
                   <div class="actions">
-                    <a
-                      class="btn btn-primary"
-                      data-cta="hero"
-                      data-wa="Olá! Quero um orçamento de caixas de papelão personalizadas com a minha marca."
-                      ><svg aria-hidden="true"><use href="#i-wa" /></svg>Pedir orçamento no
-                      WhatsApp</a
+                    <a class="btn btn-primary" data-cta="hero" data-wa="{{whatsapp.mensagens.hero}}"
+                      ><svg aria-hidden="true"><use href="#i-wa" /></svg>{{historia.hero.botao}}</a
                     >
-                    <a class="btn btn-soft" href="#produtos">Ver produtos ↓</a>
+                    <a class="btn btn-soft" href="#produtos">{{historia.hero.link_produtos}}</a>
                   </div>
-                  <p class="cta-note">Sem compromisso</p>
+                  <p class="cta-note">{{historia.hero.nota}}</p>
                   <ul class="seals" aria-label="Diferenciais" data-need="tem_fatos">
-                    <li data-need="pedido_minimo">
-                      Pedido mínimo a partir de {{pedido_minimo}} unidades
-                    </li>
-                    <li data-need="regiao">Atendemos {{regiao}}</li>
+                    <li data-need="pedido_minimo">{{historia.hero.selo_pedido_minimo}}</li>
+                    <li data-need="regiao">{{historia.hero.selo_regiao}}</li>
                   </ul>
                 </div>
               </div>
@@ -1577,45 +1565,43 @@
             <div class="step">
               <div class="wrap">
                 <div class="card">
-                  <div class="k">Anos de mercado</div>
+                  <div class="k">{{historia.anos.etiqueta}}</div>
                   <h2>
-                    <span data-need="ano_fundacao">{{anos}} anos de mercado</span
-                    ><span data-need="!ano_fundacao">Experiência em caixas de papelão</span>
+                    <span data-need="ano_fundacao">{{historia.anos.titulo}}</span
+                    ><span data-need="!ano_fundacao">{{historia.anos.titulo_sem_ano}}</span>
                   </h2>
-                  <p>Atendemos lojas, vendedores de marketplace e indústrias.</p>
+                  <p>{{historia.anos.texto}}</p>
                 </div>
               </div>
             </div>
             <div class="step">
               <div class="wrap">
                 <div class="card">
-                  <div class="k">Qualidade</div>
-                  <h2>Caixas na medida que você pediu</h2>
-                  <p>Do primeiro ao último pedido, a mesma medida e a mesma impressão.</p>
+                  <div class="k">{{historia.qualidade.etiqueta}}</div>
+                  <h2>{{historia.qualidade.titulo}}</h2>
+                  <p>{{historia.qualidade.texto}}</p>
                 </div>
               </div>
             </div>
             <div class="step">
               <div class="wrap">
                 <div class="card">
-                  <div class="k">Orçamento</div>
-                  <h2>Peça o seu pelo WhatsApp</h2>
+                  <div class="k">{{historia.orcamento.etiqueta}}</div>
+                  <h2>{{historia.orcamento.titulo}}</h2>
+                  <p>{{historia.orcamento.texto}}</p>
+                </div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="wrap">
+                <div class="card">
+                  <div class="k">{{historia.entrega.etiqueta}}</div>
+                  <h2>{{historia.entrega.titulo}}</h2>
                   <p>
-                    Mande medida, quantidade e o que vai impresso. Sem formulário e sem compromisso.
+                    <span data-need="regiao">{{historia.entrega.texto}}</span
+                    ><span data-need="!regiao">{{historia.entrega.texto_sem_regiao}}</span>
                   </p>
-                </div>
-              </div>
-            </div>
-            <div class="step">
-              <div class="wrap">
-                <div class="card">
-                  <div class="k">Entrega</div>
-                  <h2>Entregamos até você</h2>
-                  <p>
-                    <span data-need="regiao">Atendemos {{regiao}}.</span
-                    ><span data-need="!regiao">Da nossa fábrica até o seu endereço.</span>
-                  </p>
-                  <a class="more" href="#diferenciais">Veja por que a Vanpack ↓</a>
+                  <a class="more" href="#diferenciais">{{historia.entrega.link}}</a>
                 </div>
               </div>
             </div>
@@ -1638,11 +1624,11 @@
       <section class="trust" id="confianca" aria-label="Quem somos" data-need="tem_confianca">
         <div class="wrap">
           <ul class="trust-list">
-            <li data-need="cidade_uf">Fábrica própria em {{cidade_uf}}</li>
-            <li data-need="cnpj">CNPJ {{cnpj}}</li>
-            <li data-need="cnpj">Nunca pedimos pagamento para conta de pessoa física</li>
-            <li data-need="ano_fundacao">{{anos}} anos de mercado</li>
-            <li data-need="pagamento">Pagamento: {{pagamento}}</li>
+            <li data-need="cidade_uf">{{confianca.cidade}}</li>
+            <li data-need="cnpj">{{confianca.cnpj}}</li>
+            <li data-need="cnpj">{{confianca.regra_pagamento}}</li>
+            <li data-need="ano_fundacao">{{confianca.anos}}</li>
+            <li data-need="pagamento">{{confianca.pagamento}}</li>
             <li data-field="mapa" hidden></li>
             <li data-field="telefone" hidden></li>
           </ul>
@@ -1652,12 +1638,16 @@
       <section class="block" id="produtos">
         <div class="wrap">
           <div class="sec-head">
-            <span class="k">O que fabricamos</span>
-            <h2>Caixas, divisórias e chapas sob medida</h2>
+            <span class="k">{{produtos.etiqueta}}</span>
+            <h2>{{produtos.titulo}}</h2>
           </div>
           <ul class="facts" data-need="tem_fatos">
-            <li data-need="pedido_minimo"><b>Pedido mínimo</b>{{pedido_minimo}} unidades</li>
-            <li data-need="regiao"><b>Atendemos</b>{{regiao}}</li>
+            <li data-need="pedido_minimo">
+              <b>{{produtos.fatos.pedido_minimo.rotulo}}</b>{{produtos.fatos.pedido_minimo.valor}}
+            </li>
+            <li data-need="regiao">
+              <b>{{produtos.fatos.regiao.rotulo}}</b>{{produtos.fatos.regiao.valor}}
+            </li>
           </ul>
           <div class="models">
             <!--render:produtos-->
@@ -1679,8 +1669,8 @@
       <section class="block tint" id="diferenciais" data-need="tem_diferenciais">
         <div class="wrap">
           <div class="sec-head">
-            <span class="k">Diferenciais</span>
-            <h2>Por que a Vanpack</h2>
+            <span class="k">{{diferenciais.etiqueta}}</span>
+            <h2>{{diferenciais.titulo}}</h2>
           </div>
           <div class="grid3">
             <!--render:diferenciais-->
@@ -1691,8 +1681,8 @@
       <section class="block" id="clientes" data-need="tem_provas">
         <div class="wrap">
           <div class="sec-head">
-            <span class="k">Clientes</span>
-            <h2>Quem já pede com a gente</h2>
+            <span class="k">{{clientes.etiqueta}}</span>
+            <h2>{{clientes.titulo}}</h2>
           </div>
           <!--render:clientes-->
         </div>
@@ -1704,33 +1694,27 @@
             <img
               class="mark"
               src="/brand/vanpack-horizontal-negativo.svg"
-              alt="Vanpack"
+              alt="{{nome}}"
               width="136"
               height="34"
               loading="lazy"
               decoding="async"
             />
-            <h2>Conte sua medida e receba o seu orçamento</h2>
-            <p class="lead">
-              Mande medida (C x L x A), quantidade e o que vai impresso. Não tem a medida? Mande a
-              foto do produto que a gente ajuda.
-            </p>
-            <a
-              class="btn btn-light"
-              data-cta="orcamento"
-              data-wa="Olá! Quero um orçamento de caixas de papelão."
-              ><svg aria-hidden="true"><use href="#i-wa" /></svg>Pedir orçamento no WhatsApp</a
+            <h2>{{orcamento.titulo}}</h2>
+            <p class="lead">{{orcamento.texto}}</p>
+            <a class="btn btn-light" data-cta="orcamento" data-wa="{{whatsapp.mensagens.orcamento}}"
+              ><svg aria-hidden="true"><use href="#i-wa" /></svg>{{orcamento.botao}}</a
             >
-            <p class="cta-note">Sem compromisso</p>
+            <p class="cta-note">{{orcamento.nota}}</p>
             <p class="alt" data-need="telefone">
-              Prefere ligar?
+              {{orcamento.ligar}}
               <a href="tel:{{telefone}}" data-contact="phone">{{telefone_exibicao}}</a>
             </p>
           </div>
           <ol class="how" aria-label="Como pedir">
-            <li><b>1</b>Chame no WhatsApp</li>
-            <li><b>2</b>O assistente pergunta medida, quantidade e impressão</li>
-            <li><b>3</b>Receba o orçamento</li>
+            <li><b>1</b>{{orcamento.passos.0}}</li>
+            <li><b>2</b>{{orcamento.passos.1}}</li>
+            <li><b>3</b>{{orcamento.passos.2}}</li>
           </ol>
         </div>
       </section>
@@ -1741,7 +1725,7 @@
         <div class="foot-brand">
           <img
             src="/brand/vanpack-horizontal.svg"
-            alt="Vanpack"
+            alt="{{nome}}"
             width="136"
             height="34"
             loading="lazy"
@@ -1751,38 +1735,40 @@
         </div>
         <dl class="foot-info">
           <div data-field="razao" hidden>
-            <dt>Razão social</dt>
+            <dt>{{rodape.rotulos.razao_social}}</dt>
             <dd></dd>
           </div>
           <div data-field="cnpj" hidden>
-            <dt>CNPJ</dt>
+            <dt>{{rodape.rotulos.cnpj}}</dt>
             <dd></dd>
           </div>
           <div data-field="endereco" hidden>
-            <dt>Endereço</dt>
+            <dt>{{rodape.rotulos.endereco}}</dt>
             <dd></dd>
           </div>
           <div data-field="horario" hidden>
-            <dt>Horário</dt>
+            <dt>{{rodape.rotulos.horario}}</dt>
             <dd></dd>
           </div>
           <div data-field="telefone" hidden>
-            <dt>Telefone</dt>
+            <dt>{{rodape.rotulos.telefone}}</dt>
             <dd></dd>
           </div>
           <div data-field="mapa" hidden>
-            <dt>Mapa</dt>
+            <dt>{{rodape.rotulos.mapa}}</dt>
             <dd></dd>
           </div>
         </dl>
         <nav class="foot-nav" aria-label="Rodapé">
-          <a href="#produtos">Produtos</a><a href="#diferenciais">Diferenciais</a
-          ><a href="#clientes">Clientes</a><a href="#orcamento">Orçamento</a
-          ><a href="./politica-de-privacidade.html">Privacidade</a>
+          <a href="#produtos">{{site.menu.produtos}}</a
+          ><a href="#diferenciais">{{site.menu.diferenciais}}</a
+          ><a href="#clientes">{{site.menu.clientes}}</a
+          ><a href="#orcamento">{{site.menu.orcamento}}</a
+          ><a href="./politica-de-privacidade.html">{{site.menu.privacidade}}</a>
         </nav>
         <p class="legal">
           © {{ano}} {{titular}}<span data-need="cidade_uf"> · {{cidade_uf}}</span
-          ><span data-need="ano_fundacao"> · Desde {{ano_fundacao}}</span>
+          ><span data-need="ano_fundacao"> · {{rodape.desde}}</span>
         </p>
       </div>
     </footer>
@@ -1791,21 +1777,19 @@
       <a
         class="fab-wa"
         data-cta="flutuante"
-        data-wa="Olá! Quero um orçamento de caixas de papelão."
-        aria-label="Pedir orçamento pelo WhatsApp"
-        ><svg aria-hidden="true"><use href="#i-wa" /></svg><span>Pedir orçamento</span></a
+        data-wa="{{whatsapp.mensagens.flutuante}}"
+        aria-label="{{whatsapp.botoes.flutuante_aria}}"
+        ><svg aria-hidden="true"><use href="#i-wa" /></svg
+        ><span>{{whatsapp.botoes.flutuante}}</span></a
       >
       <div class="fab-tel" data-field="telefone" hidden></div>
     </div>
 
     <div class="sheet" id="zap-ajuda" role="dialog" aria-labelledby="zap-ajuda-t" hidden>
-      <p class="sheet-t" id="zap-ajuda-t" tabindex="-1">O WhatsApp não abriu?</p>
-      <p class="sheet-inapp" hidden>
-        Dentro do Instagram, Facebook ou TikTok o WhatsApp às vezes não abre: toque em ⋮ ou ··· no
-        canto da tela e escolha "Abrir no navegador".
-      </p>
+      <p class="sheet-t" id="zap-ajuda-t" tabindex="-1">{{whatsapp.folha.titulo}}</p>
+      <p class="sheet-inapp" hidden>{{whatsapp.folha.instrucao_app}}</p>
       <p data-need="whatsapp_exibicao">
-        Nosso WhatsApp é o <b class="sheet-num">{{whatsapp_exibicao}}</b>.
+        {{whatsapp.folha.numero}} <b class="sheet-num">{{whatsapp_exibicao}}</b>.
       </p>
       <div class="sheet-actions">
         <button
@@ -1814,10 +1798,10 @@
           data-need="whatsapp"
           data-copy="+{{whatsapp}}"
         >
-          Copiar número
+          {{whatsapp.folha.copiar}}
         </button>
         <a class="btn btn-soft" data-need="telefone" href="tel:{{telefone}}" data-contact="phone"
-          >Ligar {{telefone_exibicao}}</a
+          >{{whatsapp.folha.ligar}}</a
         >
       </div>
       <p class="sheet-status" role="status"></p>

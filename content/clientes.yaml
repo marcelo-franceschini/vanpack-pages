@@ -14,6 +14,9 @@
 # Os 6 clientes abaixo são exemplos: em production o site recusa publicar se sobrar algum. Troque-os
 # pelos reais ou apague as linhas. Ponha sempre os textos entre aspas.
 
+etiqueta: "Clientes"
+titulo: "Quem já pede com a gente"
+
 clientes:
   - nome: "Cliente 1"
     exemplo: true

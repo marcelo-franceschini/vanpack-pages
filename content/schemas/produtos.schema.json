@@ -5,8 +5,72 @@
   "description": "Os produtos da seção \"O que fabricamos\". Cada um tem um 3D girando no topo do cartão e um botão de orçamento.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["itens"],
+  "required": ["etiqueta", "titulo", "fatos", "botao", "itens"],
   "properties": {
+    "etiqueta": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 28,
+      "description": "Linha pequena acima do título da seção."
+    },
+    "titulo": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 55,
+      "description": "Título da seção."
+    },
+    "fatos": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pedido_minimo", "regiao"],
+      "description": "Os dois dados operacionais acima dos cartões. Cada um some se não houver dado em content/empresa.yaml.",
+      "properties": {
+        "pedido_minimo": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rotulo", "valor"],
+          "properties": {
+            "rotulo": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 25,
+              "description": "Rótulo."
+            },
+            "valor": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40,
+              "description": "Valor."
+            }
+          }
+        },
+        "regiao": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rotulo", "valor"],
+          "properties": {
+            "rotulo": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 21,
+              "description": "Rótulo."
+            },
+            "valor": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 22,
+              "description": "Valor."
+            }
+          }
+        }
+      }
+    },
+    "botao": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 45,
+      "description": "Texto do botão de orçamento de cada cartão."
+    },
     "itens": {
       "type": "array",
       "minItems": 1,

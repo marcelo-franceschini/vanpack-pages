@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vanpack.local/schemas/historia.schema.json",
+  "title": "História",
+  "description": "Os textos dos 5 cartões da história 3D.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["hero", "anos", "qualidade", "orcamento", "entrega"],
+  "properties": {
+    "hero": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "etiqueta",
+        "etiqueta_regiao",
+        "titulo",
+        "texto",
+        "texto_extra",
+        "botao",
+        "link_produtos",
+        "nota",
+        "selo_pedido_minimo",
+        "selo_regiao"
+      ],
+      "properties": {
+        "etiqueta": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 45,
+          "description": "Linha pequena acima do título. Some se não houver cidade."
+        },
+        "etiqueta_regiao": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "description": "Complemento da linha acima, só em telas grandes. Some se não houver região."
+        },
+        "titulo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65,
+          "description": "Título principal da página (h1)."
+        },
+        "texto": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 85,
+          "description": "Frase abaixo do título. O ponto final é do site."
+        },
+        "texto_extra": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 55,
+          "description": "Continuação da frase, só em telas grandes (começa com vírgula)."
+        },
+        "botao": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "description": "Texto do botão principal."
+        },
+        "link_produtos": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 26,
+          "description": "Segundo chamado: leva à seção de produtos."
+        },
+        "nota": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 27,
+          "description": "Linha de risco logo abaixo do botão."
+        },
+        "selo_pedido_minimo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 75,
+          "description": "Selo com o pedido mínimo. Some se não houver."
+        },
+        "selo_regiao": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "description": "Selo com a região. Some se não houver."
+        }
+      },
+      "description": "Cartão 1 da história: a abertura da página."
+    },
+    "anos": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["etiqueta", "titulo", "titulo_sem_ano", "texto"],
+      "properties": {
+        "etiqueta": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 27,
+          "description": "Linha pequena acima do título."
+        },
+        "titulo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 36,
+          "description": "Título quando há ano de fundação. {{anos}} é o número que se atualiza sozinho a cada ano."
+        },
+        "titulo_sem_ano": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 45,
+          "description": "Título alternativo, quando não há ano de fundação."
+        },
+        "texto": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Frase abaixo do título."
+        }
+      },
+      "description": "Cartão 2 da história."
+    },
+    "qualidade": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["etiqueta", "titulo", "texto"],
+      "properties": {
+        "etiqueta": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 21,
+          "description": "Linha pequena acima do título."
+        },
+        "titulo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 45,
+          "description": "Título do cartão."
+        },
+        "texto": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 95,
+          "description": "Frase abaixo do título."
+        }
+      },
+      "description": "Cartão 3 da história."
+    },
+    "orcamento": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["etiqueta", "titulo", "texto"],
+      "properties": {
+        "etiqueta": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 21,
+          "description": "Linha pequena acima do título."
+        },
+        "titulo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 36,
+          "description": "Título do cartão."
+        },
+        "texto": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 115,
+          "description": "Frase abaixo do título."
+        }
+      },
+      "description": "Cartão 4 da história."
+    },
+    "entrega": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["etiqueta", "titulo", "texto", "texto_sem_regiao", "link"],
+      "properties": {
+        "etiqueta": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 19,
+          "description": "Linha pequena acima do título."
+        },
+        "titulo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 31,
+          "description": "Título do cartão."
+        },
+        "texto": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 33,
+          "description": "Frase abaixo do título quando há região."
+        },
+        "texto_sem_regiao": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 55,
+          "description": "Frase alternativa, quando não há região."
+        },
+        "link": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 37,
+          "description": "Link para os diferenciais."
+        }
+      },
+      "description": "Cartão 5 da história."
+    }
+  }
+}

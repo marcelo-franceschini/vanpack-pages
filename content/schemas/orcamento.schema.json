@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vanpack.local/schemas/orcamento.schema.json",
+  "title": "Orçamento",
+  "description": "Os textos da seção final da página.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["titulo", "texto", "botao", "nota", "ligar", "passos"],
+  "properties": {
+    "titulo": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60,
+      "description": "Título da seção final."
+    },
+    "texto": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 170,
+      "description": "Parágrafo abaixo do título."
+    },
+    "botao": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40,
+      "description": "Texto do botão."
+    },
+    "nota": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 27,
+      "description": "Linha de risco logo abaixo do botão."
+    },
+    "ligar": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 26,
+      "description": "Frase antes do telefone. Some se não houver telefone."
+    },
+    "passos": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "description": "Os 3 passos de \"Como pedir\", na ordem.",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 75
+      }
+    }
+  }
+}

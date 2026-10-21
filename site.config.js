@@ -1,16 +1,8 @@
 // Configuração do site: junta o conteúdo editável (content/, lido e validado por build/content.js) com o
 // que muda por ambiente (.env: modo, URL do site e medição) e monta tudo o que o build precisa (as
-// variáveis dos textos, a config da medição). Nenhum dado da empresa fica escrito aqui.
+// variáveis dos textos, a config da medição). Nenhum dado nem texto de negócio fica escrito aqui.
 // Valor vazio = sem dado: o trecho correspondente sai do HTML (nada é inventado nem fica vazio).
 import { yearsSince } from './src/years.js';
-
-/** Constantes da marca (manual da marca §7); não são dados da empresa. */
-export const brand = {
-  name: 'Vanpack',
-  slogan: 'Do projeto à entrega',
-  description:
-    'Fábrica de caixas de papelão ondulado personalizadas: sob medida e com a marca do cliente impressa.',
-};
 
 /** Ícones dos diferenciais (diferenciais.yaml): cada um é um <symbol id="i-<nome>"> do index.html. */
 export const DIFF_ICONS = ['fabrica', 'lotes', 'conversa', 'caixa'];
@@ -46,8 +38,6 @@ export const VAR_NAMES = [
   'tem_diferenciais',
   'tem_provas',
   'tem_confianca',
-  'titulo_pagina',
-  'descricao_pagina',
 ];
 
 /** Variáveis cujo valor já é HTML montado aqui (o número que o navegador recalcula): não são escapadas. */
@@ -136,8 +126,11 @@ export function createSiteConfig({
   const cityState = city && state ? `${city}-${state}` : city || state;
 
   const products = content.produtos?.itens ?? [];
+  const brand = content.site ?? {};
   const site = {
-    ...brand,
+    name: text(brand.nome),
+    slogan: text(brand.slogan),
+    description: text(brand.descricao),
     content,
     products,
     dataMode: text(env.VITE_DATA_MODE),
@@ -270,15 +263,6 @@ export function createSiteConfig({
     pedido_minimo: site.minOrder,
     regiao: site.serviceArea,
     pagamento: site.paymentMethods,
-    // título e descrição da página (title, og e twitter); a cidade entra só se houver
-    titulo_pagina: `Caixas de papelão sob medida com a sua marca | ${site.name}${city ? ` ${city}` : ''}`,
-    descricao_pagina: [
-      'Caixas de papelão ondulado sob medida, com a sua marca impressa.',
-      cityState && `Fábrica em ${cityState}.`,
-      'Peça seu orçamento pelo WhatsApp.',
-    ]
-      .filter(Boolean)
-      .join(' '),
   };
   return site;
 }

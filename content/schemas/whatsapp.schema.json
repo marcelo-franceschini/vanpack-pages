@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vanpack.local/schemas/whatsapp.schema.json",
+  "title": "WhatsApp",
+  "description": "Mensagens e textos dos botões do WhatsApp.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mensagens", "botoes", "folha"],
+  "properties": {
+    "mensagens": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["header", "hero", "orcamento", "flutuante", "privacidade"],
+      "properties": {
+        "header": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 95,
+          "description": "Mensagem do botão do cabeçalho."
+        },
+        "hero": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 110,
+          "description": "Mensagem do botão da abertura."
+        },
+        "orcamento": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65,
+          "description": "Mensagem do botão da seção final."
+        },
+        "flutuante": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65,
+          "description": "Mensagem do botão fixo (a barra no celular)."
+        },
+        "privacidade": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 65,
+          "description": "Mensagem do link da política de privacidade."
+        }
+      },
+      "description": "A mensagem pronta de cada botão do WhatsApp. O site acrescenta no fim o código do botão (ex.: [site-hero]), para você ver de onde veio cada conversa. A dos produtos fica em produtos.yaml."
+    },
+    "botoes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cabecalho", "flutuante", "flutuante_aria"],
+      "properties": {
+        "cabecalho": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 27,
+          "description": "Texto do botão do cabeçalho."
+        },
+        "flutuante": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 27,
+          "description": "Texto da barra fixa do celular."
+        },
+        "flutuante_aria": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 45,
+          "description": "Nome do botão fixo para leitor de tela."
+        }
+      },
+      "description": "Os textos dos botões do WhatsApp (o da abertura e o da seção final ficam em historia.yaml e orcamento.yaml)."
+    },
+    "folha": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["titulo", "instrucao_app", "numero", "copiar", "ligar"],
+      "properties": {
+        "titulo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 33,
+          "description": "Título da folha de ajuda que sobe se o WhatsApp não abrir."
+        },
+        "instrucao_app": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 195,
+          "description": "Instrução que só aparece dentro do Instagram, Facebook ou TikTok."
+        },
+        "numero": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 30,
+          "description": "Frase antes do número. O número é do site."
+        },
+        "copiar": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 25,
+          "description": "Texto do botão que copia o número."
+        },
+        "ligar": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "description": "Texto do botão que liga. Some se não houver telefone."
+        }
+      },
+      "description": "A folha \"O WhatsApp não abriu?\"."
+    }
+  }
+}

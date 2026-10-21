@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=./schemas/site.schema.json
+#
+# Nome, slogan e os textos que identificam a página: título, descrição para o Google, imagem de
+# compartilhamento e os links do menu.
+#
+# Ponha sempre os textos entre aspas. {{cidade}}, {{regiao}} e as outras {{variáveis}} puxam os dados
+# da empresa (content/empresa.yaml); {{#se variavel}}trecho{{/se}} só aparece se a variável tiver valor.
+
+nome: "Vanpack"
+slogan: "Do projeto à entrega"
+descricao: "Fábrica de caixas de papelão ondulado personalizadas: sob medida e com a marca do cliente impressa."
+pagina:
+  titulo: "Caixas de papelão sob medida com a sua marca | {{nome}}{{#se cidade}} {{cidade}}{{/se}}"
+  descricao: "Caixas de papelão ondulado sob medida, com a sua marca impressa.{{#se cidade_uf}} Fábrica em {{cidade_uf}}.{{/se}} Peça seu orçamento pelo WhatsApp."
+  imagem_alt: "Ilustração 3D da Vanpack com papelão kraft e a chamada 'Caixas de papelão sob medida, com a sua marca'."
+menu:
+  produtos: "Produtos"
+  diferenciais: "Diferenciais"
+  clientes: "Clientes"
+  orcamento: "Orçamento"
+  privacidade: "Privacidade"

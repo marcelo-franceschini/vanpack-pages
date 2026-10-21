@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=./schemas/rodape.schema.json
+#
+# Os rótulos do rodapé e o link do mapa. Cada dado só aparece se existir em content/empresa.yaml.
+#
+# Ponha sempre os textos entre aspas. {{cidade}}, {{regiao}} e as outras {{variáveis}} puxam os dados
+# da empresa (content/empresa.yaml); {{#se variavel}}trecho{{/se}} só aparece se a variável tiver valor.
+
+rotulos:
+  razao_social: "Razão social"
+  cnpj: "CNPJ"
+  endereco: "Endereço"
+  horario: "Horário"
+  telefone: "Telefone"
+  mapa: "Mapa"
+  cep: "CEP"
+ver_mapa: "Ver no mapa"
+desde: "Desde {{ano_fundacao}}"

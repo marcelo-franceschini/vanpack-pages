@@ -10,6 +10,7 @@ import { robotsTxt, sitemapXml } from '../build/files.js';
 import { buildJsonLd, interpolate, renderPage } from '../build/render.js';
 import { isValidCnpj, logoProblems, validateSite } from '../build/validate.js';
 import { DIFF_ICONS, RICH_VARS, VAR_NAMES, slug } from '../site.config.js';
+import { renderText } from '../build/texto.js';
 import { yearsSince } from '../src/years.js';
 import {
   ROOT,
@@ -89,7 +90,13 @@ describe('createSiteConfig', () => {
     for (const key of ['cnpj', 'phone', 'legalName', 'hours', 'mapUrl']) {
       assert.equal(site[key], '', key);
     }
-    assert.ok(site.vars.descricao_pagina.length > 20, 'a descrição tem texto mesmo sem cidade');
+    const description = renderText(baseContent.site.pagina.descricao, site.vars, {
+      rich: RICH_VARS,
+    });
+    assert.ok(
+      description.length > 20 && !description.includes('Fábrica em'),
+      'a descrição tem texto mesmo sem cidade',
+    );
   });
 
   test('as variáveis de VAR_NAMES são exatamente as que a config entrega', () => {
@@ -223,6 +230,7 @@ describe('trava de go-live', () => {
   test('cliente autorizado e prova autorizada precisam do registro em docs/provas/', () => {
     const clientes = { clientes: [{ nome: 'Padaria Sem Registro', autorizado: true }] };
     const provas = {
+      ...baseContent.provas,
       depoimentos: [
         { id: 'sem-registro', citacao: 'Boa.', autor: 'Fulano', autorizado: true },
         { id: 'nao-autorizado', citacao: 'Ok.', autor: 'Ciclano', autorizado: false },
@@ -465,7 +473,7 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
   const strip = (site) =>
     renderPage(html, site).match(/<section class="trust"[\s\S]*?<\/section>/)?.[0] ?? '';
   const diferenciais = (itens) =>
-    siteWith({ content: { ...baseContent, diferenciais: { itens } } });
+    siteWith({ content: { ...baseContent, diferenciais: { ...baseContent.diferenciais, itens } } });
   const pillars = (site) =>
     [...renderPage(html, site).matchAll(/<article class="pillar">[\s\S]*?<\/article>/g)].map(
       (m) => m[0],
@@ -565,6 +573,7 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
       env: PRODUCTION,
       content: realContent({
         clientes: {
+          ...baseContent.clientes,
           clientes: [
             { nome: 'Padaria Real', logo: 'padaria-real.svg', autorizado: true },
             {
@@ -600,6 +609,7 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
 
   test('depoimento e nota do Google só aparecem autorizados, em qualquer modo', () => {
     const provas = {
+      ...baseContent.provas,
       depoimentos: [
         { id: 'cliente-a', autorizado: true, citacao: 'Caixa sempre igual.', autor: 'Cliente A' },
         { id: 'exemplo-x', autorizado: false, citacao: 'Texto de exemplo.', autor: 'Cliente X' },
@@ -628,6 +638,7 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
 
   test('a nota do Google nunca aparece sem autorização', () => {
     const provas = {
+      ...baseContent.provas,
       depoimentos: [],
       nota_google: { valor: 5, quantidade: 1, url: 'https://g.page/r/x', autorizado: false },
     };

@@ -10,7 +10,19 @@ import { VAR_NAMES } from '../site.config.js';
 import { textProblem, textVariables } from './texto.js';
 
 /** Os arquivos YAML de content/ (cada um tem content/schemas/<nome>.schema.json). */
-export const CONTENT_FILES = ['empresa', 'produtos', 'diferenciais', 'clientes', 'provas'];
+export const CONTENT_FILES = [
+  'empresa',
+  'site',
+  'historia',
+  'confianca',
+  'produtos',
+  'diferenciais',
+  'clientes',
+  'provas',
+  'orcamento',
+  'whatsapp',
+  'rodape',
+];
 /** Arquivos com os dados fictícios de referência (o modo production recusa o que sobrar igual a eles). */
 export const EXAMPLE_FILES = ['empresa'];
 

@@ -5,6 +5,17 @@
 # números: confira cada um antes do go-live (docs/go-live.md).
 # Ponha sempre os textos entre aspas.
 
+etiqueta: "O que fabricamos"
+titulo: "Caixas, divisórias e chapas sob medida"
+fatos:
+  pedido_minimo:
+    rotulo: "Pedido mínimo"
+    valor: "{{pedido_minimo}} unidades"
+  regiao:
+    rotulo: "Atendemos"
+    valor: "{{regiao}}"
+botao: "Pedir orçamento deste produto"
+
 itens:
   - id: corte-e-vinco
     nome: "Corte e vinco"

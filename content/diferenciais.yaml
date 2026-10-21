@@ -4,6 +4,9 @@
 # conversa ou caixa). Apague todos e a seção, e os links para ela, somem. Confira cada um antes do
 # go-live. Ponha sempre os textos entre aspas.
 
+etiqueta: "Diferenciais"
+titulo: "Por que a Vanpack"
+
 itens:
   - titulo: "Fale direto com quem fabrica"
     texto: "Sem intermediário: você sabe o que vai receber."
