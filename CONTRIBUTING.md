@@ -26,7 +26,7 @@ Os testes de navegador usam o Chrome do sistema (`CHROME_PATH`, padrão `/usr/bi
    ```bash
    npm run lint        # ESLint + Prettier
    npm run typecheck   # tsc --checkJs (JSDoc) em build/, site.config.js e src/
-   npm test            # build + testes (leva uns 10 minutos)
+   npm test            # build + testes (leva uns 9 minutos)
    ```
 
 4. Abra o pull request para a `master`. O CI (`verificar` e `paridade`) precisa estar verde. O merge

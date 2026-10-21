@@ -167,7 +167,7 @@ Troque aqui e pronto: o rodapé, os botões, o JSON-LD do Google e o mapa usam e
 
 ```text
 content/clientes.yaml, linha 14 › clientes[1].logo: o arquivo content/clientes/padaria-real.svg não existe
-content/historia.yaml, linha 12 › hero.titulo: tem 71 caracteres; o máximo é 65 (um texto maior quebraria o layout)
+content/historia.yaml, linha 12 › hero.titulo: tem 71 caracteres; o máximo é 48 (um texto maior quebraria o layout)
 content/empresa.yaml, linha 4 › telefone: precisa ser um texto (entre aspas); o valor 551147001234 foi lido como número, ponha-o entre aspas
 ```
 
@@ -224,7 +224,7 @@ A verificação (lint, tipos e a suíte inteira de testes) mora em [`verificar.y
 
 - **Pull request** ([`ci.yml`](.github/workflows/ci.yml)): `verificar` e `paridade`. A paridade compara, pixel a pixel, o PR com a branch de destino em 6 tamanhos de tela e compara a estrutura do HTML (`npm run audit:paridade`). Uma diferença de pixel só reprova se se repetir nos mesmos pixels numa segunda captura: o renderizador do CI às vezes erra um ou dois pixels de borda, em pontos diferentes a cada execução, e uma mudança real é determinística. O rótulo `muda-visual` no PR deixa a diferença de pixels passar (as imagens ficam num artefato do CI); `muda-html` deixa passar só a diferença no HTML, que vira aviso.
 - **Push na `master`** ([`deploy.yml`](.github/workflows/deploy.yml)): roda `verificar` de novo e só publica se passar.
-- **Proteção da `master`**: o check `verificar` é obrigatório no merge.
+- **Proteção da `master`** (GitHub, Settings › Branches): os checks `verificar / verificar` e `paridade` são obrigatórios no merge; ninguém, além de quem administra o repositório, empurra direto na `master`, e force-push e exclusão da branch são recusados.
 
 > [!IMPORTANT]
 > Em **Settings → Pages**, selecione **Source: GitHub Actions**. Isso impede que o builder legado (Jekyll) publique o código-fonte cru.
@@ -264,13 +264,13 @@ src/render/stage.js        Liga o canvas ao render: Web Worker (OffscreenCanvas)
 src/render/worker.js       Ponto de entrada do worker
 src/render/controller.js   Loop de render sob demanda, suavização, qualidade adaptativa, contexto perdido
 src/scene/                 Cena 3D procedural: factory/truck/hero/timeline/camera/geometry/textures
-src/brand/marks.js         Caminhos da marca em curvas (gerado por scripts/brand.py)
+src/brand/marks.js         Caminhos da marca em curvas (gerado por `node scripts/brand.mjs`, que roda scripts/brand.py com uv)
 public/brand/              SVGs oficiais da marca (Floresta, Carvão, Papel e negativos)
 public/fonts/              Archivo (WOFF2, pesos 400 a 900)
 scripts/audit/             Auditorias: bundle, cena, runtime, Lighthouse, capturas e paridade visual
 jsconfig*.json, src/types.d.ts  Checagem de tipos por JSDoc (npm run typecheck)
 tests/                     Testes de navegador (Playwright) e da cena (node:test)
-docs/                      Manual da marca e notas da v4
+docs/                      Manual da marca, notas da v4, 3D dos produtos, experimentos A/B, go-live e provas/ (autorizações)
 ```
 
 ### Como a história funciona
