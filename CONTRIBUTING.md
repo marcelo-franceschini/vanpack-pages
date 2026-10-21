@@ -30,10 +30,21 @@ Os testes de navegador usam o Chrome do sistema (`CHROME_PATH`, padrão `/usr/bi
    npm test            # build + testes (leva uns 9 minutos)
    ```
 
-4. Abra o pull request para a `master`. O CI (`verificar` e `paridade`) precisa estar verde. O merge
-   publica o site sozinho (GitHub Pages, por Actions) depois de os testes passarem de novo.
+4. Abra o pull request para a `master`. O CI (`verificar`, que roda lint, tipos e os testes em 3 partes
+   paralelas, e `paridade`) precisa estar verde; o job `lighthouse` é só informativo. O merge publica o
+   site sozinho (GitHub Pages, por Actions) depois de os testes passarem de novo.
 
-Nunca faça push direto na `master`.
+Nunca faça push direto na `master`: ela é protegida (os checks `verificar / verificar` e `paridade` são
+obrigatórios; force-push e exclusão são recusados).
+
+## Versionamento e como desfazer
+
+- O histórico é o changelog: commits pequenos no padrão acima e, em cada PR, a tabela "commit, o que muda,
+  métrica antes e depois". Não há releases nem `CHANGELOG.md`: o site é de entrega contínua.
+- Ao ir ao ar com dados reais (`docs/go-live.md`), ponha uma tag no commit do merge, como ponto de retorno
+  conhecido: `git tag -a go-live-AAAA-MM-DD -m "Site no ar com dados reais"` e `git push origin --tags`.
+- Para desfazer um merge ruim: `git revert -m 1 <commit do merge>` num PR; o merge do revert publica de
+  novo o site anterior (uns 8 minutos). Enquanto isso o site que está no ar não é derrubado.
 
 ## O que não pode mudar sem combinar antes
 
