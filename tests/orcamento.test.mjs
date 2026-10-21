@@ -30,7 +30,7 @@ const FILES = {
   'index.html': 11.5,
   'politica-de-privacidade.html': 3.6,
   '404.html': 2,
-  'fonts/archivo-latin.woff2': 31.5,
+  'fonts/archivo-latin.woff2': 28.5,
   'og.jpg': 65,
   'icon-512.png': 7.5,
   'apple-touch-icon.png': 3.5,

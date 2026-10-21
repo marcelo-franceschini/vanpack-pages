@@ -111,7 +111,7 @@ não começa, o console diz o motivo (`[vanpack] autoplay não iniciou: …`).
   hex no `:root` de `index.html`): `#0D3C2A`, `#454440` (texto secundário, 9,2:1 sobre Papel),
   `#ECE9E3`, `#DFDCD7`, `#D0CDC8`, `#2A5D47` (passos "Como pedir", 7,2:1 com texto Papel). Sem cor de
   acento (a exceção é o amarelo e o verde de sinalização da lâmpada da máquina, na ilustração da linha de produção).
-- Tipografia: só Archivo (`public/fonts/archivo-latin.woff2`, 400 a 900). Tudo em `rem`.
+- Tipografia: só Archivo (`public/fonts/archivo-latin.woff2`, 400 a 900), subconjunto do português (ASCII, Latin-1, pontuação geral, ↓ ↑ € ™ −; kerning e ligaduras ficam, frações não; 28 KB). Caractere fora dele (`Œ`, `ł`...) cai para a fonte do sistema. Tudo em `rem`.
 - Alvos de toque ≥ 44 px; foco visível de 3 px; quebras: `(max-width: 760px), (max-aspect-ratio: 1/1)`
   = celular (cartões embaixo); `(max-height: 700px)` em paisagem = compacto.
 
