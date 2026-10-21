@@ -9,12 +9,13 @@ Landing page oficial da **Vanpack** (caixas de papelão sob medida, divisórias 
 - **Passo a passo para ir ao ar com dados reais:** [`docs/go-live.md`](docs/go-live.md).
 - **Experimentos A/B** (regras, métrica, amostra e como ligar): [`docs/experimentos.md`](docs/experimentos.md).
 - **Assets oficiais em vetor:** [`public/brand/`](public/brand/).
+- **Como contribuir** (fluxo de PR, commits, o que é travado): [`CONTRIBUTING.md`](CONTRIBUTING.md). **Licença:** [`LICENSE`](LICENSE) (todos os direitos reservados).
 
 ---
 
 ## Comandos
 
-Requer Node.js 22.12+. Os testes e as auditorias usam o Chrome do sistema (`CHROME_PATH`, padrão `/usr/bin/google-chrome-stable`) com WebGL por software.
+Node.js 24 (arquivo `.nvmrc`; o mínimo aceito é o 22.12). Os testes e as auditorias usam o Chrome do sistema (`CHROME_PATH`, padrão `/usr/bin/google-chrome-stable`) com WebGL por software.
 
 ```bash
 npm install
@@ -23,6 +24,7 @@ npm run build          # gera dist/ (CSP por hash, workers da cena, three.js num
 npm run build:audit    # build de auditoria em dist-audit/ (expõe contadores do renderer)
 npm run preview        # serve o dist/ localmente
 npm run lint           # ESLint + Prettier (o mesmo do CI)
+npm run typecheck      # tipos por JSDoc (tsc --checkJs) em build/, site.config.js e src/, sem converter nada para .ts
 npm run format         # formata tudo com o Prettier
 npm test               # build + build de auditoria + testes de navegador (Playwright)
 ```
@@ -177,20 +179,21 @@ Cada linha diz **o arquivo, a linha, o campo e o problema**. `npm run build` mos
 
 Dentro de qualquer texto de `content/`, `{{nome}}` puxa o dado. `{{#se cidade}} Fábrica em {{cidade}}.{{/se}}` só aparece se houver cidade (`{{#se rua cidade_uf}}` vale quando todas têm valor; `{{#senao cidade}}...{{/senao}}` é o contrário). Uma variável com nome errado é recusada e o erro lista os nomes certos.
 
-| Variável                                                   | O que é                                                                             |
-| ---------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `{{nome}}`, `{{slogan}}`                                   | Nome e slogan da marca (`content/site.yaml`)                                        |
-| `{{razao_social}}`, `{{titular}}`                          | Razão social; `titular` é a razão social ou, sem ela, o nome da marca               |
-| `{{cnpj}}`                                                 | CNPJ                                                                                |
-| `{{rua}}`, `{{bairro}}`, `{{cidade}}`, `{{uf}}`, `{{cep}}` | Endereço, em pedaços                                                                |
-| `{{cidade_uf}}`                                            | "Santo André-SP"                                                                    |
-| `{{telefone}}`, `{{telefone_exibicao}}`                    | Telefone em `+55...` e como aparece na página                                       |
-| `{{whatsapp}}`, `{{whatsapp_exibicao}}`                    | WhatsApp só com dígitos e como aparece: (11) 91234-5678                             |
-| `{{horario}}`                                              | Horário de atendimento                                                              |
-| `{{ano_fundacao}}`                                         | Ano de fundação                                                                     |
-| `{{anos}}`, `{{ano}}`, `{{ano_atual}}`                     | Anos de mercado e ano atual, que se atualizam sozinhos (`ano_atual`: texto simples) |
-| `{{pedido_minimo}}`, `{{regiao}}`, `{{pagamento}}`         | Dados operacionais                                                                  |
-| `{{medicao_nome}}`, `{{sem_medicao}}`                      | Para a política de privacidade: a ferramenta de medição, ou "não há"                |
+| Variável                                                                       | O que é                                                                                                                                                                         |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `{{nome}}`, `{{slogan}}`                                                       | Nome e slogan da marca (`content/site.yaml`)                                                                                                                                    |
+| `{{razao_social}}`, `{{titular}}`                                              | Razão social; `titular` é a razão social ou, sem ela, o nome da marca                                                                                                           |
+| `{{cnpj}}`                                                                     | CNPJ                                                                                                                                                                            |
+| `{{rua}}`, `{{bairro}}`, `{{cidade}}`, `{{uf}}`, `{{cep}}`                     | Endereço, em pedaços                                                                                                                                                            |
+| `{{cidade_uf}}`                                                                | "Santo André-SP"                                                                                                                                                                |
+| `{{telefone}}`, `{{telefone_exibicao}}`                                        | Telefone em `+55...` e como aparece na página                                                                                                                                   |
+| `{{whatsapp}}`, `{{whatsapp_exibicao}}`                                        | WhatsApp só com dígitos e como aparece: (11) 91234-5678                                                                                                                         |
+| `{{horario}}`                                                                  | Horário de atendimento                                                                                                                                                          |
+| `{{ano_fundacao}}`                                                             | Ano de fundação                                                                                                                                                                 |
+| `{{anos}}`, `{{ano}}`, `{{ano_atual}}`                                         | Anos de mercado e ano atual, que se atualizam sozinhos (`ano_atual`: texto simples)                                                                                             |
+| `{{pedido_minimo}}`, `{{regiao}}`, `{{pagamento}}`                             | Dados operacionais                                                                                                                                                              |
+| `{{medicao_nome}}`, `{{sem_medicao}}`                                          | Para a política de privacidade: a ferramenta de medição, ou "não há"                                                                                                            |
+| `{{tem_fatos}}`, `{{tem_diferenciais}}`, `{{tem_provas}}`, `{{tem_confianca}}` | "sim" ou vazio, para usar em `{{#se ...}}`: há pedido mínimo ou região; há diferenciais; há cliente, depoimento ou nota para mostrar; a faixa de confiança tem ao menos um item |
 
 ### O que NÃO mexer (sem falar com quem programa)
 
@@ -217,7 +220,11 @@ Eventos do `dataLayer`: `whatsapp_click{cta}`, `handoff_fail{cta}`, `whatsapp_co
 
 ## Publicação contínua (GitHub Pages)
 
-A cada push na `master`, o workflow [`deploy.yml`](.github/workflows/deploy.yml) roda o lint, gera o build e publica. Os pull requests passam por [`ci.yml`](.github/workflows/ci.yml): lint, build e os testes de navegador.
+A verificação (lint, tipos e a suíte inteira de testes) mora em [`verificar.yml`](.github/workflows/verificar.yml), um workflow reutilizável chamado pelos dois fluxos abaixo; o Node vem do `.nvmrc` e as actions são fixadas por SHA (o [Dependabot](.github/dependabot.yml) propõe as atualizações, uma por assunto, toda segunda-feira).
+
+- **Pull request** ([`ci.yml`](.github/workflows/ci.yml)): `verificar` e `paridade`. A paridade compara, pixel a pixel, o PR com a branch de destino em 6 tamanhos de tela e compara a estrutura do HTML (`npm run audit:paridade`). O rótulo `muda-visual` no PR deixa a diferença de pixels passar (as imagens ficam num artefato do CI); `muda-html` deixa passar só a diferença no HTML, que vira aviso.
+- **Push na `master`** ([`deploy.yml`](.github/workflows/deploy.yml)): roda `verificar` de novo e só publica se passar.
+- **Proteção da `master`**: o check `verificar` é obrigatório no merge.
 
 > [!IMPORTANT]
 > Em **Settings → Pages**, selecione **Source: GitHub Actions**. Isso impede que o builder legado (Jekyll) publique o código-fonte cru.
@@ -227,12 +234,14 @@ A cada push na `master`, o workflow [`deploy.yml`](.github/workflows/deploy.yml)
 ## Arquitetura
 
 ```text
+404.html                   Página 404 (passa pelo build: CSP, link para o início da URL do site e textos de content/site.yaml)
 index.html                 Página única: CSS inline (tokens da marca), HTML e metadados
 site.config.js             Marca, variáveis dos textos e createSiteConfig({ env, content }): monta a config
 content/                   Dados da empresa e textos editáveis (YAML + JSON Schema em content/schemas/)
 build/content.js           Lê e valida content/ (erros em português, com arquivo, linha e campo)
 build/texto.js             Linguagem dos textos: {{variável}} e {{#se}}...{{/se}}
 build/privacidade.js       Markdown mínimo da política de privacidade (content/privacidade.md)
+build/three-compartilhado.js  O three.js num arquivo só (assets/three-*.js) para os workers e o render de reserva
 build/render.js            Escreve os dados no HTML (WhatsApp, rodapé, {{variáveis}}, diferenciais, clientes, JSON-LD)
 build/validate.js          Trava de go-live: demo × production
 build/files.js             robots.txt e sitemap.xml gerados da URL do site
@@ -258,7 +267,8 @@ src/scene/                 Cena 3D procedural: factory/truck/hero/timeline/camer
 src/brand/marks.js         Caminhos da marca em curvas (gerado por scripts/brand.py)
 public/brand/              SVGs oficiais da marca (Floresta, Carvão, Papel e negativos)
 public/fonts/              Archivo (WOFF2, pesos 400 a 900)
-scripts/audit/             Auditorias: bundle, cena, runtime, Lighthouse e capturas
+scripts/audit/             Auditorias: bundle, cena, runtime, Lighthouse, capturas e paridade visual
+jsconfig*.json, src/types.d.ts  Checagem de tipos por JSDoc (npm run typecheck)
 tests/                     Testes de navegador (Playwright) e da cena (node:test)
 docs/                      Manual da marca e notas da v4
 ```
@@ -297,6 +307,11 @@ docs/                      Manual da marca e notas da v4
 - `tests/robustness.test.mjs`: sem WebGL, worker bloqueado (fallback na thread principal) e contexto WebGL perdido e restaurado.
 - `tests/brand.test.mjs`: paleta, tipografia, efeitos proibidos, ausência de raster/rota/pinos/formulário, SVGs da marca, CSP e requisições.
 - `tests/scene.test.mjs`: linha do tempo, câmera, estrada, geometria e piso.
+- `tests/limites.test.mjs`: o pior caso que o build aceita: todo texto de `content/` no tamanho máximo do schema e as listas cheias (6 diferenciais, 12 clientes); o site é construído assim (`dist-limite/`) e passa no `tests/layout.test.mjs` em todos os tamanhos de tela.
+- `tests/foco.test.mjs`: percorre a página com Tab e falha se um foco ficar atrás do botão fixo do WhatsApp (WCAG 2.4.11).
+- `tests/axe.test.mjs`: axe-core com as regras WCAG 2.0 a 2.2 A e AA na página principal e na política: sem violação.
+- `tests/html.test.mjs`: html-validate (`.htmlvalidate.json`) nas páginas publicadas, com as exceções justificadas.
+- `tests/docs.test.mjs`: sem travessão longo em README, guias, `docs/`, `content/` e workflows; README com toda variável dos textos e todo comando de auditoria.
 - `tests/orcamento.test.mjs`: tetos de bytes do `dist/` (gzip por arquivo, JS inicial, carga inicial e visita completa); os tetos só descem.
 - `tests/three-compartilhado.test.mjs`: o three.js é um arquivo só (`assets/three-*.js`), importado pelos dois workers e pelo render de reserva, que não levam cópia; os imports do `src/` só por nome.
 
