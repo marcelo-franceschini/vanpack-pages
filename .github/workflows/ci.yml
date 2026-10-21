@@ -29,7 +29,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       # a base é o commit de destino do PR (o git archive do script só precisa desse commit)
       - name: Busca a branch de destino
         env:
@@ -63,7 +63,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - run: npm run build
       - name: Bytes do build
         run: |

@@ -30,7 +30,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
       - name: Avisa se o site vai ao ar com dados fictícios
         run: |
           if grep -Eq '^VITE_DATA_MODE=demo' .env; then
