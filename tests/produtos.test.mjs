@@ -358,21 +358,24 @@ describe('contextos WebGL e memória', () => {
 
   test('rolar para dentro e para fora 3 vezes não aumenta geometrias nem texturas', async () => {
     const { page, context } = await open(audit, MOBILE);
-    // `card`: espera um quadro desse cartão (à vista) antes de ler; sem ele, só espera assentar
-    const memory = async (card) => {
-      await page.evaluate(() => (window.__audit.produtos.stats = {}));
-      if (card !== undefined) {
-        await page.waitForFunction((card) => window.__audit.produtos.stats[card], card, {
-          timeout: 60_000,
-        });
-      }
-      await page.waitForTimeout(800);
+    // O worker publica a memória também a cada add e remove, então a leitura mais recente pode ser
+    // de antes: quem espera um fato (menos modelos) lê de novo até ele acontecer.
+    const ask = async () => {
       await page.evaluate(() => {
         window.__audit.produtos.memory = null;
         window.__audit.produtos.askMemory();
       });
       await page.waitForFunction(() => window.__audit.produtos.memory, null, { timeout: 30_000 });
       return page.evaluate(() => window.__audit.produtos.memory);
+    };
+    // espera um quadro do cartão (à vista) e assenta antes de ler
+    const memory = async (card) => {
+      await page.evaluate(() => (window.__audit.produtos.stats = {}));
+      await page.waitForFunction((card) => window.__audit.produtos.stats[card], card, {
+        timeout: 60_000,
+      });
+      await page.waitForTimeout(800);
+      return ask();
     };
     const seen = [];
     for (let round = 0; round < 3; round++) {
@@ -385,8 +388,17 @@ describe('contextos WebGL e memória', () => {
       seen.push(await memory(1));
       // o 1º cartão se afasta e é liberado; o worker segue vivo pelo 3º
       await page.evaluate(() => document.querySelector('#diferenciais').scrollIntoView());
-      const away = await memory();
-      assert.ok(away.models < seen.at(-1).models, `volta ${round + 1}: o modelo longe sai`);
+      // a página larga os cartões distantes no próximo quadro de renderização, quando a máquina deixa
+      let away;
+      for (let tries = 0; tries < 50; tries++) {
+        away = await ask();
+        if (away.models < seen.at(-1).models) break;
+        await page.waitForTimeout(200);
+      }
+      assert.ok(
+        away.models < seen.at(-1).models,
+        `volta ${round + 1}: o modelo longe sai (perto: ${JSON.stringify(seen.at(-1))}, longe: ${JSON.stringify(away)})`,
+      );
     }
     for (const m of seen) {
       assert.deepEqual(
