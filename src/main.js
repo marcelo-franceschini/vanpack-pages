@@ -18,7 +18,9 @@ startExperiments();
 
 // Textos que dependem do ano corrente (anos de mercado, ©): o build escreve o valor do dia do deploy
 // e aqui ele é recalculado, para não envelhecer entre um deploy e outro.
-for (const el of document.querySelectorAll('[data-since]')) {
+for (const el of /** @type {NodeListOf<HTMLElement>} */ (
+  document.querySelectorAll('[data-since]')
+)) {
   const years = yearsSince(el.dataset.since);
   if (Number.isFinite(years)) el.textContent = String(years);
 }
@@ -54,7 +56,7 @@ const story = createStory({
   header: $('#hdr'),
   cue: $('#cue'),
   fab,
-  cards: [...document.querySelectorAll('.card')],
+  cards: /** @type {HTMLElement[]} */ ([...document.querySelectorAll('.card')]),
   onProgress: (p) => stage.setProgress(p),
   onChapter: (index) =>
     trackOnce(`chapter-${index}`, 'chapter_view', {
@@ -190,14 +192,18 @@ function editMessage(link, edit) {
 const handoff = createHandoff({ sheet: $('#zap-ajuda'), inapp, onEvent: track });
 
 document.addEventListener('click', (e) => {
-  const link = e.target.closest?.('a[data-cta]');
+  const link = /** @type {HTMLElement | null | undefined} */ (
+    /** @type {Element} */ (e.target).closest?.('a[data-cta]')
+  );
   if (link) {
     editMessage(link, (message) => addCampaign(tagInApp(message)));
     track('whatsapp_click', { cta: link.dataset.cta });
     handoff.watch(link, e);
   }
   // telefone e mapa (data-contact="phone|map"); cta é o lugar da página do link
-  const contact = e.target.closest?.('a[data-contact]');
+  const contact = /** @type {HTMLElement | null | undefined} */ (
+    /** @type {Element} */ (e.target).closest?.('a[data-contact]')
+  );
   if (contact) {
     const place = contact.closest('footer') ? 'rodape' : (contact.closest('[id]')?.id ?? 'pagina');
     track(`${contact.dataset.contact}_click`, { cta: place });

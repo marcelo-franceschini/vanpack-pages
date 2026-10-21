@@ -24,7 +24,7 @@ npm run build          # gera dist/ (CSP por hash, workers da cena, three.js num
 npm run build:audit    # build de auditoria em dist-audit/ (expõe contadores do renderer)
 npm run preview        # serve o dist/ localmente
 npm run lint           # ESLint + Prettier (o mesmo do CI)
-npm run typecheck      # tipos por JSDoc (tsc --checkJs) em build/, site.config.js e src/, sem converter nada para .ts
+npm run typecheck      # tipos por JSDoc (tsc --checkJs) em build/, site.config.js e src/ (inclusive main.js e o 3D dos produtos), sem converter nada para .ts; src/scene/ e src/render/ (travados por hash) só entram por serem importados e os erros deles não contam
 npm run format         # formata tudo com o Prettier
 npm test               # build + build de auditoria + testes de navegador (Playwright), em fila
 PARTE=1 npm run test:parte   # só a 1ª de 3 partes da suíte (é o que o CI roda em paralelo; PARTE=2 e PARTE=3 são as outras)
@@ -321,6 +321,7 @@ docs/                      Manual da marca, notas da v4, 3D dos produtos, experi
 - `tests/subcaminho.test.mjs`: o `dist/` servido em `/vanpack-pages/`, como no GitHub Pages, por um servidor que devolve 404 de verdade: nenhum pedido pode falhar (um endereço que virasse absoluto reprovaria).
 - `tests/servidor-lento.test.mjs`: o servidor de laboratório do `audit:carga` (latência, banda compartilhada, gzip, 404).
 - `tests/partes.test.mjs`: cada arquivo de teste roda em exatamente uma das partes paralelas do CI, e as partes ficam equilibradas.
+- `tests/typecheck.test.mjs`: o filtro do `npm run typecheck` só deixa de fora os erros de tipo de `src/scene/` e `src/render/` (travados por hash); o resto, inclusive `src/main.js`, continua reprovando.
 - `tests/hooks.test.mjs`: o hook de pre-push opcional recusa o push quando o lint ou os tipos falham.
 
 ---

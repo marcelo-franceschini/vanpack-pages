@@ -15,7 +15,7 @@
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "hooks:instalar": "git config core.hooksPath .githooks",
-    "typecheck": "tsc -p jsconfig.json && tsc -p jsconfig.pagina.json",
+    "typecheck": "node scripts/typecheck.mjs",
     "test": "npm run build && npm run build:audit && node --test --test-concurrency=1 tests/*.test.mjs",
     "test:parte": "npm run build && npm run build:audit && node scripts/test-parte.mjs",
     "audit:bundle": "node scripts/audit/bundle.mjs",

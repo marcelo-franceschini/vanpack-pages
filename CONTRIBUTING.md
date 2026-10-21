@@ -26,7 +26,7 @@ Os testes de navegador usam o Chrome do sistema (`CHROME_PATH`, padrão `/usr/bi
 
    ```bash
    npm run lint        # ESLint + Prettier
-   npm run typecheck   # tsc --checkJs (JSDoc) em build/, site.config.js e src/
+   npm run typecheck   # tsc --checkJs (JSDoc) em build/, site.config.js e src/ (menos os erros do 3D travado)
    npm test            # build + testes (leva uns 9 minutos)
    ```
 
