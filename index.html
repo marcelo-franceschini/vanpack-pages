@@ -76,6 +76,9 @@
       html {
         -webkit-text-size-adjust: 100%;
         scroll-padding-top: var(--hdr-h);
+        /* o foco por teclado rola para além do botão fixo do WhatsApp (a barra no celular, o botão redondo
+           no desktop), em vez de parar atrás dele */
+        scroll-padding-bottom: calc(var(--bar-h) + 1.5rem + env(safe-area-inset-bottom));
       }
       body {
         margin: 0;
