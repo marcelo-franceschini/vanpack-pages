@@ -35,6 +35,17 @@ describe('o texto da política', () => {
     assert.equal((html.match(/<p class="lead">/g) ?? []).length, 1, 'só um resumo');
   });
 
+  test('os trechos de uma linha vêm em <span>, como o HTML da política sempre teve', () => {
+    // o navegador posiciona o texto por trecho: sem os <span> as letras mudariam de lugar em fração de pixel
+    const html = policy(siteWith());
+    assert.match(html, /LTDA<span>, CNPJ [^<]+<\/span><span>, com sede em [^<]+<\/span>\./);
+    assert.match(html, /WhatsApp<span> [^<]+<\/span><\/a><span> ou ligue para <a href="tel:/);
+    assert.ok(
+      !/<h2>[^<]*<span>/.test(html) && !/<span>\s*<h2>/.test(html),
+      'blocos não ganham span',
+    );
+  });
+
   test('a seção de medição: a do Umami com medição, a outra sem', () => {
     const sem = policy(siteWith({ env: { ...exampleEnv, VITE_ANALYTICS_PROVIDER: '' } }));
     assert.ok(sem.includes('O site não envia dados de uso a nenhuma ferramenta de medição.'));
@@ -59,20 +70,20 @@ describe('o texto da política', () => {
     const demo = policy(siteWith());
     assert.ok(
       demo.includes(
-        `é a ${empresa.razao_social}, CNPJ ${empresa.cnpj}, com sede em ${empresa.endereco.rua}, ${empresa.endereco.cidade}-${empresa.endereco.uf}.`,
+        `é a ${empresa.razao_social}<span>, CNPJ ${empresa.cnpj}</span><span>, com sede em ${empresa.endereco.rua}, ${empresa.endereco.cidade}-${empresa.endereco.uf}</span>.`,
       ),
     );
     assert.ok(
       demo.includes(
-        `chame no <a data-cta="privacidade" data-wa="Olá! Quero falar sobre os meus dados pessoais.">WhatsApp ${siteWith().whatsappDisplay}</a>`,
+        `chame no <a data-cta="privacidade" data-wa="Olá! Quero falar sobre os meus dados pessoais.">WhatsApp<span> ${siteWith().whatsappDisplay}</span></a>`,
       ),
     );
     assert.ok(
       demo.includes(
-        `ou ligue para <a href="tel:${empresa.telefone}">${empresa.telefone_exibicao}</a>.`,
+        `<span> ou ligue para <a href="tel:${empresa.telefone}">${empresa.telefone_exibicao}</a></span>.`,
       ),
     );
-    assert.ok(demo.includes(`pelo telefone ${empresa.telefone_exibicao}.`));
+    assert.ok(demo.includes(`<span> ou pelo telefone ${empresa.telefone_exibicao}</span>.`));
 
     const so = policy(emptySite());
     assert.ok(

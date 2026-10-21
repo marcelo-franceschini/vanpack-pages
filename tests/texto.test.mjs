@@ -49,6 +49,23 @@ describe('renderText', () => {
 });
 
 describe('sintaxe', () => {
+  test('com spans, o trecho condicional de uma linha só sai num <span>; o de várias linhas, não', () => {
+    const inline = 'Fábrica{{#se cidade}} em {{cidade}}{{/se}}.';
+    assert.equal(renderText(inline, vars), 'Fábrica em Santo André.');
+    assert.equal(renderText(inline, vars, { spans: true }), 'Fábrica<span> em Santo André</span>.');
+    assert.equal(
+      renderText(inline, { cidade: '' }, { spans: true }),
+      'Fábrica.',
+      'sem dado, sem span',
+    );
+    const block = '{{#se cidade}}\n## Título\n\ntexto\n{{/se}}';
+    assert.equal(
+      renderText(block, vars, { spans: true }),
+      renderText(block, vars),
+      'o trecho que abrange linhas (parágrafos e títulos) não ganha <span>',
+    );
+  });
+
   test('textVariables lista os nomes usados, inclusive nos {{#se}}', () => {
     assert.deepEqual(
       [...textVariables('{{a}} {{#se b}}{{c}}{{/se}} {{#senao d}}x{{/senao}}')].sort(),

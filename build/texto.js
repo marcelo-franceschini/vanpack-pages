@@ -10,6 +10,11 @@
 //
 // Tudo é escapado para HTML (aspas, &, <, >), exceto as variáveis "ricas" (`anos`, `ano`), que o próprio
 // build monta como HTML (o número que o navegador recalcula). Sem dependências: roda só no build.
+//
+// Com `spans`, cada trecho condicional de uma linha só (sem quebra de linha dentro) sai dentro de um
+// <span> sem atributos, como o HTML escrito à mão da política já fazia. O navegador forma e posiciona o
+// texto por trecho (o kerning não cruza a borda de um <span>), e trocar esse recorte mexe em fração de
+// pixel na posição das letras; sem o <span> o desenho deixaria de ser idêntico.
 
 export const escapeHtml = (s) =>
   String(s)
@@ -100,9 +105,10 @@ export function textProblem(text) {
  * @param {Record<string, string>} vars valor de cada variável ('' = sem dado)
  * @param {object} [options]
  * @param {Set<string>} [options.rich] variáveis cujo valor já é HTML (entram sem escapar)
+ * @param {boolean} [options.spans] trecho condicional de uma linha só sai dentro de <span>
  * @param {string} [options.where] de onde vem o texto, para as mensagens de erro
  */
-export function renderText(text, vars, { rich = new Set(), where = 'texto' } = {}) {
+export function renderText(text, vars, { rich = new Set(), spans = false, where = 'texto' } = {}) {
   const { parts } = parse(String(text), where);
   const value = (name) => {
     if (!(name in vars)) {
@@ -127,7 +133,10 @@ export function renderText(text, vars, { rich = new Set(), where = 'texto' } = {
         }
         const { when, name, parts: inner } = part.conditional;
         const all = name.split(' ').every((each) => Boolean(value(each)));
-        return all === when ? out(inner) : '';
+        if (all !== when) return '';
+        const html = out(inner);
+        const oneLine = !inner.some((each) => each.text?.includes('\n'));
+        return spans && oneLine ? `<span>${html}</span>` : html;
       })
       .join('');
   return out(parts);

@@ -48,7 +48,7 @@ export function policyProblems(markdown) {
  */
 export function renderPolicy(markdown, site) {
   const where = 'content/privacidade.md';
-  const text = renderText(markdown, site.vars, { rich: RICH_VARS, where });
+  const text = renderText(markdown, site.vars, { rich: RICH_VARS, spans: true, where });
   const inline = (block) =>
     block.replace(LINK, (_, label, target) => {
       if (target.startsWith('wa:')) {
