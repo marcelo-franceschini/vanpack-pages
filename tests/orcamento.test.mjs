@@ -5,12 +5,15 @@
 // Subir um teto, ou dar teto a um arquivo novo maior, é decisão do dono e vai no PR com a medição.
 // Histórico: com o three.js num arquivo só (em vez de uma cópia em cada worker) a visita completa
 // caiu de 321,3 para 199,5 KB, e a abertura subiu 3,9 KB (146,9 contra 142,9 KB de JS inicial).
+// O gzip varia um pouco com a versão do Node (o zlib muda): no mesmo dist/, o Node 24 (o do CI, .nvmrc) dá
+// three.js 119,54 KB e o Node 26 dá 119,36, e o JS inicial 139,10 contra 138,94. Os tetos valem o maior dos
+// dois mais 0,1 KB, para o teste não depender de qual Node roda.
 // Rodada 2: o three.js sem os shaders dos materiais que a cena não usa (build/three-compartilhado.js)
 // baixou o JS inicial de 146,9 para 138,9 KB, a carga inicial de 186,4 para 178,4 e a visita completa de
-// 196,0 para 188,0; os tetos desceram junto, para o valor medido mais 0,1 KB (HTML 0,6 KB: o go-live troca
+// 196,0 para 188,0; os tetos desceram junto, para o maior valor medido mais 0,1 KB (HTML 0,6 KB: o go-live troca
 // textos). Política, 404 e og.jpg ficaram como estavam: o texto da política vem do jurídico e a imagem de
 // compartilhamento será refeita no go-live (npm run og), e nenhum deles sobe.
-// O teto de JS inicial de npm run audit:bundle desceu de 165 para 140 KB (o do teste acima já era 139,1).
+// O teto de JS inicial de npm run audit:bundle desceu de 165 para 140 KB (o do teste acima é 139,3).
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { describe, test } from 'node:test';
@@ -23,10 +26,10 @@ const KB = 1024;
 // Cada arquivo de assets/ tem o prefixo do nome sem o hash (index-BsPmJb_d.js → index).
 const JS = {
   index: 8.3, // o script da página (sem o three.js)
-  worker: 11.5, // a cena da história, no Web Worker (o three.js vem do arquivo three)
-  three: 119.5, // o three.js, num arquivo só para os dois workers e o render de reserva
+  worker: 11.6, // a cena da história, no Web Worker (o three.js vem do arquivo three)
+  three: 119.7, // o three.js, num arquivo só para os dois workers e o render de reserva
   controller: 11.6, // o mesmo render da história, só se o worker falhar (thread principal)
-  'produtos-worker': 7.2, // a vitrine dos produtos, baixada perto da seção
+  'produtos-worker': 7.3, // a vitrine dos produtos, baixada perto da seção
   montar: 1.7, // montagem do 3D dos produtos
   'web-vitals': 3.1,
   wizard: 2.2, // assistente do experimento (só na variante B)
@@ -42,9 +45,9 @@ const FILES = {
 };
 const SVG_TOTAL = 13.5; // todos os SVGs de brand/ e produtos/
 const TOTAL = {
-  jsInicial: 139.1, // script da página + worker da história + three.js
-  carga: 178.6, // HTML + JS inicial + fonte + os 2 logos do topo e da cena
-  visita: 188.2, // a carga + o 3D dos produtos + o logo do CTA final
+  jsInicial: 139.3, // script da página + worker da história + three.js
+  carga: 178.8, // HTML + JS inicial + fonte + os 2 logos do topo e da cena
+  visita: 188.4, // a carga + o 3D dos produtos + o logo do CTA final
 };
 
 const built = existsSync(`${DIST}index.html`);
