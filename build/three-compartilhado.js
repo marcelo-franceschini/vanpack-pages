@@ -279,6 +279,24 @@ export function sharedThree() {
     generateBundle() {
       this.emitFile({ type: 'asset', fileName: shared.fileName, source: shared.code });
     },
+    // A página avisa do three.js já no <head>. Sem isto o navegador só o descobre depois do HTML, do
+    // script da página e do worker, uma fila de três pedidos em série; com o aviso ele chega junto do HTML.
+    // modulepreload (e não preload, que acusa "pré-carregado e não usado" porque quem usa é o worker): o
+    // worker encontra o arquivo no cache. Medido (celular, 1,6 Mbps, 150 ms, CPU 4x, mediana de 11): cena
+    // pronta -18 a -21%, FCP e LCP reais iguais; o Lighthouse simulado cai de 100 para 99 (LCP simulado
+    // 1,4 para 2,0 s), em qualquer forma de adiantar o pedido. Decisão do dono: vale o tempo até o 3D.
+    transformIndexHtml: {
+      order: 'post',
+      handler(html, { filename }) {
+        if (basename(filename) !== 'index.html') return html;
+        if (!html.includes('</title>'))
+          throw new Error('index.html sem </title> para o modulepreload.');
+        return html.replace(
+          '</title>',
+          `</title>\n    <link rel="modulepreload" href="./${shared.fileName}" />`,
+        );
+      },
+    },
   };
   return {
     plugins: [main, externalThree(shared)],

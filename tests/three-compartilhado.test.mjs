@@ -179,8 +179,14 @@ describe('three.js no dist/', { skip: !built && 'sem dist/: rode `npm run build`
     });
   }
 
-  test('o index.html não pede o three.js: quem o pede é o worker (um prefetch na página piora o LCP do Lighthouse)', () => {
+  test('o index.html avisa do three.js no <head> (modulepreload), e as outras páginas não', () => {
+    // Decisão do dono: o 3D aparece ~0,4 s mais cedo (rede lenta); o Lighthouse simulado perde 1 ponto.
+    const link = `<link rel="modulepreload" href="./assets/${shared[0]}" />`;
     const html = readFileSync(`${ROOT}dist/index.html`, 'utf8');
-    assert.doesNotMatch(html, /<link[^>]*three-/);
+    assert.equal(html.split(link).length - 1, 1, 'um aviso, com o nome do arquivo compartilhado');
+    assert.ok(html.indexOf(link) < html.indexOf('</head>'), 'dentro do <head>');
+    for (const page of ['politica-de-privacidade.html', '404.html']) {
+      assert.doesNotMatch(readFileSync(`${ROOT}dist/${page}`, 'utf8'), /three-/, page);
+    }
   });
 });
