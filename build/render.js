@@ -295,9 +295,9 @@ const BLOCKS = {
     const icon = (id) => `<svg aria-hidden="true"><use href="#i-${id}" /></svg>`;
     return [
       clients.length
-        ? `<div class="carrossel" data-carrossel><div class="carrossel-janela" role="region" aria-roledescription="carrossel" aria-label="Logos de clientes" tabindex="0"><ul class="carrossel-trilho">${clients
+        ? `<div class="carrossel" data-carrossel><section class="carrossel-janela" aria-roledescription="carrossel" aria-label="Logos de clientes" tabindex="0"><ul class="carrossel-trilho">${clients
             .map(client)
-            .join('')}</ul></div><div class="carrossel-controles" hidden>${[
+            .join('')}</ul></section><div class="carrossel-controles" hidden>${[
             button('pausa', `${icon('pausa')}<span>Pausar</span>`, ' aria-pressed="false"'),
             button('anterior', icon('anterior'), ' aria-label="Anterior"'),
             button('proximo', icon('proximo'), ' aria-label="Próximo"'),

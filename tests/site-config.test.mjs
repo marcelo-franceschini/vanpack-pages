@@ -568,7 +568,7 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
     const emDemo = carrossel(demo);
     assert.match(
       emDemo,
-      /<div class="carrossel-janela" role="region" aria-roledescription="carrossel" aria-label="[^"]+" tabindex="0">/,
+      /<section class="carrossel-janela" aria-roledescription="carrossel" aria-label="[^"]+" tabindex="0">/,
     );
     assert.equal((emDemo.match(/<li class="cliente">/g) ?? []).length, 6, 'só os originais');
     assert.ok(!/<li[^>]*aria-hidden/.test(emDemo), 'as cópias do loop são do JS, não do build');

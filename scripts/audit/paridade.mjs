@@ -10,8 +10,10 @@
 // nisso: trocar uma cor, mover algo em 1 px ou mudar um texto passa de 2/255 nas bordas. Quando reprova,
 // as duas imagens vão para dist-paridade/.
 //
-// Uso: node scripts/audit/paridade.mjs [--base=<ref do git>] [--telas=1440x900,390x844]
-// (sai com 1 se algo mudou)
+// Uso: node scripts/audit/paridade.mjs [--base=<ref do git>] [--telas=1440x900,390x844] [--html=aviso]
+// (sai com 1 se algo mudou). --html=aviso: diferença só na estrutura do HTML (tags, atributos, texto) é
+// mostrada, mas não reprova (correções de acessibilidade e de HTML válido que não mudam o desenho);
+// os pixels continuam valendo.
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -21,6 +23,7 @@ import { ROOT, launch, openPage, scrollToProgress, startServer } from '../lib.mj
 const base = process.argv.find((arg) => arg.startsWith('--base='))?.slice('--base='.length);
 const BASE_REF = base || 'origin/master';
 const only = process.argv.find((arg) => arg.startsWith('--telas='))?.slice('--telas='.length);
+const htmlWarns = process.argv.includes('--html=aviso');
 const OUT = `${ROOT}dist-paridade/`;
 const TOLERANCE = 2; // diferença máxima por canal (0 a 255) que ainda conta como o mesmo pixel
 const VITE = `${ROOT}node_modules/vite/bin/vite.js`;
@@ -284,9 +287,11 @@ for (const screen of screens) {
 }
 const markup = await compareHtml(diffPage, atual.url, anterior.url);
 compared += PAGES.length + FILES.length;
-different += markup.length;
-console.log(`HTML      ${markup.length ? `${markup.length} mudou` : 'preservado'}`);
-for (const line of markup) console.log(`  MUDOU ${line}`);
+if (!htmlWarns) different += markup.length;
+console.log(
+  `HTML      ${markup.length ? `${markup.length} mudou${htmlWarns ? ' (aviso)' : ''}` : 'preservado'}`,
+);
+for (const line of markup) console.log(`  ${htmlWarns ? 'AVISO' : 'MUDOU'} ${line}`);
 await browser.close();
 await atual.close();
 await anterior.close();

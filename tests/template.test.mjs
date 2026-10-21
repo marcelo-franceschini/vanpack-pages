@@ -22,7 +22,6 @@ const INTERFACE_ATTRIBUTES = [
   'Rodapé',
   'Quem somos',
   'Como pedir',
-  'Diferenciais',
   'Logos de clientes',
   'Anterior',
   'Próximo',

@@ -3,7 +3,8 @@ name: CI
 # Valida cada pull request (o deploy continua só na master): a verificação (lint, build e testes de
 # navegador) e a paridade visual contra a branch de destino, que roda em paralelo.
 # Mudança visual de propósito: ponha o rótulo "muda-visual" no PR; a paridade ainda roda e publica as
-# imagens como artefato, mas não reprova.
+# imagens como artefato, mas não reprova. Mudança só na estrutura do HTML (acessibilidade, HTML válido),
+# sem mudar o desenho: rótulo "muda-html"; os pixels continuam valendo e o HTML mostra só aviso.
 on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
@@ -39,7 +40,8 @@ jobs:
         env:
           BASE: ${{ github.base_ref }}
           CHROME_PATH: /usr/bin/google-chrome-stable
-        run: npm run audit:paridade -- --base="origin/$BASE"
+          HTML: ${{ contains(github.event.pull_request.labels.*.name, 'muda-html') && '--html=aviso' || '' }}
+        run: npm run audit:paridade -- --base="origin/$BASE" $HTML
       - name: Imagens que mudaram
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
