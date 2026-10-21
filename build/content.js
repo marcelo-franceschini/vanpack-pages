@@ -69,8 +69,12 @@ const TYPE_NAMES = {
   null: 'vazio',
 };
 
-/** A frase em português para um erro do Ajv (que vem em inglês). */
-function describe(error) {
+/**
+ * A frase em português para um erro do Ajv (que vem em inglês).
+ * @param {any} error
+ * @param {string} [source] o valor como foi digitado no arquivo (o YAML pode ter lido outra coisa)
+ */
+function describe(error, source) {
   const { keyword, params, parentSchema: schema, data } = error;
   switch (keyword) {
     case 'required':
@@ -87,7 +91,12 @@ function describe(error) {
         .map((type) => TYPE_NAMES[type] ?? type)
         .join(' ou ');
       const asNumber = typeof data === 'number' && [params.type].flat().includes('string');
-      return `precisa ser ${expected}${asNumber ? `; o valor ${data} foi lido como número, ponha-o entre aspas` : ''}`;
+      // `+5511...` e `0000123` foram digitados de um jeito e lidos de outro (sinal e zeros à esquerda somem)
+      const typed =
+        source && source !== String(data)
+          ? `você escreveu ${source}, que o YAML leu como o número ${data}; ponha-o entre aspas`
+          : `o valor ${data} foi lido como número, ponha-o entre aspas`;
+      return `precisa ser ${expected}${asNumber ? `; ${typed}` : ''}`;
     }
     case 'minLength':
       return params.limit === 1
@@ -179,17 +188,31 @@ const YAML_HINTS = {
   MISSING_CHAR: 'falta fechar aspas, colchete ou chave',
   BAD_SCALAR_START: 'o texto começa com um caractere reservado; ponha-o entre aspas',
   TAB_AS_INDENT: 'o recuo usa Tab; use espaços',
+  // o erro mais comum de quem edita: um ":" no meio de um texto sem aspas
+  BLOCK_AS_IMPLICIT_KEY:
+    'o texto tem ":" no meio e o YAML o leu como outro campo; ponha o texto inteiro entre aspas',
 };
 
-/** Os erros do YAML (aspas faltando, recuo errado, campo repetido) em português. */
+/**
+ * Os erros do YAML (aspas faltando, recuo errado, campo repetido) em português. Um Tab no recuo faz
+ * todas as linhas seguintes parecerem erradas: erros seguidos com a mesma causa viram uma linha só.
+ */
 function yamlProblems(label, doc) {
-  return doc.errors.map((error) => {
+  /** @type {{ from: number, to: number, col: number, hint: string }[]} */
+  const groups = [];
+  for (const error of doc.errors) {
     const { line, col } = error.linePos?.[0] ?? { line: 1, col: 1 };
     const hint =
       YAML_HINTS[error.code] ??
       `${error.message.split(' at line')[0]} (textos com ":" no meio, ou que começam com { [ * & ! % ou @, precisam de aspas)`;
-    return `${label}, linha ${line}, coluna ${col}: erro de formatação do YAML: ${hint}`;
-  });
+    const last = groups.at(-1);
+    if (last && last.hint === hint && line <= last.to + 1) last.to = Math.max(last.to, line);
+    else groups.push({ from: line, to: line, col, hint });
+  }
+  return groups.map(
+    ({ from, to, col, hint }) =>
+      `${label}, linha${to > from ? `s ${from} a ${to}` : ` ${from}`}, coluna ${col}: erro de formatação do YAML: ${hint}`,
+  );
 }
 
 /**
@@ -267,7 +290,9 @@ export function readContent(dir) {
             : key
               ? [...path, key]
               : path;
-        errors.push(`${label}, linha ${line} › ${prettyPath(field)}: ${describe(error)}`);
+        const node = /** @type {{ source?: string } | undefined} */ (doc.getIn(path, true));
+        const source = node?.source;
+        errors.push(`${label}, linha ${line} › ${prettyPath(field)}: ${describe(error, source)}`);
       }
     }
     errors.push(...checkTexts(label, value, (path) => `, linha ${lineOf(doc, counter, path)}`));

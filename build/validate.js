@@ -11,6 +11,14 @@ import { renderText } from './texto.js';
 
 const MODES = ['demo', 'production'];
 
+/**
+ * A configuração não pode ir ao ar. A mensagem já diz tudo (arquivo, linha, campo e o que fazer), então o
+ * build a mostra sozinha, sem o rastro de pilha do Node (vite.config.js).
+ */
+export class SiteConfigError extends Error {
+  name = 'SiteConfigError';
+}
+
 // Textos que, depois de trocadas as {{variáveis}}, não podem passar de um tamanho, senão o cartão da
 // abertura estoura no celular deitado (844 x 390), onde ele tem 2 px de folga. O tamanho de cada campo
 // em si é do schema; aqui conta o texto pronto (ex.: a cidade entra na linha "Fábrica própria em ...").
@@ -124,7 +132,8 @@ export function validateSite({
       `VITE_DATA_MODE="${site.dataMode}" não existe: use "demo" (dados fictícios, noindex) ou "production".`,
     );
   }
-  if (!/^55\d{10,11}$/.test(site.whatsapp)) {
+  // sem content/empresa.yaml válido o erro já está na lista do carregador: não repete como "whatsapp ()"
+  if (content.empresa && !/^55\d{10,11}$/.test(site.whatsapp)) {
     errors.push(
       `${field('empresa', 'whatsapp')} (${content.empresa?.whatsapp ?? ''}) inválido ou vazio: use 55 + DDD + número, ex.: 5511912345678.`,
     );
@@ -212,7 +221,7 @@ export function validateSite({
   if (site.dataMode === 'production') {
     const empresa = content.empresa ?? {};
     for (const [path, label] of REQUIRED_IN_PRODUCTION) {
-      if (!String(get(empresa, path) ?? '').trim()) {
+      if (content.empresa && !String(get(empresa, path) ?? '').trim()) {
         errors.push(`${field('empresa', path)} (${label}) é obrigatório em production.`);
       }
     }
@@ -270,7 +279,9 @@ export function assertValidSite({ contentErrors = [], ...input }) {
   const { errors, warnings } = validateSite(input);
   const all = [...contentErrors, ...errors];
   if (all.length) {
-    throw new Error(`Configuração do site inválida (veja docs/go-live.md):\n- ${all.join('\n- ')}`);
+    throw new SiteConfigError(
+      `Configuração do site inválida (veja docs/go-live.md):\n- ${all.join('\n- ')}`,
+    );
   }
   return warnings;
 }

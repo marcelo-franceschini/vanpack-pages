@@ -8,7 +8,7 @@ import { contentSecurityPolicy } from './build/csp.js';
 import { robotsTxt, sitemapXml } from './build/files.js';
 import { sharedThree } from './build/three-compartilhado.js';
 import { renderPage } from './build/render.js';
-import { assertValidSite } from './build/validate.js';
+import { SiteConfigError, assertValidSite } from './build/validate.js';
 import { createSiteConfig } from './site.config.js';
 
 /**
@@ -126,7 +126,17 @@ export default defineConfig(({ mode, command }) => {
     const site = createSiteConfig({ env, content });
     return { site, warnings: assertValidSite({ site, content, contentErrors, root, contentDir }) };
   };
-  const { site, warnings } = loadSite();
+  /** @type {ReturnType<typeof loadSite>} */
+  let loaded;
+  try {
+    loaded = loadSite();
+  } catch (error) {
+    if (!(error instanceof SiteConfigError)) throw error;
+    // conteúdo errado: só a mensagem (arquivo, linha, campo), sem o rastro de pilha do Node
+    console.error(`\n${error.message}\n`);
+    process.exit(1);
+  }
+  const { site, warnings } = loaded;
   for (const warning of warnings) console.warn(`[vanpack] ${warning}`);
   const three = sharedThree();
   return {

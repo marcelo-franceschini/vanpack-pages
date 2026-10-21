@@ -168,7 +168,7 @@ Troque aqui e pronto: o rodapé, os botões, o JSON-LD do Google e o mapa usam e
 ```text
 content/clientes.yaml, linha 14 › clientes[1].logo: o arquivo content/clientes/padaria-real.svg não existe
 content/historia.yaml, linha 12 › hero.titulo: tem 71 caracteres; o máximo é 48 (um texto maior quebraria o layout)
-content/empresa.yaml, linha 4 › telefone: precisa ser um texto (entre aspas); o valor 551147001234 foi lido como número, ponha-o entre aspas
+content/empresa.yaml, linha 4 › telefone: precisa ser um texto (entre aspas); você escreveu +551147001234, que o YAML leu como o número 551147001234; ponha-o entre aspas
 ```
 
 Cada linha diz **o arquivo, a linha, o campo e o problema**. `npm run build` mostra os mesmos erros.

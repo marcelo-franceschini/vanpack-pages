@@ -106,6 +106,21 @@ describe('createSiteConfig', () => {
 });
 
 describe('trava de go-live', () => {
+  test('sem content/empresa.yaml válido, a trava não inventa erro de WhatsApp nem de campo obrigatório', () => {
+    // o carregador já aponta o erro do arquivo (e descarta o conteúdo dele): repetir como
+    // "whatsapp () inválido" ou "cnpj é obrigatório" só confunde quem edita
+    const content = { ...baseContent, empresa: undefined };
+    for (const dataMode of ['demo', 'production']) {
+      const env = { ...exampleEnv, VITE_DATA_MODE: dataMode };
+      const { errors } = validateSite({ site: siteWith({ env, content }), content });
+      assert.deepEqual(
+        errors.filter((error) => /whatsapp|obrigatório em production/.test(error)),
+        [],
+        dataMode,
+      );
+    }
+  });
+
   test('o CNPJ fictício é inválido e o real passa', () => {
     assert.equal(isValidCnpj(DEMO_EMPRESA.cnpj), false, 'o CNPJ fictício é inválido');
     assert.equal(isValidCnpj('11.111.111/1111-11'), false);
