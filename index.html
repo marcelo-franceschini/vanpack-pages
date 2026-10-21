@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-    <title>{{title}}</title>
-    <meta name="description" content="{{description}}" />
+    <title>{{titulo_pagina}}</title>
+    <meta name="description" content="{{descricao_pagina}}" />
     <meta name="theme-color" content="#FBF8F2" />
     <meta name="color-scheme" content="light" />
     <link rel="canonical" href="%VITE_SITE_URL%" />
@@ -14,8 +14,8 @@
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="pt_BR" />
     <meta property="og:site_name" content="Vanpack" />
-    <meta property="og:title" content="{{title}}" />
-    <meta property="og:description" content="{{description}}" />
+    <meta property="og:title" content="{{titulo_pagina}}" />
+    <meta property="og:description" content="{{descricao_pagina}}" />
     <meta property="og:url" content="%VITE_SITE_URL%" />
     <meta property="og:image" content="%VITE_SITE_URL%og.jpg" />
     <meta property="og:image:width" content="1200" />
@@ -25,8 +25,8 @@
       content="Ilustração 3D da Vanpack com papelão kraft e a chamada 'Caixas de papelão sob medida, com a sua marca'."
     />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="{{title}}" />
-    <meta name="twitter:description" content="{{description}}" />
+    <meta name="twitter:title" content="{{titulo_pagina}}" />
+    <meta name="twitter:description" content="{{descricao_pagina}}" />
     <link
       rel="preload"
       href="/fonts/archivo-latin.woff2"
@@ -1541,9 +1541,9 @@
             <div class="step">
               <div class="wrap">
                 <div class="card on">
-                  <div class="k" data-need="cityState">
-                    Fábrica própria em {{cityState}}<span class="optional" data-need="serviceArea">
-                      · Atendemos {{serviceArea}}</span
+                  <div class="k" data-need="cidade_uf">
+                    Fábrica própria em {{cidade_uf}}<span class="optional" data-need="regiao">
+                      · Atendemos {{regiao}}</span
                     >
                   </div>
                   <h1>Caixas de papelão sob medida, com a sua marca</h1>
@@ -1563,9 +1563,11 @@
                     <a class="btn btn-soft" href="#produtos">Ver produtos ↓</a>
                   </div>
                   <p class="cta-note">Sem compromisso</p>
-                  <ul class="seals" aria-label="Diferenciais" data-need="hasFacts">
-                    <li data-need="minOrder">Pedido mínimo a partir de {{minOrder}} unidades</li>
-                    <li data-need="serviceArea">Atendemos {{serviceArea}}</li>
+                  <ul class="seals" aria-label="Diferenciais" data-need="tem_fatos">
+                    <li data-need="pedido_minimo">
+                      Pedido mínimo a partir de {{pedido_minimo}} unidades
+                    </li>
+                    <li data-need="regiao">Atendemos {{regiao}}</li>
                   </ul>
                 </div>
               </div>
@@ -1577,10 +1579,8 @@
                 <div class="card">
                   <div class="k">Anos de mercado</div>
                   <h2>
-                    <span data-need="foundedYear"
-                      ><span data-since="{{foundedYear}}">{{yearsInBusiness}}</span> anos de
-                      mercado</span
-                    ><span data-need="!foundedYear">Experiência em caixas de papelão</span>
+                    <span data-need="ano_fundacao">{{anos}} anos de mercado</span
+                    ><span data-need="!ano_fundacao">Experiência em caixas de papelão</span>
                   </h2>
                   <p>Atendemos lojas, vendedores de marketplace e indústrias.</p>
                 </div>
@@ -1612,8 +1612,8 @@
                   <div class="k">Entrega</div>
                   <h2>Entregamos até você</h2>
                   <p>
-                    <span data-need="serviceArea">Atendemos {{serviceArea}}.</span
-                    ><span data-need="!serviceArea">Da nossa fábrica até o seu endereço.</span>
+                    <span data-need="regiao">Atendemos {{regiao}}.</span
+                    ><span data-need="!regiao">Da nossa fábrica até o seu endereço.</span>
                   </p>
                   <a class="more" href="#diferenciais">Veja por que a Vanpack ↓</a>
                 </div>
@@ -1635,16 +1635,14 @@
         </svg>
       </div>
 
-      <section class="trust" id="confianca" aria-label="Quem somos" data-need="hasTrust">
+      <section class="trust" id="confianca" aria-label="Quem somos" data-need="tem_confianca">
         <div class="wrap">
           <ul class="trust-list">
-            <li data-need="cityState">Fábrica própria em {{cityState}}</li>
+            <li data-need="cidade_uf">Fábrica própria em {{cidade_uf}}</li>
             <li data-need="cnpj">CNPJ {{cnpj}}</li>
             <li data-need="cnpj">Nunca pedimos pagamento para conta de pessoa física</li>
-            <li data-need="foundedYear">
-              <span data-since="{{foundedYear}}">{{yearsInBusiness}}</span> anos de mercado
-            </li>
-            <li data-need="paymentMethods">Pagamento: {{paymentMethods}}</li>
+            <li data-need="ano_fundacao">{{anos}} anos de mercado</li>
+            <li data-need="pagamento">Pagamento: {{pagamento}}</li>
             <li data-field="mapa" hidden></li>
             <li data-field="telefone" hidden></li>
           </ul>
@@ -1657,9 +1655,9 @@
             <span class="k">O que fabricamos</span>
             <h2>Caixas, divisórias e chapas sob medida</h2>
           </div>
-          <ul class="facts" data-need="hasFacts">
-            <li data-need="minOrder"><b>Pedido mínimo</b>{{minOrder}} unidades</li>
-            <li data-need="serviceArea"><b>Atendemos</b>{{serviceArea}}</li>
+          <ul class="facts" data-need="tem_fatos">
+            <li data-need="pedido_minimo"><b>Pedido mínimo</b>{{pedido_minimo}} unidades</li>
+            <li data-need="regiao"><b>Atendemos</b>{{regiao}}</li>
           </ul>
           <div class="models">
             <!--render:produtos-->
@@ -1667,7 +1665,7 @@
         </div>
       </section>
 
-      <div class="wave" aria-hidden="true" data-need="hasDiffs">
+      <div class="wave" aria-hidden="true" data-need="tem_diferenciais">
         <svg viewBox="0 0 1200 20" preserveAspectRatio="none">
           <path
             d="M0,10 Q15,0 30,10 T60,10 T90,10 T120,10 T150,10 T180,10 T210,10 T240,10 T270,10 T300,10 T330,10 T360,10 T390,10 T420,10 T450,10 T480,10 T510,10 T540,10 T570,10 T600,10 T630,10 T660,10 T690,10 T720,10 T750,10 T780,10 T810,10 T840,10 T870,10 T900,10 T930,10 T960,10 T990,10 T1020,10 T1050,10 T1080,10 T1110,10 T1140,10 T1170,10 T1200,10"
@@ -1678,7 +1676,7 @@
         </svg>
       </div>
 
-      <section class="block tint" id="diferenciais" data-need="hasDiffs">
+      <section class="block tint" id="diferenciais" data-need="tem_diferenciais">
         <div class="wrap">
           <div class="sec-head">
             <span class="k">Diferenciais</span>
@@ -1690,7 +1688,7 @@
         </div>
       </section>
 
-      <section class="block" id="clientes" data-need="hasProofs">
+      <section class="block" id="clientes" data-need="tem_provas">
         <div class="wrap">
           <div class="sec-head">
             <span class="k">Clientes</span>
@@ -1724,8 +1722,9 @@
               ><svg aria-hidden="true"><use href="#i-wa" /></svg>Pedir orçamento no WhatsApp</a
             >
             <p class="cta-note">Sem compromisso</p>
-            <p class="alt" data-need="phone">
-              Prefere ligar? <a href="tel:{{phone}}" data-contact="phone">{{phoneDisplay}}</a>
+            <p class="alt" data-need="telefone">
+              Prefere ligar?
+              <a href="tel:{{telefone}}" data-contact="phone">{{telefone_exibicao}}</a>
             </p>
           </div>
           <ol class="how" aria-label="Como pedir">
@@ -1782,9 +1781,8 @@
           ><a href="./politica-de-privacidade.html">Privacidade</a>
         </nav>
         <p class="legal">
-          © <span data-year>{{year}}</span> {{holder}}<span data-need="cityState">
-            · {{cityState}}</span
-          ><span data-need="foundedYear"> · Desde {{foundedYear}}</span>
+          © {{ano}} {{titular}}<span data-need="cidade_uf"> · {{cidade_uf}}</span
+          ><span data-need="ano_fundacao"> · Desde {{ano_fundacao}}</span>
         </p>
       </div>
     </footer>
@@ -1806,8 +1804,8 @@
         Dentro do Instagram, Facebook ou TikTok o WhatsApp às vezes não abre: toque em ⋮ ou ··· no
         canto da tela e escolha "Abrir no navegador".
       </p>
-      <p data-need="whatsappDisplay">
-        Nosso WhatsApp é o <b class="sheet-num">{{whatsappDisplay}}</b>.
+      <p data-need="whatsapp_exibicao">
+        Nosso WhatsApp é o <b class="sheet-num">{{whatsapp_exibicao}}</b>.
       </p>
       <div class="sheet-actions">
         <button
@@ -1818,8 +1816,8 @@
         >
           Copiar número
         </button>
-        <a class="btn btn-soft" data-need="phone" href="tel:{{phone}}" data-contact="phone"
-          >Ligar {{phoneDisplay}}</a
+        <a class="btn btn-soft" data-need="telefone" href="tel:{{telefone}}" data-contact="phone"
+          >Ligar {{telefone_exibicao}}</a
         >
       </div>
       <p class="sheet-status" role="status"></p>

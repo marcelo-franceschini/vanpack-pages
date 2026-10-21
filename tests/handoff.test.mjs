@@ -4,12 +4,12 @@
 // como sair dele. Relógio falso do Playwright; o wa.me nunca é acessado de verdade.
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
-import { loadEnv } from 'vite';
-import { ROOT, launch, openPage, startServer } from '../scripts/lib.mjs';
+import { launch, openPage, startServer } from '../scripts/lib.mjs';
 import { inAppBrowser } from '../src/handoff.js';
+import { baseContent } from './dados.mjs';
 
 // O mesmo número que o build usou (as variáveis do processo vencem o arquivo).
-const number = loadEnv('production', ROOT, 'VITE_').VITE_WHATSAPP.replace(/\D/g, '');
+const number = String(baseContent.empresa.whatsapp).replace(/\D/g, '');
 
 const UA = {
   instagram:

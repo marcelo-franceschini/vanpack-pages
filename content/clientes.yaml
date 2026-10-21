@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=./schemas/clientes.schema.json
+#
+# A faixa de logos dos clientes (até 12). Em production só aparece quem tem "autorizado: true", com o
+# registro da autorização em docs/provas/<nome em minúsculas, sem acento e com hífens>.md. Em demo
+# aparecem todos, e o não autorizado leva o rótulo "Exemplo".
+#
+# Para pôr um cliente de verdade, troque um exemplo por:
+#
+#   - nome: "Padaria Real"
+#     logo: "padaria-real.svg"       # arquivo SVG em content/clientes/ (até 20 KB); sem logo, aparece o nome
+#     alt: "Padaria Real"            # opcional; sem ele, vale o nome
+#     autorizado: true
+#
+# Os 6 clientes abaixo são exemplos: em production o site recusa publicar se sobrar algum. Troque-os
+# pelos reais ou apague as linhas. Ponha sempre os textos entre aspas.
+
+clientes:
+  - nome: "Cliente 1"
+    exemplo: true
+
+  - nome: "Cliente 2"
+    exemplo: true
+
+  - nome: "Cliente 3"
+    exemplo: true
+
+  - nome: "Cliente 4"
+    exemplo: true
+
+  - nome: "Cliente 5"
+    exemplo: true
+
+  - nome: "Cliente 6"
+    exemplo: true

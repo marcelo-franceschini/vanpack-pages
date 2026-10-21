@@ -5,6 +5,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { after, before, describe, test } from 'node:test';
 import { loadEnv } from 'vite';
 import { ROOT, launch, openPage, scrollToProgress, startServer } from '../scripts/lib.mjs';
+import { baseContent } from './dados.mjs';
 
 const read = (file) => readFileSync(`${ROOT}${file}`, 'utf8');
 const env = loadEnv('production', ROOT, 'VITE_');
@@ -240,11 +241,12 @@ describe('build: CSP, requisições e marca na página', () => {
     assert.ok(!dist.includes('%VITE_'), 'nenhuma variável sem substituir');
   });
 
-  test('política de privacidade: dados do .env, CSP própria, só as cores da marca e abre sem erro', async () => {
+  test('política de privacidade: dados de content/, CSP própria, só as cores da marca e abre sem erro', async () => {
     const page = read('dist/politica-de-privacidade.html');
     assert.ok(!/\{\{|data-need|data-field/.test(page), 'marcas e placeholders resolvidos');
-    for (const key of ['VITE_LEGAL_NAME', 'VITE_CNPJ']) {
-      if (env[key]) assert.ok(page.includes(env[key]), `${key} na política`);
+    for (const key of ['razao_social', 'cnpj']) {
+      const value = baseContent.empresa[key];
+      if (value) assert.ok(page.includes(value), `${key} na política`);
     }
     const csp = page.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)"/)?.[1];
     assert.ok(csp, 'CSP presente');

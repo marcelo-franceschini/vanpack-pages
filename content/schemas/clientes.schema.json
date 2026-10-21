@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vanpack.local/schemas/clientes.schema.json",
+  "title": "Clientes",
+  "description": "A faixa de logos dos clientes. Em production só aparece quem tem autorizado: true (com registro em docs/provas/<id>.md); em demo aparecem todos e o não autorizado leva o rótulo \"Exemplo\".",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["clientes"],
+  "properties": {
+    "clientes": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["nome"],
+        "properties": {
+          "nome": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40,
+            "description": "Nome do cliente. Sem logo, aparece o nome em texto. O registro da autorização é docs/provas/<nome em minúsculas, sem acento e com hífens>.md."
+          },
+          "logo": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*\\.svg$",
+            "dica": "o logo é o nome de um arquivo SVG em content/clientes/, em minúsculas, sem acento e com hífens (ex.: padaria-real.svg)",
+            "description": "Arquivo SVG do logo, em content/clientes/ (até 20 KB)."
+          },
+          "alt": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "description": "Texto alternativo do logo para leitor de tela. Sem ele, vale o nome do cliente."
+          },
+          "autorizado": {
+            "type": "boolean",
+            "description": "true quando o cliente autorizou a divulgação, com registro em docs/provas/."
+          },
+          "exemplo": {
+            "type": "boolean",
+            "description": "true nos clientes de demonstração: em production o site recusa publicar enquanto sobrar algum."
+          }
+        }
+      }
+    }
+  }
+}

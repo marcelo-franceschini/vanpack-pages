@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-    <title>Política de privacidade | {{name}}</title>
+    <title>Política de privacidade | {{nome}}</title>
     <meta
       name="description"
-      content="Como o site da {{holder}} trata dados: sem cookies, sem formulário e com medição anônima."
+      content="Como o site da {{titular}} trata dados: sem cookies, sem formulário e com medição anônima."
     />
     <meta name="theme-color" content="#FBF8F2" />
     <meta name="color-scheme" content="light" />
@@ -173,20 +173,21 @@
       <div class="wrap">
         <h1>Política de privacidade</h1>
         <p class="lead">
-          Em linguagem simples: o site da {{holder}} não usa cookies, não pede seus dados pessoais e
-          não tem formulário.
+          Em linguagem simples: o site da {{titular}} não usa cookies, não pede seus dados pessoais
+          e não tem formulário.
         </p>
 
         <h2>Quem é o responsável</h2>
         <p>
-          O responsável pelos dados é a {{holder}}<span data-need="cnpj">, CNPJ {{cnpj}}</span
-          ><span data-need="street cityState">, com sede em {{street}}, {{cityState}}</span>.
+          O responsável pelos dados é a {{titular}}<span data-need="cnpj">, CNPJ {{cnpj}}</span
+          ><span data-need="rua cidade_uf">, com sede em {{rua}}, {{cidade_uf}}</span>.
         </p>
         <p data-need="whatsapp">
           Para falar sobre privacidade, chame no
           <a data-cta="privacidade" data-wa="Olá! Quero falar sobre os meus dados pessoais."
-            >WhatsApp<span data-need="whatsappDisplay"> {{whatsappDisplay}}</span></a
-          ><span data-need="phone"> ou ligue para <a href="tel:{{phone}}">{{phoneDisplay}}</a></span
+            >WhatsApp<span data-need="whatsapp_exibicao"> {{whatsapp_exibicao}}</span></a
+          ><span data-need="telefone">
+            ou ligue para <a href="tel:{{telefone}}">{{telefone_exibicao}}</a></span
           >.
         </p>
 
@@ -196,7 +197,7 @@
           scripts de terceiros.
         </p>
 
-        <div data-need="analyticsName">
+        <div data-need="medicao_nome">
           <h2>Medição do uso do site</h2>
           <p>
             Para entender como o site é usado, medimos de forma agregada: as páginas vistas, os
@@ -205,14 +206,14 @@
             a pessoa foi e o tempo de carregamento. Nada disso identifica você.
           </p>
           <p>
-            A medição é feita pelo {{analyticsName}}, que não usa cookies e informa que não coleta
+            A medição é feita pelo {{medicao_nome}}, que não usa cookies e informa que não coleta
             dados pessoais e que anonimiza os dados coletados. Como em qualquer acesso a um site, o
             endereço de IP e o navegador chegam ao servidor da ferramenta, que fica nos Estados
             Unidos e na União Europeia. Os dados de medição ficam na ferramenta por tempo limitado
             (no plano atual, até seis meses).
           </p>
         </div>
-        <div data-need="noAnalytics">
+        <div data-need="sem_medicao">
           <h2>Medição do uso do site</h2>
           <p>O site não envia dados de uso a nenhuma ferramenta de medição.</p>
         </div>
@@ -239,8 +240,8 @@
           correção, a eliminação e a informação sobre com quem os dados são compartilhados (art. 18
           da LGPD). Como a medição do site é anônima, não temos como identificar dados seus nela; se
           você nos enviou dados pelo WhatsApp, pode pedir para acessá-los ou eliminá-los pelo mesmo
-          WhatsApp<span data-need="whatsappDisplay"> {{whatsappDisplay}}</span
-          ><span data-need="phone"> ou pelo telefone {{phoneDisplay}}</span>.
+          WhatsApp<span data-need="whatsapp_exibicao"> {{whatsapp_exibicao}}</span
+          ><span data-need="telefone"> ou pelo telefone {{telefone_exibicao}}</span>.
         </p>
 
         <h2>Mudanças</h2>
@@ -252,7 +253,7 @@
 
     <footer>
       <div class="wrap">
-        <p>© {{year}} {{holder}}<span data-need="cityState"> · {{cityState}}</span></p>
+        <p>© {{ano_atual}} {{titular}}<span data-need="cidade_uf"> · {{cidade_uf}}</span></p>
       </div>
     </footer>
   </body>

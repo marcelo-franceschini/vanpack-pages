@@ -5,10 +5,10 @@
 // os 3 botões de orçamento seguem funcionando.
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
-import { loadEnv } from 'vite';
-import { ROOT, launch, openPage, scrollToProgress, startServer } from '../scripts/lib.mjs';
+import { launch, openPage, scrollToProgress, startServer } from '../scripts/lib.mjs';
+import { baseContent } from './dados.mjs';
 
-const number = loadEnv('production', ROOT, 'VITE_').VITE_WHATSAPP.replace(/\D/g, '');
+const number = String(baseContent.empresa.whatsapp).replace(/\D/g, '');
 const CHUNK = /\/assets\/(montar|produtos-worker)-[\w-]+\.js$/;
 const MOBILE = {
   viewport: { width: 390, height: 844 },

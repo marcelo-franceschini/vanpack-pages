@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=./schemas/produtos.schema.json
+#
+# Os produtos da seção "O que fabricamos", na ordem em que aparecem. Cada um tem um 3D girando no topo
+# do cartão: o "id" escolhe a peça (corte-e-vinco, divisorias ou chapas). Textos genéricos e sem
+# números: confira cada um antes do go-live (docs/go-live.md).
+# Ponha sempre os textos entre aspas.
+
+itens:
+  - id: corte-e-vinco
+    nome: "Corte e vinco"
+    # a mensagem pronta do botão; o site acrescenta o código de origem [site-produtos-corte-e-vinco]
+    mensagem: "Olá! Quero um orçamento de caixas com corte e vinco."
+    # como o leitor de tela descreve o 3D: "Modelo 3D de <peça> girando"
+    peca: "caixa com corte e vinco"
+    texto: "Caixas com corte e vinco sob medida, para encaixe, tampa e formatos especiais."
+
+  - id: divisorias
+    nome: "Divisórias, tabuleiros e separadores"
+    mensagem: "Olá! Quero um orçamento de divisórias, tabuleiros e separadores."
+    peca: "divisórias encaixadas num tabuleiro"
+    texto: "Separam, organizam e protegem o que vai dentro da caixa."
+
+  - id: chapas
+    nome: "Chapas de papelão ondulado"
+    mensagem: "Olá! Quero um orçamento de chapas de papelão ondulado."
+    peca: "pilha de chapas de papelão ondulado"
+    texto: "Chapas para embalar, proteger e forrar."

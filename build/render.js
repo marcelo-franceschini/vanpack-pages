@@ -9,7 +9,7 @@
 //   JSON-LD                  montado inteiro a partir da config
 //   modo demo                <meta name="robots" content="noindex,nofollow">
 
-import { visibleClients, visibleProofs } from '../site.config.js';
+import { RICH_VARS, visibleClients, visibleProofs } from '../site.config.js';
 
 export const escapeHtml = (s) =>
   String(s)
@@ -153,14 +153,17 @@ const outsideRawBlocks = (html, fn) =>
     .map((part, i) => (i % 2 ? part : fn(part)))
     .join('');
 
-/** Troca {{variavel}} pelo valor escapado; variável desconhecida ou vazia é erro de build. */
+/**
+ * Troca {{variavel}} pelo valor escapado (as variáveis ricas, como `anos`, já são HTML); variável
+ * desconhecida ou vazia é erro de build.
+ */
 export function interpolate(text, vars, where = 'HTML') {
   return text.replace(/\{\{\s*([A-Za-z]\w*)\s*\}\}/g, (_, key) => {
     if (!(key in vars)) throw new Error(`${where}: variável desconhecida {{${key}}}`);
     if (!vars[key]) {
       throw new Error(`${where}: {{${key}}} está vazio; proteja o trecho com data-need="${key}"`);
     }
-    return escapeHtml(vars[key]);
+    return RICH_VARS.has(key) ? vars[key] : escapeHtml(vars[key]);
   });
 }
 
@@ -173,7 +176,7 @@ function whatsappLinks(html, site) {
   return html.replace(/<a\b[^>]*\sdata-wa="[^"]*"[^>]*>/g, (tag) => {
     if (!site.whatsapp) {
       throw new Error(
-        'VITE_WHATSAPP vazio: os botões do WhatsApp abririam wa.me/?text=… sem número.',
+        'content/empresa.yaml › whatsapp está vazio: os botões do WhatsApp abririam wa.me/?text=… sem número.',
       );
     }
     const cta = /\sdata-cta="([^"]*)"/.exec(tag)?.[1];
@@ -217,20 +220,20 @@ const BLOCKS = {
   // Produtos: cada um com a área do 3D no topo (preenchida por src/produtos/, com o espaço já
   // reservado) e o seu botão de orçamento (código [site-produtos-<id>]).
   produtos: (site) =>
-    site.content.models
+    site.products
       .map(
-        ({ id, name, subject, text, peca }) => `<article class="model">
-  <div class="model-3d" data-modelo="${escapeHtml(id)}" data-peca="${escapeHtml(peca ?? name)}"></div>
-  <h3>${escapeHtml(name)}</h3>
-  <p>${escapeHtml(text)}</p>
+        ({ id, nome, mensagem, texto, peca }) => `<article class="model">
+  <div class="model-3d" data-modelo="${escapeHtml(id)}" data-peca="${escapeHtml(peca ?? nome)}"></div>
+  <h3>${escapeHtml(nome)}</h3>
+  <p>${escapeHtml(texto)}</p>
   <a class="btn btn-soft" data-cta="produtos-${escapeHtml(id)}" data-wa="${escapeHtml(
-    `Olá! Quero um orçamento de ${subject}.`,
+    mensagem,
   )}">Pedir orçamento deste produto</a>
 </article>`,
       )
       .join('\n'),
 
-  // Diferenciais do .env (VITE_DIFF_<n>_*): título, texto e ícone (um <symbol> do index.html).
+  // Diferenciais (content/diferenciais.yaml): título, texto e ícone (um <symbol> do index.html).
   diferenciais: (site) =>
     site.differentials
       .map(
@@ -241,18 +244,18 @@ const BLOCKS = {
       )
       .join('\n'),
 
-  // Prova social: o carrossel de logos dos clientes do .env (em production só os que autorizaram; em
+  // Prova social: o carrossel de logos dos clientes (em production só os que autorizaram; em
   // demo também os exemplos, com o rótulo "Exemplo") e os depoimentos e a nota do Google autorizados.
   // O HTML leva só os itens originais e os controles escondidos: as cópias do loop e os controles são
   // do src/carrossel.js. O logo é relativo à página (./clientes/…): o render roda depois de o Vite
   // reescrever as URLs, e um caminho absoluto quebraria no subcaminho do GitHub Pages.
   clientes: (site) => {
     const clients = visibleClients(site.clients, site.dataMode);
-    const { testimonials, googleRating } = visibleProofs(site.content.proofs);
-    const client = ({ name, logo, authorized }) =>
+    const { testimonials, googleRating } = visibleProofs(site.proofs);
+    const client = ({ name, logo, alt, authorized }) =>
       `<li class="cliente">${
         logo
-          ? `<img src="./clientes/${escapeHtml(logo)}" alt="${escapeHtml(name)}" width="160" height="64" loading="lazy" decoding="async" draggable="false" />`
+          ? `<img src="./clientes/${escapeHtml(logo)}" alt="${escapeHtml(alt || name)}" width="160" height="64" loading="lazy" decoding="async" draggable="false" />`
           : `<span class="logo-name">${escapeHtml(name)}</span>`
       }${authorized ? '' : '<span class="tag">Exemplo</span>'}</li>`;
     const button = (action, content, extra = '') =>

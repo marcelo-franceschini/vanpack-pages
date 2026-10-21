@@ -1,37 +1,44 @@
 // Trava de go-live: a página só pode ir ao ar com dados reais. `VITE_DATA_MODE=demo` aceita os dados
-// fictícios do `.env.example` (e o site sai com noindex); `production` exige dado real e completo.
-import { DIFF_ICONS, LIMITS } from '../site.config.js';
+// fictícios (e o site sai com noindex); `production` exige dado real e completo. As regras de formato
+// (tipos, tamanhos, campos que existem) são do JSON Schema de cada arquivo de content/ (build/content.js);
+// aqui ficam o que depende do modo, de outros arquivos ou do disco: CNPJ com dígito verificador, dados
+// fictícios que sobraram, logos de cliente (existem, são SVG seguro, até 20 KB) e as autorizações
+// registradas em docs/provas/.
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { visibleProofs } from '../site.config.js';
 
 const MODES = ['demo', 'production'];
+const MAX_LOGO_BYTES = 20 * 1024;
 
-// Chaves que podem ter o mesmo valor do .env.example mesmo em produção: ou são reais desde já
-// (cidade, UF, URL do site, ano de fundação, Umami) ou não são dados da empresa.
-const REAL_BY_NATURE = new Set([
-  'VITE_DATA_MODE',
-  'VITE_SITE_URL',
-  'VITE_CITY',
-  'VITE_STATE',
-  'VITE_FOUNDED_YEAR',
-  'VITE_ANALYTICS_PROVIDER',
-  'VITE_ANALYTICS_SITE',
-  'VITE_ANALYTICS_ENDPOINT',
-]);
-// Os diferenciais (VITE_DIFF_<n>_*) também ficam de fora: são texto, e o dono confere cada um antes
-// do go-live (docs/go-live.md).
-const realByNature = (key) => REAL_BY_NATURE.has(key) || /^VITE_DIFF_\d+_/.test(key);
+// Campos que podem ter o mesmo valor do exemplo mesmo em produção: já são reais desde já (cidade, UF,
+// ano de fundação).
+const REAL_BY_NATURE = new Set(['endereco.cidade', 'endereco.uf', 'ano_fundacao']);
 
-// Obrigatórios em produção (WhatsApp e URL do site valem nos dois modos).
+// Obrigatórios em produção (o WhatsApp e a URL do site valem nos dois modos).
 const REQUIRED_IN_PRODUCTION = [
-  ['VITE_CNPJ', 'CNPJ'],
-  ['VITE_PHONE', 'telefone'],
-  ['VITE_STREET', 'rua e número'],
-  ['VITE_CITY', 'cidade'],
-  ['VITE_STATE', 'UF'],
-  ['VITE_CEP', 'CEP'],
-  ['VITE_HOURS', 'horário de atendimento'],
+  ['cnpj', 'CNPJ'],
+  ['telefone', 'telefone'],
+  ['endereco.rua', 'rua e número'],
+  ['endereco.cidade', 'cidade'],
+  ['endereco.uf', 'UF'],
+  ['endereco.cep', 'CEP'],
+  ['horario', 'horário de atendimento'],
 ];
 
-/** CNPJ com os dois dígitos verificadores certos (o CNPJ fictício do .env.example não passa). */
+const get = (object, path) => path.split('.').reduce((value, key) => value?.[key], object);
+const field = (file, path) => `content/${file}.yaml › ${path}`;
+
+/** Os campos de um objeto em linha: { 'endereco.cep': '01310-100', ... }. */
+function flatten(object, prefix = '') {
+  return Object.entries(object ?? {}).flatMap(([key, value]) =>
+    value && typeof value === 'object' && !Array.isArray(value)
+      ? flatten(value, `${prefix}${key}.`)
+      : [[`${prefix}${key}`, value]],
+  );
+}
+
+/** CNPJ com os dois dígitos verificadores certos (o CNPJ fictício do exemplo não passa). */
 export function isValidCnpj(value) {
   const digits = String(value).replace(/\D/g, '');
   if (digits.length !== 14 || /^(\d)\1+$/.test(digits)) return false;
@@ -53,15 +60,48 @@ export function isValidCnpj(value) {
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/** Problemas de um logo de cliente (content/clientes/<arquivo>): existe, é SVG seguro e leve. */
+export function logoProblems(contentDir, logo) {
+  const path = join(contentDir, 'clientes', logo);
+  if (!existsSync(path)) return [`o arquivo content/clientes/${logo} não existe`];
+  const problems = [];
+  const bytes = statSync(path).size;
+  if (bytes > MAX_LOGO_BYTES) {
+    problems.push(
+      `content/clientes/${logo} tem ${(bytes / 1024).toFixed(1)} KB; o máximo é ${MAX_LOGO_BYTES / 1024} KB`,
+    );
+  }
+  const svg = readFileSync(path, 'utf8');
+  if (!/<svg[\s>]/.test(svg)) problems.push(`content/clientes/${logo} não é um SVG`);
+  if (!/viewBox=/.test(svg)) problems.push(`content/clientes/${logo} precisa ter viewBox`);
+  if (/<script|\son\w+\s*=|javascript:/i.test(svg)) {
+    problems.push(`content/clientes/${logo} tem script, e o site não aceita`);
+  }
+  if (/<image\b|data:image|href=["']?https?:/i.test(svg)) {
+    problems.push(
+      `content/clientes/${logo} embute imagem ou carrega algo de fora; o logo precisa ser só vetor`,
+    );
+  }
+  return problems;
+}
+
 /**
  * @param {object} input
  * @param {ReturnType<import('../site.config.js').createSiteConfig>} input.site
- * @param {Record<string, string>} input.env variáveis VITE_* do build
- * @param {Record<string, string>} input.example variáveis do `.env.example` (os valores fictícios)
+ * @param {Record<string, any>} input.content o conteúdo lido de content/ (inclui `exemplo`)
+ * @param {string} [input.root] pasta do projeto (onde ficam content/ e docs/provas/); sem ela, as
+ *   conferências de arquivos (logos, registros de autorização) ficam de fora
+ * @param {string} [input.contentDir] pasta do conteúdo (padrão: content/ dentro de `root`)
  * @param {Date} [input.now]
  * @returns {{ errors: string[], warnings: string[] }}
  */
-export function validateSite({ site, env, example, now = new Date() }) {
+export function validateSite({
+  site,
+  content,
+  root,
+  contentDir = root && join(root, 'content'),
+  now = new Date(),
+}) {
   const errors = [];
   const warnings = [];
 
@@ -72,7 +112,7 @@ export function validateSite({ site, env, example, now = new Date() }) {
   }
   if (!/^55\d{10,11}$/.test(site.whatsapp)) {
     errors.push(
-      `VITE_WHATSAPP="${env.VITE_WHATSAPP ?? ''}" inválido ou vazio: use 55 + DDD + número, ex.: 5511912345678.`,
+      `${field('empresa', 'whatsapp')} (${content.empresa?.whatsapp ?? ''}) inválido ou vazio: use 55 + DDD + número, ex.: 5511912345678.`,
     );
   }
   if (!/^https?:\/\/[^/\s]+\/(\S*\/)?$/.test(site.siteUrl)) {
@@ -82,7 +122,7 @@ export function validateSite({ site, env, example, now = new Date() }) {
     const year = Number(site.foundedYear);
     if (!/^\d{4}$/.test(site.foundedYear) || year < 1900 || year > now.getFullYear()) {
       errors.push(
-        `VITE_FOUNDED_YEAR="${site.foundedYear}" precisa ser um ano entre 1900 e o atual.`,
+        `${field('empresa', 'ano_fundacao')} (${site.foundedYear}) precisa ser um ano entre 1900 e o atual.`,
       );
     }
   }
@@ -102,29 +142,31 @@ export function validateSite({ site, env, example, now = new Date() }) {
     );
   }
 
-  // Diferenciais e clientes numerados: número dentro do limite, ícone conhecido, logo em SVG
-  // (só o nome do arquivo em public/clientes/) e autorização "sim" ou vazia.
-  for (const [key, raw] of Object.entries(env)) {
-    const value = String(raw ?? '').trim();
-    const numbered = /^VITE_(DIFF|CLIENT)_(\d+)_/.exec(key);
-    if (numbered) {
-      const [kind, max] =
-        numbered[1] === 'DIFF' ? ['diferenciais', LIMITS.diffs] : ['clientes', LIMITS.clients];
-      const n = Number(numbered[2]);
-      if (n < 1 || n > max) errors.push(`${key}: os ${kind} vão de 1 a ${max}.`);
+  // Produtos: cada peça 3D uma vez só.
+  const ids = (content.produtos?.itens ?? []).map((item) => item.id);
+  for (const id of new Set(ids.filter((id, i) => ids.indexOf(id) !== i))) {
+    errors.push(`${field('produtos', 'itens')}: o produto "${id}" aparece mais de uma vez.`);
+  }
+
+  // Clientes: logo de arquivo (SVG leve e seguro) e autorização com registro em docs/provas/.
+  const registry = (id) => root && existsSync(join(root, 'docs', 'provas', `${id}.md`));
+  for (const [i, client] of site.clients.entries()) {
+    const where = field('clientes', `clientes[${i}]`);
+    if (client.logo && contentDir) {
+      for (const problem of logoProblems(contentDir, client.logo))
+        errors.push(`${where}.logo: ${problem}.`);
     }
-    if (!value) continue;
-    if (/^VITE_DIFF_\d+_ICON$/.test(key) && !DIFF_ICONS.includes(value)) {
-      errors.push(`${key}="${value}" não existe: use ${DIFF_ICONS.join(', ')} ou deixe vazio.`);
-    }
-    if (/^VITE_CLIENT_\d+_LOGO$/.test(key) && !/^[\w-]+\.svg$/.test(value)) {
+    if (client.authorized && root && !registry(client.id)) {
       errors.push(
-        `${key}="${value}" precisa ser o nome de um arquivo SVG em public/clientes/, ex.: loja.svg.`,
+        `${where}: o cliente está autorizado, mas falta o registro docs/provas/${client.id}.md (quem autorizou, quando e o quê).`,
       );
     }
-    if (/^VITE_CLIENT_\d+_AUTH$/.test(key) && value.toLowerCase() !== 'sim') {
+  }
+  const proofs = visibleProofs(site.proofs);
+  for (const item of [...proofs.testimonials, ...(proofs.googleRating ? [{ id: 'google' }] : [])]) {
+    if (root && !registry(item.id)) {
       errors.push(
-        `${key}="${value}": use "sim" (o cliente autorizou, com registro em docs/provas/) ou deixe vazio.`,
+        `${field('provas', item.id)}: a prova está autorizada, mas falta o registro docs/provas/${item.id}.md.`,
       );
     }
   }
@@ -136,31 +178,47 @@ export function validateSite({ site, env, example, now = new Date() }) {
   }
 
   if (site.dataMode === 'production') {
-    for (const [key, label] of REQUIRED_IN_PRODUCTION) {
-      if (!env[key]?.trim()) errors.push(`${key} (${label}) é obrigatório em production.`);
+    const empresa = content.empresa ?? {};
+    for (const [path, label] of REQUIRED_IN_PRODUCTION) {
+      if (!String(get(empresa, path) ?? '').trim()) {
+        errors.push(`${field('empresa', path)} (${label}) é obrigatório em production.`);
+      }
     }
     if (site.cnpj && !isValidCnpj(site.cnpj)) {
-      errors.push(`VITE_CNPJ="${site.cnpj}" não é um CNPJ válido (dígitos verificadores).`);
+      errors.push(
+        `${field('empresa', 'cnpj')} ("${site.cnpj}") não é um CNPJ válido (dígitos verificadores).`,
+      );
     }
     if (site.phone && !/^\+55\d{10,11}$/.test(site.phone)) {
       errors.push(
-        `VITE_PHONE="${site.phone}" inválido: use +55 + DDD + número, ex.: +5511912345678.`,
+        `${field('empresa', 'telefone')} ("${site.phone}") inválido: use +55 + DDD + número, ex.: +5511912345678.`,
       );
     }
     if (site.address.state && !/^[A-Z]{2}$/.test(site.address.state)) {
-      errors.push(`VITE_STATE="${site.address.state}" precisa ser a sigla da UF, ex.: SP.`);
+      errors.push(
+        `${field('empresa', 'endereco.uf')} ("${site.address.state}") precisa ser a sigla da UF em maiúsculas, ex.: SP.`,
+      );
     }
     if (site.address.postalCode && !/^\d{5}-?\d{3}$/.test(site.address.postalCode)) {
-      errors.push(`VITE_CEP="${site.address.postalCode}" inválido: use o formato 01310-100.`);
+      errors.push(
+        `${field('empresa', 'endereco.cep')} ("${site.address.postalCode}") inválido: use o formato 01310-100.`,
+      );
     }
     if (!/^https:\/\//.test(site.siteUrl)) {
       errors.push(`VITE_SITE_URL="${site.siteUrl}" precisa ser https em production.`);
     }
-    for (const [key, sample] of Object.entries(example)) {
-      if (realByNature(key) || !sample) continue;
-      if (env[key] === sample) {
+    for (const [path, sample] of flatten(content.exemplo?.empresa)) {
+      if (REAL_BY_NATURE.has(path) || !String(sample ?? '').trim()) continue;
+      if (String(get(content.empresa, path) ?? '').trim() === String(sample).trim()) {
         errors.push(
-          `${key}="${sample}" ainda é o valor fictício do .env.example: troque pelo real.`,
+          `${field('empresa', path)} ("${sample}") ainda é o valor fictício de content/exemplo/empresa.yaml: troque pelo real.`,
+        );
+      }
+    }
+    for (const [i, client] of site.clients.entries()) {
+      if (client.example) {
+        errors.push(
+          `${field('clientes', `clientes[${i}]`)} ("${client.name}") é um cliente de exemplo: troque por um cliente real autorizado ou apague a linha.`,
         );
       }
     }
@@ -171,13 +229,16 @@ export function validateSite({ site, env, example, now = new Date() }) {
   return { errors, warnings };
 }
 
-/** Lança um erro claro (com todos os problemas) se a config não puder ir ao ar; devolve os avisos. */
-export function assertValidSite(input) {
+/**
+ * Lança um erro claro (com todos os problemas, os do conteúdo primeiro) se a config não puder ir ao ar;
+ * devolve os avisos.
+ * @param {Parameters<typeof validateSite>[0] & { contentErrors?: string[] }} input
+ */
+export function assertValidSite({ contentErrors = [], ...input }) {
   const { errors, warnings } = validateSite(input);
-  if (errors.length) {
-    throw new Error(
-      `Configuração do site inválida (veja docs/go-live.md):\n- ${errors.join('\n- ')}`,
-    );
+  const all = [...contentErrors, ...errors];
+  if (all.length) {
+    throw new Error(`Configuração do site inválida (veja docs/go-live.md):\n- ${all.join('\n- ')}`);
   }
   return warnings;
 }

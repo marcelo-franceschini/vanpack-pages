@@ -1,34 +1,57 @@
 // Config e render dos dados da empresa: puros (sem navegador nem build), então rodam em segundos.
-// Cobre a trava de go-live (demo × production), o render com a config vazia (nada de campo vazio nem
+// Cobre a trava de go-live (demo × production), o render com a empresa vazia (nada de campo vazio nem
 // {{placeholder}} sobrando), o JSON-LD, o robots.txt e o sitemap.xml.
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, test } from 'node:test';
-import { parseEnv } from '../build/env.js';
 import { contentSecurityPolicy } from '../build/csp.js';
 import { robotsTxt, sitemapXml } from '../build/files.js';
 import { buildJsonLd, interpolate, renderPage } from '../build/render.js';
-import { isValidCnpj, validateSite } from '../build/validate.js';
-import { DIFF_ICONS, createSiteConfig, models, proofs, slug } from '../site.config.js';
+import { isValidCnpj, logoProblems, validateSite } from '../build/validate.js';
+import { DIFF_ICONS, RICH_VARS, VAR_NAMES, slug } from '../site.config.js';
 import { yearsSince } from '../src/years.js';
-import { realEnv } from './real-env.mjs';
+import {
+  ROOT,
+  baseContent,
+  contentCopy,
+  emptySite,
+  exampleEnv,
+  realContent,
+  realEmpresa,
+  siteWith,
+  withEmpresa,
+} from './dados.mjs';
 
-const ROOT = new URL('..', import.meta.url).pathname;
 const read = (file) => readFileSync(`${ROOT}${file}`, 'utf8');
 const html = read('index.html');
-const example = parseEnv(read('.env.example'));
 
-const REAL = realEnv(example);
+const PRODUCTION = { ...exampleEnv, VITE_DATA_MODE: 'production' };
+const DEMO_EMPRESA = baseContent.empresa;
 
-const validate = (env, now) => validateSite({ site: createSiteConfig(env), env, example, now });
+/** Troca um campo (`endereco.cep`) de um objeto, sem mexer no original. */
+const setPath = (object, path, value) => {
+  const copy = structuredClone(object);
+  const keys = path.split('.');
+  const last = keys.pop();
+  const target = keys.reduce((o, key) => (o[key] ??= {}), copy);
+  target[last] = value;
+  return copy;
+};
+
+/** Os erros e avisos da trava; sem `root` as conferências de arquivos (logos, registros) ficam de fora. */
+const validate = ({ env = exampleEnv, content = baseContent, now, root } = {}) =>
+  validateSite({ site: siteWith({ env, content, now }), content, now, root });
+const errorsOf = (options) => validate(options).errors.join('\n');
 
 describe('createSiteConfig', () => {
-  test('lê só o env recebido e normaliza os campos', () => {
-    const site = createSiteConfig({
-      VITE_WHATSAPP: '+55 (11) 91234-5678',
-      VITE_PHONE: '+551147001234',
-      VITE_CITY: ' Santo André ',
-      VITE_STATE: 'SP',
+  test('lê só o conteúdo recebido e normaliza os campos', () => {
+    const site = siteWith({
+      content: withEmpresa({
+        whatsapp: '+55 (11) 91234-5678',
+        telefone: '+551147001234',
+        endereco: { cidade: ' Santo André ', uf: 'SP' },
+      }),
     });
     assert.equal(site.whatsapp, '5511912345678');
     assert.equal(
@@ -37,165 +60,216 @@ describe('createSiteConfig', () => {
       'formata o telefone quando não há texto pronto',
     );
     assert.equal(site.cityState, 'Santo André-SP');
-    assert.equal(site.vars.holder, 'Vanpack', 'sem razão social o © usa o nome da marca');
+    assert.equal(site.vars.titular, 'Vanpack', 'sem razão social o © usa o nome da marca');
   });
 
   test('anos de mercado e ano do © vêm da data do build', () => {
-    const site = createSiteConfig({ VITE_FOUNDED_YEAR: '2010' }, new Date('2031-06-01'));
+    const site = siteWith({
+      content: withEmpresa({ whatsapp: '5511912345678', ano_fundacao: 2010 }),
+      now: new Date('2031-06-01'),
+    });
     assert.equal(site.yearsInBusiness, '21');
     assert.equal(site.year, '2031');
-    assert.equal(createSiteConfig({}).yearsInBusiness, '', 'sem ano de fundação não há texto');
+    assert.equal(
+      site.vars.anos,
+      '<span data-since="2010">21</span>',
+      'o número que o navegador recalcula',
+    );
+    assert.equal(site.vars.ano, '<span data-year>2031</span>');
+    assert.equal(site.vars.ano_atual, '2031');
+    assert.equal(emptySite().yearsInBusiness, '', 'sem ano de fundação não há texto');
+    assert.equal(emptySite().vars.anos, '');
     assert.equal(yearsSince('2010', new Date('2026-10-15')), 16);
     assert.ok(Number.isNaN(yearsSince('')));
     assert.ok(Number.isNaN(yearsSince('abc')));
   });
 
-  test('com o env vazio todo campo da empresa fica vazio (nada inventado)', () => {
-    const site = createSiteConfig({});
-    for (const key of ['cnpj', 'phone', 'whatsapp', 'legalName', 'hours', 'mapUrl']) {
+  test('com a empresa vazia todo campo da empresa fica vazio (nada inventado)', () => {
+    const site = emptySite();
+    for (const key of ['cnpj', 'phone', 'legalName', 'hours', 'mapUrl']) {
       assert.equal(site[key], '', key);
     }
-    assert.ok(site.vars.description.length > 20, 'a descrição tem texto mesmo sem cidade');
+    assert.ok(site.vars.descricao_pagina.length > 20, 'a descrição tem texto mesmo sem cidade');
+  });
+
+  test('as variáveis de VAR_NAMES são exatamente as que a config entrega', () => {
+    assert.deepEqual(Object.keys(emptySite().vars).sort(), [...VAR_NAMES].sort());
+    for (const name of RICH_VARS) assert.ok(VAR_NAMES.includes(name), name);
   });
 });
 
 describe('trava de go-live', () => {
   test('o CNPJ fictício é inválido e o real passa', () => {
-    assert.equal(isValidCnpj(example.VITE_CNPJ), false, 'o CNPJ fictício é inválido');
+    assert.equal(isValidCnpj(DEMO_EMPRESA.cnpj), false, 'o CNPJ fictício é inválido');
     assert.equal(isValidCnpj('11.111.111/1111-11'), false);
     assert.equal(isValidCnpj('11.222.333/0001-81'), true);
     assert.equal(isValidCnpj('11222333000181'), true);
   });
 
-  test('demo aceita os dados fictícios do .env.example e avisa', () => {
-    const { errors, warnings } = validate(example);
+  test('demo aceita os dados fictícios e avisa', () => {
+    const { errors, warnings } = validate();
     assert.deepEqual(errors, []);
     assert.ok(warnings.some((w) => w.includes('demo')));
   });
 
   test('modo desconhecido, WhatsApp vazio ou inválido e URL sem "/" falham com mensagem clara', () => {
+    assert.match(errorsOf({ env: { ...exampleEnv, VITE_DATA_MODE: 'xyz' } }), /VITE_DATA_MODE/);
+    assert.match(errorsOf({ env: { ...exampleEnv, VITE_DATA_MODE: '' } }), /VITE_DATA_MODE/);
+    for (const whatsapp of ['', '119000']) {
+      assert.match(
+        errorsOf({ content: withEmpresa(setPath(DEMO_EMPRESA, 'whatsapp', whatsapp)) }),
+        /content\/empresa\.yaml › whatsapp/,
+      );
+    }
     assert.match(
-      validate({ ...example, VITE_DATA_MODE: 'xyz' }).errors.join('\n'),
-      /VITE_DATA_MODE/,
-    );
-    assert.match(validate({ ...example, VITE_DATA_MODE: '' }).errors.join('\n'), /VITE_DATA_MODE/);
-    assert.match(validate({ ...example, VITE_WHATSAPP: '' }).errors.join('\n'), /VITE_WHATSAPP/);
-    assert.match(
-      validate({ ...example, VITE_WHATSAPP: '119000' }).errors.join('\n'),
-      /VITE_WHATSAPP/,
-    );
-    assert.match(
-      validate({ ...example, VITE_SITE_URL: 'https://site.com.br' }).errors.join('\n'),
+      errorsOf({ env: { ...exampleEnv, VITE_SITE_URL: 'https://site.com.br' } }),
       /VITE_SITE_URL/,
     );
   });
 
   test('production com os dados fictícios falha e lista cada valor que sobrou', () => {
-    const { errors } = validate({ ...example, VITE_DATA_MODE: 'production' });
-    const all = errors.join('\n');
-    for (const key of [
-      'VITE_WHATSAPP',
-      'VITE_PHONE',
-      'VITE_CNPJ',
-      'VITE_LEGAL_NAME',
-      'VITE_STREET',
-      'VITE_CEP',
-      'VITE_HOURS',
-      'VITE_SERVICE_AREA',
-      'VITE_CLIENT_1_NAME',
-      'VITE_CLIENT_6_NAME',
+    const all = errorsOf({ env: PRODUCTION });
+    for (const path of [
+      'whatsapp',
+      'telefone',
+      'cnpj',
+      'razao_social',
+      'endereco.rua',
+      'endereco.cep',
+      'horario',
+      'regiao',
+      'clientes\\[0\\]',
+      'clientes\\[5\\]',
     ]) {
-      assert.match(all, new RegExp(`${key}`), `${key} sobrou no .env`);
+      assert.match(all, new RegExp(`› ${path}`), `${path} sobrou na empresa`);
     }
-    assert.ok(!/VITE_DIFF_/.test(all), 'os diferenciais não contam como fictícios');
-    assert.match(all, /CNPJ válido|não é um CNPJ válido/, 'o CNPJ fictício também é inválido');
+    assert.ok(!/diferenciais/.test(all), 'os diferenciais não contam como fictícios');
+    assert.match(all, /não é um CNPJ válido/, 'o CNPJ fictício também é inválido');
   });
 
   test('production com dados reais passa; cidade e UF iguais ao exemplo não contam como fictício', () => {
-    const { errors, warnings } = validate(REAL);
+    const { errors, warnings } = validate({ env: PRODUCTION, content: realContent() });
     assert.deepEqual(errors, []);
-    assert.equal(REAL.VITE_CITY, example.VITE_CITY);
+    assert.equal(realEmpresa.endereco.cidade, DEMO_EMPRESA.endereco.cidade);
     assert.ok(
       warnings.some((w) => w.includes('VITE_ANALYTICS_PROVIDER')),
       'avisa que não há medição',
     );
     assert.deepEqual(
       validate({
-        ...REAL,
-        VITE_ANALYTICS_PROVIDER: 'umami',
-        VITE_ANALYTICS_SITE: '56f48c71-e0b8-4e7a-ac56-be2631e2e31d',
+        env: {
+          ...PRODUCTION,
+          VITE_ANALYTICS_PROVIDER: 'umami',
+          VITE_ANALYTICS_SITE: '56f48c71-e0b8-4e7a-ac56-be2631e2e31d',
+        },
+        content: realContent(),
       }).warnings,
       [],
     );
   });
 
   test('production exige os campos obrigatórios e os formatos', () => {
-    for (const [key, value] of [
-      ['VITE_CNPJ', ''],
-      ['VITE_CNPJ', '11.222.333/0001-82'],
-      ['VITE_PHONE', '11 4700-1234'],
-      ['VITE_STATE', 'sp'],
-      ['VITE_CEP', '123'],
-      ['VITE_HOURS', ''],
-      ['VITE_SITE_URL', 'http://empresa.com.br/'],
+    for (const [path, value] of [
+      ['cnpj', ''],
+      ['cnpj', '11.222.333/0001-82'],
+      ['telefone', '11 4700-1234'],
+      ['endereco.uf', 'sp'],
+      ['endereco.cep', '123'],
+      ['horario', ''],
     ]) {
-      const { errors } = validate({ ...REAL, [key]: value });
-      assert.ok(
-        errors.some((e) => e.includes(key)),
-        `${key}="${value}" deveria falhar`,
+      const content = realContent({ empresa: setPath(realEmpresa, path, value) });
+      assert.match(
+        errorsOf({ env: PRODUCTION, content }),
+        new RegExp(`content/empresa\\.yaml › ${path.replace('.', '\\.')}`),
+        `${path}="${value}" deveria falhar`,
       );
     }
-  });
-
-  test('diferenciais e clientes: ícone, logo, autorização e numeração inválidos falham nos dois modos', () => {
-    for (const [key, value] of [
-      ['VITE_DIFF_1_ICON', 'estrela'],
-      ['VITE_CLIENT_1_LOGO', 'logo.png'],
-      ['VITE_CLIENT_1_LOGO', '../logo.svg'],
-      ['VITE_CLIENT_1_LOGO', '/clientes/logo.svg'],
-      ['VITE_CLIENT_1_AUTH', 'talvez'],
-      ['VITE_DIFF_7_TITLE', 'Sétimo'],
-      ['VITE_DIFF_0_TITLE', 'Zero'],
-      ['VITE_CLIENT_13_NAME', 'Décimo terceiro'],
-    ]) {
-      for (const env of [example, REAL]) {
-        assert.ok(
-          validate({ ...env, [key]: value }).errors.some((e) => e.includes(key)),
-          `${key}="${value}" deveria falhar (${env.VITE_DATA_MODE})`,
-        );
-      }
-    }
-    for (const [key, value] of [
-      ['VITE_DIFF_6_ICON', 'caixa'],
-      ['VITE_CLIENT_12_LOGO', 'loja-1.svg'],
-      ['VITE_CLIENT_12_AUTH', 'Sim'],
-    ]) {
-      assert.deepEqual(validate({ ...REAL, [key]: value }).errors, [], `${key}="${value}"`);
-    }
+    assert.match(
+      errorsOf({
+        env: { ...PRODUCTION, VITE_SITE_URL: 'http://empresa.com.br/' },
+        content: realContent(),
+      }),
+      /VITE_SITE_URL/,
+    );
   });
 
   test('analytics: provedor desconhecido ou Umami sem Website ID falham; ano de fundação no futuro também', () => {
     assert.match(
-      validate({ ...example, VITE_ANALYTICS_PROVIDER: 'ga4' }).errors.join('\n'),
+      errorsOf({ env: { ...exampleEnv, VITE_ANALYTICS_PROVIDER: 'ga4' } }),
       /ANALYTICS_PROVIDER/,
     );
     assert.match(
-      validate({ ...example, VITE_ANALYTICS_PROVIDER: 'umami' }).errors.join('\n'),
+      errorsOf({ env: { ...exampleEnv, VITE_ANALYTICS_PROVIDER: 'umami' } }),
       /ANALYTICS_SITE/,
     );
     assert.match(
-      validate({ ...example, VITE_FOUNDED_YEAR: '2999' }, new Date('2026-10-15')).errors.join('\n'),
-      /VITE_FOUNDED_YEAR/,
+      errorsOf({
+        content: withEmpresa(setPath(DEMO_EMPRESA, 'ano_fundacao', 2999)),
+        now: new Date('2026-10-15'),
+      }),
+      /ano_fundacao/,
     );
+  });
+
+  test('cada peça 3D dos produtos aparece uma vez só', () => {
+    const [first, ...rest] = baseContent.produtos.itens;
+    const content = { ...baseContent, produtos: { itens: [first, { ...rest[0], id: first.id }] } };
+    assert.match(
+      errorsOf({ content }),
+      new RegExp(`o produto "${first.id}" aparece mais de uma vez`),
+    );
+  });
+
+  test('cliente autorizado e prova autorizada precisam do registro em docs/provas/', () => {
+    const clientes = { clientes: [{ nome: 'Padaria Sem Registro', autorizado: true }] };
+    const provas = {
+      depoimentos: [
+        { id: 'sem-registro', citacao: 'Boa.', autor: 'Fulano', autorizado: true },
+        { id: 'nao-autorizado', citacao: 'Ok.', autor: 'Ciclano', autorizado: false },
+      ],
+      nota_google: null,
+    };
+    const all = errorsOf({ content: { ...baseContent, clientes, provas }, root: ROOT });
+    assert.match(all, /clientes\[0\].*docs\/provas\/padaria-sem-registro\.md/);
+    assert.match(all, /provas\.yaml › sem-registro.*docs\/provas\/sem-registro\.md/);
+    assert.ok(!all.includes('nao-autorizado'), 'só o autorizado precisa de registro');
+    assert.deepEqual(validate({ root: ROOT }).errors, [], 'o conteúdo de verdade está em ordem');
+  });
+
+  test('logo de cliente: precisa existir, ser SVG leve, com viewBox, sem script nem imagem embutida', () => {
+    const { dir, remove } = contentCopy();
+    try {
+      mkdirSync(join(dir, 'clientes'), { recursive: true });
+      const put = (name, text) => writeFileSync(join(dir, 'clientes', name), text);
+      const ok =
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><path d="M0 0h10v10z"/></svg>';
+      put('bom.svg', ok);
+      put('script.svg', ok.replace('<path', '<script>alert(1)</script><path'));
+      put('evento.svg', ok.replace('<path', '<path onclick="x()"'));
+      put('imagem.svg', ok.replace('<path', '<image href="data:image/png;base64,AAAA"/><path'));
+      put('semviewbox.svg', ok.replace(' viewBox="0 0 10 10"', ''));
+      put('grande.svg', ok.replace('</svg>', `<!--${'x'.repeat(21 * 1024)}--></svg>`));
+      put('texto.svg', 'não sou svg');
+      assert.deepEqual(logoProblems(dir, 'bom.svg'), []);
+      assert.match(logoProblems(dir, 'nao-existe.svg').join(), /não existe/);
+      assert.match(logoProblems(dir, 'script.svg').join(), /script/);
+      assert.match(logoProblems(dir, 'evento.svg').join(), /script/);
+      assert.match(logoProblems(dir, 'imagem.svg').join(), /imagem|fora/);
+      assert.match(logoProblems(dir, 'semviewbox.svg').join(), /viewBox/);
+      assert.match(logoProblems(dir, 'grande.svg').join(), /máximo é 20 KB/);
+      assert.match(logoProblems(dir, 'texto.svg').join(), /não é um SVG/);
+    } finally {
+      remove();
+    }
   });
 });
 
 describe('render', () => {
   // O render recusa wa.me sem número, então a config "vazia" leva só o WhatsApp.
-  const empty = createSiteConfig({ VITE_WHATSAPP: '5511912345678' });
-  const demo = createSiteConfig(example);
+  const empty = emptySite();
+  const demo = siteWith();
 
-  test('com a config vazia nenhum campo, elemento vazio ou {{placeholder}} sobra na página', () => {
+  test('com a empresa vazia nenhum campo, elemento vazio ou {{placeholder}} sobra na página', () => {
     const out = renderPage(html, empty);
     assert.ok(!/data-need|data-field|\{\{/.test(out), 'sem marcas nem placeholders');
     assert.match(out, /<p class="slogan">Do projeto à entrega<\/p>/, 'o slogan do manual fica');
@@ -224,43 +298,45 @@ describe('render', () => {
     }
   });
 
-  test('com os dados do .env.example tudo aparece, o JSON-LD é completo e o noindex liga', () => {
+  test('com os dados de demonstração tudo aparece, o JSON-LD é completo e o noindex liga', () => {
     const out = renderPage(html, demo);
     const flat = out.replace(/\s+/g, ' ');
     assert.ok(!/data-need|data-field|\{\{/.test(out));
-    for (const value of [example.VITE_CNPJ, example.VITE_LEGAL_NAME, example.VITE_HOURS]) {
+    for (const value of [DEMO_EMPRESA.cnpj, DEMO_EMPRESA.razao_social, DEMO_EMPRESA.horario]) {
       assert.ok(flat.includes(value), value);
     }
-    assert.ok(flat.includes(`href="tel:${example.VITE_PHONE}"`));
+    assert.ok(flat.includes(`href="tel:${DEMO_EMPRESA.telefone}"`));
     assert.ok(!flat.includes('mailto:'), 'sem e-mail na página');
     assert.ok(flat.includes('Fábrica própria em Santo André-SP'));
     assert.ok(flat.includes('Atendemos Santo André, ABC e Grande São Paulo'));
     assert.match(out, /<meta name="robots" content="noindex,nofollow" \/>/);
     for (const [, link] of out.matchAll(/href="(https:\/\/wa\.me\/[^"]*)"/g)) {
-      assert.ok(link.startsWith(`https://wa.me/${example.VITE_WHATSAPP}?text=`), link);
+      assert.ok(link.startsWith(`https://wa.me/${DEMO_EMPRESA.whatsapp}?text=`), link);
     }
     const ld = buildJsonLd(demo);
-    assert.equal(ld.telephone, example.VITE_PHONE);
-    assert.equal(ld.openingHours, example.VITE_HOURS_SCHEMA);
+    assert.equal(ld.telephone, DEMO_EMPRESA.telefone);
+    assert.equal(ld.openingHours, DEMO_EMPRESA.horario_schema);
     assert.equal(ld.address.addressLocality, 'Santo André');
-    assert.equal(ld.address.streetAddress, `${example.VITE_STREET}, ${example.VITE_DISTRICT}`);
+    assert.equal(
+      ld.address.streetAddress,
+      `${DEMO_EMPRESA.endereco.rua}, ${DEMO_EMPRESA.endereco.bairro}`,
+    );
     assert.ok(!('aggregateRating' in ld), 'sem avaliação própria');
   });
 
   test('a faixa de confiança some inteira sem dado e, com pouco dado, mostra só o que existe', () => {
     assert.ok(!renderPage(html, empty).includes('id="confianca"'));
-    const onlyCnpj = createSiteConfig({
-      VITE_WHATSAPP: '5511912345678',
-      VITE_CNPJ: REAL.VITE_CNPJ,
+    const onlyCnpj = siteWith({
+      content: withEmpresa({ whatsapp: '5511912345678', cnpj: realEmpresa.cnpj }),
     });
     const strip = renderPage(html, onlyCnpj).match(/<section class="trust"[\s\S]*?<\/section>/)[0];
-    assert.ok(strip.includes(`CNPJ ${REAL.VITE_CNPJ}`));
+    assert.ok(strip.includes(`CNPJ ${realEmpresa.cnpj}`));
     assert.ok(strip.includes('Nunca pedimos pagamento para conta de pessoa física'));
     assert.ok(!/anos de mercado|tel:|mailto:|Fábrica própria|Pagamento:/.test(strip), strip);
   });
 
   test('sem ano de fundação não há anos de mercado nem "Desde"; o cartão 2 usa o texto alternativo', () => {
-    const semAno = createSiteConfig({ ...example, VITE_FOUNDED_YEAR: '' });
+    const semAno = siteWith({ content: withEmpresa(setPath(DEMO_EMPRESA, 'ano_fundacao', '')) });
     const out = renderPage(html, semAno);
     assert.ok(!/data-since|anos de\s+mercado<|Desde/.test(out));
     assert.ok(out.includes('Experiência em caixas de papelão'));
@@ -271,7 +347,7 @@ describe('render', () => {
   });
 
   test('os 5 cartões da história ficam com qualquer config (o scroll depende deles)', () => {
-    for (const site of [empty, demo, createSiteConfig(REAL)]) {
+    for (const site of [empty, demo, siteWith({ env: PRODUCTION, content: realContent() })]) {
       const cards = renderPage(html, site).match(/<div class="card(?: on)?">/g) ?? [];
       assert.equal(cards.length, 5, site.dataMode || 'vazia');
     }
@@ -286,7 +362,7 @@ describe('render', () => {
 
   test('elemento removido leva junto o que tem dentro, mesmo com a mesma tag aninhada', () => {
     const out = renderPage(
-      '<div data-need="cnpj"><div>a</div><div>b</div></div><p data-need="city">x</p><p>fica</p>',
+      '<div data-need="cnpj"><div>a</div><div>b</div></div><p data-need="cidade">x</p><p>fica</p>',
       empty,
     );
     assert.equal(out, '<p>fica</p>');
@@ -296,6 +372,11 @@ describe('render', () => {
     assert.throws(() => interpolate('a {{cnpj}} b', { cnpj: '' }), /data-need="cnpj"/);
     assert.throws(() => interpolate('{{nada}}', {}), /desconhecida/);
     assert.equal(interpolate('<{{x}}>', { x: 'a&b' }), '<a&amp;b>', 'escapa o valor');
+    assert.equal(
+      interpolate('{{anos}}', { anos: '<span data-since="2010">16</span>' }),
+      '<span data-since="2010">16</span>',
+      'a variável rica já é HTML',
+    );
     assert.throws(() => renderPage('<p>{{cnpj}}</p>', empty), /vazio/);
     assert.throws(() => renderPage('<p data-need="inventada">x</p>', empty), /desconhecido/);
   });
@@ -310,8 +391,8 @@ describe('render', () => {
 
   test('sem número de WhatsApp o build não gera link wa.me/?', () => {
     assert.throws(
-      () => renderPage('<a data-wa="oi"></a>', createSiteConfig({})),
-      /VITE_WHATSAPP vazio/,
+      () => renderPage('<a data-wa="oi"></a>', siteWith({ content: withEmpresa({}) })),
+      /content\/empresa\.yaml › whatsapp está vazio/,
     );
   });
 
@@ -322,19 +403,21 @@ describe('render', () => {
 });
 
 describe('robots.txt e sitemap.xml', () => {
+  const production = siteWith({ env: PRODUCTION, content: realContent() });
+
   test('em demo o robots bloqueia tudo e não aponta para o sitemap', () => {
-    assert.equal(robotsTxt(createSiteConfig(example)), 'User-agent: *\nDisallow: /\n');
+    assert.equal(robotsTxt(siteWith()), 'User-agent: *\nDisallow: /\n');
   });
 
   test('em production o robots libera e aponta para o sitemap da URL do site', () => {
-    const robots = robotsTxt(createSiteConfig(REAL));
+    const robots = robotsTxt(production);
     assert.match(robots, /^User-agent: \*\nAllow: \/\n/);
-    assert.ok(robots.includes(`Sitemap: ${REAL.VITE_SITE_URL}sitemap.xml`));
+    assert.ok(robots.includes(`Sitemap: ${exampleEnv.VITE_SITE_URL}sitemap.xml`));
   });
 
   test('o sitemap usa a URL do site e a data do build', () => {
-    const xml = sitemapXml(createSiteConfig(REAL), new Date('2031-01-02T10:00:00Z'));
-    assert.ok(xml.includes(`<loc>${REAL.VITE_SITE_URL}</loc>`));
+    const xml = sitemapXml(production, new Date('2031-01-02T10:00:00Z'));
+    assert.ok(xml.includes(`<loc>${exampleEnv.VITE_SITE_URL}</loc>`));
     assert.ok(xml.includes('<lastmod>2031-01-02</lastmod>'));
   });
 });
@@ -346,16 +429,16 @@ describe('medição e CSP', () => {
     VITE_SITE_URL: 'https://empresa.com.br/loja/',
   };
   const csp = (env) =>
-    contentSecurityPolicy({ styleHashes: ["'sha256-x'"], site: createSiteConfig(env) });
+    contentSecurityPolicy({ styleHashes: ["'sha256-x'"], site: siteWith({ env }) });
 
   test('sem provedor o navegador não recebe config de medição e a CSP não abre domínio nenhum', () => {
-    assert.equal(createSiteConfig({}).client.analytics, null);
+    assert.equal(siteWith({ env: {} }).client.analytics, null);
     assert.match(csp({}), /connect-src 'self';/);
     assert.ok(!/https?:/.test(csp({})));
   });
 
   test('com Umami a config leva o host do site e a CSP abre só o servidor da medição', () => {
-    const { analytics } = createSiteConfig(UMAMI).client;
+    const { analytics } = siteWith({ env: UMAMI }).client;
     assert.deepEqual(analytics, {
       site: UMAMI.VITE_ANALYTICS_SITE,
       endpoint: 'https://gateway.umami.is',
@@ -366,92 +449,84 @@ describe('medição e CSP', () => {
 
   test('instância própria: o endereço do servidor vai na config e na CSP', () => {
     const own = { ...UMAMI, VITE_ANALYTICS_ENDPOINT: 'https://umami.empresa.com.br/' };
-    assert.equal(createSiteConfig(own).client.analytics.endpoint, 'https://umami.empresa.com.br');
+    assert.equal(siteWith({ env: own }).client.analytics.endpoint, 'https://umami.empresa.com.br');
     assert.match(csp(own), /connect-src 'self' https:\/\/umami\.empresa\.com\.br;/);
     assert.match(
-      validate({ ...example, ...own, VITE_ANALYTICS_ENDPOINT: 'umami.empresa.com.br' }).errors.join(
-        '\n',
-      ),
+      errorsOf({ env: { ...exampleEnv, ...own, VITE_ANALYTICS_ENDPOINT: 'umami.empresa.com.br' } }),
       /VITE_ANALYTICS_ENDPOINT/,
     );
   });
 });
 
 describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', () => {
-  const demo = createSiteConfig(example);
-  const production = createSiteConfig(REAL);
-  const empty = createSiteConfig({ VITE_WHATSAPP: '5511912345678' });
+  const demo = siteWith();
+  const production = siteWith({ env: PRODUCTION, content: realContent() });
+  const empty = emptySite();
+  const strip = (site) =>
+    renderPage(html, site).match(/<section class="trust"[\s\S]*?<\/section>/)?.[0] ?? '';
+  const diferenciais = (itens) =>
+    siteWith({ content: { ...baseContent, diferenciais: { itens } } });
+  const pillars = (site) =>
+    [...renderPage(html, site).matchAll(/<article class="pillar">[\s\S]*?<\/article>/g)].map(
+      (m) => m[0],
+    );
 
   test('os 3 produtos têm cada um o seu botão, com o produto na mensagem e o código de origem', () => {
+    const produtos = baseContent.produtos.itens;
     assert.deepEqual(
-      models.map(({ id }) => id),
+      produtos.map(({ id }) => id),
       ['corte-e-vinco', 'divisorias', 'chapas'],
     );
     const cards = [
       ...renderPage(html, demo).matchAll(/<article class="model">[\s\S]*?<\/article>/g),
     ];
-    assert.equal(cards.length, models.length);
-    for (const [i, model] of models.entries()) {
-      assert.ok(cards[i][0].includes(`<h3>${model.name}</h3>`), model.name);
+    assert.equal(cards.length, produtos.length);
+    for (const [i, item] of produtos.entries()) {
+      assert.ok(cards[i][0].includes(`<h3>${item.nome}</h3>`), item.nome);
       // a área do 3D vem antes do título, com o modelo e a descrição da peça
       assert.ok(
         cards[i][0].startsWith(
-          `<article class="model">\n  <div class="model-3d" data-modelo="${model.id}" data-peca="${model.peca}"></div>\n  <h3>`,
+          `<article class="model">\n  <div class="model-3d" data-modelo="${item.id}" data-peca="${item.peca}"></div>\n  <h3>`,
         ),
-        `${model.id}: área do 3D no topo`,
+        `${item.id}: área do 3D no topo`,
       );
       const text = new URL(cards[i][0].match(/href="([^"]+)"/)[1]).searchParams.get('text');
-      assert.equal(
-        text,
-        `Olá! Quero um orçamento de ${model.subject}. [site-produtos-${model.id}]`,
-      );
+      assert.equal(text, `${item.mensagem} [site-produtos-${item.id}]`);
     }
   });
 
   test('a regra do pagamento fica na faixa de confiança, com as formas de pagamento quando há', () => {
-    const strip = (site) =>
-      renderPage(html, site).match(/<section class="trust"[\s\S]*?<\/section>/)?.[0] ?? '';
     const rule = 'Nunca pedimos pagamento para conta de pessoa física';
     assert.ok(strip(production).includes(rule));
-    assert.ok(strip(production).includes(`Pagamento: ${REAL.VITE_PAYMENT_METHODS}`));
-    const semPagamento = strip(createSiteConfig({ ...REAL, VITE_PAYMENT_METHODS: '' }));
+    assert.ok(strip(production).includes(`Pagamento: ${realEmpresa.pagamento}`));
+    const semPagamento = strip(
+      siteWith({
+        env: PRODUCTION,
+        content: realContent({ empresa: { ...realEmpresa, pagamento: '' } }),
+      }),
+    );
     assert.ok(semPagamento.includes(rule) && !semPagamento.includes('Pagamento:'));
-    assert.ok(!strip(createSiteConfig({ ...REAL, VITE_CNPJ: '' })).includes(rule), 'só com CNPJ');
+    const semCnpj = siteWith({
+      env: PRODUCTION,
+      content: realContent({ empresa: { ...realEmpresa, cnpj: '' } }),
+    });
+    assert.ok(!strip(semCnpj).includes(rule), 'só com CNPJ');
   });
 
-  test('diferenciais vêm do .env: item sem título some e, sem nenhum, a seção e os links somem', () => {
-    const pillars = (site) =>
-      [...renderPage(html, site).matchAll(/<article class="pillar">[\s\S]*?<\/article>/g)].map(
-        (m) => m[0],
-      );
+  test('diferenciais vêm de content/: item sem ícone ou texto se adapta e, sem nenhum, a seção e os links somem', () => {
+    const [primeiro, ...resto] = baseContent.diferenciais.itens;
     const shown = pillars(demo);
     assert.equal(shown.length, 3);
     assert.equal(
       shown[0],
-      `<article class="pillar"><svg aria-hidden="true"><use href="#i-fabrica" /></svg><h3>${example.VITE_DIFF_1_TITLE}</h3><p>${example.VITE_DIFF_1_TEXT}</p></article>`,
+      `<article class="pillar"><svg aria-hidden="true"><use href="#i-fabrica" /></svg><h3>${primeiro.titulo}</h3><p>${primeiro.texto}</p></article>`,
     );
-    assert.equal(pillars(createSiteConfig({ ...example, VITE_DIFF_2_TITLE: '' })).length, 2);
-    const semIcone = pillars(createSiteConfig({ ...example, VITE_DIFF_1_ICON: '' }))[0];
-    assert.ok(!semIcone.includes('<svg') && semIcone.includes(example.VITE_DIFF_1_TITLE));
-    const semTexto = pillars(createSiteConfig({ ...example, VITE_DIFF_1_TEXT: '' }))[0];
+    assert.equal(pillars(diferenciais(resto)).length, 2);
+    const semIcone = pillars(diferenciais([{ ...primeiro, icone: '' }, ...resto]))[0];
+    assert.ok(!semIcone.includes('<svg') && semIcone.includes(primeiro.titulo));
+    const semTexto = pillars(diferenciais([{ ...primeiro, texto: '' }, ...resto]))[0];
     assert.ok(!semTexto.includes('<p>'));
-    assert.deepEqual(
-      createSiteConfig({
-        VITE_DIFF_6_TITLE: 'Sexto',
-        VITE_DIFF_7_TITLE: 'Sétimo',
-      }).differentials.map(({ title }) => title),
-      ['Sexto'],
-      'até 6',
-    );
-    const nenhum = renderPage(
-      html,
-      createSiteConfig({
-        ...example,
-        VITE_DIFF_1_TITLE: '',
-        VITE_DIFF_2_TITLE: '',
-        VITE_DIFF_3_TITLE: '',
-      }),
-    );
+    const nenhum = renderPage(html, diferenciais([]));
     assert.ok(!nenhum.includes('id="diferenciais"') && !nenhum.includes('href="#diferenciais"'));
     assert.equal(
       (nenhum.match(/<div class="card(?: on)?">/g) ?? []).length,
@@ -460,16 +535,18 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
     );
   });
 
-  test('cada ícone de diferencial tem o seu <symbol> no index.html', () => {
+  test('cada ícone de diferencial tem o seu <symbol> no index.html e está no schema', () => {
     for (const icon of DIFF_ICONS) assert.ok(html.includes(`<symbol id="i-${icon}"`), icon);
+    const schema = JSON.parse(read('content/schemas/diferenciais.schema.json'));
+    assert.deepEqual(schema.properties.itens.items.properties.icone.enum, DIFF_ICONS);
   });
 
-  test('clientes vêm do .env: demo mostra os 6 exemplos rotulados; production só os autorizados', () => {
-    const strip = (site) =>
+  test('clientes vêm de content/: demo mostra os 6 exemplos rotulados; production só os autorizados', () => {
+    const carrossel = (site) =>
       renderPage(html, site).match(
         /<div class="carrossel" data-carrossel>[\s\S]*?<\/button><\/div><\/div>/,
       )?.[0] ?? '';
-    const emDemo = strip(demo);
+    const emDemo = carrossel(demo);
     assert.match(
       emDemo,
       /<div class="carrossel-janela" role="region" aria-roledescription="carrossel" aria-label="[^"]+" tabindex="0">/,
@@ -484,42 +561,61 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
     assert.equal((emDemo.match(/<span class="tag">Exemplo<\/span>/g) ?? []).length, 6);
     assert.ok(emDemo.includes('<span class="logo-name">Cliente 1</span>'));
     assert.ok(!emDemo.includes('<img'), 'exemplo sem logo real');
-    const site = createSiteConfig({
-      ...REAL,
-      VITE_CLIENT_1_NAME: 'Padaria Real',
-      VITE_CLIENT_1_LOGO: 'padaria-real.svg',
-      VITE_CLIENT_1_AUTH: 'sim',
-      VITE_CLIENT_2_NAME: 'Mercado Sem Autorização',
+    const site = siteWith({
+      env: PRODUCTION,
+      content: realContent({
+        clientes: {
+          clientes: [
+            { nome: 'Padaria Real', logo: 'padaria-real.svg', autorizado: true },
+            {
+              nome: 'Loja Alfa',
+              logo: 'loja-alfa.svg',
+              alt: 'Logo da Loja Alfa',
+              autorizado: true,
+            },
+            { nome: 'Mercado Sem Autorização' },
+          ],
+        },
+      }),
     });
     assert.deepEqual(
       site.clients.map(({ id, authorized }) => [id, authorized]),
       [
         ['padaria-real', true],
+        ['loja-alfa', true],
         ['mercado-sem-autorizacao', false],
       ],
     );
-    const emProducao = strip(site);
+    const emProducao = carrossel(site);
     assert.ok(
       emProducao.includes(
         '<img src="./clientes/padaria-real.svg" alt="Padaria Real" width="160" height="64"',
       ),
       'logo com caminho relativo à página',
     );
+    assert.ok(emProducao.includes('alt="Logo da Loja Alfa"'), 'o alt próprio vence o nome');
     assert.ok(!emProducao.includes('Mercado') && !emProducao.includes('Exemplo'));
     assert.equal(slug('Café & Cia. Ltda'), 'cafe-cia-ltda');
   });
 
   test('depoimento e nota do Google só aparecem autorizados, em qualquer modo', () => {
-    const own = {
-      testimonials: [
-        { id: 'cliente-a', authorized: true, quote: 'Caixa sempre igual.', author: 'Cliente A' },
-        { id: 'exemplo-x', demo: true, quote: 'Texto de exemplo.', author: 'Cliente X' },
+    const provas = {
+      depoimentos: [
+        { id: 'cliente-a', autorizado: true, citacao: 'Caixa sempre igual.', autor: 'Cliente A' },
+        { id: 'exemplo-x', autorizado: false, citacao: 'Texto de exemplo.', autor: 'Cliente X' },
       ],
-      googleRating: { value: 4.8, count: 37, url: 'https://g.page/r/exemplo', authorized: true },
+      nota_google: {
+        valor: 4.8,
+        quantidade: 37,
+        url: 'https://g.page/r/exemplo',
+        autorizado: true,
+      },
     };
-    const content = { models, proofs: own };
-    for (const env of [example, REAL]) {
-      const out = renderPage(html, createSiteConfig(env, new Date(), content));
+    for (const [env, content] of [
+      [exampleEnv, { ...baseContent, provas }],
+      [PRODUCTION, realContent({ provas })],
+    ]) {
+      const out = renderPage(html, siteWith({ env, content }));
       assert.ok(out.includes('Caixa sempre igual.'), env.VITE_DATA_MODE);
       assert.ok(!out.includes('Texto de exemplo.'), env.VITE_DATA_MODE);
       assert.ok(out.includes('4,8 de 5 no Google (37 avaliações)'), env.VITE_DATA_MODE);
@@ -530,33 +626,28 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
     assert.ok(renderPage(html, demo).includes('href="#clientes"'));
   });
 
-  test('a nota do Google nunca aparece como exemplo', () => {
-    const content = {
-      models,
-      proofs: {
-        testimonials: [],
-        googleRating: { value: 5, count: 1, url: 'https://g.page/r/x', demo: true },
-      },
+  test('a nota do Google nunca aparece sem autorização', () => {
+    const provas = {
+      depoimentos: [],
+      nota_google: { valor: 5, quantidade: 1, url: 'https://g.page/r/x', autorizado: false },
     };
     assert.ok(
-      !renderPage(html, createSiteConfig(example, new Date(), content)).includes('no Google'),
+      !renderPage(html, siteWith({ content: { ...baseContent, provas } })).includes('no Google'),
     );
   });
 
-  test('todo cliente autorizado do .env e toda prova têm registro em docs/provas; logos só em SVG', () => {
-    const site = createSiteConfig(parseEnv(read('.env')));
-    const items = [
-      ...site.clients.filter((client) => client.authorized),
-      ...proofs.testimonials,
-      ...(proofs.googleRating ? [{ id: 'google', ...proofs.googleRating }] : []),
+  test('todo cliente autorizado e toda prova do conteúdo de verdade têm registro em docs/provas', () => {
+    const { clientes, provas } = baseContent;
+    const autorizados = [
+      ...clientes.clientes.filter((c) => c.autorizado).map((c) => slug(c.nome)),
+      ...provas.depoimentos.filter((d) => d.autorizado).map((d) => d.id),
+      ...(provas.nota_google?.autorizado ? ['google'] : []),
     ];
-    for (const item of items) {
-      assert.equal(item.authorized, true, `${item.id}: sem autorização`);
-      assert.ok(existsSync(`${ROOT}docs/provas/${item.id}.md`), `${item.id}: falta docs/provas`);
+    for (const id of autorizados) {
+      assert.ok(existsSync(`${ROOT}docs/provas/${id}.md`), `${id}: falta docs/provas/${id}.md`);
     }
-    for (const { logo } of site.clients.filter((client) => client.logo)) {
-      assert.match(logo, /^[\w-]+\.svg$/);
-      assert.ok(existsSync(`${ROOT}public/clientes/${logo}`), `${logo} falta em public/clientes`);
+    for (const { logo } of clientes.clientes.filter((c) => c.logo)) {
+      assert.deepEqual(logoProblems(`${ROOT}content`, logo), [], logo);
     }
   });
 

@@ -2,22 +2,22 @@
 // resposta e descrição do processo industrial, em nada que se veja ou que um leitor de tela leia
 // (texto, aria-label, alt, title, metas, JSON-LD e as mensagens prontas do WhatsApp); nem travessão
 // longo ou meio travessão. Renderiza a página e a política de privacidade em demo e em production,
-// com os mesmos helpers do site-config, e confere também o build publicado (o .env de verdade).
+// com os mesmos helpers do site-config, e confere também o build publicado (o content/ de verdade).
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, test } from 'node:test';
-import { parseEnv } from '../build/env.js';
 import { decodeEntities, renderPage } from '../build/render.js';
-import { createSiteConfig } from '../site.config.js';
-import { realEnv } from './real-env.mjs';
+import { baseContent, exampleEnv, realContent, siteWith } from './dados.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const read = (file) => readFileSync(`${ROOT}${file}`, 'utf8');
-const example = parseEnv(read('.env.example'));
 const PAGES = ['index.html', 'politica-de-privacidade.html'];
 const CONFIGS = {
-  demo: createSiteConfig(example),
-  production: createSiteConfig(realEnv(example)),
+  demo: siteWith(),
+  production: siteWith({
+    env: { ...exampleEnv, VITE_DATA_MODE: 'production' },
+    content: realContent(),
+  }),
 };
 
 // Palavras do produto continuam valendo: "Corte e vinco", "com a sua marca impressa", "impressão",
@@ -90,8 +90,30 @@ describe('conteúdo que não pode estar na página', () => {
     }
   }
 
-  test('o build publicado (dados do .env) também está limpo', () => {
+  test('o build publicado (dados de content/) também está limpo', () => {
     for (const page of PAGES) assertClean(read(`dist/${page}`), `dist/${page}`);
+  });
+
+  test('os textos de content/ também estão limpos, antes de virarem página', () => {
+    const texts = [];
+    const collect = (value) => {
+      if (typeof value === 'string') texts.push(value);
+      else if (Array.isArray(value)) value.forEach(collect);
+      else if (value && typeof value === 'object') Object.values(value).forEach(collect);
+    };
+    // o que vira texto da página: tudo menos os dados da empresa (valores) e os de exemplo
+    for (const [name, value] of Object.entries(baseContent)) {
+      if (name !== 'empresa' && name !== 'exemplo') collect(value);
+    }
+    const text = texts.join(' ');
+    for (const [name, pattern] of FORBIDDEN) {
+      const found = pattern.exec(text);
+      assert.equal(
+        found,
+        null,
+        `content/: ${name} em "…${found && text.slice(Math.max(0, found.index - 40), found.index + 40)}…"`,
+      );
+    }
   });
 
   test('o próprio filtro pega cada caso proibido', () => {

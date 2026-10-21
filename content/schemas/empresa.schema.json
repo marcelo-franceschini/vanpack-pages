@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vanpack.local/schemas/empresa.schema.json",
+  "title": "Dados da empresa",
+  "description": "Razão social, contatos, endereço e dados operacionais. Daqui saem o rodapé, os links do WhatsApp, o telefone, o mapa e os dados para o Google. Campo vazio ou apagado: o trecho some da página (nada é inventado).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["whatsapp"],
+  "properties": {
+    "razao_social": {
+      "type": "string",
+      "maxLength": 80,
+      "description": "Razão social, como no CNPJ. Aparece no rodapé, na política de privacidade e no © da página."
+    },
+    "cnpj": {
+      "type": "string",
+      "maxLength": 18,
+      "description": "CNPJ com pontuação: 00.000.000/0001-00."
+    },
+    "whatsapp": {
+      "type": ["string", "integer"],
+      "description": "WhatsApp que recebe os pedidos de orçamento: 55 + DDD + número, só dígitos (ex.: 5511912345678). Obrigatório."
+    },
+    "telefone": {
+      "type": "string",
+      "maxLength": 20,
+      "description": "Telefone para ligações: +55 + DDD + número (ex.: +551147001234). Ponha entre aspas."
+    },
+    "telefone_exibicao": {
+      "type": "string",
+      "maxLength": 20,
+      "description": "Como o telefone aparece na página, ex.: (11) 4700-1234. Vazio: o site formata o telefone sozinho."
+    },
+    "endereco": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Endereço da fábrica.",
+      "properties": {
+        "rua": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "Rua e número."
+        },
+        "bairro": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "cidade": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "uf": {
+          "type": "string",
+          "pattern": "^([A-Za-z]{2})?$",
+          "dica": "use a sigla da UF com duas letras, ex.: SP",
+          "description": "Sigla do estado, ex.: SP."
+        },
+        "cep": {
+          "type": "string",
+          "maxLength": 9,
+          "description": "CEP no formato 01310-100."
+        }
+      }
+    },
+    "horario": {
+      "type": "string",
+      "maxLength": 50,
+      "description": "Horário de atendimento como aparece no rodapé, ex.: Seg a Sex, 8h às 17h."
+    },
+    "horario_schema": {
+      "type": "string",
+      "maxLength": 60,
+      "description": "O mesmo horário no formato do Google (schema.org), ex.: Mo-Fr 08:00-17:00."
+    },
+    "mapa": {
+      "type": "string",
+      "pattern": "^(https://\\S+)?$",
+      "dica": "o link do mapa precisa começar com https://",
+      "maxLength": 300,
+      "description": "Link do Google Maps para o endereço."
+    },
+    "ano_fundacao": {
+      "type": ["integer", "string"],
+      "description": "Ano de fundação, ex.: 2010. O \"N anos de mercado\" da página é calculado a partir dele, sem edição anual."
+    },
+    "pedido_minimo": {
+      "type": ["integer", "string"],
+      "description": "Pedido mínimo, em unidades (só o número)."
+    },
+    "regiao": {
+      "type": "string",
+      "maxLength": 80,
+      "description": "Região atendida, ex.: Santo André, ABC e Grande São Paulo."
+    },
+    "pagamento": {
+      "type": "string",
+      "maxLength": 80,
+      "description": "Formas de pagamento, ex.: Pix, boleto faturado e cartão."
+    }
+  }
+}

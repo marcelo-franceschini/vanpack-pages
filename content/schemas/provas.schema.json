@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vanpack.local/schemas/provas.schema.json",
+  "title": "Prova social",
+  "description": "Depoimentos e nota do Google. Nada entra na página sem autorizado: true e o registro em docs/provas/<id>.md. Hoje não há nenhum.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["depoimentos", "nota_google"],
+  "properties": {
+    "depoimentos": {
+      "type": "array",
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "citacao", "autor", "autorizado"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+            "dica": "o id usa minúsculas, números e hífens (ex.: padaria-real); é o nome do registro em docs/provas/",
+            "description": "Identificador, nome do registro em docs/provas/<id>.md."
+          },
+          "citacao": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240,
+            "description": "O depoimento, exatamente como foi autorizado."
+          },
+          "autor": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "description": "Quem disse, ex.: Fulana, compras, Empresa A."
+          },
+          "autorizado": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "nota_google": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "description": "A nota do Perfil da Empresa no Google (só se for a nota real). null: sem nota.",
+      "required": ["valor", "quantidade", "url", "autorizado"],
+      "properties": {
+        "valor": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Nota de 1 a 5, ex.: 4.8."
+        },
+        "quantidade": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Número de avaliações."
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https://\\S+$",
+          "dica": "o link precisa começar com https://",
+          "description": "Link do Perfil da Empresa."
+        },
+        "autorizado": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

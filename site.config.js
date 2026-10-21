@@ -1,5 +1,6 @@
-// Configuração do site. Todo dado da empresa (CNPJ, telefone, endereço, pedido mínimo…) vive só no
-// `.env`, a fonte única; aqui ficam as constantes da marca e a função que monta a config a partir dele.
+// Configuração do site: junta o conteúdo editável (content/, lido e validado por build/content.js) com o
+// que muda por ambiente (.env: modo, URL do site e medição) e monta tudo o que o build precisa (as
+// variáveis dos textos, a config da medição). Nenhum dado da empresa fica escrito aqui.
 // Valor vazio = sem dado: o trecho correspondente sai do HTML (nada é inventado nem fica vazio).
 import { yearsSince } from './src/years.js';
 
@@ -11,48 +12,60 @@ export const brand = {
     'Fábrica de caixas de papelão ondulado personalizadas: sob medida e com a marca do cliente impressa.',
 };
 
-/**
- * Produtos da seção "O que fabricamos": texto genérico e sem números; o dono confere no go-live
- * (docs/go-live.md). O `id` vira o código de origem do botão ([site-produtos-<id>]) e o `subject`
- * completa a mensagem do WhatsApp ("Olá! Quero um orçamento de <subject>."). O `id` também escolhe
- * o modelo 3D do cartão (src/produtos/modelos.js) e a ilustração (public/produtos/<id>.svg); a `peca`
- * descreve os dois para leitor de tela ("Modelo 3D de <peca> girando").
- */
-export const models = [
-  {
-    id: 'corte-e-vinco',
-    name: 'Corte e vinco',
-    subject: 'caixas com corte e vinco',
-    peca: 'caixa com corte e vinco',
-    text: 'Caixas com corte e vinco sob medida, para encaixe, tampa e formatos especiais.',
-  },
-  {
-    id: 'divisorias',
-    name: 'Divisórias, tabuleiros e separadores',
-    subject: 'divisórias, tabuleiros e separadores',
-    peca: 'divisórias encaixadas num tabuleiro',
-    text: 'Separam, organizam e protegem o que vai dentro da caixa.',
-  },
-  {
-    id: 'chapas',
-    name: 'Chapas de papelão ondulado',
-    subject: 'chapas de papelão ondulado',
-    peca: 'pilha de chapas de papelão ondulado',
-    text: 'Chapas para embalar, proteger e forrar.',
-  },
+/** Ícones dos diferenciais (diferenciais.yaml): cada um é um <symbol id="i-<nome>"> do index.html. */
+export const DIFF_ICONS = ['fabrica', 'lotes', 'conversa', 'caixa'];
+
+/** Variáveis que os textos de content/ e os data-need do HTML podem usar (`{{cidade}}`...). */
+export const VAR_NAMES = [
+  'nome',
+  'slogan',
+  'razao_social',
+  'titular',
+  'cnpj',
+  'rua',
+  'bairro',
+  'cidade',
+  'uf',
+  'cidade_uf',
+  'cep',
+  'telefone',
+  'telefone_exibicao',
+  'whatsapp',
+  'whatsapp_exibicao',
+  'horario',
+  'ano_fundacao',
+  'anos',
+  'ano',
+  'ano_atual',
+  'pedido_minimo',
+  'regiao',
+  'pagamento',
+  'medicao_nome',
+  'sem_medicao',
+  'tem_fatos',
+  'tem_diferenciais',
+  'tem_provas',
+  'tem_confianca',
+  'titulo_pagina',
+  'descricao_pagina',
 ];
 
-/**
- * Depoimentos e nota do Google: nada inventado. Só entra na página o item com `authorized: true` (e
- * registro em docs/provas/<id>.md), em qualquer modo; o JSON-LD nunca leva nota própria. Os clientes
- * da faixa de logos vêm do .env (VITE_CLIENT_<n>_*).
- */
-export const proofs = {
-  testimonials: [], // { id, quote, author, authorized: true }
-  googleRating: null, // { value, count, url, authorized: true }
-};
+/** Variáveis cujo valor já é HTML montado aqui (o número que o navegador recalcula): não são escapadas. */
+export const RICH_VARS = new Set(['anos', 'ano']);
 
-/** Depoimentos e nota do Google que a página mostra: só os autorizados. */
+/** "Café & Cia." → "cafe-cia": o id do cliente, que nomeia o registro em docs/provas/<id>.md. */
+export const slug = (name) =>
+  name
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+
+/**
+ * Depoimentos e nota do Google que a página mostra: só os autorizados (e com registro em
+ * docs/provas/<id>.md). O JSON-LD nunca leva nota própria.
+ */
 export function visibleProofs(items) {
   return {
     testimonials: items.testimonials.filter((item) => item.authorized === true),
@@ -60,24 +73,9 @@ export function visibleProofs(items) {
   };
 }
 
-/** Ícones dos diferenciais (VITE_DIFF_<n>_ICON): cada um é um <symbol id="i-<nome>"> do index.html. */
-export const DIFF_ICONS = ['fabrica', 'lotes', 'conversa', 'caixa'];
-
-/** Quantos diferenciais (VITE_DIFF_1_* a VITE_DIFF_6_*) e clientes (até VITE_CLIENT_12_*) o .env aceita. */
-export const LIMITS = { diffs: 6, clients: 12 };
-
-/** "Café & Cia." → "cafe-cia": o id do cliente, que nomeia o registro em docs/provas/<id>.md. */
-export const slug = (name) =>
-  name
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-
 /**
- * Clientes que a página mostra: em production só os que autorizaram (AUTH=sim); em demo todos, e o
- * não autorizado leva o rótulo "Exemplo".
+ * Clientes que a página mostra: em production só os que autorizaram; em demo todos, e o não autorizado
+ * leva o rótulo "Exemplo".
  */
 export const visibleClients = (clients, dataMode) =>
   clients.filter((client) => client.authorized || dataMode === 'demo');
@@ -106,19 +104,6 @@ function hostOf(url) {
   }
 }
 
-/**
- * Itens numerados do .env (VITE_<prefixo>_<n>_<CAMPO>, de 1 a `max`). Item sem o campo principal
- * (título do diferencial, nome do cliente) não existe.
- */
-function numbered(env, prefix, max, main, read) {
-  const items = [];
-  for (let n = 1; n <= max; n++) {
-    const field = (name) => text(env[`VITE_${prefix}_${n}_${name}`]);
-    if (field(main)) items.push(read(field));
-  }
-  return items;
-}
-
 /** (11) 4700-1234 a partir de +551147001234; vazio se o telefone não tiver o formato do Brasil. */
 function formatPhone(phone) {
   const match = /^\+55(\d{2})(\d{4,5})(\d{4})$/.exec(phone);
@@ -126,65 +111,90 @@ function formatPhone(phone) {
 }
 
 /**
- * Monta a configuração do site a partir das variáveis VITE_* (o objeto que o `loadEnv` do Vite
- * devolve). Pura: não lê `process.env` nem arquivos.
- * @param {Record<string, string | undefined>} env
- * @param {Date} [now] data do build (ano do © e anos de mercado)
+ * Monta a configuração do site. Pura: não lê `process.env` nem arquivos.
+ * @param {object} options
+ * @param {Record<string, string | undefined>} [options.env] variáveis VITE_* do ambiente (modo, URL, medição)
+ * @param {Record<string, any>} options.content o conteúdo de content/ (ver build/content.js)
+ * @param {Date} [options.now] data do build (ano do © e anos de mercado)
+ * @param {typeof experiments} [options.experiments] experimentos A/B
  */
-export function createSiteConfig(
+export function createSiteConfig({
   env = {},
+  content,
   now = new Date(),
-  content = { models, proofs, experiments },
-) {
-  const city = text(env.VITE_CITY);
-  const state = text(env.VITE_STATE);
-  const phone = text(env.VITE_PHONE);
-  const legalName = text(env.VITE_LEGAL_NAME);
-  const whatsapp = text(env.VITE_WHATSAPP).replace(/\D/g, '');
-  const foundedYear = text(env.VITE_FOUNDED_YEAR);
+  experiments: tests = experiments,
+}) {
+  const empresa = content.empresa ?? {};
+  const endereco = empresa.endereco ?? {};
+  const city = text(endereco.cidade);
+  const state = text(endereco.uf);
+  const phone = text(empresa.telefone);
+  const legalName = text(empresa.razao_social);
+  const whatsapp = text(empresa.whatsapp).replace(/\D/g, '');
+  const foundedYear = text(empresa.ano_fundacao);
   const years = yearsSince(foundedYear, now);
   const cityState = city && state ? `${city}-${state}` : city || state;
 
+  const products = content.produtos?.itens ?? [];
   const site = {
     ...brand,
     content,
+    products,
     dataMode: text(env.VITE_DATA_MODE),
     siteUrl: text(env.VITE_SITE_URL),
     whatsapp,
     // como aparece na folha "O WhatsApp não abriu?": (11) 91234-5678
     whatsappDisplay: whatsapp ? formatPhone(`+${whatsapp}`) || `+${whatsapp}` : '',
     phone,
-    phoneDisplay: text(env.VITE_PHONE_DISPLAY) || formatPhone(phone) || phone,
-    cnpj: text(env.VITE_CNPJ),
+    phoneDisplay: text(empresa.telefone_exibicao) || formatPhone(phone) || phone,
+    cnpj: text(empresa.cnpj),
     legalName,
     address: {
-      street: text(env.VITE_STREET),
-      district: text(env.VITE_DISTRICT),
+      street: text(endereco.rua),
+      district: text(endereco.bairro),
       city,
       state,
-      postalCode: text(env.VITE_CEP),
+      postalCode: text(endereco.cep),
       country: 'BR',
     },
     cityState,
-    hours: text(env.VITE_HOURS),
-    hoursSchema: text(env.VITE_HOURS_SCHEMA),
-    mapUrl: text(env.VITE_MAP_URL),
+    hours: text(empresa.horario),
+    hoursSchema: text(empresa.horario_schema),
+    mapUrl: text(empresa.mapa),
     foundedYear,
-    minOrder: text(env.VITE_MIN_ORDER),
-    serviceArea: text(env.VITE_SERVICE_AREA),
-    paymentMethods: text(env.VITE_PAYMENT_METHODS),
+    minOrder: text(empresa.pedido_minimo),
+    serviceArea: text(empresa.regiao),
+    paymentMethods: text(empresa.pagamento),
     // "Por que a Vanpack" e a faixa de logos
-    differentials: numbered(env, 'DIFF', LIMITS.diffs, 'TITLE', (field) => ({
-      title: field('TITLE'),
-      text: field('TEXT'),
-      icon: field('ICON'),
+    differentials: (content.diferenciais?.itens ?? []).map((item) => ({
+      title: text(item.titulo),
+      text: text(item.texto),
+      icon: text(item.icone),
     })),
-    clients: numbered(env, 'CLIENT', LIMITS.clients, 'NAME', (field) => ({
-      id: slug(field('NAME')),
-      name: field('NAME'),
-      logo: field('LOGO'),
-      authorized: field('AUTH').toLowerCase() === 'sim',
+    clients: (content.clientes?.clientes ?? []).map((client) => ({
+      id: slug(text(client.nome)),
+      name: text(client.nome),
+      logo: text(client.logo),
+      alt: text(client.alt),
+      authorized: client.autorizado === true,
+      example: client.exemplo === true,
     })),
+    proofs: {
+      testimonials: (content.provas?.depoimentos ?? []).map((item) => ({
+        id: text(item.id),
+        quote: text(item.citacao),
+        author: text(item.autor),
+        authorized: item.autorizado === true,
+      })),
+      googleRating: content.provas?.nota_google
+        ? {
+            value: content.provas.nota_google.valor,
+            count: content.provas.nota_google.quantidade,
+            url: text(content.provas.nota_google.url),
+            authorized: content.provas.nota_google.autorizado === true,
+          }
+        : null,
+    },
     analytics: {
       provider: text(env.VITE_ANALYTICS_PROVIDER),
       site: text(env.VITE_ANALYTICS_SITE),
@@ -196,8 +206,8 @@ export function createSiteConfig(
 
   // O que vai ao navegador (define __SITE__): a medição só liga na página publicada (o host do site).
   site.client = {
-    experiments: content.experiments ?? {},
-    models: content.models.map(({ id, name }) => ({ id, name })), // assistente de orçamento
+    experiments: tests ?? {},
+    models: products.map(({ id, nome }) => ({ id, name: nome })), // assistente de orçamento
     analytics:
       site.analytics.provider === 'umami'
         ? {
@@ -208,51 +218,61 @@ export function createSiteConfig(
         : null,
   };
 
-  // Variáveis dos {{...}} do HTML. Vazia = o trecho que a usa tem de estar dentro de um elemento com
-  // data-need.
+  // Variáveis dos {{...}} do HTML e dos textos de content/. Vazia = o trecho que a usa tem de estar
+  // dentro de um elemento com data-need (ou de um {{#se}}).
+  const shownProofs = visibleProofs(site.proofs);
+  const shownClients = visibleClients(site.clients, site.dataMode);
   site.vars = {
-    name: site.name,
+    nome: site.name,
     slogan: site.slogan,
-    legalName,
-    holder: legalName || site.name, // titular do ©
+    razao_social: legalName,
+    titular: legalName || site.name, // titular do ©
     cnpj: site.cnpj,
-    street: site.address.street,
-    district: site.address.district,
-    city,
-    state,
-    cityState,
-    postalCode: site.address.postalCode,
-    phoneDisplay: site.phoneDisplay,
-    phone,
+    rua: site.address.street,
+    bairro: site.address.district,
+    cidade: city,
+    uf: state,
+    cidade_uf: cityState,
+    cep: site.address.postalCode,
+    telefone_exibicao: site.phoneDisplay,
+    telefone: phone,
     whatsapp, // folha "O WhatsApp não abriu?": o número para copiar
-    whatsappDisplay: site.whatsappDisplay,
-    hours: site.hours,
-    foundedYear,
-    yearsInBusiness: site.yearsInBusiness,
-    year: site.year,
+    whatsapp_exibicao: site.whatsappDisplay,
+    horario: site.hours,
+    ano_fundacao: foundedYear,
+    // os números que o navegador recalcula (src/main.js lê data-since e data-year)
+    anos: site.yearsInBusiness
+      ? `<span data-since="${foundedYear}">${site.yearsInBusiness}</span>`
+      : '',
+    ano: `<span data-year>${site.year}</span>`,
+    ano_atual: site.year, // o mesmo ano em texto puro, para a página sem script (política de privacidade)
     // política de privacidade: a ferramenta de medição (ou a ausência dela)
-    analyticsName: site.analytics.provider === 'umami' ? 'Umami Cloud' : '',
-    noAnalytics: site.analytics.provider ? '' : 'sim',
+    medicao_nome: site.analytics.provider === 'umami' ? 'Umami Cloud' : '',
+    sem_medicao: site.analytics.provider ? '' : 'sim',
     // seções que só existem se tiverem algo a mostrar
-    hasFacts: site.minOrder || site.serviceArea ? 'sim' : '',
-    hasDiffs: site.differentials.length ? 'sim' : '',
-    hasProofs: (() => {
-      const shown = visibleProofs(content.proofs);
-      const clients = visibleClients(site.clients, site.dataMode);
-      return clients.length || shown.testimonials.length || shown.googleRating ? 'sim' : '';
-    })(),
+    tem_fatos: site.minOrder || site.serviceArea ? 'sim' : '',
+    tem_diferenciais: site.differentials.length ? 'sim' : '',
+    tem_provas:
+      shownClients.length || shownProofs.testimonials.length || shownProofs.googleRating
+        ? 'sim'
+        : '',
     // a faixa de confiança só existe se tiver ao menos um item
-    hasTrust: [cityState, site.cnpj, foundedYear, site.mapUrl, phone, site.paymentMethods].some(
-      Boolean,
-    )
+    tem_confianca: [
+      cityState,
+      site.cnpj,
+      foundedYear,
+      site.mapUrl,
+      phone,
+      site.paymentMethods,
+    ].some(Boolean)
       ? 'sim'
       : '',
-    minOrder: site.minOrder,
-    serviceArea: site.serviceArea,
-    paymentMethods: site.paymentMethods,
+    pedido_minimo: site.minOrder,
+    regiao: site.serviceArea,
+    pagamento: site.paymentMethods,
     // título e descrição da página (title, og e twitter); a cidade entra só se houver
-    title: `Caixas de papelão sob medida com a sua marca | ${site.name}${city ? ` ${city}` : ''}`,
-    description: [
+    titulo_pagina: `Caixas de papelão sob medida com a sua marca | ${site.name}${city ? ` ${city}` : ''}`,
+    descricao_pagina: [
       'Caixas de papelão ondulado sob medida, com a sua marca impressa.',
       cityState && `Fábrica em ${cityState}.`,
       'Peça seu orçamento pelo WhatsApp.',

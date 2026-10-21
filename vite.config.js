@@ -1,7 +1,9 @@
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { basename, join } from 'node:path';
+import { optimize } from 'svgo';
 import { defineConfig, loadEnv } from 'vite';
-import { parseEnv } from './build/env.js';
+import { readContent } from './build/content.js';
 import { contentSecurityPolicy } from './build/csp.js';
 import { robotsTxt, sitemapXml } from './build/files.js';
 import { sharedThree } from './build/three-compartilhado.js';
@@ -10,13 +12,55 @@ import { assertValidSite } from './build/validate.js';
 import { createSiteConfig } from './site.config.js';
 
 /**
- * Escreve os dados da empresa (vindos do `.env` pela site.config.js) no HTML: links do WhatsApp,
- * rodapé, JSON-LD e, em modo demo, o noindex. A lógica está em build/render.js.
+ * Escreve os dados da empresa (de content/, validados) no HTML: links do WhatsApp, rodapé, JSON-LD e,
+ * em modo demo, o noindex. A lógica está em build/render.js. No servidor de desenvolvimento o conteúdo é
+ * relido a cada página (`reload`), e mexer em content/ recarrega o navegador.
  */
-function siteDataPlugin(site) {
+function siteDataPlugin(site, { reload, contentDir } = {}) {
   return {
     name: 'vanpack:site-data',
-    transformIndexHtml: { order: 'post', handler: (html) => renderPage(html, site) },
+    transformIndexHtml: {
+      order: 'post',
+      handler: (html) => renderPage(html, reload ? reload() : site),
+    },
+    configureServer(server) {
+      if (!contentDir) return;
+      server.watcher.add(contentDir);
+      server.watcher.on('change', (file) => {
+        if (file.startsWith(contentDir)) server.ws.send({ type: 'full-reload' });
+      });
+    },
+  };
+}
+
+/**
+ * Os logos dos clientes (content/clientes/*.svg) saem em clientes/<arquivo>, otimizados pelo svgo (o
+ * desenho é o mesmo, o arquivo fica menor). Só os que content/clientes.yaml usa. No desenvolvimento o
+ * arquivo é servido como está.
+ */
+function clientLogosPlugin(site, contentDir) {
+  const logos = [...new Set(site.clients.map((client) => client.logo).filter(Boolean))];
+  return {
+    name: 'vanpack:clientes',
+    generateBundle() {
+      for (const logo of logos) {
+        const source = readFileSync(join(contentDir, 'clientes', logo), 'utf8');
+        const { data } = optimize(source, { multipass: true, plugins: ['preset-default'] });
+        this.emitFile({ type: 'asset', fileName: `clientes/${logo}`, source: data });
+      }
+    },
+    configureServer(server) {
+      server.middlewares.use('/clientes', (req, res, next) => {
+        const file = join(
+          contentDir,
+          'clientes',
+          basename(decodeURIComponent(req.url.split('?')[0])),
+        );
+        if (!file.endsWith('.svg') || !existsSync(file)) return next();
+        res.setHeader('Content-Type', 'image/svg+xml');
+        res.end(readFileSync(file));
+      });
+    },
   };
 }
 
@@ -67,18 +111,34 @@ function cspPlugin(site) {
   };
 }
 
-export default defineConfig(({ mode }) => {
-  // O `.env` é a fonte única dos dados da empresa. O Vite não o copia para o process.env, então o
+export default defineConfig(({ mode, command }) => {
+  const root = process.cwd();
+  // O conteúdo editável vive em content/ (lido e validado aqui, no build); o .env guarda só o que muda
+  // por ambiente (modo, URL do site, medição). O Vite não copia o .env para o process.env, então o
   // loadEnv é a única forma de lê-lo; as variáveis do processo (VITE_*) vencem o arquivo.
-  const env = loadEnv(mode, process.cwd(), 'VITE_');
-  const site = createSiteConfig(env);
+  // VANPACK_CONTENT aponta para outra pasta de conteúdo (os testes usam, para exercitar o production).
+  const env = loadEnv(mode, root, 'VITE_');
+  const contentDir = process.env.VANPACK_CONTENT ?? `${root}/content`;
+  const loadSite = () => {
+    const { content, errors: contentErrors } = readContent(contentDir);
+    const site = createSiteConfig({ env, content });
+    return { site, warnings: assertValidSite({ site, content, contentErrors, root, contentDir }) };
+  };
+  const { site, warnings } = loadSite();
+  for (const warning of warnings) console.warn(`[vanpack] ${warning}`);
   const three = sharedThree();
-  const example = parseEnv(readFileSync(`${process.cwd()}/.env.example`, 'utf8'));
-  for (const warning of assertValidSite({ site, env, example }))
-    console.warn(`[vanpack] ${warning}`);
   return {
     base: './',
-    plugins: [...three.plugins, siteDataPlugin(site), siteFilesPlugin(site), cspPlugin(site)],
+    plugins: [
+      ...three.plugins,
+      siteDataPlugin(
+        site,
+        command === 'serve' ? { reload: () => loadSite().site, contentDir } : {},
+      ),
+      clientLogosPlugin(site, contentDir),
+      siteFilesPlugin(site),
+      cspPlugin(site),
+    ],
     // o que a medição precisa saber no navegador (host da página publicada, servidor e site do Umami)
     define: { __SITE__: JSON.stringify(site.client) },
     // o three.js sai num arquivo só, importado pelos workers e pelo render de reserva

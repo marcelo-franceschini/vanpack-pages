@@ -1,14 +1,13 @@
 // Domínio próprio: canonical, Open Graph, JSON-LD, robots.txt, sitemap.xml e a medição derivam todos da
-// VITE_SITE_URL. O teste faz um build em modo production com dados "reais" e outra URL e confere que
+// VITE_SITE_URL. O teste faz um build em modo production com dados "reais" (uma cópia de content/) e outra URL e confere que
 // nada da URL antiga sobra e que o site fica indexável.
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { before, describe, test } from 'node:test';
 import { build } from 'vite';
-import { parseEnv } from '../build/env.js';
 import { ROOT } from '../scripts/lib.mjs';
-import { realEnv } from './real-env.mjs';
+import { contentCopy, realEmpresa } from './dados.mjs';
 
 const FINAL = 'https://vanpack.com.br/';
 const OLD_HOST = 'marcelo-franceschini.github.io';
@@ -17,8 +16,11 @@ const read = (file) => readFileSync(`${OUT}${file}`, 'utf8');
 
 before(async () => {
   const saved = { ...process.env };
-  const example = parseEnv(readFileSync(`${ROOT}.env.example`, 'utf8'));
-  Object.assign(process.env, realEnv(example), {
+  // production: dados reais de teste e sem os clientes de exemplo, numa cópia de content/
+  const copy = contentCopy({ 'empresa.yaml': realEmpresa, 'clientes.yaml': { clientes: [] } });
+  Object.assign(process.env, {
+    VITE_DATA_MODE: 'production',
+    VANPACK_CONTENT: copy.dir,
     VITE_SITE_URL: FINAL,
     VITE_ANALYTICS_PROVIDER: 'umami',
     VITE_ANALYTICS_SITE: '12345678-1234-4234-8234-123456789abc',
@@ -26,6 +28,7 @@ before(async () => {
   try {
     await build({ root: ROOT, logLevel: 'silent', build: { outDir: 'dist-site' } });
   } finally {
+    copy.remove();
     for (const key of Object.keys(process.env)) if (!(key in saved)) delete process.env[key];
     Object.assign(process.env, saved);
   }

@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=./schemas/empresa.schema.json
+#
+# Dados da empresa. É daqui que saem o rodapé, os links do WhatsApp, o telefone, o mapa e os dados
+# enviados ao Google. Hoje são valores FICTÍCIOS de demonstração; para ir ao ar com dados reais,
+# troque pelos reais e mude VITE_DATA_MODE para production no arquivo .env (passo a passo em
+# docs/go-live.md).
+#
+# Regras para editar:
+#   - Ponha sempre os textos entre aspas, "assim".
+#   - Campo vazio ("") ou apagado: o trecho correspondente some da página. Nada é inventado.
+#   - Em production, o site só publica se os dados obrigatórios estiverem reais e completos.
+
+razao_social: "Vanpack Embalagens Demonstração LTDA"
+cnpj: "00.000.000/0001-00"
+
+# WhatsApp que recebe os pedidos de orçamento: 55 + DDD + número. Obrigatório.
+whatsapp: "5511900000000"
+# Telefone para ligações (+55 + DDD + número) e o texto que aparece na página.
+telefone: "+551130000000"
+telefone_exibicao: "(11) 3000-0000"
+
+endereco:
+  rua: "Rua Exemplo, 123"
+  bairro: "Bairro Demonstração"
+  cidade: "Santo André"
+  uf: "SP"
+  cep: "00000-000"
+
+# O horário como aparece no rodapé e no formato do Google (schema.org).
+horario: "Seg a Sex, 8h às 17h"
+horario_schema: "Mo-Fr 08:00-17:00"
+# Link do Google Maps para o endereço.
+mapa: "https://maps.google.com/?q=Santo+Andre+SP"
+
+# O "N anos de mercado" da página é calculado a partir do ano de fundação.
+ano_fundacao: 2010
+
+# Dados operacionais (aparecem na abertura, em "O que fabricamos" e na faixa de confiança).
+pedido_minimo: 500
+regiao: "Santo André, ABC e Grande São Paulo"
+pagamento: "Pix, boleto faturado e cartão"

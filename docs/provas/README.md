@@ -3,16 +3,16 @@
 Nada de logo de cliente, depoimento ou nota do Google entra no site sem autorização de quem é citado.
 Cada item publicado precisa de um arquivo `docs/provas/<id>.md`; um teste confere.
 
-- **Clientes (faixa de logos):** vêm do `.env`, em `VITE_CLIENT_<n>_NAME`, `VITE_CLIENT_<n>_LOGO` e
-  `VITE_CLIENT_<n>_AUTH` (até 12). Em `production` só aparece o cliente com `AUTH=sim`. O `<id>` é o
-  nome em minúsculas, sem acento e com hífens: `VITE_CLIENT_1_NAME="Padaria Real"` →
+- **Clientes (faixa de logos):** vêm de `content/clientes.yaml` (`nome`, `logo` e `autorizado`, até 12).
+  Em `production` só aparece o cliente com `autorizado: true`, e o build recusa se faltar o registro.
+  O `<id>` é o nome em minúsculas, sem acento e com hífens: `nome: "Padaria Real"` →
   `docs/provas/padaria-real.md`.
-- **Depoimentos e nota do Google:** ficam em `site.config.js` (constante `proofs`), com
-  `authorized: true` e um `id`; o arquivo é `docs/provas/<id>.md` (a nota do Google usa `google`).
+- **Depoimentos e nota do Google:** ficam em `content/provas.yaml`, com `autorizado: true` e um `id`; o
+  arquivo é `docs/provas/<id>.md` (a nota do Google usa `google`).
 
-Em modo demo, os clientes "Cliente 1" a "Cliente 6" do `.env` são exemplos: aparecem com o rótulo
-"Exemplo", sem logo, e o build de `production` recusa se eles sobrarem. Troque-os pelos reais (ou
-apague as linhas) antes do go-live.
+Em modo demo, os clientes "Cliente 1" a "Cliente 6" de `content/clientes.yaml` são exemplos
+(`exemplo: true`): aparecem com o rótulo "Exemplo", sem logo, e o build de `production` recusa se eles
+sobrarem. Troque-os pelos reais (ou apague as linhas) antes do go-live.
 
 ## O que o arquivo registra
 
@@ -34,8 +34,9 @@ apague as linhas) antes do go-live.
 
 ## Logos e nota do Google
 
-- Logos de clientes só em SVG, em `public/clientes/` (o site não aceita imagem raster); o
-  `VITE_CLIENT_<n>_LOGO` leva só o nome do arquivo, ex.: `padaria-real.svg`. Sem logo, a faixa mostra o
-  nome em texto.
-- A nota do Google (`googleRating`) só entra se for a nota real do Perfil da Empresa, com `authorized:
-true`; o JSON-LD nunca leva `aggregateRating` próprio.
+- Logos de clientes só em SVG, em `content/clientes/` (o site não aceita imagem raster; até 20 KB, com
+  `viewBox`, sem script nem imagem embutida); o campo `logo` de `content/clientes.yaml` leva só o nome do
+  arquivo, ex.: `padaria-real.svg`. Sem logo, a faixa mostra o nome em texto. O build otimiza o SVG sem
+  mudar o desenho.
+- A nota do Google (`nota_google`) só entra se for a nota real do Perfil da Empresa, com
+  `autorizado: true`; o JSON-LD nunca leva `aggregateRating` próprio.

@@ -53,23 +53,20 @@ node scripts/produtos-svg.mjs   # regenera as ilustrações dos produtos (public
 
 ## Seções da página
 
-Cabeçalho fixo, a história 3D (`#processo`, com 5 cartões que nunca somem), a faixa de confiança (`#confianca`: cidade, CNPJ, "Nunca pedimos pagamento para conta de pessoa física", anos de mercado, formas de pagamento, mapa e telefone), "O que fabricamos" (`#produtos`: Corte e vinco; Divisórias, tabuleiros e separadores; Chapas de papelão ondulado, cada um com um 3D da peça girando no topo do cartão e o seu botão de orçamento, e pedido mínimo e região; o 3D só é baixado quando a seção chega perto e, em aparelho sem condição, vira uma ilustração em SVG: [`docs/produtos-3d.md`](docs/produtos-3d.md)), os diferenciais (`#diferenciais`, do `.env`), os clientes (`#clientes`: carrossel de logos do `.env` em qualquer largura, uma esteira lenta da direita para a esquerda com botão Pausar/Retomar, setas, teclado e arrasto, que fica parada e centralizada quando os logos cabem na largura; só cliente autorizado em production e exemplos em demo; e depoimentos autorizados), o CTA final (`#orcamento`) e o rodapé. As seções alternam Papel, tint e Floresta, com a onda de papelão como divisor. A página não tem e-mail, prazo, promessa de tempo de resposta nem texto sobre o processo de fabricação (o `tests/conteudo.test.mjs` confere). O botão do WhatsApp fica fixo: no desktop é redondo e aparece depois da história; em telas de até 768 px é uma barra de largura total com o telefone, que aparece já no 2º capítulo (o botão do cabeçalho sai enquanto ela está à vista); os dois somem com o CTA final à vista. Se a página continua à vista 2,5 s depois do toque num botão do WhatsApp, sobe a folha "O WhatsApp não abriu?" (`#zap-ajuda`): copiar o número, ligar e, dentro do Instagram, Facebook ou TikTok, como abrir no navegador. Cada seção sem dado (e o link para ela) some sozinha.
+Cabeçalho fixo, a história 3D (`#processo`, com 5 cartões que nunca somem), a faixa de confiança (`#confianca`: cidade, CNPJ, "Nunca pedimos pagamento para conta de pessoa física", anos de mercado, formas de pagamento, mapa e telefone), "O que fabricamos" (`#produtos`: Corte e vinco; Divisórias, tabuleiros e separadores; Chapas de papelão ondulado, cada um com um 3D da peça girando no topo do cartão e o seu botão de orçamento, e pedido mínimo e região; o 3D só é baixado quando a seção chega perto e, em aparelho sem condição, vira uma ilustração em SVG: [`docs/produtos-3d.md`](docs/produtos-3d.md)), os diferenciais (`#diferenciais`, de `content/diferenciais.yaml`), os clientes (`#clientes`: carrossel de logos de `content/clientes.yaml` em qualquer largura, uma esteira lenta da direita para a esquerda com botão Pausar/Retomar, setas, teclado e arrasto, que fica parada e centralizada quando os logos cabem na largura; só cliente autorizado em production e exemplos em demo; e depoimentos autorizados), o CTA final (`#orcamento`) e o rodapé. As seções alternam Papel, tint e Floresta, com a onda de papelão como divisor. A página não tem e-mail, prazo, promessa de tempo de resposta nem texto sobre o processo de fabricação (o `tests/conteudo.test.mjs` confere). O botão do WhatsApp fica fixo: no desktop é redondo e aparece depois da história; em telas de até 768 px é uma barra de largura total com o telefone, que aparece já no 2º capítulo (o botão do cabeçalho sai enquanto ela está à vista); os dois somem com o CTA final à vista. Se a página continua à vista 2,5 s depois do toque num botão do WhatsApp, sobe a folha "O WhatsApp não abriu?" (`#zap-ajuda`): copiar o número, ligar e, dentro do Instagram, Facebook ou TikTok, como abrir no navegador. Cada seção sem dado (e o link para ela) some sozinha.
 
 ---
 
-## Dados da empresa (`.env`)
+## Conteúdo e dados (`content/` e `.env`)
 
-Todo dado da empresa (CNPJ, telefone, WhatsApp, endereço, pedido mínimo, diferenciais, clientes…) vive só no `.env`, que é versionado: a fonte única do rodapé, do JSON-LD, dos links do WhatsApp, do `robots.txt` e do `sitemap.xml`. O [`.env.example`](.env.example) guarda os valores fictícios de demonstração e comenta cada chave; [`docs/go-live.md`](docs/go-live.md) explica como trocar tudo pelos dados reais editando **só o `.env`**. O que não tem dado **não aparece** no HTML (nada de valor de exemplo), e nenhum desses dados é escrito à mão no código (um teste confere).
+Os dados da empresa e os textos editáveis do site vivem na pasta [`content/`](content/): arquivos YAML pequenos, um por assunto, cada um com o seu JSON Schema em `content/schemas/` (o editor sublinha o erro e autocompleta). O `.env` guarda só o que muda por ambiente. [`docs/go-live.md`](docs/go-live.md) explica como trocar tudo pelos dados reais. O que não tem dado **não aparece** no HTML (nada de valor de exemplo), e nenhum desses dados é escrito à mão no código (um teste confere).
 
-- `VITE_DATA_MODE`: `demo` (dados fictícios: o HTML sai com `noindex` e o `robots.txt` bloqueia tudo) ou `production` (o build falha se faltar dado obrigatório, se o formato for inválido ou se sobrar valor fictício do `.env.example`; outro valor também falha).
-- `VITE_WHATSAPP` (obrigatório nos dois modos: `55` + DDD + número, ex.: `5511912345678`; o build nunca gera `wa.me/?text=…` sem número), `VITE_SITE_URL` (termina em `/`: canonical, Open Graph, JSON-LD, robots e sitemap).
-- Contato e endereço: `VITE_PHONE`, `VITE_PHONE_DISPLAY`, `VITE_CNPJ`, `VITE_LEGAL_NAME`, `VITE_STREET`, `VITE_DISTRICT`, `VITE_CITY`, `VITE_STATE`, `VITE_CEP`, `VITE_HOURS`, `VITE_HOURS_SCHEMA`, `VITE_MAP_URL`.
-- `VITE_FOUNDED_YEAR`: o "N anos de mercado" e o © são calculados dele (no build e de novo no navegador), então não precisam de edição anual.
-- Operacionais: `VITE_MIN_ORDER`, `VITE_SERVICE_AREA`, `VITE_PAYMENT_METHODS`.
-- Diferenciais e clientes, em chaves numeradas: `VITE_DIFF_<n>_TITLE`, `_TEXT` e `_ICON` (até 6; ícone `fabrica`, `lotes`, `conversa` ou `caixa`) e `VITE_CLIENT_<n>_NAME`, `_LOGO` (arquivo SVG em `public/clientes/`) e `_AUTH` (até 12; em production só aparece o cliente com `AUTH=sim`, que precisa de registro em [`docs/provas/`](docs/provas/README.md)). Item sem título ou sem nome some; seção sem item some.
-- Medição sem cookies: `VITE_ANALYTICS_PROVIDER` (`umami` ou vazio), `VITE_ANALYTICS_SITE` e `VITE_ANALYTICS_ENDPOINT`.
+- `content/empresa.yaml`: razão social, CNPJ, WhatsApp, telefone, endereço, horário, mapa, ano de fundação (o "N anos de mercado" e o © são calculados dele, no build e de novo no navegador, então não precisam de edição anual), pedido mínimo, região e formas de pagamento. É a fonte única do rodapé, do JSON-LD, dos links do WhatsApp, do `robots.txt` e do `sitemap.xml`. O WhatsApp é obrigatório nos dois modos (`55` + DDD + número); o build nunca gera `wa.me/?text=…` sem número.
+- `content/produtos.yaml`, `diferenciais.yaml` (até 6; ícone `fabrica`, `lotes`, `conversa` ou `caixa`), `clientes.yaml` e `clientes/` (até 12; logo só em SVG, até 20 KB, que o build otimiza com o svgo; em production só aparece o cliente com `autorizado: true`, que precisa de registro em [`docs/provas/`](docs/provas/README.md)) e `provas.yaml` (depoimentos e nota do Google, só autorizados). Seção sem item some, junto com o link para ela.
+- `content/exemplo/empresa.yaml`: os valores fictícios de referência. Em production o build recusa um valor de `empresa.yaml` que ainda seja igual ao daqui (cidade, UF e ano de fundação ficam de fora: já são reais).
+- `.env`: `VITE_DATA_MODE` (`demo`: dados fictícios, o HTML sai com `noindex` e o `robots.txt` bloqueia tudo; `production`: o build falha se faltar dado obrigatório, se o formato for inválido, se sobrar valor fictício ou cliente de exemplo), `VITE_SITE_URL` (termina em `/`: canonical, Open Graph, JSON-LD, robots e sitemap) e a medição sem cookies: `VITE_ANALYTICS_PROVIDER` (`umami` ou vazio), `VITE_ANALYTICS_SITE` e `VITE_ANALYTICS_ENDPOINT`. O [`.env.example`](.env.example) comenta cada chave.
 
-No build, o `site.config.js` monta a config a partir do `.env` (`createSiteConfig`), o `build/validate.js` confere a trava de go-live, o `build/render.js` escreve os dados no HTML (links `wa.me`, campos `data-field` do rodapé, trechos `data-need` e o texto alternativo `data-need="!chave"`, `{{variáveis}}`, produtos, diferenciais, clientes, JSON-LD e o `noindex` em demo) e o `build/files.js` gera `robots.txt` e `sitemap.xml`. `{{variável}}` vazia fora de um `data-need` é erro de build.
+No build, o `build/content.js` lê e valida `content/` contra os schemas (erro em português, com arquivo, linha e campo), o `site.config.js` monta a config (`createSiteConfig`), o `build/validate.js` confere a trava de go-live, o `build/render.js` escreve os dados no HTML (links `wa.me`, campos `data-field` do rodapé, trechos `data-need` e o texto alternativo `data-need="!chave"`, `{{variáveis}}`, produtos, diferenciais, clientes, JSON-LD e o `noindex` em demo) e o `build/files.js` gera `robots.txt` e `sitemap.xml`. `{{variável}}` vazia fora de um `data-need` é erro de build. Tudo isso roda só no build: o navegador recebe o mesmo HTML estático, sem YAML, sem validador e sem `fetch`.
 
 ---
 
@@ -96,11 +93,14 @@ A cada push na `master`, o workflow [`deploy.yml`](.github/workflows/deploy.yml)
 
 ```text
 index.html                 Página única: CSS inline (tokens da marca), HTML e metadados
-site.config.js             Marca, produtos, provas e createSiteConfig(env): monta a config do .env
+site.config.js             Marca, variáveis dos textos e createSiteConfig({ env, content }): monta a config
+content/                   Dados da empresa e textos editáveis (YAML + JSON Schema em content/schemas/)
+build/content.js           Lê e valida content/ (erros em português, com arquivo, linha e campo)
+build/texto.js             Linguagem dos textos: {{variável}} e {{#se}}...{{/se}}
 build/render.js            Escreve os dados no HTML (WhatsApp, rodapé, {{variáveis}}, diferenciais, clientes, JSON-LD)
 build/validate.js          Trava de go-live: demo × production
 build/files.js             robots.txt e sitemap.xml gerados da URL do site
-build/env.js               Leitor de .env fora do Vite (o .env.example)
+build/env.js               Leitor de .env fora do Vite (os testes comparam o .env com o .env.example)
 vite.config.js             Plugins: dados no HTML, robots/sitemap e CSP por hash dos <style>
 src/years.js               Anos de mercado e ano do © (build e navegador)
 src/main.js                Orquestra: história ↔ cena, tour automático, medição de uso
@@ -114,7 +114,7 @@ src/handoff.js             "O WhatsApp não abriu?": folha de ajuda e navegador 
 src/carrossel.js           Carrossel de clientes: esteira na Web Animations API, pausa, setas, teclado e arrasto
 src/produtos/              3D de cada produto: gatilho (JS inicial), montagem na página, worker com um WebGL só e os 3 modelos
 build/csp.js               CSP por hash dos <style> (e o servidor da medição, se houver)
-politica-de-privacidade.html  2ª página: política de privacidade com os dados do .env
+politica-de-privacidade.html  2ª página: política de privacidade com os dados de content/
 src/render/stage.js        Liga o canvas ao render: Web Worker (OffscreenCanvas) ou thread principal
 src/render/worker.js       Ponto de entrada do worker
 src/render/controller.js   Loop de render sob demanda, suavização, qualidade adaptativa, contexto perdido
@@ -144,10 +144,11 @@ docs/                      Manual da marca e notas da v4
 - `tests/handoff.test.mjs`: folha "O WhatsApp não abriu?" (sobe em 2,5 s com a página à vista, não sobe se o app abre, fecha sozinha se ele abre depois, Esc, "Fechar", Ctrl+clique e copiar número) e navegador embutido (user agent, código `[site-hero-ig]` e a instrução). Usa o relógio falso do Playwright.
 - `tests/trust.test.mjs`: faixa de confiança (com a regra do pagamento) e anos de mercado/© recalculados no navegador (relógio em 2031).
 - `tests/analytics.test.mjs`: eventos no Umami (interceptado, nenhum tráfego real), resumo da visita, sem cookie nem storage e nada enviado fora do host do site.
-- `tests/site-config.test.mjs`: config, trava de go-live (demo × production), render com a config vazia, os 5 cartões com qualquer config, produtos, diferenciais e clientes do `.env`, JSON-LD, robots e sitemap; puro, sem navegador.
+- `tests/site-config.test.mjs`: config, trava de go-live (demo × production), render com a config vazia, os 5 cartões com qualquer config, produtos, diferenciais e clientes de `content/`, logos e registros de autorização, JSON-LD, robots e sitemap; puro, sem navegador.
 - `tests/conteudo.test.mjs`: nada de e-mail, prazo, promessa de tempo de resposta, texto de processo industrial ou travessão no que a página mostra ou faz um leitor de tela ler (texto, aria-label, alt, title, metas, JSON-LD e mensagens do WhatsApp), em demo, em production e no build publicado; puro.
 - `tests/trava-3d.test.mjs`: o 3D principal é intocável: compara o sha256 de `src/scene/`, `src/render/` e `tests/scene.test.mjs` com `tests/fixtures/3d-lock.json`.
-- `tests/data-source.test.mjs`: nenhum dado do `.env` escrito à mão no código, o `.env` chega à página publicada e todo número visível vem da config.
+- `tests/data-source.test.mjs`: nenhum dado de `content/empresa.yaml` escrito à mão no código, o conteúdo chega à página publicada, todo número visível vem de `content/` e o `.env` guarda só o que muda por ambiente.
+- `tests/content.test.mjs` e `tests/texto.test.mjs`: o carregador de `content/` (YAML mal formado, campo que falta ou não existe, tipo errado, tamanho, lista, valor fora da lista, travessão, variável inexistente: cada um vira mensagem em português com arquivo, linha e campo) e a linguagem dos textos.
 - `tests/site-url.test.mjs`: build em production com domínio próprio: canonical, Open Graph, JSON-LD, robots, sitemap e medição derivam todos da `VITE_SITE_URL`.
 - `tests/experiments.test.mjs` e `tests/wizard.test.mjs`: sorteio, persistência, data de término e variante forçada; o assistente de 3 passos (mensagem, validação, teclado, rótulos, contraste e celular).
 - `tests/tour.test.mjs`: início automático, percurso e parada no fim da história, interrupções (roda, tecla, clique, toque, scroll, aba oculta e o link "Ver produtos ↓"), `?tour=0`, `#hash`, movimento reduzido e, no celular, o pulso da barra no fim. Usa o relógio falso do Playwright.
@@ -166,6 +167,6 @@ docs/                      Manual da marca e notas da v4
 ## Marca, produto e segurança
 
 - Cores: só Floresta, Carvão, Papel e Kraft (o Kraft é o material, nunca texto ou botão); só Archivo; logotipo sempre em curvas, em negativo sobre Floresta, com respiro de ¼ do símbolo.
-- Sem imagem raster (nenhuma foto: só SVG; logos de clientes também só em SVG), sem formulário, sem números ou alegações inventados. Logo de cliente (do `.env`, com `AUTH=sim`), depoimento e nota do Google só com autorização registrada em [`docs/provas/`](docs/provas/README.md); em demo, os clientes de exemplo levam o rótulo "Exemplo".
+- Sem imagem raster (nenhuma foto: só SVG; logos de clientes também só em SVG), sem formulário, sem números ou alegações inventados. Logo de cliente (de `content/clientes.yaml`, com `autorizado: true`), depoimento e nota do Google só com autorização registrada em [`docs/provas/`](docs/provas/README.md); em demo, os clientes de exemplo levam o rótulo "Exemplo".
 - Sem PWA: sem manifest, sem service worker e sem instalação como app (decisão do dono: é uma landing de um só objetivo). Ficam `theme-color`, os favicons, o `apple-touch-icon` e o `icon-512.png`, que o JSON-LD usa como logo.
 - CSP por `<meta>` com hash de cada `<style>` (`script-src 'self'`, sem CDN, sem `eval`); o único domínio externo é o servidor da medição (Umami), e só com provedor configurado; links externos com `rel="noopener"`.
