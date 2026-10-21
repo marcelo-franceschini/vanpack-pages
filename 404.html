@@ -3,9 +3,9 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Página não encontrada | Vanpack</title>
+    <title>{{site.nao_encontrada.titulo_aba}}</title>
     <meta name="robots" content="noindex" />
-    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <style>
       :root {
         --floresta: #14513a;
@@ -86,7 +86,7 @@
   </head>
   <body>
     <div class="card">
-      <a class="logo" href="./" aria-label="Vanpack · início">
+      <a class="logo" href="%VITE_SITE_URL%" aria-label="{{nome}} · início">
         <svg viewBox="0 0 400 100" fill="currentColor">
           <rect
             x="3.5"
@@ -130,9 +130,9 @@
           </g>
         </svg>
       </a>
-      <h1>Página não encontrada</h1>
-      <p>O link que você tentou acessar não existe ou mudou de endereço.</p>
-      <a class="btn" href="./">Voltar para o início</a>
+      <h1>{{site.nao_encontrada.titulo}}</h1>
+      <p>{{site.nao_encontrada.texto}}</p>
+      <a class="btn" href="%VITE_SITE_URL%">{{site.nao_encontrada.voltar}}</a>
     </div>
   </body>
 </html>

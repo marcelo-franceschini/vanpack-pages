@@ -102,17 +102,25 @@ async function capture(browser, url, screen) {
   shots.set(`${name}-altura.txt`, Buffer.from(`${height}\n`));
   await context.close();
 
-  const privacy = await openPage(
-    browser,
-    url,
-    { reducedMotion: 'reduce', ...device },
-    { waitFor: 'none' },
-  );
-  await privacy.page.goto(`${url}politica-de-privacidade.html`);
-  await privacy.page.waitForTimeout(500);
-  shots.set(`${name}-privacidade.png`, await privacy.page.screenshot({ fullPage: true }));
-  await privacy.context.close();
-  return { shots, problems: [...problems, ...privacy.problems] };
+  // as outras páginas (política de privacidade e 404), inteiras
+  const extra = [];
+  for (const [label, file] of [
+    ['privacidade', 'politica-de-privacidade.html'],
+    ['404', '404.html'],
+  ]) {
+    const other = await openPage(
+      browser,
+      url,
+      { reducedMotion: 'reduce', ...device },
+      { waitFor: 'none' },
+    );
+    await other.page.goto(`${url}${file}`);
+    await other.page.waitForTimeout(500);
+    shots.set(`${name}-${label}.png`, await other.page.screenshot({ fullPage: true }));
+    extra.push(...other.problems);
+    await other.context.close();
+  }
+  return { shots, problems: [...problems, ...extra] };
 }
 
 /** Pixels que mudaram, quantos passam da tolerância e a maior diferença de canal, contados no navegador. */
@@ -208,7 +216,7 @@ const canonicalHtml = (page, source) =>
     return lines;
   }, source);
 
-const PAGES = ['index.html', 'politica-de-privacidade.html'];
+const PAGES = ['index.html', 'politica-de-privacidade.html', '404.html'];
 const FILES = ['robots.txt', 'sitemap.xml'];
 
 /** Compara a estrutura das páginas e os arquivos de texto; devolve as diferenças, uma por linha. */

@@ -156,6 +156,14 @@ describe('nenhum texto de negócio escrito à mão', () => {
     }
   });
 
+  test('a página 404 renderizada também só tem texto de content/', () => {
+    const page = shown(renderPage(readFileSync(`${ROOT}404.html`, 'utf8'), site), data);
+    assert.ok(!letters.test(page.text), `texto fixo na 404: "${page.text}"`);
+    for (const value of page.attributes) {
+      assert.ok(!letters.test(value), `atributo com texto fixo: "${value}"`);
+    }
+  });
+
   test('o teste enxerga um texto escrito à mão (se não, ele não prova nada)', () => {
     const template = readFileSync(`${ROOT}index.html`, 'utf8').replace(
       '<h1>{{historia.hero.titulo}}</h1>',
@@ -171,8 +179,8 @@ describe('nenhum texto de negócio escrito à mão', () => {
     assert.ok(shown(renderPage(attribute, site), data).attributes.some((v) => /Pedir já/.test(v)));
   });
 
-  test('todo marcador de content/ aparece em algum lugar das duas páginas (nenhum texto fica sem uso)', () => {
-    const pages = ['index.html', 'politica-de-privacidade.html'].map((file) =>
+  test('todo marcador de content/ aparece em algum lugar das três páginas (nenhum texto fica sem uso)', () => {
+    const pages = ['index.html', 'politica-de-privacidade.html', '404.html'].map((file) =>
       renderPage(readFileSync(`${ROOT}${file}`, 'utf8'), site),
     );
     // as mensagens do WhatsApp vão codificadas no link

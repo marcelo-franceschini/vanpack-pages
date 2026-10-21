@@ -357,7 +357,7 @@ export function renderPage(html, site) {
   out = dropDeadAnchors(out);
   // <dl> sem nenhum campo (nada a mostrar) não fica vazio na página
   out = out.replace(/<dl class="foot-info">\s*<\/dl>\s*/, '');
-  if (site.dataMode === 'demo') {
+  if (site.dataMode === 'demo' && !/<meta\s+name="robots"/.test(out)) {
     out = out.replace(
       /<meta charset="utf-8"\s*\/?>/i,
       (meta) => `${meta}\n<meta name="robots" content="noindex,nofollow" />`,

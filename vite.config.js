@@ -147,9 +147,13 @@ export default defineConfig(({ mode, command }) => {
     // (build/three-compartilhado.js)
     worker: { format: 'es', plugins: three.workerPlugins },
     build: {
-      // duas páginas: a principal e a política de privacidade (que também recebe os dados do .env)
+      // três páginas: a principal, a política de privacidade e a 404 (todas recebem o conteúdo de content/)
       rolldownOptions: {
-        input: { index: 'index.html', privacidade: 'politica-de-privacidade.html' },
+        input: {
+          index: 'index.html',
+          privacidade: 'politica-de-privacidade.html',
+          naoEncontrada: '404.html',
+        },
       },
       modulePreload: { polyfill: false },
       // O three.js fica no seu próprio arquivo (~520 kB, ~130 kB gzip), de propósito.

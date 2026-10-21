@@ -5,7 +5,7 @@
   "description": "Nome da marca, título e descrição da página e links do menu.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["nome", "slogan", "descricao", "pagina", "menu", "privacidade"],
+  "required": ["nome", "slogan", "descricao", "pagina", "menu", "privacidade", "nao_encontrada"],
   "properties": {
     "nome": {
       "type": "string",
@@ -112,6 +112,38 @@
           "minLength": 1,
           "maxLength": 40,
           "description": "Link para voltar ao site, no topo da página."
+        }
+      }
+    },
+    "nao_encontrada": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["titulo_aba", "titulo", "texto", "voltar"],
+      "description": "A página 404, que aparece quando o endereço digitado não existe.",
+      "properties": {
+        "titulo_aba": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Título na aba do navegador."
+        },
+        "titulo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "description": "Título da página."
+        },
+        "texto": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Frase abaixo do título."
+        },
+        "voltar": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "description": "Texto do botão que volta ao início."
         }
       }
     }

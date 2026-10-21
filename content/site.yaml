@@ -23,3 +23,8 @@ privacidade:
   titulo: "Política de privacidade | {{nome}}"
   descricao: "Como o site da {{titular}} trata dados: sem cookies, sem formulário e com medição anônima."
   voltar: "Voltar ao site"
+nao_encontrada:
+  titulo_aba: "Página não encontrada | {{nome}}"
+  titulo: "Página não encontrada"
+  texto: "O link que você tentou acessar não existe ou mudou de endereço."
+  voltar: "Voltar para o início"
