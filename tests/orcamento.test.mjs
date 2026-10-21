@@ -3,6 +3,8 @@
 // Os tetos partem da linha de base de 20/10/2026 com uma folga curta (editar um texto da página
 // mexe em alguns bytes do HTML) e só DESCEM: cada ganho de performance baixa o teto correspondente.
 // Subir um teto, ou dar teto a um arquivo novo maior, é decisão do dono e vai no PR com a medição.
+// Histórico: com o three.js num arquivo só (em vez de uma cópia em cada worker) a visita completa
+// caiu de 321,3 para 199,5 KB, e a abertura subiu 3,9 KB (146,9 contra 142,9 KB de JS inicial).
 // O teto antigo de 165 KB de JS inicial (npm run audit:bundle) continua valendo.
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
@@ -16,9 +18,10 @@ const KB = 1024;
 // Cada arquivo de assets/ tem o prefixo do nome sem o hash (index-BsPmJb_d.js → index).
 const JS = {
   index: 8.5, // o script da página (sem o three.js)
-  worker: 135.5, // three.js e a cena da história, no Web Worker
-  controller: 135, // o mesmo render, só se o worker falhar (thread principal)
-  'produtos-worker': 133.5, // three.js e a vitrine dos produtos, baixados perto da seção
+  worker: 11.9, // a cena da história, no Web Worker (o three.js vem do arquivo three)
+  three: 128, // o three.js, num arquivo só para os dois workers e o render de reserva
+  controller: 12, // o mesmo render da história, só se o worker falhar (thread principal)
+  'produtos-worker': 7.5, // a vitrine dos produtos, baixada perto da seção
   montar: 1.7, // montagem do 3D dos produtos
   'web-vitals': 3.3,
   wizard: 2.4, // assistente do experimento (só na variante B)
@@ -34,9 +37,9 @@ const FILES = {
 };
 const SVG_TOTAL = 14; // todos os SVGs de brand/ e produtos/
 const TOTAL = {
-  jsInicial: 143.5, // script da página + worker da história
-  carga: 187, // HTML + JS inicial + fonte + os 2 logos do topo e da cena
-  visita: 322.5, // a carga + o 3D dos produtos + o logo do CTA final
+  jsInicial: 147.5, // script da página + worker da história + three.js
+  carga: 190.5, // HTML + JS inicial + fonte + os 2 logos do topo e da cena
+  visita: 200.5, // a carga + o 3D dos produtos + o logo do CTA final
 };
 
 const built = existsSync(`${DIST}index.html`);
@@ -85,7 +88,7 @@ describe('orçamento de bytes', { skip: !built && 'sem dist/: rode `npm run buil
   });
 
   test('o que o visitante baixa: JS inicial, carga inicial e visita completa', () => {
-    const jsInicial = bytes.index + bytes.worker;
+    const jsInicial = bytes.index + bytes.worker + bytes.three;
     const carga =
       gzip('index.html') +
       jsInicial +

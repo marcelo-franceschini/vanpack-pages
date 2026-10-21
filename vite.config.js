@@ -4,6 +4,7 @@ import { defineConfig, loadEnv } from 'vite';
 import { parseEnv } from './build/env.js';
 import { contentSecurityPolicy } from './build/csp.js';
 import { robotsTxt, sitemapXml } from './build/files.js';
+import { sharedThree } from './build/three-compartilhado.js';
 import { renderPage } from './build/render.js';
 import { assertValidSite } from './build/validate.js';
 import { createSiteConfig } from './site.config.js';
@@ -71,22 +72,25 @@ export default defineConfig(({ mode }) => {
   // loadEnv é a única forma de lê-lo; as variáveis do processo (VITE_*) vencem o arquivo.
   const env = loadEnv(mode, process.cwd(), 'VITE_');
   const site = createSiteConfig(env);
+  const three = sharedThree();
   const example = parseEnv(readFileSync(`${process.cwd()}/.env.example`, 'utf8'));
   for (const warning of assertValidSite({ site, env, example }))
     console.warn(`[vanpack] ${warning}`);
   return {
     base: './',
-    plugins: [siteDataPlugin(site), siteFilesPlugin(site), cspPlugin(site)],
+    plugins: [...three.plugins, siteDataPlugin(site), siteFilesPlugin(site), cspPlugin(site)],
     // o que a medição precisa saber no navegador (host da página publicada, servidor e site do Umami)
     define: { __SITE__: JSON.stringify(site.client) },
-    worker: { format: 'es' },
+    // o three.js sai num arquivo só, importado pelos workers e pelo render de reserva
+    // (build/three-compartilhado.js)
+    worker: { format: 'es', plugins: three.workerPlugins },
     build: {
       // duas páginas: a principal e a política de privacidade (que também recebe os dados do .env)
       rolldownOptions: {
         input: { index: 'index.html', privacidade: 'politica-de-privacidade.html' },
       },
       modulePreload: { polyfill: false },
-      // O three.js vai inteiro no chunk do worker (~570 kB, ~150 kB gzip), de propósito.
+      // O three.js fica no seu próprio arquivo (~520 kB, ~130 kB gzip), de propósito.
       chunkSizeWarningLimit: 700,
     },
   };
