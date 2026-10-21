@@ -1,0 +1,13 @@
+Copyright (c) 2026 Vanpack. Todos os direitos reservados.
+
+O código-fonte, os textos, a marca (nome, símbolo, logotipo e cores), os desenhos e os dados deste
+repositório pertencem à Vanpack. Nenhuma parte pode ser copiada, modificada, distribuída ou usada em
+outro projeto sem autorização prévia e por escrito da Vanpack. O repositório é público apenas para
+que o site seja publicado no GitHub Pages; isso não concede licença de uso.
+
+Exceções, que seguem as licenças próprias:
+
+- A fonte Archivo (public/fonts/) é distribuída sob a SIL Open Font License 1.1; o texto da licença
+  está em public/fonts/OFL-Archivo.txt.
+- As dependências listadas em package.json seguem as licenças dos seus autores (licenças de código
+  aberto) e não fazem parte do que é reservado acima.

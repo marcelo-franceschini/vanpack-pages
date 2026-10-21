@@ -40,6 +40,7 @@ export function montarProdutos(areas) {
     devicePixelRatio || 1,
     matchMedia(MOBILE).matches ? MAX_DENSITY.mobile : MAX_DENSITY.desktop,
   );
+  /** @type {any} */
   const audit =
     import.meta.env.MODE === 'audit'
       ? ((window.__audit ??= {}).produtos = { frames: 0, stats: {}, memory: null, workers: 0 })
@@ -54,6 +55,7 @@ export function montarProdutos(areas) {
     width: 0,
     height: 0,
   }));
+  /** @type {Map<Element, (typeof cards)[number]>} */
   const byArea = new Map(cards.map((card) => [card.area, card]));
   let worker = null;
   let failed = false;

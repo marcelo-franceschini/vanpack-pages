@@ -1,12 +1,12 @@
 // Faixa de confiança (#confianca) e textos que dependem da data: os anos de mercado e o © são
-// calculados do ano de fundação do .env e recalculados no navegador, então viram o ano sozinhos.
+// calculados do ano de fundação de content/empresa.yaml e recalculados no navegador, então viram o ano sozinhos.
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
-import { loadEnv } from 'vite';
-import { ROOT, launch, openPage, startServer } from '../scripts/lib.mjs';
+import { launch, openPage, startServer } from '../scripts/lib.mjs';
+import { baseContent } from './dados.mjs';
 
-const env = loadEnv('production', ROOT, 'VITE_');
-const founded = Number(env.VITE_FOUNDED_YEAR);
+const empresa = baseContent.empresa;
+const founded = Number(empresa.ano_fundacao);
 
 let server;
 let browser;
@@ -34,16 +34,16 @@ describe('faixa de confiança', () => {
     });
     const years = new Date().getFullYear() - founded;
     assert.ok(
-      strip.text.includes(`Fábrica própria em ${env.VITE_CITY}-${env.VITE_STATE}`),
+      strip.text.includes(`Fábrica própria em ${empresa.endereco.cidade}-${empresa.endereco.uf}`),
       strip.text,
     );
-    assert.ok(strip.text.includes(`CNPJ ${env.VITE_CNPJ}`), strip.text);
+    assert.ok(strip.text.includes(`CNPJ ${empresa.cnpj}`), strip.text);
     assert.ok(strip.text.includes(`${years} anos de mercado`), strip.text);
     assert.ok(strip.text.includes('Nunca pedimos pagamento para conta de pessoa física'));
-    if (env.VITE_PAYMENT_METHODS) {
-      assert.ok(strip.text.includes(`Pagamento: ${env.VITE_PAYMENT_METHODS}`), strip.text);
+    if (empresa.pagamento) {
+      assert.ok(strip.text.includes(`Pagamento: ${empresa.pagamento}`), strip.text);
     }
-    for (const href of [`tel:${env.VITE_PHONE}`, env.VITE_MAP_URL]) {
+    for (const href of [`tel:${empresa.telefone}`, empresa.mapa]) {
       assert.ok(strip.hrefs.includes(href), `${href} falta nos links: ${strip.hrefs}`);
     }
     assert.ok(!strip.hrefs.some((href) => href.startsWith('mailto:')), 'sem e-mail');

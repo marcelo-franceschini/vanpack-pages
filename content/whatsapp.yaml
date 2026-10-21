@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=./schemas/whatsapp.schema.json
+#
+# As mensagens prontas e os textos dos botões do WhatsApp, e a folha "O WhatsApp não abriu?". O número
+# do WhatsApp fica em content/empresa.yaml. As chaves de "mensagens" são os códigos dos botões: o site
+# acrescenta [site-<código>] no fim da mensagem. Não escreva tempo de resposta (um teste confere).
+#
+# Ponha sempre os textos entre aspas. {{cidade}}, {{regiao}} e as outras {{variáveis}} puxam os dados
+# da empresa (content/empresa.yaml); {{#se variavel}}trecho{{/se}} só aparece se a variável tiver valor.
+
+mensagens:
+  header: "Olá! Vim pelo site e gostaria de um orçamento de caixas de papelão."
+  hero: "Olá! Quero um orçamento de caixas de papelão personalizadas com a minha marca."
+  orcamento: "Olá! Quero um orçamento de caixas de papelão."
+  flutuante: "Olá! Quero um orçamento de caixas de papelão."
+  privacidade: "Olá! Quero falar sobre os meus dados pessoais."
+botoes:
+  cabecalho: "Pedir orçamento"
+  flutuante: "Pedir orçamento"
+  flutuante_aria: "Pedir orçamento pelo WhatsApp"
+folha:
+  titulo: "O WhatsApp não abriu?"
+  instrucao_app: "Dentro do Instagram, Facebook ou TikTok o WhatsApp às vezes não abre: toque em ⋮ ou ··· no canto da tela e escolha \"Abrir no navegador\"."
+  numero: "Nosso WhatsApp é o"
+  copiar: "Copiar número"
+  ligar: "Ligar {{telefone_exibicao}}"

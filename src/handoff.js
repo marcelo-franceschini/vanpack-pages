@@ -6,6 +6,7 @@
 const HANDOFF_MS = 2500;
 
 // Navegadores embutidos de redes sociais, pelo user agent (o do Instagram vem antes).
+/** @type {[string, RegExp][]} */
 const IN_APP = [
   ['ig', /Instagram/],
   ['fb', /FBAN|FBAV|FB_IAB/], // Facebook e Messenger
@@ -26,11 +27,11 @@ export function inAppBrowser(userAgent = globalThis.navigator?.userAgent ?? '') 
  */
 export function createHandoff({ sheet, inapp, onEvent }) {
   if (!sheet) return { watch() {} };
-  const title = sheet.querySelector('.sheet-t');
-  const status = sheet.querySelector('.sheet-status');
-  const number = sheet.querySelector('.sheet-num');
-  const copy = sheet.querySelector('[data-copy]');
-  sheet.querySelector('.sheet-inapp').hidden = !inapp;
+  const title = /** @type {HTMLElement} */ (sheet.querySelector('.sheet-t'));
+  const status = /** @type {HTMLElement} */ (sheet.querySelector('.sheet-status'));
+  const number = /** @type {HTMLElement} */ (sheet.querySelector('.sheet-num'));
+  const copy = /** @type {HTMLElement} */ (sheet.querySelector('[data-copy]'));
+  /** @type {HTMLElement} */ (sheet.querySelector('.sheet-inapp')).hidden = !inapp;
 
   let timer = 0;
   let opener = null; // botão que abriu a folha: o foco volta para ele

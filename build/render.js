@@ -6,10 +6,14 @@
 //   data-need="chave outra"  o elemento sai se qualquer chave estiver vazia (e o atributo some)
 //   data-need="!chave"       o contrário: sai se a chave tiver valor (o texto de quando falta o dado)
 //   {{variavel}}           valor da config; vazio fora de um data-need é erro de build
+//   {{arquivo.campo}}      texto de content/ (ex.: {{historia.hero.titulo}}), com as {{variáveis}} dele
+//                          e os {{#se}} resolvidos; caminho que não existe é erro de build
 //   JSON-LD                  montado inteiro a partir da config
 //   modo demo                <meta name="robots" content="noindex,nofollow">
 
-import { visibleClients, visibleProofs } from '../site.config.js';
+import { RICH_VARS, visibleClients, visibleProofs } from '../site.config.js';
+import { renderPolicy } from './privacidade.js';
+import { renderText } from './texto.js';
 
 export const escapeHtml = (s) =>
   String(s)
@@ -68,7 +72,7 @@ export function footerFields(site) {
         address.street,
         address.district,
         site.cityState,
-        address.postalCode && `CEP ${address.postalCode}`,
+        address.postalCode && `${site.content.rodape.rotulos.cep} ${address.postalCode}`,
       ]
         .filter(Boolean)
         .join(' · ')
@@ -86,7 +90,11 @@ export function footerFields(site) {
       link(`tel:${site.phone}`, site.phoneDisplay || site.phone, ' data-contact="phone"'),
     mapa:
       site.mapUrl &&
-      link(site.mapUrl, 'Ver no mapa', ' data-contact="map" target="_blank" rel="noopener"'),
+      link(
+        site.mapUrl,
+        site.content.rodape.ver_mapa,
+        ' data-contact="map" target="_blank" rel="noopener"',
+      ),
   };
 }
 
@@ -123,7 +131,7 @@ function applyMarks(html, { fields, vars }) {
       const lineStart = out.lastIndexOf('\n', m.index - 1) + 1;
       const alone = /^[ \t]*$/.test(out.slice(lineStart, m.index));
       const from = alone ? lineStart : m.index;
-      const to = alone ? end + /^[ \t]*\n?/.exec(out.slice(end))[0].length : end;
+      const to = alone ? end + (/^[ \t]*\n?/.exec(out.slice(end)) ?? [''])[0].length : end;
       out = out.slice(0, from) + out.slice(to);
       pos = from;
       continue;
@@ -153,14 +161,34 @@ const outsideRawBlocks = (html, fn) =>
     .map((part, i) => (i % 2 ? part : fn(part)))
     .join('');
 
-/** Troca {{variavel}} pelo valor escapado; variável desconhecida ou vazia é erro de build. */
-export function interpolate(text, vars, where = 'HTML') {
-  return text.replace(/\{\{\s*([A-Za-z]\w*)\s*\}\}/g, (_, key) => {
+/** O texto de content/ em `path` (ex.: 'historia.hero.titulo'); erro de build se não existir. */
+function contentText(content, path, where) {
+  const value = path.split('.').reduce((node, key) => node?.[key], content);
+  if (typeof value !== 'string') {
+    throw new Error(`${where}: {{${path}}} não existe em content/ (ou não é um texto)`);
+  }
+  return value;
+}
+
+/**
+ * Troca {{variavel}} pelo valor escapado (as variáveis ricas, como `anos`, já são HTML) e
+ * {{arquivo.campo}} pelo texto de content/ (com as variáveis e os {{#se}} dele resolvidos);
+ * variável desconhecida ou vazia é erro de build.
+ */
+export function interpolate(text, vars, where = 'HTML', content = {}) {
+  return text.replace(/\{\{\s*([A-Za-z][\w.]*)\s*\}\}/g, (_, key) => {
+    if (key.includes('.')) {
+      const file = key.split('.')[0];
+      return renderText(contentText(content, key, where), vars, {
+        rich: RICH_VARS,
+        where: `content/${file}.yaml › ${key.slice(file.length + 1)}`,
+      });
+    }
     if (!(key in vars)) throw new Error(`${where}: variável desconhecida {{${key}}}`);
     if (!vars[key]) {
       throw new Error(`${where}: {{${key}}} está vazio; proteja o trecho com data-need="${key}"`);
     }
-    return escapeHtml(vars[key]);
+    return RICH_VARS.has(key) ? vars[key] : escapeHtml(vars[key]);
   });
 }
 
@@ -173,7 +201,7 @@ function whatsappLinks(html, site) {
   return html.replace(/<a\b[^>]*\sdata-wa="[^"]*"[^>]*>/g, (tag) => {
     if (!site.whatsapp) {
       throw new Error(
-        'VITE_WHATSAPP vazio: os botões do WhatsApp abririam wa.me/?text=… sem número.',
+        'content/empresa.yaml › whatsapp está vazio: os botões do WhatsApp abririam wa.me/?text=… sem número.',
       );
     }
     const cta = /\sdata-cta="([^"]*)"/.exec(tag)?.[1];
@@ -213,46 +241,53 @@ export function buildJsonLd(site) {
   };
 }
 
+/** Um texto de content/ pronto para o HTML (variáveis e {{#se}} resolvidos, tudo escapado). */
+const text = (site, value) => renderText(value, site.vars, { rich: RICH_VARS, where: 'conteúdo' });
+
 const BLOCKS = {
+  // A política de privacidade, de content/privacidade.md (Markdown mínimo, build/privacidade.js).
+  politica: (site) => renderPolicy(site.content.privacidade, site),
+
   // Produtos: cada um com a área do 3D no topo (preenchida por src/produtos/, com o espaço já
   // reservado) e o seu botão de orçamento (código [site-produtos-<id>]).
   produtos: (site) =>
-    site.content.models
+    site.products
       .map(
-        ({ id, name, subject, text, peca }) => `<article class="model">
-  <div class="model-3d" data-modelo="${escapeHtml(id)}" data-peca="${escapeHtml(peca ?? name)}"></div>
-  <h3>${escapeHtml(name)}</h3>
-  <p>${escapeHtml(text)}</p>
-  <a class="btn btn-soft" data-cta="produtos-${escapeHtml(id)}" data-wa="${escapeHtml(
-    `Olá! Quero um orçamento de ${subject}.`,
-  )}">Pedir orçamento deste produto</a>
+        ({ id, nome, mensagem, texto, peca }) => `<article class="model">
+  <div class="model-3d" data-modelo="${escapeHtml(id)}" data-peca="${text(site, peca ?? nome)}"></div>
+  <h3>${text(site, nome)}</h3>
+  <p>${text(site, texto)}</p>
+  <a class="btn btn-soft" data-cta="produtos-${escapeHtml(id)}" data-wa="${text(
+    site,
+    mensagem,
+  )}">${text(site, site.content.produtos.botao)}</a>
 </article>`,
       )
       .join('\n'),
 
-  // Diferenciais do .env (VITE_DIFF_<n>_*): título, texto e ícone (um <symbol> do index.html).
+  // Diferenciais (content/diferenciais.yaml): título, texto e ícone (um <symbol> do index.html).
   diferenciais: (site) =>
     site.differentials
       .map(
-        ({ title, text, icon }) =>
+        ({ title, text: body, icon }) =>
           `<article class="pillar">${
             icon ? `<svg aria-hidden="true"><use href="#i-${escapeHtml(icon)}" /></svg>` : ''
-          }<h3>${escapeHtml(title)}</h3>${text ? `<p>${escapeHtml(text)}</p>` : ''}</article>`,
+          }<h3>${text(site, title)}</h3>${body ? `<p>${text(site, body)}</p>` : ''}</article>`,
       )
       .join('\n'),
 
-  // Prova social: o carrossel de logos dos clientes do .env (em production só os que autorizaram; em
+  // Prova social: o carrossel de logos dos clientes (em production só os que autorizaram; em
   // demo também os exemplos, com o rótulo "Exemplo") e os depoimentos e a nota do Google autorizados.
   // O HTML leva só os itens originais e os controles escondidos: as cópias do loop e os controles são
   // do src/carrossel.js. O logo é relativo à página (./clientes/…): o render roda depois de o Vite
   // reescrever as URLs, e um caminho absoluto quebraria no subcaminho do GitHub Pages.
   clientes: (site) => {
     const clients = visibleClients(site.clients, site.dataMode);
-    const { testimonials, googleRating } = visibleProofs(site.content.proofs);
-    const client = ({ name, logo, authorized }) =>
+    const { testimonials, googleRating } = visibleProofs(site.proofs);
+    const client = ({ name, logo, alt, authorized }) =>
       `<li class="cliente">${
         logo
-          ? `<img src="./clientes/${escapeHtml(logo)}" alt="${escapeHtml(name)}" width="160" height="64" loading="lazy" decoding="async" draggable="false" />`
+          ? `<img src="./clientes/${escapeHtml(logo)}" alt="${escapeHtml(alt || name)}" width="160" height="64" loading="lazy" decoding="async" draggable="false" />`
           : `<span class="logo-name">${escapeHtml(name)}</span>`
       }${authorized ? '' : '<span class="tag">Exemplo</span>'}</li>`;
     const button = (action, content, extra = '') =>
@@ -260,9 +295,9 @@ const BLOCKS = {
     const icon = (id) => `<svg aria-hidden="true"><use href="#i-${id}" /></svg>`;
     return [
       clients.length
-        ? `<div class="carrossel" data-carrossel><div class="carrossel-janela" role="region" aria-roledescription="carrossel" aria-label="Logos de clientes" tabindex="0"><ul class="carrossel-trilho">${clients
+        ? `<div class="carrossel" data-carrossel><section class="carrossel-janela" aria-roledescription="carrossel" aria-label="Logos de clientes" tabindex="0"><ul class="carrossel-trilho">${clients
             .map(client)
-            .join('')}</ul></div><div class="carrossel-controles" hidden>${[
+            .join('')}</ul></section><div class="carrossel-controles" hidden>${[
             button('pausa', `${icon('pausa')}<span>Pausar</span>`, ' aria-pressed="false"'),
             button('anterior', icon('anterior'), ' aria-label="Anterior"'),
             button('proximo', icon('proximo'), ' aria-label="Próximo"'),
@@ -279,7 +314,7 @@ const BLOCKS = {
       googleRating
         ? `<p class="rating"><a href="${escapeHtml(googleRating.url)}" target="_blank" rel="noopener">${escapeHtml(
             String(googleRating.value).replace('.', ','),
-          )} de 5 no Google (${escapeHtml(String(googleRating.count))} avaliações)</a></p>`
+          )} ${text(site, site.content.provas.textos.nota)} (${escapeHtml(String(googleRating.count))} ${text(site, site.content.provas.textos.avaliacoes)})</a></p>`
         : '',
     ]
       .filter(Boolean)
@@ -287,7 +322,7 @@ const BLOCKS = {
   },
 };
 
-/** <!--render:nome--> vira o bloco gerado do conteúdo (produtos, diferenciais, prova social). */
+/** <!--render:nome--> vira o bloco gerado do conteúdo (produtos, diferenciais, prova social, política). */
 function renderBlocks(html, site) {
   return html.replace(/<!--render:(\w+)-->/g, (_, name) => {
     if (!(name in BLOCKS)) throw new Error(`bloco desconhecido: <!--render:${name}-->`);
@@ -309,11 +344,12 @@ function dropDeadAnchors(html) {
 
 /** Renderiza a página: dados da empresa, links do WhatsApp, JSON-LD e, em demo, o noindex. */
 export function renderPage(html, site) {
-  let out = whatsappLinks(renderBlocks(html, site), site);
+  let out = renderBlocks(html, site);
   out = outsideRawBlocks(out, (part) =>
     applyMarks(part, { fields: footerFields(site), vars: site.vars }),
   );
-  out = outsideRawBlocks(out, (part) => interpolate(part, site.vars));
+  out = outsideRawBlocks(out, (part) => interpolate(part, site.vars, 'HTML', site.content));
+  out = whatsappLinks(out, site);
   out = out.replace(
     /(<script type="application\/ld\+json">)[\s\S]*?(<\/script>)/,
     (_, open, close) => open + JSON.stringify(buildJsonLd(site)).replace(/</g, '\\u003c') + close,
@@ -321,7 +357,7 @@ export function renderPage(html, site) {
   out = dropDeadAnchors(out);
   // <dl> sem nenhum campo (nada a mostrar) não fica vazio na página
   out = out.replace(/<dl class="foot-info">\s*<\/dl>\s*/, '');
-  if (site.dataMode === 'demo') {
+  if (site.dataMode === 'demo' && !/<meta\s+name="robots"/.test(out)) {
     out = out.replace(
       /<meta charset="utf-8"\s*\/?>/i,
       (meta) => `${meta}\n<meta name="robots" content="noindex,nofollow" />`,

@@ -1,9 +1,13 @@
 name: CI
 
-# Valida cada pull request (o deploy continua só na master): lint, build e testes de navegador.
-# O Chrome já vem na imagem do ubuntu-latest; o WebGL roda por software (SwiftShader).
+# Valida cada pull request (o deploy continua só na master): a verificação (lint, build e testes de
+# navegador) e a paridade visual contra a branch de destino, que roda em paralelo.
+# Mudança visual de propósito: ponha o rótulo "muda-visual" no PR; a paridade ainda roda e publica as
+# imagens como artefato, mas não reprova. Mudança só na estrutura do HTML (acessibilidade, HTML válido),
+# sem mudar o desenho: rótulo "muda-html"; os pixels continuam valendo e o HTML mostra só aviso.
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 
 permissions:
   contents: read
@@ -13,17 +17,35 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  verify:
+  verificar:
+    uses: ./.github/workflows/verificar.yml
+
+  paridade:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npm run lint
-      - run: npm test
+      # a base é o commit de destino do PR (o git archive do script só precisa desse commit)
+      - name: Busca a branch de destino
         env:
+          BASE: ${{ github.base_ref }}
+        run: git fetch --depth=1 origin "$BASE:refs/remotes/origin/$BASE"
+      - name: Paridade visual contra a branch de destino
+        continue-on-error: ${{ contains(github.event.pull_request.labels.*.name, 'muda-visual') }}
+        env:
+          BASE: ${{ github.base_ref }}
           CHROME_PATH: /usr/bin/google-chrome-stable
+          HTML: ${{ contains(github.event.pull_request.labels.*.name, 'muda-html') && '--html=aviso' || '' }}
+        run: npm run audit:paridade -- --base="origin/$BASE" $HTML
+      - name: Imagens que mudaram
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: paridade-diferencas
+          path: dist-paridade/diferencas
+          if-no-files-found: ignore

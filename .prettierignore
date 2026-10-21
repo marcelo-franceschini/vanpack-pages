@@ -1,3 +1,7 @@
 dist/
 package-lock.json
 public/fonts/
+# conteúdo editado por quem não programa: o que vale é o JSON Schema (npm run build), não o estilo
+content/*.yaml
+content/exemplo/
+content/privacidade.md

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vanpack.local/schemas/rodape.schema.json",
+  "title": "Rodapé",
+  "description": "Rótulos do rodapé.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rotulos", "ver_mapa", "desde"],
+  "properties": {
+    "rotulos": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["razao_social", "cnpj", "endereco", "horario", "telefone", "mapa", "cep"],
+      "properties": {
+        "razao_social": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 24,
+          "description": "Rótulo do campo."
+        },
+        "cnpj": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "description": "Rótulo do campo."
+        },
+        "endereco": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20,
+          "description": "Rótulo do campo."
+        },
+        "horario": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 19,
+          "description": "Rótulo do campo."
+        },
+        "telefone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20,
+          "description": "Rótulo do campo."
+        },
+        "mapa": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "description": "Rótulo do campo."
+        },
+        "cep": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 10,
+          "description": "Rótulo do CEP, dentro do endereço: Rua, bairro, cidade, CEP 00000-000."
+        }
+      },
+      "description": "Os rótulos dos dados da empresa no rodapé."
+    },
+    "ver_mapa": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 23,
+      "description": "Texto do link do mapa (rodapé e faixa de confiança)."
+    },
+    "desde": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "description": "Trecho do © do rodapé. Some se não houver ano de fundação."
+    }
+  }
+}

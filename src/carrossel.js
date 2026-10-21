@@ -18,17 +18,18 @@ const easeOut = (t) => 1 - (1 - t) ** 3;
  */
 export function mountCarousel(root) {
   if (!root || typeof root.animate !== 'function') return;
-  const view = root.querySelector('.carrossel-janela');
-  const track = root.querySelector('.carrossel-trilho');
-  const controls = root.querySelector('.carrossel-controles');
-  const pause = root.querySelector('[data-acao="pausa"]');
-  const originals = [...track.children];
+  const view = /** @type {HTMLElement} */ (root.querySelector('.carrossel-janela'));
+  const track = /** @type {HTMLElement} */ (root.querySelector('.carrossel-trilho'));
+  const controls = /** @type {HTMLElement} */ (root.querySelector('.carrossel-controles'));
+  const pause = /** @type {HTMLElement} */ (root.querySelector('[data-acao="pausa"]'));
+  const originals = /** @type {HTMLElement[]} */ ([...track.children]);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const reasons = new Set(); // motivos de pausa; o botão é o único que não se desfaz sozinho
   let animation = null;
   let duration = 0; // ms para andar um conjunto inteiro
   let step = 0; // px do início de um item ao do seguinte
   let setWidth = 0;
+  /** @type {HTMLElement[]} */
   let clones = [];
   let glide = 0; // rAF do deslize em andamento
   let resumeTimer = 0;
@@ -61,7 +62,7 @@ export function mountCarousel(root) {
     clones = [];
     for (let s = 0; s < sets; s++) {
       for (const item of originals) {
-        const clone = item.cloneNode(true);
+        const clone = /** @type {HTMLElement} */ (item.cloneNode(true));
         clone.setAttribute('aria-hidden', 'true');
         clone.inert = true;
         clones.push(clone);

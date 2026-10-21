@@ -1,10 +1,12 @@
 // Peso do build (rode `npm run build` antes): gzip e brotli por arquivo, o JS carregado no caminho
-// normal (página + worker) e no fallback, o CSS inline, a carga inicial, o 3D dos produtos (baixado só
-// perto da seção, fora da carga inicial) e os maiores módulos. Sai com erro se o JS inicial passar do
-// orçamento de 165 KB gzip ou se o script da página levar o three.js.
+// normal (página + worker da história + three.js) e no fallback, o CSS inline, a carga inicial, o 3D
+// dos produtos (baixado só perto da seção, fora da carga inicial), a visita completa e os maiores
+// módulos. O three.js é um arquivo só, compartilhado pelos dois workers e pelo fallback
+// (build/three-compartilhado.js). Sai com erro se o JS inicial passar do orçamento de 165 KB gzip ou
+// se o script da página levar o three.js. Os tetos por arquivo ficam em tests/orcamento.test.mjs.
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { brotliCompressSync, constants, gzipSync } from 'node:zlib';
-import { build } from 'vite';
+import { buildThree } from '../../build/three-compartilhado.js';
 import { ROOT } from '../lib.mjs';
 
 const BUDGET_KB = 165;
@@ -26,6 +28,7 @@ const files = {
   html: 'index.html',
   main: find(/^assets\/index-.*\.js$/),
   worker: find(/^assets\/worker-.*\.js$/),
+  three: find(/^assets\/three-.*\.js$/),
   fallback: find(/^assets\/controller-.*\.js$/),
   // 3D dos produtos: só quando a seção chega perto (src/produtos/gatilho.js)
   produtos: find(/^assets\/montar-.*\.js$/),
@@ -52,20 +55,24 @@ const font = read('fonts/archivo-latin.woff2').length;
 const logos = ['brand/vanpack-horizontal.svg', 'brand/vanpack-simbolo.svg'].map((f) =>
   gzip(read(f)),
 );
-const jsInitial = sizes.main.gzip + sizes.worker.gzip;
-const jsFallbackPath = sizes.main.gzip + sizes.worker.gzip + sizes.fallback.gzip;
+const jsInitial = sizes.main.gzip + sizes.worker.gzip + sizes.three.gzip;
+const jsFallbackPath = jsInitial + sizes.fallback.gzip;
 const initial = sizes.html.gzip + jsInitial + font + logos.reduce((a, b) => a + b, 0);
 
 console.log('\nResumo (KB, gzip)');
-console.log(`  JS no caminho normal (página + worker) : ${kb(jsInitial)}   orçamento ${BUDGET_KB}`);
+console.log(
+  `  JS no caminho normal (página + worker + three): ${kb(jsInitial)}   orçamento ${BUDGET_KB}`,
+);
 console.log(`  JS se o worker falhar (+ thread principal): ${kb(jsFallbackPath)}`);
 console.log(`  Carga inicial (HTML + JS + fonte + logos): ${kb(initial)}`);
 const lazy = sizes.produtos.gzip + sizes.produtosWorker.gzip;
 console.log(`  3D dos produtos, só perto da seção (montar + worker): ${kb(lazy)}`);
+console.log(`  Visita completa (carga inicial + 3D dos produtos): ${kb(initial + lazy)}`);
 const threeInMain = /WebGLRenderer|WEBGL_lose_context/.test(read(files.main).toString('utf8'));
 console.log(`  three.js no script da página: ${threeInMain ? 'SIM (erro)' : 'não'}`);
 
-// Maiores módulos: tamanho renderizado (antes da minificação, depois do tree-shaking).
+// Maiores módulos: tamanho renderizado (antes da minificação, depois do tree-shaking). O three.js sai
+// do build compartilhado; o resto, do código da cena e do render (os módulos de src/ no worker).
 const rows = [];
 const analyzer = () => ({
   name: 'audit:modules',
@@ -73,27 +80,20 @@ const analyzer = () => ({
     for (const chunk of Object.values(bundle)) {
       if (chunk.type !== 'chunk') continue;
       for (const [id, module] of Object.entries(chunk.modules)) {
-        rows.push({ chunk: chunk.fileName, id: id.replace(ROOT, ''), size: module.renderedLength });
+        rows.push({ id: id.replace(ROOT, ''), size: module.renderedLength });
       }
     }
   },
 });
-await build({
-  root: ROOT,
-  logLevel: 'silent',
-  plugins: [analyzer()],
-  worker: { plugins: () => [analyzer()] },
-  build: { write: false },
-});
-const worker = rows.filter((r) => /^assets\/worker-/.test(r.chunk));
+await buildThree(ROOT, [analyzer()]);
 const grouped = new Map();
-for (const { id, size } of worker) {
+for (const { id, size } of rows) {
   const key = id.includes('node_modules/three/')
     ? id.replace(/^.*node_modules\/three\//, 'three/')
     : id;
   grouped.set(key, (grouped.get(key) ?? 0) + size);
 }
-console.log('\n5 maiores módulos do worker (KB renderizados, antes de minificar)');
+console.log('\n5 maiores módulos do three.js compartilhado (KB renderizados, antes de minificar)');
 for (const [id, size] of [...grouped].sort((a, b) => b[1] - a[1]).slice(0, 5)) {
   console.log(`  ${kb(size)}  ${id}`);
 }

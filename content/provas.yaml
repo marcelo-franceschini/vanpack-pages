@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=./schemas/provas.schema.json
+#
+# Depoimentos e nota do Google. Nada entra na página sem "autorizado: true" e o registro da autorização
+# em docs/provas/<id>.md. Hoje não há nenhum: a seção "Clientes" mostra só a faixa de logos.
+#
+# Para pôr um depoimento:
+#
+#   depoimentos:
+#     - id: "padaria-real"
+#       citacao: "Caixa sempre do mesmo tamanho e com a nossa marca bem impressa."
+#       autor: "Fulana, compras, Padaria Real"
+#       autorizado: true
+#
+# Para pôr a nota do Google (só a nota real do Perfil da Empresa):
+#
+#   nota_google:
+#     valor: 4.8
+#     quantidade: 37
+#     url: "https://g.page/r/exemplo"
+#     autorizado: true
+
+# As palavras da linha da nota do Google, que sai assim: 4,8 de 5 no Google (37 avaliações).
+textos:
+  nota: "de 5 no Google"
+  avaliacoes: "avaliações"
+
+depoimentos: []
+nota_google: null

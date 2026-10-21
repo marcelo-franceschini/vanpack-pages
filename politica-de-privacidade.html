@@ -3,11 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-    <title>Política de privacidade | {{name}}</title>
-    <meta
-      name="description"
-      content="Como o site da {{holder}} trata dados: sem cookies, sem formulário e com medição anônima."
-    />
+    <title>{{site.privacidade.titulo}}</title>
+    <meta name="description" content="{{site.privacidade.descricao}}" />
     <meta name="theme-color" content="#FBF8F2" />
     <meta name="color-scheme" content="light" />
     <link rel="canonical" href="%VITE_SITE_URL%politica-de-privacidade.html" />
@@ -162,97 +159,22 @@
 
     <header class="top">
       <div class="wrap">
-        <a class="logo" href="./" aria-label="Vanpack · início"
+        <a class="logo" href="./" aria-label="{{nome}} · início"
           ><img src="/brand/vanpack-horizontal.svg" alt="" width="136" height="34"
         /></a>
-        <a class="back" href="./">Voltar ao site</a>
+        <a class="back" href="./">{{site.privacidade.voltar}}</a>
       </div>
     </header>
 
     <main id="conteudo">
       <div class="wrap">
-        <h1>Política de privacidade</h1>
-        <p class="lead">
-          Em linguagem simples: o site da {{holder}} não usa cookies, não pede seus dados pessoais e
-          não tem formulário.
-        </p>
-
-        <h2>Quem é o responsável</h2>
-        <p>
-          O responsável pelos dados é a {{holder}}<span data-need="cnpj">, CNPJ {{cnpj}}</span
-          ><span data-need="street cityState">, com sede em {{street}}, {{cityState}}</span>.
-        </p>
-        <p data-need="whatsapp">
-          Para falar sobre privacidade, chame no
-          <a data-cta="privacidade" data-wa="Olá! Quero falar sobre os meus dados pessoais."
-            >WhatsApp<span data-need="whatsappDisplay"> {{whatsappDisplay}}</span></a
-          ><span data-need="phone"> ou ligue para <a href="tel:{{phone}}">{{phoneDisplay}}</a></span
-          >.
-        </p>
-
-        <h2>Cookies e armazenamento</h2>
-        <p>
-          O site não grava cookies nem guarda identificadores no seu navegador, e não carrega
-          scripts de terceiros.
-        </p>
-
-        <div data-need="analyticsName">
-          <h2>Medição do uso do site</h2>
-          <p>
-            Para entender como o site é usado, medimos de forma agregada: as páginas vistas, os
-            cliques nos botões de WhatsApp, telefone e mapa, se o WhatsApp abriu depois do clique,
-            se o site foi aberto dentro de um aplicativo (como o Instagram), até que ponto da página
-            a pessoa foi e o tempo de carregamento. Nada disso identifica você.
-          </p>
-          <p>
-            A medição é feita pelo {{analyticsName}}, que não usa cookies e informa que não coleta
-            dados pessoais e que anonimiza os dados coletados. Como em qualquer acesso a um site, o
-            endereço de IP e o navegador chegam ao servidor da ferramenta, que fica nos Estados
-            Unidos e na União Europeia. Os dados de medição ficam na ferramenta por tempo limitado
-            (no plano atual, até seis meses).
-          </p>
-        </div>
-        <div data-need="noAnalytics">
-          <h2>Medição do uso do site</h2>
-          <p>O site não envia dados de uso a nenhuma ferramenta de medição.</p>
-        </div>
-
-        <h2>Para quê e com que base legal</h2>
-        <p>
-          Usamos os dados agregados para entender como o site é usado e melhorar as páginas e o
-          atendimento. A base legal é o legítimo interesse (Lei Geral de Proteção de Dados, art. 7º,
-          inciso IX), com dados agregados e sem identificação.
-        </p>
-
-        <h2>O WhatsApp</h2>
-        <p>
-          Os botões de WhatsApp abrem uma conversa no aplicativo, que segue a política da própria
-          plataforma. A mensagem já vem escrita e termina com um código do botão de origem (por
-          exemplo, [site-hero]) e, se você chegou por uma campanha, com a origem dela. Você pode
-          mudar ou apagar a mensagem antes de enviar. O que você enviar será usado só para responder
-          ao seu pedido de orçamento.
-        </p>
-
-        <h2>Seus direitos</h2>
-        <p>
-          A lei garante a você, entre outros, a confirmação de que tratamos dados seus, o acesso, a
-          correção, a eliminação e a informação sobre com quem os dados são compartilhados (art. 18
-          da LGPD). Como a medição do site é anônima, não temos como identificar dados seus nela; se
-          você nos enviou dados pelo WhatsApp, pode pedir para acessá-los ou eliminá-los pelo mesmo
-          WhatsApp<span data-need="whatsappDisplay"> {{whatsappDisplay}}</span
-          ><span data-need="phone"> ou pelo telefone {{phoneDisplay}}</span>.
-        </p>
-
-        <h2>Mudanças</h2>
-        <p>
-          Se o site passar a usar outra ferramenta ou outros dados, esta página será atualizada.
-        </p>
+        <!--render:politica-->
       </div>
     </main>
 
     <footer>
       <div class="wrap">
-        <p>© {{year}} {{holder}}<span data-need="cityState"> · {{cityState}}</span></p>
+        <p>© {{ano_atual}} {{titular}}<span data-need="cidade_uf"> · {{cidade_uf}}</span></p>
       </div>
     </footer>
   </body>

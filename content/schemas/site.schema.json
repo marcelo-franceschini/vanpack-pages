@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vanpack.local/schemas/site.schema.json",
+  "title": "Site",
+  "description": "Nome da marca, título e descrição da página e links do menu.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["nome", "slogan", "descricao", "pagina", "menu", "privacidade", "nao_encontrada"],
+  "properties": {
+    "nome": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 19,
+      "description": "Nome da marca. Aparece no © do rodapé, no título das páginas e nos textos que usam {{nome}}."
+    },
+    "slogan": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "description": "Slogan do manual da marca. Aparece no rodapé."
+    },
+    "descricao": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 140,
+      "description": "Descrição da empresa para o Google (JSON-LD)."
+    },
+    "pagina": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["titulo", "descricao", "imagem_alt"],
+      "properties": {
+        "titulo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 125,
+          "description": "Título da página (aba do navegador, Google e compartilhamento). A cidade entra só se houver."
+        },
+        "descricao": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 210,
+          "description": "Descrição da página para o Google e para a prévia de compartilhamento (cerca de 155 caracteres)."
+        },
+        "imagem_alt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 145,
+          "description": "Descrição da imagem de compartilhamento (public/og.jpg) para quem não a vê."
+        }
+      },
+      "description": "Título, descrição e imagem de compartilhamento da página principal."
+    },
+    "menu": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["produtos", "diferenciais", "clientes", "orcamento", "privacidade"],
+      "properties": {
+        "produtos": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20,
+          "description": "Link do menu para a seção de produtos."
+        },
+        "diferenciais": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 24,
+          "description": "Link do menu para os diferenciais."
+        },
+        "clientes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20,
+          "description": "Link do rodapé para os clientes."
+        },
+        "orcamento": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 21,
+          "description": "Link do rodapé para o pedido de orçamento."
+        },
+        "privacidade": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 23,
+          "description": "Link do rodapé para a política de privacidade."
+        }
+      },
+      "description": "Os links do menu do topo e do rodapé."
+    },
+    "privacidade": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["titulo", "descricao", "voltar"],
+      "description": "A página da política de privacidade (o texto dela está em privacidade.md).",
+      "properties": {
+        "titulo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Título da página (aba do navegador)."
+        },
+        "descricao": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 180,
+          "description": "Descrição da página para o Google."
+        },
+        "voltar": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "description": "Link para voltar ao site, no topo da página."
+        }
+      }
+    },
+    "nao_encontrada": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["titulo_aba", "titulo", "texto", "voltar"],
+      "description": "A página 404, que aparece quando o endereço digitado não existe.",
+      "properties": {
+        "titulo_aba": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80,
+          "description": "Título na aba do navegador."
+        },
+        "titulo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "description": "Título da página."
+        },
+        "texto": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100,
+          "description": "Frase abaixo do título."
+        },
+        "voltar": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "description": "Texto do botão que volta ao início."
+        }
+      }
+    }
+  }
+}

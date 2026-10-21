@@ -75,6 +75,7 @@ const position = (page) =>
     const step = items.length > 1 ? items[1].offsetLeft - items[0].offsetLeft : 0;
     return {
       x: new DOMMatrix(getComputedStyle(track).transform).m41,
+      t: performance.now(), // quando a leitura foi feita: a velocidade usa o tempo real entre duas
       step,
       loop: items.length * step,
     };
@@ -113,10 +114,21 @@ for (const screen of Object.keys(SCREENS)) {
     test('anda sozinho em demo, da direita para a esquerda, devagar', async () => {
       const { page, context, problems } = await open(screen);
       assert.equal(await estado(page), 'rodando');
+      // a esteira só parte no 1º quadro da animação, que atrasa se a máquina estiver ocupada: espera
+      // ela andar e mede a velocidade (px/s) pelo tempo real entre as duas leituras, não por 1 s fixo
+      const start = await position(page);
+      await page.waitForFunction(
+        (x) =>
+          new DOMMatrix(getComputedStyle(document.querySelector('.carrossel-trilho')).transform)
+            .m41 !== x,
+        start.x,
+        { timeout: 10_000 },
+      );
       const a = await position(page);
       await page.waitForTimeout(1000);
-      const moved = leftward(a, await position(page));
-      assert.ok(moved > 15 && moved < 60, `andou ${moved.toFixed(1)} px em 1 s`);
+      const b = await position(page);
+      const speed = (leftward(a, b) / (b.t - a.t)) * 1000;
+      assert.ok(speed > 15 && speed < 60, `andou a ${speed.toFixed(1)} px/s`);
       assert.deepEqual(problems, []);
       await context.close();
     });

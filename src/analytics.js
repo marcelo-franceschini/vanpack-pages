@@ -92,14 +92,36 @@ function sendSummary() {
   send({ name: 'visit_summary', data: { ...visit, ...context() } });
 }
 
+// A visualização da página (evento sem nome) sai depois do carregamento, com o navegador ocioso: ela
+// não disputa a largada (conexão com um servidor de terceiro, pedido CORS) com o worker da cena. Se a
+// pessoa sai antes, ou se um evento de negócio vem antes, ela vai primeiro: a ordem é sempre
+// visualização, eventos, resumo.
+let viewSent = false;
+function sendView() {
+  if (viewSent) return;
+  viewSent = true;
+  send();
+}
+
 if (live) {
-  send(); // visualização da página (evento sem nome)
+  const idle = () =>
+    'requestIdleCallback' in window
+      ? requestIdleCallback(sendView, { timeout: 3000 })
+      : setTimeout(sendView, 1500);
+  if (document.readyState === 'complete') idle();
+  else addEventListener('load', idle, { once: true });
   // Ao sair da página (aba escondida ou fechada). O setTimeout deixa o web-vitals, que também
   // reporta ao esconder a aba, entregar LCP, INP e CLS antes do resumo.
   addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') setTimeout(sendSummary);
+    if (document.visibilityState === 'hidden') {
+      sendView();
+      setTimeout(sendSummary);
+    }
   });
-  addEventListener('pagehide', sendSummary);
+  addEventListener('pagehide', () => {
+    sendView();
+    sendSummary();
+  });
 }
 
 export function track(event, data = {}) {
@@ -107,7 +129,10 @@ export function track(event, data = {}) {
   const full = { ...data, ...context() };
   window.dataLayer.push({ event, ...full });
   remember(event, data);
-  if (FORWARD.has(event)) send({ name: event, data: full });
+  if (FORWARD.has(event)) {
+    if (live) sendView();
+    send({ name: event, data: full });
+  }
 }
 
 /** Envia o evento uma única vez por visita para a mesma `key`. */

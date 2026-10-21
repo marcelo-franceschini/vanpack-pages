@@ -18,8 +18,8 @@ tour automático que rola a página sozinho.
 | `#zap-ajuda`                                                                       | folha "O WhatsApp não abriu?" (`src/handoff.js`): sobe se a página continua à vista 2,5 s depois do toque num botão do WhatsApp; copiar número, ligar e, em navegador embutido, como abrir no navegador                                                                                                                                                                                                                    |
 | `a[data-cta][data-wa]`                                                             | botões do WhatsApp; o build troca `data-wa` por `href="https://wa.me/…"`                                                                                                                                                                                                                                                                                                                                                   |
 | `#processo`, `#confianca`, `#produtos`, `#diferenciais`, `#clientes`, `#orcamento` | seções e âncoras do menu; as sem dado somem com os links (os 5 cartões de `#processo` nunca somem)                                                                                                                                                                                                                                                                                                                         |
-| `<!--render:produtos\|diferenciais\|clientes-->`                                   | blocos gerados: produtos do `site.config.js` (`.model`), diferenciais do `.env` (`.pillar`) e clientes do `.env` com os depoimentos autorizados (`[data-carrossel]`, `.proof`)                                                                                                                                                                                                                                             |
-| `[data-field="slogan\|razao\|cnpj\|endereco\|horario\|telefone\|mapa"]`            | rodapé: preenchido com o dado do `.env` ou removido do HTML quando não há dado                                                                                                                                                                                                                                                                                                                                             |
+| `<!--render:produtos\|diferenciais\|clientes-->`                                   | blocos gerados: produtos de `content/produtos.yaml` (`.model`), diferenciais de `content/diferenciais.yaml` (`.pillar`) e clientes de `content/clientes.yaml` com os depoimentos autorizados (`[data-carrossel]`, `.proof`)                                                                                                                                                                                                |
+| `[data-field="slogan\|razao\|cnpj\|endereco\|horario\|telefone\|mapa"]`            | rodapé: preenchido com o dado de `content/empresa.yaml` ou removido do HTML quando não há dado                                                                                                                                                                                                                                                                                                                             |
 | `[data-need="chave outra"]`, `[data-need="!chave"]` e `{{variavel}}`               | o elemento sai se alguma chave estiver vazia; com `!`, sai se a chave tiver valor (o texto de quando falta o dado, nos cartões); `{{variavel}}` vazia fora de um `data-need` é erro de build                                                                                                                                                                                                                               |
 | `[data-year]` e `[data-since]`                                                     | ano do © e anos de mercado: o build escreve o valor e o `main.js` o recalcula no navegador                                                                                                                                                                                                                                                                                                                                 |
 | `a[data-contact="phone\|map"]`                                                     | links de contato: viram os eventos `phone_click` e `map_click`                                                                                                                                                                                                                                                                                                                                                             |
@@ -111,7 +111,7 @@ não começa, o console diz o motivo (`[vanpack] autoplay não iniciou: …`).
   hex no `:root` de `index.html`): `#0D3C2A`, `#454440` (texto secundário, 9,2:1 sobre Papel),
   `#ECE9E3`, `#DFDCD7`, `#D0CDC8`, `#2A5D47` (passos "Como pedir", 7,2:1 com texto Papel). Sem cor de
   acento (a exceção é o amarelo e o verde de sinalização da lâmpada da máquina, na ilustração da linha de produção).
-- Tipografia: só Archivo (`public/fonts/archivo-latin.woff2`, 400 a 900). Tudo em `rem`.
+- Tipografia: só Archivo (`public/fonts/archivo-latin.woff2`, 400 a 900), subconjunto do português (ASCII, Latin-1, pontuação geral, ↓ ↑ € ™ −; kerning e ligaduras ficam, frações não; 28 KB). Caractere fora dele (`Œ`, `ł`...) cai para a fonte do sistema. Tudo em `rem`.
 - Alvos de toque ≥ 44 px; foco visível de 3 px; quebras: `(max-width: 760px), (max-aspect-ratio: 1/1)`
   = celular (cartões embaixo); `(max-height: 700px)` em paisagem = compacto.
 
@@ -127,7 +127,7 @@ não começa, o console diz o motivo (`[vanpack] autoplay não iniciou: …`).
 - Sombra em tempo real só no desktop (a cena só projeta sombra no piso, a 16% de opacidade).
 - `text-wrap: pretty` removido dos parágrafos (custava metade do layout inicial em CPU lenta).
 - Slogan "Do projeto à entrega" no rodapé (manual §7); endereço, horário, CNPJ e mapa ficam ocultos
-  até existirem em `site.config.js`/`.env`.
+  até existirem em `content/empresa.yaml`.
 - **Autoplay sem espera, em qualquer tela** (decisão do dono): o tour nunca é desligado por largura de
   tela nem por Save-Data; só o movimento reduzido do sistema o desliga (acessibilidade).
 - **Sem fotos** (decisão do dono): só SVG; a única foto real permitida seria a da fachada, e o dono prefere não usá-la. Depoimentos, logos e nota do Google só com autorização em `docs/provas/`.
@@ -144,7 +144,7 @@ não começa, o console diz o motivo (`[vanpack] autoplay não iniciou: …`).
 - Confirmar o `vanpack-horizontal-negativo.svg` (horizontal em Papel sobre Floresta): o manual só traz
   o símbolo em negativo. É o horizontal oficial com a cor trocada, sem mais nada.
 - Textos dos 5 cartões e dos diferenciais são rascunho: podem mudar depois da pesquisa de posicionamento.
-- Dados institucionais (endereço, horário, CNPJ, mapa) e o número do WhatsApp (`VITE_WHATSAPP`).
+- Dados institucionais (endereço, horário, CNPJ, mapa) e o número do WhatsApp (`whatsapp`, em `content/empresa.yaml`).
 
 ## 9. Medidas
 

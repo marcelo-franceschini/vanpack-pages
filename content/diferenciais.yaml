@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=./schemas/diferenciais.schema.json
+#
+# Os cartões da seção "Por que a Vanpack" (até 6). Cada um tem título, texto e ícone (fabrica, lotes,
+# conversa ou caixa). Apague todos e a seção, e os links para ela, somem. Confira cada um antes do
+# go-live. Ponha sempre os textos entre aspas.
+
+etiqueta: "Diferenciais"
+titulo: "Por que a Vanpack"
+
+itens:
+  - titulo: "Fale direto com quem fabrica"
+    texto: "Sem intermediário: você sabe o que vai receber."
+    icone: fabrica
+
+  - titulo: "Mesma medida e impressão em todos os lotes"
+    texto: "Do primeiro ao último lote, a caixa sai com a mesma medida, a mesma resistência e a mesma impressão."
+    icone: lotes
+
+  - titulo: "Orçamento sem formulário"
+    texto: "Mande medida e quantidade na conversa do WhatsApp."
+    icone: conversa

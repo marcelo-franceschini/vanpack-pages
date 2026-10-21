@@ -4,12 +4,12 @@
 // como sair dele. Relógio falso do Playwright; o wa.me nunca é acessado de verdade.
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
-import { loadEnv } from 'vite';
-import { ROOT, launch, openPage, startServer } from '../scripts/lib.mjs';
+import { launch, openPage, startServer } from '../scripts/lib.mjs';
 import { inAppBrowser } from '../src/handoff.js';
+import { baseContent } from './dados.mjs';
 
 // O mesmo número que o build usou (as variáveis do processo vencem o arquivo).
-const number = loadEnv('production', ROOT, 'VITE_').VITE_WHATSAPP.replace(/\D/g, '');
+const number = String(baseContent.empresa.whatsapp).replace(/\D/g, '');
 
 const UA = {
   instagram:
@@ -44,7 +44,11 @@ after(async () => {
   await server.close();
 });
 
-/** Abre a página sem tour e com o relógio parado; o wa.me é barrado e a aba que ele abriria fecha. */
+/**
+ * Abre a página sem tour e com o relógio parado; o wa.me é barrado. A aba que o clique abre fica aberta
+ * até o context.close() do teste: fechá-la na hora disputava com o relógio falso, que avança todas as
+ * abas do contexto ("clock.runFor: Target page, context or browser has been closed", ~3 de 10 rodadas).
+ */
 const open = (contextOptions = {}) =>
   openPage(
     browser,
@@ -55,7 +59,6 @@ const open = (contextOptions = {}) =>
         await context.clock.install({ time: 0 });
         await context.clock.pauseAt(1000);
         await context.route(/^https:\/\/(wa\.me|api\.whatsapp\.com)\//, (route) => route.abort());
-        context.on('page', (popup) => popup.close().catch(() => {}));
       },
     },
   );
