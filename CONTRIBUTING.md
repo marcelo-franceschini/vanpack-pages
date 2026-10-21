@@ -45,7 +45,7 @@ Nunca faça push direto na `master`.
 - **O 3D principal.** `src/scene/`, `src/render/` e `tests/scene.test.mjs` são travados por hash
   (`tests/trava-3d.test.mjs` e `tests/fixtures/3d-lock.json`). Mexer neles é decisão do dono do projeto.
 - **O tour automático.** Ele começa sozinho, sem espera, assim que a cena fica pronta (ver README).
-- **Os orçamentos de desempenho.** O JS inicial não passa de 165 KB gzip, e `tests/orcamento.test.mjs`
+- **Os orçamentos de desempenho.** O JS inicial não passa de 140 KB gzip, e `tests/orcamento.test.mjs`
   trava os bytes por arquivo: os tetos só descem. Nunca afrouxe um teto nem altere um teste para fazê-lo
   passar; se um teste falha, entenda a causa.
 - **A marca.** Só as cores Floresta, Carvão, Papel e Kraft; só a fonte Archivo; sem foto; sem

@@ -32,7 +32,7 @@ npm test               # build + build de auditoria + testes de navegador (Playw
 Auditorias (medem; os orçamentos estão no cabeçalho de cada script):
 
 ```bash
-npm run audit:bundle      # gzip/brotli por arquivo, JS inicial (≤ 165 KB gzip), visita completa, maiores módulos
+npm run audit:bundle      # gzip/brotli por arquivo, JS inicial (≤ 140 KB gzip), visita completa, maiores módulos
 npm run audit:scene       # draw calls e triângulos nos 5 centros (≤ 90 desktop, ≤ 60 celular)
 npm run audit:produtos    # draw calls do 3D de cada produto (≤ 60 por modelo) e memória ao rolar (precisa do build:audit)
 npm run audit:runtime     # tarefas longas e quadros ao rolar a história, com CPU 1× e 4×

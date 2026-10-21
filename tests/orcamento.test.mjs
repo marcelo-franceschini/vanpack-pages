@@ -5,7 +5,12 @@
 // Subir um teto, ou dar teto a um arquivo novo maior, é decisão do dono e vai no PR com a medição.
 // Histórico: com o three.js num arquivo só (em vez de uma cópia em cada worker) a visita completa
 // caiu de 321,3 para 199,5 KB, e a abertura subiu 3,9 KB (146,9 contra 142,9 KB de JS inicial).
-// O teto antigo de 165 KB de JS inicial (npm run audit:bundle) continua valendo.
+// Rodada 2: o three.js sem os shaders dos materiais que a cena não usa (build/three-compartilhado.js)
+// baixou o JS inicial de 146,9 para 138,9 KB, a carga inicial de 186,4 para 178,4 e a visita completa de
+// 196,0 para 188,0; os tetos desceram junto, para o valor medido mais 0,1 KB (HTML 0,6 KB: o go-live troca
+// textos). Política, 404 e og.jpg ficaram como estavam: o texto da política vem do jurídico e a imagem de
+// compartilhamento será refeita no go-live (npm run og), e nenhum deles sobe.
+// O teto de JS inicial de npm run audit:bundle desceu de 165 para 140 KB (o do teste acima já era 139,1).
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { describe, test } from 'node:test';
@@ -17,29 +22,29 @@ const KB = 1024;
 
 // Cada arquivo de assets/ tem o prefixo do nome sem o hash (index-BsPmJb_d.js → index).
 const JS = {
-  index: 8.5, // o script da página (sem o three.js)
-  worker: 11.9, // a cena da história, no Web Worker (o three.js vem do arquivo three)
-  three: 128, // o three.js, num arquivo só para os dois workers e o render de reserva
-  controller: 12, // o mesmo render da história, só se o worker falhar (thread principal)
-  'produtos-worker': 7.5, // a vitrine dos produtos, baixada perto da seção
+  index: 8.3, // o script da página (sem o three.js)
+  worker: 11.5, // a cena da história, no Web Worker (o three.js vem do arquivo three)
+  three: 119.5, // o three.js, num arquivo só para os dois workers e o render de reserva
+  controller: 11.6, // o mesmo render da história, só se o worker falhar (thread principal)
+  'produtos-worker': 7.2, // a vitrine dos produtos, baixada perto da seção
   montar: 1.7, // montagem do 3D dos produtos
-  'web-vitals': 3.3,
-  wizard: 2.4, // assistente do experimento (só na variante B)
+  'web-vitals': 3.1,
+  wizard: 2.2, // assistente do experimento (só na variante B)
 };
 const FILES = {
-  'index.html': 11.5,
+  'index.html': 11.2, // folga maior que a dos JS: o go-live troca textos e logos de clientes
   'politica-de-privacidade.html': 3.6,
   '404.html': 2,
-  'fonts/archivo-latin.woff2': 28.5,
+  'fonts/archivo-latin.woff2': 27.8,
   'og.jpg': 65,
-  'icon-512.png': 7.5,
-  'apple-touch-icon.png': 3.5,
+  'icon-512.png': 7.4,
+  'apple-touch-icon.png': 3.4,
 };
-const SVG_TOTAL = 14; // todos os SVGs de brand/ e produtos/
+const SVG_TOTAL = 13.5; // todos os SVGs de brand/ e produtos/
 const TOTAL = {
-  jsInicial: 147.5, // script da página + worker da história + three.js
-  carga: 190.5, // HTML + JS inicial + fonte + os 2 logos do topo e da cena
-  visita: 200.5, // a carga + o 3D dos produtos + o logo do CTA final
+  jsInicial: 139.1, // script da página + worker da história + three.js
+  carga: 178.6, // HTML + JS inicial + fonte + os 2 logos do topo e da cena
+  visita: 188.2, // a carga + o 3D dos produtos + o logo do CTA final
 };
 
 const built = existsSync(`${DIST}index.html`);
