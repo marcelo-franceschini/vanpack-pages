@@ -15,6 +15,8 @@ import { createSiteConfig } from './site.config.js';
  * Escreve os dados da empresa (de content/, validados) no HTML: links do WhatsApp, rodapé, JSON-LD e,
  * em modo demo, o noindex. A lógica está em build/render.js. No servidor de desenvolvimento o conteúdo é
  * relido a cada página (`reload`), e mexer em content/ recarrega o navegador.
+ * @param {any} site
+ * @param {{ reload?: () => any, contentDir?: string }} [options]
  */
 function siteDataPlugin(site, { reload, contentDir } = {}) {
   return {

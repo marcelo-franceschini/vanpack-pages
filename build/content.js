@@ -112,11 +112,18 @@ function describe(error) {
   }
 }
 
-/** Linha (a partir de 1) do campo no arquivo, para o erro apontar onde está. */
+/**
+ * Linha (a partir de 1) do campo no arquivo, para o erro apontar onde está.
+ * @param {import('yaml').Document} doc
+ * @param {import('yaml').LineCounter} counter
+ * @param {(string | number)[]} path
+ * @param {string} [key]
+ */
 function lineOf(doc, counter, path, key) {
+  /** @type {any} */
   let node = path.length ? doc.getIn(path, true) : doc.contents;
   if (key !== undefined && isMap(node)) {
-    const pair = node.items.find((item) => String(item.key?.value) === key);
+    const pair = /** @type {any[]} */ (node.items).find((item) => String(item.key?.value) === key);
     if (pair?.key?.range) return counter.linePos(pair.key.range[0]).line;
   }
   // o campo não existe (falta): aponta o bloco que devia tê-lo; o caminho inteiro se perdeu: o começo
@@ -138,6 +145,9 @@ function* strings(value, path = []) {
 
 /**
  * Confere cada texto: sem travessão longo, com a sintaxe de {{ }} certa e só com variáveis que existem.
+ * @param {string} label
+ * @param {unknown} value
+ * @param {(path: (string | number)[]) => string} [locate] a linha do texto, para a mensagem
  * @returns {string[]} um problema por texto, já com o lugar
  */
 export function checkTexts(label, value, locate = () => '') {
@@ -246,7 +256,7 @@ export function readContent(dir) {
     const value = doc.toJS();
     const valid = validate(value);
     if (!valid) {
-      for (const error of validate.errors) {
+      for (const error of validate.errors ?? []) {
         const path = pointerToPath(error.instancePath);
         const key =
           error.keyword === 'additionalProperties' ? error.params.additionalProperty : undefined;

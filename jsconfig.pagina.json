@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "checkJs": true,
+    "allowJs": true,
+    "noEmit": true,
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2023", "DOM", "DOM.Iterable", "WebWorker"],
+    "skipLibCheck": true,
+    "maxNodeModuleJsDepth": 0,
+    "noImplicitAny": false,
+    "strict": false,
+    "types": []
+  },
+  "include": [
+    "src/years.js",
+    "src/analytics.js",
+    "src/experiments.js",
+    "src/handoff.js",
+    "src/story.js",
+    "src/tour.js",
+    "src/carrossel.js",
+    "src/wizard.js",
+    "src/vitals.js",
+    "src/produtos/gatilho.js",
+    "src/types.d.ts"
+  ],
+  "exclude": ["node_modules", "dist*"]
+}

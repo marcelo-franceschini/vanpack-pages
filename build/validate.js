@@ -14,6 +14,7 @@ const MODES = ['demo', 'production'];
 // Textos que, depois de trocadas as {{variáveis}}, não podem passar de um tamanho, senão o cartão da
 // abertura estoura no celular deitado (844 x 390), onde ele tem 2 px de folga. O tamanho de cada campo
 // em si é do schema; aqui conta o texto pronto (ex.: a cidade entra na linha "Fábrica própria em ...").
+/** @type {[string, string, number, string][]} */
 const RENDERED_LIMITS = [
   [
     'historia',
@@ -100,7 +101,7 @@ export function logoProblems(contentDir, logo) {
 
 /**
  * @param {object} input
- * @param {ReturnType<import('../site.config.js').createSiteConfig>} input.site
+ * @param {ReturnType<typeof import('../site.config.js').createSiteConfig>} input.site
  * @param {Record<string, any>} input.content o conteúdo lido de content/ (inclui `exemplo`)
  * @param {string} [input.root] pasta do projeto (onde ficam content/ e docs/provas/); sem ela, as
  *   conferências de arquivos (logos, registros de autorização) ficam de fora

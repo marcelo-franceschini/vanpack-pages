@@ -29,12 +29,17 @@ const TAG =
 function parse(text, where) {
   const parts = [];
   const names = new Set();
+  /** @type {{ when: boolean, name: string, parts: object[] } | null} */
   let open = null; // trecho condicional aberto
   let last = 0;
   const push = (part) => (open ? open.parts : parts).push(part);
-  const fail = (problem) => {
+  /**
+   * @param {string} problem
+   * @returns {never}
+   */
+  function fail(problem) {
     throw new Error(`${where}: ${problem}`);
-  };
+  }
   for (const match of text.matchAll(TAG)) {
     const [raw, command, listed] = match;
     const name = listed?.trim().replace(/\s+/g, ' ');
@@ -85,7 +90,7 @@ export function textProblem(text) {
     parse(String(text), 'texto');
     return '';
   } catch (error) {
-    return error.message.replace(/^texto: /, '');
+    return (error instanceof Error ? error.message : String(error)).replace(/^texto: /, '');
   }
 }
 

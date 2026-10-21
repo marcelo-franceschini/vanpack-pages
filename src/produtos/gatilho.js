@@ -16,7 +16,9 @@ export function ilustrar(area) {
 
 export function observeProdutos() {
   const list = document.querySelector('.models');
-  const areas = [...document.querySelectorAll('.model-3d[data-modelo]')];
+  const areas = /** @type {HTMLElement[]} */ ([
+    ...document.querySelectorAll('.model-3d[data-modelo]'),
+  ]);
   if (!list || !areas.length) return;
   const observer = new IntersectionObserver(
     (entries) => {

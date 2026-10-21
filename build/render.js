@@ -131,7 +131,7 @@ function applyMarks(html, { fields, vars }) {
       const lineStart = out.lastIndexOf('\n', m.index - 1) + 1;
       const alone = /^[ \t]*$/.test(out.slice(lineStart, m.index));
       const from = alone ? lineStart : m.index;
-      const to = alone ? end + /^[ \t]*\n?/.exec(out.slice(end))[0].length : end;
+      const to = alone ? end + (/^[ \t]*\n?/.exec(out.slice(end)) ?? [''])[0].length : end;
       out = out.slice(0, from) + out.slice(to);
       pos = from;
       continue;

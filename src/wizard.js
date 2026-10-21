@@ -31,12 +31,16 @@ const show = (value) => String(Number(value)).replace('.', ',');
  * @param {{ models: { id: string, name: string }[] }} options
  */
 export function mountQuoteWizard(section, { models }) {
-  const original = section.querySelector('a[data-cta="orcamento"]');
+  const original = /** @type {HTMLAnchorElement | null} */ (
+    section.querySelector('a[data-cta="orcamento"]')
+  );
   if (!original) return;
   const base = new URL(original.href);
   const wizard = el('div', { class: 'wizard', role: 'group', 'aria-label': 'Monte seu pedido' });
   // o assistente fica no lugar do texto, do botão e dos avisos do CTA final (que seguem no HTML)
-  for (const node of section.querySelectorAll('.lead, a[data-cta="orcamento"], .cta-note, .alt')) {
+  for (const node of /** @type {NodeListOf<HTMLElement>} */ (
+    section.querySelectorAll('.lead, a[data-cta="orcamento"], .cta-note, .alt')
+  )) {
     node.hidden = true;
   }
   section.querySelector('h2').after(wizard);

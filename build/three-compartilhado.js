@@ -72,11 +72,12 @@ export function jsSources(dir) {
 /**
  * Constrói o three.js compartilhado: um módulo só, com os nomes que o src/ importa, minificado.
  * @param {string} root pasta do projeto (o src/ fica dentro dela)
- * @param {object[]} [plugins] plugins extras do Vite (a auditoria usa um para medir os módulos)
+ * @param {import('vite').Plugin[]} [plugins] plugins extras do Vite (a auditoria usa um para medir os módulos)
  * @returns {Promise<string>} o código do módulo
  */
 export async function buildThree(root, plugins = []) {
   const entry = threeEntry(threeImports(jsSources(join(root, 'src'))));
+  /** @type {any} */
   const output = await build({
     root,
     configFile: false,
