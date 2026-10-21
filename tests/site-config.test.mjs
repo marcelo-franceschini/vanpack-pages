@@ -218,6 +218,17 @@ describe('trava de go-live', () => {
     );
   });
 
+  test('a linha pequena da abertura, já com a cidade no lugar, não passa de 48 caracteres', () => {
+    assert.deepEqual(validate().errors, [], 'Santo André-SP cabe');
+    const longCity = withEmpresa(
+      setPath(DEMO_EMPRESA, 'endereco.cidade', 'São José dos Campos de Cima'),
+    );
+    assert.match(
+      errorsOf({ content: longCity }),
+      /content\/historia\.yaml › hero\.etiqueta: depois de trocar as variáveis, o texto tem 49 caracteres \("Fábrica própria em São José dos Campos de Cima-SP"\); o máximo é 48/,
+    );
+  });
+
   test('cada peça 3D dos produtos aparece uma vez só', () => {
     const [first, ...rest] = baseContent.produtos.itens;
     const content = { ...baseContent, produtos: { itens: [first, { ...rest[0], id: first.id }] } };

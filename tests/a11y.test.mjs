@@ -7,7 +7,7 @@ import { launch, openPage, scrollToProgress, startServer } from '../scripts/lib.
 let server;
 let browser;
 before(async () => {
-  server = await startServer('dist');
+  server = await startServer(process.env.TESTE_DIST ?? 'dist');
   browser = await launch();
 });
 after(async () => {

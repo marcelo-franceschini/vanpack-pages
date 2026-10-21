@@ -6,9 +6,22 @@
 // registradas em docs/provas/.
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { visibleProofs } from '../site.config.js';
+import { RICH_VARS, visibleProofs } from '../site.config.js';
+import { renderText } from './texto.js';
 
 const MODES = ['demo', 'production'];
+
+// Textos que, depois de trocadas as {{variáveis}}, não podem passar de um tamanho, senão o cartão da
+// abertura estoura no celular deitado (844 x 390), onde ele tem 2 px de folga. O tamanho de cada campo
+// em si é do schema; aqui conta o texto pronto (ex.: a cidade entra na linha "Fábrica própria em ...").
+const RENDERED_LIMITS = [
+  [
+    'historia',
+    'hero.etiqueta',
+    48,
+    'a linha pequena acima do título (cabe numa linha no celular deitado)',
+  ],
+];
 const MAX_LOGO_BYTES = 20 * 1024;
 
 // Campos que podem ter o mesmo valor do exemplo mesmo em produção: já são reais desde já (cidade, UF,
@@ -167,6 +180,24 @@ export function validateSite({
     if (root && !registry(item.id)) {
       errors.push(
         `${field('provas', item.id)}: a prova está autorizada, mas falta o registro docs/provas/${item.id}.md.`,
+      );
+    }
+  }
+
+  // Textos prontos que não podem passar de um tamanho (a cidade ou a região entram neles).
+  for (const [file, path, max, why] of RENDERED_LIMITS) {
+    const source = get(content[file], path);
+    if (typeof source !== 'string') continue;
+    let ready;
+    try {
+      ready = renderText(source, site.vars, { rich: RICH_VARS });
+    } catch {
+      continue; // variável vazia: o trecho some junto com o elemento, e o carregador já avisa do resto
+    }
+    const length = [...ready.replace(/<[^>]*>/g, '')].length;
+    if (length > max) {
+      errors.push(
+        `${field(file, path)}: depois de trocar as variáveis, o texto tem ${length} caracteres ("${ready}"); o máximo é ${max}, ${why}. Encurte o texto, ou o nome da cidade, da região...`,
       );
     }
   }

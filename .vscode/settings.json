@@ -1,0 +1,20 @@
+{
+  "yaml.schemas": {
+    "./content/schemas/empresa.schema.json": [
+      "content/empresa.yaml",
+      "content/exemplo/empresa.yaml"
+    ],
+    "./content/schemas/site.schema.json": "content/site.yaml",
+    "./content/schemas/historia.schema.json": "content/historia.yaml",
+    "./content/schemas/confianca.schema.json": "content/confianca.yaml",
+    "./content/schemas/produtos.schema.json": "content/produtos.yaml",
+    "./content/schemas/diferenciais.schema.json": "content/diferenciais.yaml",
+    "./content/schemas/clientes.schema.json": "content/clientes.yaml",
+    "./content/schemas/provas.schema.json": "content/provas.yaml",
+    "./content/schemas/orcamento.schema.json": "content/orcamento.yaml",
+    "./content/schemas/whatsapp.schema.json": "content/whatsapp.yaml",
+    "./content/schemas/rodape.schema.json": "content/rodape.yaml"
+  },
+  "[yaml]": { "editor.insertSpaces": true, "editor.tabSize": 2 },
+  "editor.rulers": [100]
+}
