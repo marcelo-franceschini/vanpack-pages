@@ -37,6 +37,7 @@ npm run audit:scene       # draw calls e triângulos nos 5 centros (≤ 90 deskt
 npm run audit:produtos    # draw calls do 3D de cada produto (≤ 60 por modelo) e memória ao rolar (precisa do build:audit)
 npm run audit:runtime     # tarefas longas e quadros ao rolar a história, com CPU 1× e 4×
 npm run audit:lighthouse  # Lighthouse mobile e desktop (mediana de 3 execuções; baixa via npx)
+npm run audit:carga       # celular com rede lenta (150 ms, 1,6 Mbps) e CPU 4x: FCP, LCP, tempo até a cena 3D e fila de pedidos (mediana de 11; tetos no cabeçalho)
 npm run audit:capturas    # capturas da história e das seções, em docs/capturas/ (fora do git)
 npm run audit:paridade    # compara com a master (ou --base=<ref>): pixels em 6 tamanhos (5 quadros, 5 seções) e a estrutura do HTML; diferenças em dist-paridade/
 ```
