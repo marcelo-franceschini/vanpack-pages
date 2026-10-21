@@ -41,32 +41,42 @@ after(async () => {
   await published.close();
 });
 
-/** Abre a página com o Umami interceptado; `calls` guarda cada evento enviado. */
-async function open({ url = server.url, query = '?tour=0', reply = {}, ...options } = {}) {
+/**
+ * Abre a página com o Umami interceptado; `calls` guarda cada evento enviado e `order` a ordem em que
+ * o evento "load" da página e cada envio aconteceram ('load', 'pageview' ou o nome do evento).
+ * `init` roda na página antes de qualquer script dela.
+ */
+async function open({ url = server.url, query = '?tour=0', reply = {}, init, ...options } = {}) {
   const calls = [];
+  const order = [];
   const opened = await openPage(
     browser,
     url + query,
     { reducedMotion: 'reduce', ...options },
     {
-      setup: ({ context }) =>
-        context.route(`${UMAMI}/**`, (route) => {
+      setup: async ({ context, page }) => {
+        page.on('load', () => order.push('load'));
+        if (init) await page.addInitScript(init);
+        await context.route(`${UMAMI}/**`, (route) => {
           const request = route.request();
           if (request.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: CORS });
-          calls.push({ ...JSON.parse(request.postData()), headers: request.headers() });
+          const call = { ...JSON.parse(request.postData()), headers: request.headers() };
+          calls.push(call);
+          order.push(call.payload.name ?? 'pageview');
           return route.fulfill({
             status: 200,
             headers: { ...CORS, 'content-type': 'application/json' },
             body: JSON.stringify({ cache: 'abc', sessionId: 's', visitId: 'v', ...reply }),
           });
-        }),
+        });
+      },
     },
   );
   // links externos (tel:, wa.me) não podem tirar a página do lugar durante o teste
   await opened.page.evaluate(() =>
     document.addEventListener('click', (e) => e.preventDefault(), true),
   );
-  return { ...opened, calls };
+  return { ...opened, calls, order };
 }
 
 /** Espera (até 5 s) um evento enviado que satisfaça `match`. */
@@ -91,6 +101,53 @@ describe('Umami Cloud', () => {
     assert.equal(view.payload.url, '/?tour=0');
     assert.equal(view.headers['content-type'], 'application/json');
     assert.equal(view.headers['x-umami-website-id'], SITE_ID);
+    await context.close();
+  });
+
+  test('a visualização só sai depois do carregamento, não na largada', async () => {
+    const { context, calls, order } = await open();
+    await waitFor(calls, (call) => !call.payload.name);
+    assert.equal(order.indexOf('load') < order.indexOf('pageview'), true, `ordem: ${order}`);
+    await context.close();
+  });
+
+  test('um evento de negócio antes do momento ocioso leva a visualização na frente', async () => {
+    // sem requestIdleCallback a visualização fica esperando; o clique a solta, e ela vai primeiro
+    const { page, context, calls, order } = await open({
+      init: () => {
+        window.requestIdleCallback = () => 0;
+      },
+    });
+    await page.waitForTimeout(500);
+    assert.deepEqual(calls, [], 'nada enviado antes do clique');
+    await page.click('[data-cta="hero"]');
+    await waitFor(calls, named('whatsapp_click'));
+    assert.deepEqual(
+      order.filter((item) => item !== 'load'),
+      ['pageview', 'whatsapp_click'],
+    );
+    await context.close();
+  });
+
+  test('ao esconder a aba sem ter chegado ao momento ocioso, a visualização sai antes do resumo', async () => {
+    const { page, context, calls, order } = await open({
+      init: () => {
+        window.requestIdleCallback = () => 0;
+      },
+    });
+    await scrollToProgress(page, 0.25);
+    await page.evaluate(() => {
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        get: () => 'hidden',
+      });
+      document.dispatchEvent(new Event('visibilitychange', { bubbles: true }));
+    });
+    await waitFor(calls, named('visit_summary'));
+    assert.deepEqual(
+      order.filter((item) => item !== 'load'),
+      ['pageview', 'visit_summary'],
+    );
     await context.close();
   });
 
