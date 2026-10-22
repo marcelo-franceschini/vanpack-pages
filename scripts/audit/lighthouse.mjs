@@ -4,7 +4,9 @@
 //
 // Tetos, medidos em 21/10/2026 com o three.js avisado no <head> (mobile: desempenho 99, LCP 2,0 s, FCP
 // 1,24 s, TBT 0, CLS 0; desktop: desempenho 99 a 100, LCP 0,44 s); só descem. Passar de um teto sai com
-// erro; no CI do PR este script roda como informativo (o job não bloqueia o merge). O SEO não entra: em
+// erro, mas só LCP, TBT e CLS: a nota (quantizada) só avisa, porque no runner do CI o desempenho mobile saiu
+// 98/99/99 num run em que as métricas não oscilaram. No CI do PR o job fica vermelho se uma métrica passar
+// do teto; ele só bloqueia o merge depois de entrar nos checks obrigatórios da master. O SEO não entra: em
 // modo demo o `noindex` o derruba de propósito (SEO 100 só em production, ver docs/go-live.md).
 // Com GITHUB_STEP_SUMMARY definido (Actions), escreve também o resumo em Markdown.
 import { execFile } from 'node:child_process';
@@ -36,12 +38,13 @@ console.log(
   'modo     desempenho  acessib.  boas práticas  SEO   LCP      TBT     CLS    FCP     execuções',
 );
 const summary = [
-  `### Lighthouse (informativo, mediana de ${runs}; teto entre parênteses)`,
+  `### Lighthouse (mediana de ${runs}; LCP, TBT e CLS reprovam, a nota só avisa)`,
   '',
   '| modo | desempenho | acessibilidade | boas práticas | LCP | TBT | CLS | FCP |',
   '|---|---|---|---|---|---|---|---|',
 ];
-const problems = [];
+const problems = []; // LCP, TBT e CLS acima do teto: reprovam
+const warnings = []; // nota abaixo do piso: só avisa (a nota é quantizada e oscila 98/99 no runner)
 for (const mode of ['mobile', 'desktop']) {
   const reports = [];
   for (let i = 1; i <= runs; i++) {
@@ -83,7 +86,7 @@ for (const mode of ['mobile', 'desktop']) {
     ['accessibility', limit.accessibility, 'acessibilidade'],
     ['bestPractices', limit.bestPractices, 'boas práticas'],
   ]) {
-    if (got[key] < floor) problems.push(`${mode}: ${label} ${got[key]} abaixo do piso de ${floor}`);
+    if (got[key] < floor) warnings.push(`${mode}: ${label} ${got[key]} abaixo do piso de ${floor}`);
   }
   for (const [key, ceiling, label, unit] of [
     ['lcp', limit.lcp, 'LCP', 'ms'],
@@ -106,6 +109,7 @@ await server.close();
 summary.push(
   '',
   problems.length ? `Fora do orçamento: ${problems.join('; ')}.` : 'Dentro do orçamento.',
+  ...(warnings.length ? ['', `Aviso (não reprova): ${warnings.join('; ')}.`] : []),
 );
 if (process.env.GITHUB_STEP_SUMMARY) {
   appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${summary.join('\n')}\n\n`);
@@ -116,4 +120,5 @@ if (problems.length) {
   );
   process.exit(1);
 }
+if (warnings.length) console.warn(`\nAviso (não reprova): ${warnings.join('; ')}.`);
 console.log('Dentro do orçamento.');

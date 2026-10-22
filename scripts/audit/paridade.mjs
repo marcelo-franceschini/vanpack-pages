@@ -6,8 +6,12 @@
 // a política de privacidade e a altura total da página, mais a estrutura do HTML publicado (index.html e a política de privacidade, ver
 // canonicalHtml), robots.txt e sitemap.xml. Byte igual passa direto; se os bytes diferem, conta-se por pixel: a tolerância
 // é de 2/255 por canal (ruído de rasterização nas bordas suavizadas de ícones e sublinhados, medido em
-// 1/255 entre duas séries da mesma base) e nenhuma mudança de tamanho. Nenhuma mudança visual real cabe
-// nisso: trocar uma cor, mover algo em 1 px ou mudar um texto passa de 2/255 nas bordas. O renderizador
+// 1/255 entre duas séries da mesma base) e nenhuma mudança de tamanho. Mover algo em 1 px ou mudar um texto
+// passa de 2/255 nas bordas. Uma troca de cor de 1 ou 2/255 não passa, mas atinge muitos pixels: por isso
+// uma diferença abaixo da tolerância que atinge 0,1% da imagem ou mais também precisa ser confirmada
+// numa 2ª captura (medido: trocar #14513a por #14513b dava 1/255 em um milhão de pixels e passava). Isso
+// vale só para as capturas de página: nos quadros 3D (`-pNNN.png`) o runner do CI erra 1/255 em ~22 mil
+// pixels de forma estável, e ali a tolerância de 2/255 continua sendo o critério. O renderizador
 // do runner do CI às vezes erra um ou dois pixels de borda (2 pixels a 14/255 num sublinhado, em pontos
 // diferentes a cada execução): por isso uma diferença acima da tolerância só reprova se se repetir nos
 // mesmos pixels numa segunda captura dos dois lados; mudança real é determinística e se repete, o erro
@@ -22,13 +26,13 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ROOT, launch, openPage, scrollToProgress, startServer } from '../lib.mjs';
+import { TOLERANCE, ehRuido, repetiu } from './paridade-criterio.mjs';
 
 const base = process.argv.find((arg) => arg.startsWith('--base='))?.slice('--base='.length);
 const BASE_REF = base || 'origin/master';
 const only = process.argv.find((arg) => arg.startsWith('--telas='))?.slice('--telas='.length);
 const htmlWarns = process.argv.includes('--html=aviso');
 const OUT = `${ROOT}dist-paridade/`;
-const TOLERANCE = 2; // diferença máxima por canal (0 a 255) que ainda conta como o mesmo pixel
 const VITE = `${ROOT}node_modules/vite/bin/vite.js`;
 
 const MOBILE = { hasTouch: true, isMobile: true, deviceScaleFactor: 2 };
@@ -167,20 +171,24 @@ const pixelDiff = (page, a, b) =>
       let over = 0;
       let max = 0;
       const at = [];
+      const any = [];
       for (let i = 0; i < p.data.length; i += 4) {
         const delta = Math.max(
           Math.abs(p.data[i] - q.data[i]),
           Math.abs(p.data[i + 1] - q.data[i + 1]),
           Math.abs(p.data[i + 2] - q.data[i + 2]),
         );
-        if (delta) pixels += 1;
+        if (delta) {
+          pixels += 1;
+          if (any.length < 5000) any.push(i / 4);
+        }
         if (delta > tolerance) {
           over += 1;
           if (at.length < 5000) at.push(i / 4);
         }
         max = Math.max(max, delta);
       }
-      return { pixels, over, max, at };
+      return { pixels, over, max, at, any, total: p.width * p.height };
     },
     [a.toString('base64'), b.toString('base64'), TOLERANCE],
   );
@@ -297,7 +305,7 @@ for (const screen of screens) {
     let detail = 'só existe de um lado';
     if (a && b && name.endsWith('.png')) {
       const diff = await pixelDiff(diffPage, a, b);
-      if (!diff.size && !diff.over) {
+      if (ehRuido(diff, name)) {
         noise.push(`${name} (${diff.pixels} pixels, no máximo ${diff.max}/255)`);
         noisy += 1;
         continue;
@@ -311,7 +319,7 @@ for (const screen of screens) {
           second.now.shots.get(name) && second.before.shots.get(name)
             ? await pixelDiff(diffPage, second.now.shots.get(name), second.before.shots.get(name))
             : { size: 'sumiu na 2ª captura' };
-        const repeated = again.size || again.at.some((pixel) => diff.at.includes(pixel));
+        const repeated = repetiu(diff, again);
         if (!repeated) {
           noise.push(
             `${name} (${diff.over} pixels acima de ${TOLERANCE}/255, máximo ${diff.max}/255, não se repetiu na 2ª captura)`,
@@ -320,7 +328,11 @@ for (const screen of screens) {
           continue;
         }
       }
-      detail = diff.size ?? `${diff.over} pixels acima de ${TOLERANCE}/255, máximo ${diff.max}/255`;
+      detail =
+        diff.size ??
+        (diff.over
+          ? `${diff.over} pixels acima de ${TOLERANCE}/255, máximo ${diff.max}/255`
+          : `${diff.pixels} pixels diferem em até ${diff.max}/255 e se repetiram na 2ª captura: mudança ampla de baixa amplitude`);
     } else if (a && b) {
       detail = `${b.toString().trim()} contra ${a.toString().trim()}`;
     }

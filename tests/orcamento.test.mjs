@@ -13,21 +13,27 @@
 // 196,0 para 188,0; os tetos desceram junto, para o maior valor medido mais 0,1 KB (HTML 0,6 KB: o go-live troca
 // textos). Política, 404 e og.jpg ficaram como estavam: o texto da política vem do jurídico e a imagem de
 // compartilhamento será refeita no go-live (npm run og), e nenhum deles sobe.
-// O teto de JS inicial de npm run audit:bundle desceu de 165 para 140 KB (o do teste acima é 139,3).
+// Rodada 3: o three.js sem PMREMGenerator e WebXRManager (build/three-compartilhado.js) baixou o three.js de
+// 119,54 para 111,71 KB e o JS inicial de 139,10 para 131,27. Os tetos agora partem do pior conteúdo que os
+// schemas aceitam (dist-limite/, que tests/limites.test.mjs confere com este mesmo teste), medido no Node 24
+// (o maior dos dois Node), mais 0,1 a 0,2 KB: three.js 111,71, JS inicial 131,29, carga 171,12 e visita 180,72
+// KB. Descem 7,8 KB cada um (three.js, JS inicial, carga) e 7,4 KB (visita); nenhum sobe.
+// O teto de JS inicial de npm run audit:bundle foi de 165 para 140 e agora para 132 KB (o do teste acima é 131,5).
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { describe, test } from 'node:test';
 import { gzipSync } from 'node:zlib';
 
 const ROOT = new URL('..', import.meta.url).pathname;
-const DIST = `${ROOT}dist/`;
+// TESTE_DIST aponta outra pasta de build (tests/limites.test.mjs confere o conteúdo no máximo dos schemas).
+const DIST = `${ROOT}${process.env.TESTE_DIST ?? 'dist'}/`;
 const KB = 1024;
 
 // Cada arquivo de assets/ tem o prefixo do nome sem o hash (index-BsPmJb_d.js → index).
 const JS = {
   index: 8.3, // o script da página (sem o three.js)
   worker: 11.6, // a cena da história, no Web Worker (o three.js vem do arquivo three)
-  three: 119.7, // o three.js, num arquivo só para os dois workers e o render de reserva
+  three: 111.9, // o three.js, num arquivo só para os dois workers e o render de reserva
   controller: 11.6, // o mesmo render da história, só se o worker falhar (thread principal)
   'produtos-worker': 7.3, // a vitrine dos produtos, baixada perto da seção
   montar: 1.7, // montagem do 3D dos produtos
@@ -45,9 +51,9 @@ const FILES = {
 };
 const SVG_TOTAL = 13.5; // todos os SVGs de brand/ e produtos/
 const TOTAL = {
-  jsInicial: 139.3, // script da página + worker da história + three.js
-  carga: 178.8, // HTML + JS inicial + fonte + os 2 logos do topo e da cena
-  visita: 188.4, // a carga + o 3D dos produtos + o logo do CTA final
+  jsInicial: 131.5, // script da página + worker da história + three.js
+  carga: 171.4, // HTML + JS inicial + fonte + os 2 logos do topo e da cena
+  visita: 181.0, // a carga + o 3D dos produtos + o logo do CTA final
 };
 
 const built = existsSync(`${DIST}index.html`);

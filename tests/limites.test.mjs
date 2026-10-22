@@ -78,6 +78,20 @@ const files = Object.fromEntries(
   }),
 );
 
+/** Roda um arquivo de teste contra o build do conteúdo no máximo (dist-limite/). */
+function rodar(file) {
+  // um `node --test` dentro de um teste herda NODE_TEST_CONTEXT e só finge rodar (sai com 0): sem ela
+  // ele é um executor de verdade
+  const env = { ...process.env };
+  delete env.NODE_TEST_CONTEXT;
+  return spawnSync(process.execPath, ['--test', file], {
+    cwd: ROOT,
+    env: { ...env, TESTE_DIST: 'dist-limite' },
+    encoding: 'utf8',
+    timeout: 600_000,
+  });
+}
+
 describe('conteúdo no limite máximo', () => {
   test('o conteúdo no limite passa pelo carregador e as listas estão cheias', () => {
     const { dir, remove } = contentCopy(files);
@@ -106,16 +120,7 @@ describe('conteúdo no limite máximo', () => {
       Object.assign(process.env, saved);
       remove();
     }
-    // um `node --test` dentro de um teste herda NODE_TEST_CONTEXT e só finge rodar (sai com 0): sem ela
-    // ele é um executor de verdade
-    const env = { ...process.env };
-    delete env.NODE_TEST_CONTEXT;
-    const run = spawnSync(process.execPath, ['--test', 'tests/layout.test.mjs'], {
-      cwd: ROOT,
-      env: { ...env, TESTE_DIST: 'dist-limite' },
-      encoding: 'utf8',
-      timeout: 600_000,
-    });
+    const run = rodar('tests/layout.test.mjs');
     const failed = run.stdout
       .split('\n')
       .filter((line) => /^\s*✖/.test(line))
@@ -124,6 +129,20 @@ describe('conteúdo no limite máximo', () => {
       run.status,
       0,
       `o layout quebra com o conteúdo no limite:\n${failed}\n${run.stdout.slice(-3000)}`,
+    );
+  });
+
+  test('o site construído com tudo no limite cabe nos tetos de bytes (os mesmos do site normal)', () => {
+    // depende do build do teste anterior (dist-limite/)
+    const run = rodar('tests/orcamento.test.mjs');
+    const failed = run.stdout
+      .split('\n')
+      .filter((line) => /AssertionError/.test(line))
+      .join('\n');
+    assert.equal(
+      run.status,
+      0,
+      `o conteúdo no limite dos schemas estoura o orçamento de bytes:\n${failed}\n${run.stdout.slice(-2000)}`,
     );
   });
 });

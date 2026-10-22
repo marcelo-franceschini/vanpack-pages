@@ -31,7 +31,7 @@ Os testes de navegador usam o Chrome do sistema (`CHROME_PATH`, padrão `/usr/bi
    ```
 
 4. Abra o pull request para a `master`. O CI (`verificar`, que roda lint, tipos e os testes em 3 partes
-   paralelas, e `paridade`) precisa estar verde; o job `lighthouse` é só informativo. O merge publica o
+   paralelas, e `paridade`) precisa estar verde; o job `lighthouse` fica vermelho se LCP, TBT ou CLS passarem do teto, mas não bloqueia o merge enquanto não for check obrigatório da `master`. O merge publica o
    site sozinho (GitHub Pages, por Actions) depois de os testes passarem de novo.
 
 Nunca faça push direto na `master`: ela é protegida (os checks `verificar / verificar` e `paridade` são
@@ -57,7 +57,7 @@ obrigatórios; force-push e exclusão são recusados).
 - **O 3D principal.** `src/scene/`, `src/render/` e `tests/scene.test.mjs` são travados por hash
   (`tests/trava-3d.test.mjs` e `tests/fixtures/3d-lock.json`). Mexer neles é decisão do dono do projeto.
 - **O tour automático.** Ele começa sozinho, sem espera, assim que a cena fica pronta (ver README).
-- **Os orçamentos de desempenho.** O JS inicial não passa de 140 KB gzip, e `tests/orcamento.test.mjs`
+- **Os orçamentos de desempenho.** O JS inicial não passa de 132 KB gzip, e `tests/orcamento.test.mjs`
   trava os bytes por arquivo: os tetos só descem. Nunca afrouxe um teto nem altere um teste para fazê-lo
   passar; se um teste falha, entenda a causa.
 - **A marca.** Só as cores Floresta, Carvão, Papel e Kraft; só a fonte Archivo; sem foto; sem

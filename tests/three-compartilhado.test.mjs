@@ -23,6 +23,7 @@ import {
   shadersDosNomes,
   threeEntry,
   threeImports,
+  usosQueExigemOsTocos,
 } from '../build/three-compartilhado.js';
 
 const ROOT = new URL('..', import.meta.url).pathname;
@@ -134,6 +135,19 @@ describe('aparo dos shaders do three.js', () => {
     );
   });
 
+  test('o src/ não usa environment map nem XR; se usar, o build cai com arquivo e linha', () => {
+    assert.deepEqual(usosQueExigemOsTocos(jsSources(`${ROOT}src`)), []);
+    const found = usosQueExigemOsTocos([
+      { path: 'src/a.js', text: 'const x = 1;\nscene.environment = tex;' },
+      { path: 'src/b.js', text: 'material.envMap = tex;\nrenderer.xr.enabled = true;' },
+      { path: 'src/c.js', text: 'const ok = environmentLabel; // sem uso' },
+    ]);
+    assert.deepEqual(
+      found.map((line) => line.split(': ')[0]),
+      ['src/a.js:2', 'src/b.js:1', 'src/b.js:2'],
+    );
+  });
+
   test('o projeto usa a versão do three.js com a qual o aparo foi conferido; outra versão derruba o build', async () => {
     const real = JSON.parse(readFileSync(`${ROOT}node_modules/three/package.json`, 'utf8')).version;
     assert.equal(real, SHADERS_CONFERIDOS_COM);
@@ -167,6 +181,13 @@ describe('three.js no dist/', { skip: !built && 'sem dist/: rode `npm run build`
     assert.match(code, /#define LAMBERT/);
     assert.match(code, /USE_SHADOWMAP/);
     assert.doesNotMatch(code, /#define PHONG|#define PHYSICAL|#define TOON|#define MATCAP/);
+  });
+
+  test('o PMREMGenerator e o WebXRManager entram só como tocos (a cena não usa nenhum dos dois)', () => {
+    const code = read(shared[0]);
+    assert.match(code, /PMREMGenerator removido do three\.js compartilhado/);
+    assert.ok(!/XRWebGLLayer|xr-standard|XRSession/.test(code), 'WebXR de verdade no bundle');
+    assert.ok(!/_sceneToCubeUV/.test(code), 'PMREM de verdade no bundle');
   });
 
   for (const prefix of ['worker', 'produtos-worker', 'controller']) {

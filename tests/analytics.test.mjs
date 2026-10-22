@@ -1,11 +1,12 @@
 // Medição no Umami Cloud: os eventos de negócio e o resumo da visita saem pelo nosso JS, sem cookies,
 // sem storage e sem script de terceiro, e só na página publicada (o host da VITE_SITE_URL). O build do
-// teste liga o Umami e põe o host do site igual ao do servidor de teste; a URL real do Umami é
+// teste liga o Umami (em production, o único modo que mede) e põe o host do site igual ao do servidor de teste; a URL real do Umami é
 // interceptada pelo Playwright, então nenhum tráfego real sai.
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
 import { build } from 'vite';
 import { ROOT, launch, openPage, scrollToProgress, startServer } from '../scripts/lib.mjs';
+import { baseContent, contentCopy, realEmpresa } from './dados.mjs';
 
 const SITE_ID = '12345678-1234-4234-8234-123456789abc';
 const UMAMI = 'https://gateway.umami.is';
@@ -19,17 +20,26 @@ let server;
 let published; // servidor do build padrão (host diferente do site: não deve enviar nada)
 let browser;
 before(async () => {
+  // A medição só liga em production (o site de demonstração não soma visitas): o build usa dados reais de
+  // teste e uma lista de clientes vazia.
+  const { dir, remove } = contentCopy({
+    'empresa.yaml': realEmpresa,
+    'clientes.yaml': { ...baseContent.clientes, clientes: [] },
+  });
   const saved = { ...process.env };
   Object.assign(process.env, {
+    VITE_DATA_MODE: 'production',
     VITE_ANALYTICS_PROVIDER: 'umami',
     VITE_ANALYTICS_SITE: SITE_ID,
-    VITE_SITE_URL: 'http://127.0.0.1/',
+    VITE_SITE_URL: 'https://127.0.0.1/',
+    VANPACK_CONTENT: dir,
   });
   try {
     await build({ root: ROOT, logLevel: 'silent', build: { outDir: 'dist-analytics' } });
   } finally {
     for (const key of Object.keys(process.env)) if (!(key in saved)) delete process.env[key];
     Object.assign(process.env, saved);
+    remove();
   }
   server = await startServer('dist-analytics');
   published = await startServer('dist');
