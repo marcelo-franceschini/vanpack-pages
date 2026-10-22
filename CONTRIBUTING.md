@@ -31,7 +31,7 @@ Os testes de navegador usam o Chrome do sistema (`CHROME_PATH`, padrão `/usr/bi
    ```
 
 4. Abra o pull request para a `master`. O CI (`verificar`, que roda lint, tipos e os testes em 3 partes
-   paralelas, e `paridade`) precisa estar verde; o job `lighthouse` é só informativo. O merge publica o
+   paralelas, e `paridade`) precisa estar verde; o job `lighthouse` fica vermelho se LCP, TBT ou CLS passarem do teto, mas não bloqueia o merge enquanto não for check obrigatório da `master`. O merge publica o
    site sozinho (GitHub Pages, por Actions) depois de os testes passarem de novo.
 
 Nunca faça push direto na `master`: ela é protegida (os checks `verificar / verificar` e `paridade` são
