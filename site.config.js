@@ -197,12 +197,13 @@ export function createSiteConfig({
     yearsInBusiness: Number.isFinite(years) ? String(years) : '',
   };
 
-  // O que vai ao navegador (define __SITE__): a medição só liga na página publicada (o host do site).
+  // O que vai ao navegador (define __SITE__): a medição só liga na página publicada (o host do site) e só em
+  // production: o site de demonstração tem CNPJ e telefone fictícios e não pode somar visitas ao Umami.
   site.client = {
     experiments: tests ?? {},
     models: products.map(({ id, nome }) => ({ id, name: nome })), // assistente de orçamento
     analytics:
-      site.analytics.provider === 'umami'
+      site.analytics.provider === 'umami' && site.dataMode === 'production'
         ? {
             site: site.analytics.site,
             endpoint: (site.analytics.endpoint || UMAMI_CLOUD).replace(/\/+$/, ''),

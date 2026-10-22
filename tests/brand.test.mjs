@@ -9,9 +9,10 @@ import { baseContent } from './dados.mjs';
 
 const read = (file) => readFileSync(`${ROOT}${file}`, 'utf8');
 const env = loadEnv('production', ROOT, 'VITE_');
-// O único domínio externo permitido na CSP é o servidor da medição, e só com provedor configurado.
+// O único domínio externo permitido na CSP é o servidor da medição, e só com provedor configurado em
+// production (em demo a medição fica desligada e a CSP não abre domínio nenhum).
 const ALLOWED_ORIGINS =
-  env.VITE_ANALYTICS_PROVIDER === 'umami'
+  env.VITE_ANALYTICS_PROVIDER === 'umami' && env.VITE_DATA_MODE === 'production'
     ? [new URL(env.VITE_ANALYTICS_ENDPOINT || 'https://gateway.umami.is').origin]
     : [];
 const html = read('index.html');

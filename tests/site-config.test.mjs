@@ -500,6 +500,7 @@ describe('medição e CSP', () => {
     VITE_ANALYTICS_PROVIDER: 'umami',
     VITE_ANALYTICS_SITE: '12345678-1234-4234-8234-123456789abc',
     VITE_SITE_URL: 'https://empresa.com.br/loja/',
+    VITE_DATA_MODE: 'production', // em demo a medição não liga (teste abaixo)
   };
   const csp = (env) =>
     contentSecurityPolicy({ styleHashes: ["'sha256-x'"], site: siteWith({ env }) });
@@ -518,6 +519,13 @@ describe('medição e CSP', () => {
       host: 'empresa.com.br',
     });
     assert.match(csp(UMAMI), /connect-src 'self' https:\/\/gateway\.umami\.is;/);
+  });
+
+  test('em demo a medição não liga, mesmo com Umami configurado: nada vai ao navegador nem à CSP', () => {
+    const demo = { ...UMAMI, VITE_DATA_MODE: 'demo' };
+    assert.equal(siteWith({ env: demo }).client.analytics, null);
+    assert.match(csp(demo), /connect-src 'self';/);
+    assert.ok(!/https?:/.test(csp(demo)));
   });
 
   test('instância própria: o endereço do servidor vai na config e na CSP', () => {

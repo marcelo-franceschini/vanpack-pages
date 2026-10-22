@@ -108,7 +108,7 @@ A medição é sem cookies, então o site não precisa de banner. Para ligá-la:
 3. Copie o **Website ID** (Settings do site) para `VITE_ANALYTICS_SITE` e deixe `VITE_ANALYTICS_PROVIDER=umami`.
 4. **Não** cole o "Tracking code" do Umami no HTML: o nosso JS já chama a API deles, e a CSP bloquearia o script.
 
-Navegador automatizado (Lighthouse, Playwright, Selenium) não envia nada: as execuções de teste no site publicado não entram na medição nem gastam a cota. O site só envia eventos quando o host da página é o da `VITE_SITE_URL`: ao trocar de domínio, mude a URL no `.env` e o domínio do site no Umami. Os dados passam por servidores dos EUA e da UE; a [política de privacidade](../politica-de-privacidade.html) do site explica isso e cita o plano atual (se mudar de plano, ajuste o texto de retenção nela). Vale uma checagem rápida dessa política com o jurídico antes do go-live.
+A medição só liga com `VITE_DATA_MODE=production`: no site de demonstração (dados fictícios) o navegador não recebe o Website ID, a CSP não abre o domínio do Umami e nenhum evento sai. Navegador automatizado (Lighthouse, Playwright, Selenium) não envia nada: as execuções de teste no site publicado não entram na medição nem gastam a cota. O site só envia eventos quando o host da página é o da `VITE_SITE_URL`: ao trocar de domínio, mude a URL no `.env` e o domínio do site no Umami. Os dados passam por servidores dos EUA e da UE; a [política de privacidade](../politica-de-privacidade.html) do site explica isso e cita o plano atual (se mudar de plano, ajuste o texto de retenção nela). Vale uma checagem rápida dessa política com o jurídico antes do go-live.
 
 ## Checklist final
 
