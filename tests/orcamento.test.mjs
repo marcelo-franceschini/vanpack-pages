@@ -20,7 +20,8 @@ import { describe, test } from 'node:test';
 import { gzipSync } from 'node:zlib';
 
 const ROOT = new URL('..', import.meta.url).pathname;
-const DIST = `${ROOT}dist/`;
+// TESTE_DIST aponta outra pasta de build (tests/limites.test.mjs confere o conteúdo no máximo dos schemas).
+const DIST = `${ROOT}${process.env.TESTE_DIST ?? 'dist'}/`;
 const KB = 1024;
 
 // Cada arquivo de assets/ tem o prefixo do nome sem o hash (index-BsPmJb_d.js → index).
