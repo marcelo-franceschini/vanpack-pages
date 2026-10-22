@@ -1,10 +1,16 @@
 // O critério da paridade visual (scripts/audit/paridade-criterio.mjs), sem navegador: mudança de cor de
-// baixa amplitude mas ampla é detectada; ruído do renderizador do runner, que cai em pontos diferentes a
-// cada execução, não reprova. Os números vêm de medições reais (troca de #14513a por #14513b: 1/255 em
+// baixa amplitude mas ampla é detectada nas capturas de página; o ruído estável do runner nos quadros 3D
+// não reprova. Os números vêm de medições reais (troca de #14513a por #14513b: 1/255 em
 // 1.008.936 pixels numa seção; ruído do CI: 22.501 pixels a 1/255 numa tela de 844x390 a 2x).
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import { TOLERANCE, ehAmpla, ehRuido, repetiu } from '../scripts/audit/paridade-criterio.mjs';
+import {
+  TOLERANCE,
+  ehAmpla,
+  ehQuadro3D,
+  ehRuido,
+  repetiu,
+} from '../scripts/audit/paridade-criterio.mjs';
 
 const range = (from, count) => Array.from({ length: count }, (_, i) => from + i);
 const secao = 1440 * 900;
@@ -18,6 +24,14 @@ describe('critério da paridade visual', () => {
     const diff = { pixels: 1_008_936, over: 0, max: 1, any: range(0, 5000), total: secao };
     assert.ok(ehAmpla(diff));
     assert.ok(!ehRuido(diff));
+  });
+
+  test('no quadro 3D a diferença ampla de 1/255 é ruído do runner; na seção ela reprova', () => {
+    const diff = { pixels: 22_501, over: 0, max: 1, any: range(0, 5000), total: 1688 * 780 };
+    assert.ok(ehQuadro3D('844x390-p075.png'));
+    assert.ok(!ehQuadro3D('844x390-secao-clientes.png'));
+    assert.ok(ehRuido(diff, '844x390-p075.png'));
+    assert.ok(!ehRuido(diff, '844x390-secao-clientes.png'));
   });
 
   test('um punhado de pixels a 1/255 continua sendo ruído', () => {

@@ -9,7 +9,9 @@
 // 1/255 entre duas séries da mesma base) e nenhuma mudança de tamanho. Mover algo em 1 px ou mudar um texto
 // passa de 2/255 nas bordas. Uma troca de cor de 1 ou 2/255 não passa, mas atinge muitos pixels: por isso
 // uma diferença abaixo da tolerância que atinge 0,1% da imagem ou mais também precisa ser confirmada
-// numa 2ª captura (medido: trocar #14513a por #14513b dava 1/255 em um milhão de pixels e passava). O renderizador
+// numa 2ª captura (medido: trocar #14513a por #14513b dava 1/255 em um milhão de pixels e passava). Isso
+// vale só para as capturas de página: nos quadros 3D (`-pNNN.png`) o runner do CI erra 1/255 em ~22 mil
+// pixels de forma estável, e ali a tolerância de 2/255 continua sendo o critério. O renderizador
 // do runner do CI às vezes erra um ou dois pixels de borda (2 pixels a 14/255 num sublinhado, em pontos
 // diferentes a cada execução): por isso uma diferença acima da tolerância só reprova se se repetir nos
 // mesmos pixels numa segunda captura dos dois lados; mudança real é determinística e se repete, o erro
@@ -303,7 +305,7 @@ for (const screen of screens) {
     let detail = 'só existe de um lado';
     if (a && b && name.endsWith('.png')) {
       const diff = await pixelDiff(diffPage, a, b);
-      if (ehRuido(diff)) {
+      if (ehRuido(diff, name)) {
         noise.push(`${name} (${diff.pixels} pixels, no máximo ${diff.max}/255)`);
         noisy += 1;
         continue;
