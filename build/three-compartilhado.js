@@ -12,6 +12,10 @@
 // o desenho é o mesmo (paridade visual). Material fora da tabela, ou versão do three.js diferente da
 // conferida, derruba o build com a explicação: nada falha em silêncio no navegador.
 //
+// O renderer também importa o PMREMGenerator (22 KB, só serve para environment map e fundo equirretangular) e o
+// WebXRManager (17 KB, realidade virtual). A cena não usa nenhum dos dois: aqui eles viram tocos pequenos
+// (-7,9 KB gzip, medido). Se o src/ passar a usar environment map ou XR, o build cai com a explicação.
+//
 // Nada em src/ muda, e a cena é a mesma: só de onde vem o código do three.js.
 import { createHash } from 'node:crypto';
 import { readFileSync, readdirSync } from 'node:fs';
@@ -154,6 +158,60 @@ export function shaderChunkEnxuto(source, keep) {
   return out.join('\n').replace(/,\n\};/, '\n};');
 }
 
+/** Troca o PMREMGenerator por um toco: só um environment map ou fundo equirretangular chega a criá-lo. */
+const TOCO_PMREM =
+  "export class PMREMGenerator { constructor() { throw new Error('PMREMGenerator removido do three.js compartilhado (build/three-compartilhado.js): a cena não usa environment map.'); } }";
+/** Troca o WebXRManager por um toco inerte: `renderer.xr` existe, mas nunca entra em sessão. */
+const TOCO_WEBXR = [
+  "import { EventDispatcher } from '../../core/EventDispatcher.js';",
+  'export class WebXRManager extends EventDispatcher {',
+  '  constructor() { super(); this.enabled = false; this.isPresenting = false; }',
+  ...[
+    'getController',
+    'getControllerGrip',
+    'getHand',
+    'getReferenceSpace',
+    'getBaseLayer',
+    'getBinding',
+    'getFrame',
+    'getSession',
+    'getCamera',
+    'getDepthTexture',
+    'getDepthSensingMesh',
+  ].map((name) => `  ${name}() { return null; }`),
+  ...[
+    'setFramebufferScaleFactor',
+    'setReferenceSpaceType',
+    'updateCamera',
+    'setFoveation',
+    'dispose',
+  ].map((name) => `  ${name}() {}`),
+  '  getFoveation() { return undefined; }',
+  '  getEnvironmentBlendMode() { return undefined; }',
+  '  hasDepthSensing() { return false; }',
+  '  setSession() { return Promise.resolve(); }',
+  '}',
+].join('\n');
+
+/** Usos no código do projeto que exigem o PMREMGenerator ou o WebXRManager de verdade. */
+const USO_DE_AMBIENTE_OU_XR =
+  /\b(envMap|PMREMGenerator|WebXRManager|setSession)\b|\.(environment|xr)\b/;
+
+/**
+ * Onde o src/ usa environment map ou XR (o que o aparo dos tocos não aguenta).
+ * @param {{ path: string, text: string }[]} sources
+ * @returns {string[]} `arquivo:linha: trecho`
+ */
+export function usosQueExigemOsTocos(sources) {
+  return sources.flatMap(({ path, text }) =>
+    text
+      .split('\n')
+      .flatMap((line, i) =>
+        USO_DE_AMBIENTE_OU_XR.test(line) ? [`${path}:${i + 1}: ${line.trim()}`] : [],
+      ),
+  );
+}
+
 /**
  * Plugins do Vite que trocam build/three.module.js pelos módulos de three/src e apagam os shaders de que a
  * cena não precisa.
@@ -186,6 +244,15 @@ export async function aparoDeShaders(root, names) {
       resolveId: (id) => (id === 'three' ? join(dir, 'src', 'Three.js') : null),
     },
     {
+      name: 'vanpack:three-tocos',
+      enforce: 'pre',
+      load: (id) => {
+        if (id.endsWith('/extras/PMREMGenerator.js')) return TOCO_PMREM;
+        if (id.endsWith('/renderers/webxr/WebXRManager.js')) return TOCO_WEBXR;
+        return null;
+      },
+    },
+    {
       name: 'vanpack:three-shaders',
       enforce: 'pre',
       load: (id) =>
@@ -213,7 +280,16 @@ export function jsSources(dir) {
  * @returns {Promise<string>} o código do módulo
  */
 export async function buildThree(root, plugins = []) {
-  const imports = threeImports(jsSources(join(root, 'src')));
+  const sources = jsSources(join(root, 'src'));
+  const imports = threeImports(sources);
+  const usos = usosQueExigemOsTocos(sources);
+  if (usos.length) {
+    throw new Error(
+      `build/three-compartilhado.js: o src/ usa environment map ou XR, que o three.js compartilhado não traz ` +
+        `(PMREMGenerator e WebXRManager viram tocos). Tire os tocos de aparoDeShaders e confira a paridade ` +
+        `visual:\n  ${usos.join('\n  ')}`,
+    );
+  }
   const entry = threeEntry(imports);
   const slim = await aparoDeShaders(root, imports.get('three') ?? []);
   /** @type {any} */
