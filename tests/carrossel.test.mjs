@@ -1,7 +1,7 @@
 // Carrossel de clientes (src/carrossel.js): esteira automática da direita para a esquerda em qualquer
 // largura e SEM nenhum controle (nem pausa, nem setas); pausa sozinha (mouse, foco de teclado, toque,
-// aba oculta e fora da tela), movimento reduzido, poucos itens parados (a partir de quantos a esteira
-// anda), cópias fora da leitura e do foco, e layout sem sobreposição nem rolagem horizontal.
+// aba oculta e fora da tela), movimento reduzido (parada), poucos itens (a esteira anda do mesmo jeito),
+// cópias fora da leitura e do foco, e layout sem sobreposição nem rolagem horizontal.
 // A lista de clientes de content/ pode ter qualquer tamanho: cada teste põe no HTML servido a
 // quantidade de cartões de que precisa (`items`), com nomes "Cliente 1", "Cliente 2"...
 import assert from 'node:assert/strict';
@@ -273,54 +273,59 @@ describe('carrossel com movimento reduzido', () => {
   }
 });
 
-describe('poucos clientes: cabem na largura e ficam parados', () => {
-  // quantos cabem sem andar: 5 em 1440 (o 6º já faz a esteira andar), 2 em 390 (o 3º já anda)
-  const cases = [
-    ['1440×900', 5],
-    ['1440×900', 4],
+describe('poucos clientes: a esteira anda do mesmo jeito', () => {
+  for (const [screen, items] of [
     ['1440×900', 1],
-    ['390×844', 2],
+    ['1440×900', 4],
     ['390×844', 1],
-  ];
-  for (const [screen, items] of cases) {
-    test(`${screen} com ${items}: parado, centralizado, sem cópias`, async () => {
-      const { page, context } = await open(screen, { items, expected: 'estatico' });
-      assert.equal(await estado(page), 'estatico');
+    ['390×844', 2],
+  ]) {
+    test(`${screen} com ${items}: anda, e as cópias enchem a janela`, async () => {
+      const { page, context } = await open(screen, { items });
+      assert.equal(await estado(page), 'rodando');
       const info = await page.evaluate(() => {
         const view = document.querySelector('.carrossel-janela').getBoundingClientRect();
-        const items = [...document.querySelectorAll('.carrossel-trilho .cliente')];
-        const first = items[0].getBoundingClientRect();
-        const last = items.at(-1).getBoundingClientRect();
+        const all = [...document.querySelectorAll('.carrossel-trilho .cliente')];
+        const last = all.at(-1).getBoundingClientRect();
         return {
-          items: items.length,
-          copies: document.querySelectorAll('.cliente[aria-hidden]').length,
-          transform: getComputedStyle(document.querySelector('.carrossel-trilho')).transform,
-          left: first.left - view.left,
-          right: view.right - last.right,
+          originals: all.filter((li) => !li.hasAttribute('aria-hidden')).length,
+          right: last.right - view.right,
         };
       });
-      assert.equal(info.items, items);
-      assert.equal(info.copies, 0);
-      assert.equal(info.transform, 'none');
-      assert.ok(
-        Math.abs(info.left - info.right) < 2,
-        `centralizado (${info.left} × ${info.right})`,
-      );
-      assert.ok(await still(page), 'parado');
+      assert.equal(info.originals, items);
+      assert.ok(info.right >= 0, 'a janela fica cheia até a borda direita');
       await context.close();
     });
   }
 
-  test('o limiar: 1 cartão a mais e a esteira anda (6 em 1440, 3 em 390)', async () => {
-    for (const [screen, items] of [
-      ['1440×900', 6],
-      ['390×844', 3],
-    ]) {
-      const { page, context } = await open(screen, { items });
-      assert.equal(await estado(page), 'rodando', `${screen} com ${items}`);
+  for (const [screen, items] of [
+    ['1440×900', 1],
+    ['390×844', 1],
+  ]) {
+    test(`${screen} com ${items} e movimento reduzido: parado, centralizado, sem cópias`, async () => {
+      const { page, context } = await open(screen, {
+        items,
+        reducedMotion: 'reduce',
+        expected: 'estatico',
+      });
+      assert.equal(await estado(page), 'estatico');
+      const info = await page.evaluate(() => {
+        const view = document.querySelector('.carrossel-janela').getBoundingClientRect();
+        const first = document.querySelector('.carrossel-trilho .cliente').getBoundingClientRect();
+        return {
+          copies: document.querySelectorAll('.cliente[aria-hidden]').length,
+          left: first.left - view.left,
+          right: view.right - first.right,
+        };
+      });
+      assert.equal(info.copies, 0);
+      assert.ok(
+        Math.abs(info.left - info.right) < 2,
+        `centralizado (${info.left} × ${info.right})`,
+      );
       await context.close();
-    }
-  });
+    });
+  }
 });
 
 describe('layout do carrossel', () => {

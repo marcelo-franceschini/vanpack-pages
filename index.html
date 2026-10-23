@@ -709,9 +709,9 @@
       /* clientes: só prova autorizada (ou exemplo, em demo), num carrossel (src/carrossel.js) em
          qualquer largura. Sem JS a janela rola na horizontal; com JS (.on) os itens andam devagar da
          direita para a esquerda numa esteira sem fim (transform, no compositor), com degradê Papel
-         nas bordas e sem nenhum controle (ela pausa sozinha, ver src/carrossel.js). Se os itens cabem
-         na largura (.estatico), ficam parados e centralizados. A largura fixa do item (10 rem, 12,5 rem
-         a partir de 861 px) decide a partir de quantos clientes a esteira anda. */
+         nas bordas e sem nenhum controle (ela pausa sozinha, ver src/carrossel.js). Com poucos logos os
+         itens se repetem para encher a janela; só com movimento reduzido e itens que cabem na largura
+         (.estatico) ficam parados e centralizados. */
       .carrossel-janela {
         position: relative;
         overflow-x: auto;
@@ -754,17 +754,17 @@
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
-        width: 10rem;
-        min-height: 6.5rem;
-        padding: 1rem;
+        width: 15rem;
+        min-height: 9.5rem;
+        padding: 1.5rem;
         border-radius: 0.5rem;
         background: var(--tint); /* cartão tint sobre a faixa Papel */
         text-align: center;
       }
       .cliente img {
         width: 100%;
-        max-width: 10rem;
-        height: 4rem;
+        max-width: 12rem;
+        height: 6rem;
         object-fit: contain;
       }
       .logo-name {
@@ -777,7 +777,12 @@
       }
       @media (min-width: 861px) {
         .cliente {
-          width: 12.5rem;
+          width: 20rem;
+          min-height: 12rem;
+        }
+        .cliente img {
+          max-width: 16rem;
+          height: 8rem;
         }
       }
       .carrossel + .proofs {

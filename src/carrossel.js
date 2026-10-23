@@ -3,8 +3,8 @@
 // Web Animations API em transform, que roda no compositor: nada é medido a cada quadro, só no
 // ResizeObserver. A página não tem controle da esteira (nem pausa, nem setas): ela pausa sozinha com o
 // mouse em cima, com foco de teclado, ao tocar, com a aba oculta e fora da tela, e retoma sozinha. Com
-// movimento reduzido no sistema não há movimento. Se os itens cabem na largura, fica parado e
-// centralizado, sem cópias.
+// movimento reduzido no sistema não há movimento: se os itens cabem na largura, ficam parados e
+// centralizados, sem cópias.
 
 const SPEED = 30; // px/s: lento, para ler cada logo
 const RESUME_MS = 1500; // depois de soltar o dedo
@@ -65,7 +65,9 @@ export function mountCarousel(root) {
     const width = view.clientWidth;
     const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
     const nextWidth = originals.length * (originals[0].offsetWidth + gap);
-    if (nextWidth - gap <= width + 0.5) {
+    // Com poucos logos a esteira anda do mesmo jeito (os itens se repetem para encher a janela); só com
+    // movimento reduzido eles ficam parados e centralizados, sem cópias.
+    if (nextWidth - gap <= width + 0.5 && reduced.matches) {
       animation?.cancel();
       animation = null;
       setClones(0);
@@ -120,6 +122,6 @@ export function mountCarousel(root) {
 
   document.addEventListener('visibilitychange', () => toggle('oculta', document.hidden));
   new IntersectionObserver(([entry]) => toggle('fora', !entry.isIntersecting)).observe(view);
-  reduced.addEventListener('change', update);
+  reduced.addEventListener('change', layout);
   new ResizeObserver(layout).observe(view);
 }
