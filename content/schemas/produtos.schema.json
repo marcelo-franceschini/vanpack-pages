@@ -5,25 +5,13 @@
   "description": "Os produtos da seção \"O que fabricamos\". Cada um tem um 3D girando no topo do cartão e um botão de orçamento.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["etiqueta", "titulo", "regiao", "botao", "itens"],
+  "required": ["titulo", "botao", "itens"],
   "properties": {
-    "etiqueta": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 28,
-      "description": "Linha pequena acima do título da seção."
-    },
     "titulo": {
       "type": "string",
       "minLength": 1,
       "maxLength": 55,
       "description": "Título da seção."
-    },
-    "regiao": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 40,
-      "description": "Linha sob o título da seção com a região atendida. Some se não houver região em content/empresa.yaml."
     },
     "botao": {
       "type": "string",

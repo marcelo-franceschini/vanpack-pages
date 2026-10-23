@@ -80,7 +80,6 @@ export function footerFields(site) {
   const link = (href, label, extra = '') =>
     `<a href="${escapeHtml(href)}"${extra}>${escapeHtml(label)}</a>`;
   return {
-    razao: site.legalName && escapeHtml(site.legalName),
     cnpj: site.cnpj && escapeHtml(site.cnpj),
     endereco: place && escapeHtml(place),
     horario: site.hours && escapeHtml(site.hours),
@@ -276,19 +275,19 @@ const BLOCKS = {
       .join('\n'),
 
   // Prova social: o carrossel de logos dos clientes (em production só os que autorizaram; em
-  // demo também os exemplos, com o rótulo "Exemplo") e os depoimentos e a nota do Google autorizados.
+  // demo também os exemplos, sem rótulo) e os depoimentos e a nota do Google autorizados.
   // O HTML leva só os itens originais: as cópias do loop são do src/carrossel.js, que não tem controle
   // nenhum. O logo é relativo à página (./clientes/…): o render roda depois de o Vite reescrever as
   // URLs, e um caminho absoluto quebraria no subcaminho do GitHub Pages.
   clientes: (site) => {
     const clients = visibleClients(site.clients, site.dataMode);
     const { testimonials, googleRating } = visibleProofs(site.proofs);
-    const client = ({ name, logo, alt, authorized }) =>
+    const client = ({ name, logo, alt }) =>
       `<li class="cliente">${
         logo
           ? `<img src="./clientes/${escapeHtml(logo)}" alt="${escapeHtml(alt || name)}" width="160" height="64" loading="lazy" decoding="async" draggable="false" />`
           : `<span class="logo-name">${escapeHtml(name)}</span>`
-      }${authorized ? '' : '<span class="tag">Exemplo</span>'}</li>`;
+      }</li>`;
     return [
       clients.length
         ? `<div class="carrossel" data-carrossel><section class="carrossel-janela" aria-roledescription="carrossel" aria-label="Logos de clientes" tabindex="0"><ul class="carrossel-trilho">${clients

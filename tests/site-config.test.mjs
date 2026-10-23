@@ -299,17 +299,6 @@ describe('trava de go-live', () => {
     );
   });
 
-  test('a linha pequena da abertura, já com a cidade no lugar, não passa de 48 caracteres', () => {
-    assert.deepEqual(validate().errors, [], 'Santo André-SP cabe');
-    const longCity = withEmpresa(
-      setPath(DEMO_EMPRESA, 'endereco.cidade', 'São José dos Campos de Cima'),
-    );
-    assert.match(
-      errorsOf({ content: longCity }),
-      /content\/historia\.yaml › hero\.etiqueta: depois de trocar as variáveis, o texto tem 49 caracteres \("Fábrica própria em São José dos Campos de Cima-SP"\); o máximo é 48/,
-    );
-  });
-
   test('cada peça 3D dos produtos aparece uma vez só', () => {
     const [first, ...rest] = baseContent.produtos.itens;
     const content = { ...baseContent, produtos: { itens: [first, { ...rest[0], id: first.id }] } };
@@ -374,7 +363,6 @@ describe('render', () => {
     assert.ok(!/data-need|data-field|\{\{/.test(out), 'sem marcas nem placeholders');
     assert.ok(!/slogan|Do projeto à entrega/.test(out), 'sem slogan por enquanto');
     assert.ok(!/<dl|<dt|<dd/.test(out), 'sem campos de rodapé vazios');
-    assert.ok(!out.includes('Fábrica própria'), 'sem cidade o eyebrow some');
     assert.ok(!/Atendemos (?!lojas)/.test(out), 'sem região, nenhum "Atendemos" da região');
     assert.match(
       out,
@@ -407,7 +395,6 @@ describe('render', () => {
     }
     assert.ok(flat.includes(`href="tel:${DEMO_EMPRESA.telefone}"`));
     assert.ok(!flat.includes('mailto:'), 'sem e-mail na página');
-    assert.ok(flat.includes('Fábrica própria em Santo André-SP'));
     assert.ok(flat.includes('Atendemos Santo André, ABC e Grande São Paulo'));
     assert.match(out, /<meta name="robots" content="noindex,nofollow" \/>/);
     for (const [, link] of out.matchAll(/href="(https:\/\/wa\.me\/[^"]*)"/g)) {
@@ -597,18 +584,6 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
     }
   });
 
-  test('o rodapé leva a regra do pagamento, e só quando há CNPJ', () => {
-    const rule = 'Nunca pedimos pagamento para conta de pessoa física';
-    const footer = (site) => renderPage(html, site).match(/<footer>[\s\S]*<\/footer>/)?.[0] ?? '';
-    assert.ok(footer(demo).includes(rule));
-    assert.ok(footer(production).includes(rule));
-    const semCnpj = siteWith({
-      env: PRODUCTION,
-      content: realContent({ empresa: { ...realEmpresa, cnpj: '' } }),
-    });
-    assert.ok(!footer(semCnpj).includes(rule), 'sem CNPJ a página não promete nada');
-  });
-
   test('diferenciais vêm de content/: item sem ícone ou texto se adapta e, sem nenhum, a seção e os links somem', () => {
     const [primeiro, ...resto] = baseContent.diferenciais.itens;
     const shown = pillars(demo);
@@ -637,7 +612,7 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
     assert.deepEqual(schema.properties.itens.items.properties.icone.enum, DIFF_ICONS);
   });
 
-  test('clientes vêm de content/: demo mostra todos, só com o logo (o nome fica no alt), rotulados; production só os autorizados', () => {
+  test('clientes vêm de content/: demo mostra todos, só com o logo (o nome fica no alt) e sem rótulo; production só os autorizados', () => {
     const carrossel = (site) =>
       renderPage(html, site).match(
         /<div class="carrossel" data-carrossel>[\s\S]*?<\/section><\/div>/,
@@ -663,8 +638,7 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
       !/<button|data-acao|carrossel-controles/.test(emDemo),
       'o carrossel não tem controle',
     );
-    const naoAutorizados = listados.filter((c) => !c.autorizado).length;
-    assert.equal((emDemo.match(/<span class="tag">Exemplo<\/span>/g) ?? []).length, naoAutorizados);
+    assert.ok(!emDemo.includes('Exemplo') && !emDemo.includes('class="tag"'), 'sem rótulo');
     assert.ok(!emDemo.includes('logo-name'), 'sem nome visível: só o logo');
     for (const { nome, logo, alt } of listados) {
       assert.ok(

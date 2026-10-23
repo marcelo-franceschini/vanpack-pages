@@ -8,8 +8,6 @@
 # da empresa (content/empresa.yaml); {{#se variavel}}trecho{{/se}} só aparece se a variável tiver valor.
 
 hero:
-  etiqueta: "Fábrica própria em {{cidade_uf}}"
-  etiqueta_regiao: "Atendemos {{regiao}}"
   titulo: "Caixas de papelão sob medida, com a sua marca"
   texto: "Você manda a medida e a quantidade. A gente cuida do resto"
   texto_extra: ", direto da fábrica e sem intermediário"
@@ -17,20 +15,16 @@ hero:
   link_produtos: "Ver produtos ↓"
   selo_regiao: "Atendemos {{regiao}}"
 anos:
-  etiqueta: "Anos de mercado"
   titulo: "{{anos}} anos de mercado"
   titulo_sem_ano: "Experiência em caixas de papelão"
   texto: "Atendemos lojas, vendedores de marketplace e indústrias."
 qualidade:
-  etiqueta: "Qualidade"
   titulo: "Caixas na medida que você pediu"
   texto: "Do primeiro ao último pedido, a mesma medida e a mesma impressão."
 orcamento:
-  etiqueta: "Orçamento"
   titulo: "Peça o seu pelo WhatsApp"
   texto: "Mande medida, quantidade e o que vai impresso. Sem formulário."
 entrega:
-  etiqueta: "Entrega"
   titulo: "Entregamos até você"
   texto: "Atendemos {{regiao}}."
   texto_sem_regiao: "Da nossa fábrica até o seu endereço."

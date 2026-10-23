@@ -5,14 +5,8 @@
   "description": "Os cartões da seção \"Por que a Vanpack\" (até 6). Sem nenhum, a seção e os links para ela somem.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["etiqueta", "titulo", "itens"],
+  "required": ["titulo", "itens"],
   "properties": {
-    "etiqueta": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 24,
-      "description": "Linha pequena acima do título da seção."
-    },
     "titulo": {
       "type": "string",
       "minLength": 1,

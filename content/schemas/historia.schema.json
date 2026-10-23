@@ -10,29 +10,8 @@
     "hero": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "etiqueta",
-        "etiqueta_regiao",
-        "titulo",
-        "texto",
-        "texto_extra",
-        "botao",
-        "link_produtos",
-        "selo_regiao"
-      ],
+      "required": ["titulo", "texto", "texto_extra", "botao", "link_produtos", "selo_regiao"],
       "properties": {
-        "etiqueta": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 38,
-          "description": "Linha pequena acima do título. Some se não houver cidade."
-        },
-        "etiqueta_regiao": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 30,
-          "description": "Complemento da linha acima, só em telas grandes. Some se não houver região."
-        },
         "titulo": {
           "type": "string",
           "minLength": 1,
@@ -75,14 +54,8 @@
     "anos": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["etiqueta", "titulo", "titulo_sem_ano", "texto"],
+      "required": ["titulo", "titulo_sem_ano", "texto"],
       "properties": {
-        "etiqueta": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 27,
-          "description": "Linha pequena acima do título."
-        },
         "titulo": {
           "type": "string",
           "minLength": 1,
@@ -107,14 +80,8 @@
     "qualidade": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["etiqueta", "titulo", "texto"],
+      "required": ["titulo", "texto"],
       "properties": {
-        "etiqueta": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 21,
-          "description": "Linha pequena acima do título."
-        },
         "titulo": {
           "type": "string",
           "minLength": 1,
@@ -133,14 +100,8 @@
     "orcamento": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["etiqueta", "titulo", "texto"],
+      "required": ["titulo", "texto"],
       "properties": {
-        "etiqueta": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 21,
-          "description": "Linha pequena acima do título."
-        },
         "titulo": {
           "type": "string",
           "minLength": 1,
@@ -159,14 +120,8 @@
     "entrega": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["etiqueta", "titulo", "texto", "texto_sem_regiao", "link"],
+      "required": ["titulo", "texto", "texto_sem_regiao", "link"],
       "properties": {
-        "etiqueta": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 19,
-          "description": "Linha pequena acima do título."
-        },
         "titulo": {
           "type": "string",
           "minLength": 1,

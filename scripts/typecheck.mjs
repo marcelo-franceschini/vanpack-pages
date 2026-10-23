@@ -37,7 +37,10 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   let failed = false;
   let ignored = 0;
   for (const config of CONFIGS) {
-    const run = spawnSync(tsc, ['-p', `${root}${config}`], { cwd: root, encoding: 'utf8' });
+    const run = spawnSync(tsc, ['-p', `${root}${config}`, '--pretty', 'false'], {
+      cwd: root,
+      encoding: 'utf8',
+    });
     const output = `${run.stdout}${run.stderr}`;
     const { contam, ignorados } = separarTravados(errosDoTsc(output));
     ignored += ignorados.length;

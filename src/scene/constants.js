@@ -113,7 +113,13 @@ export const SCRAPS = [
 export const CAMERA_DIRECTION = [-0.62, 0.55, 0.82];
 const PORTRAIT_WIDTH = 0.7;
 const CAMERA_KEYS = [
-  { p: 0, at: [-6.0, 0.72, 0], w: 5.0, h: 2.8 },
+  {
+    p: 0,
+    at: [-6.0, 0.72, 0],
+    w: 7.4,
+    h: 4.0,
+    portrait: { at: [-6.0, 0.72, 0], w: 3.5, h: 2.8 },
+  },
   { p: 0.25, at: [-2.7, 0.78, 0], w: 4.6, h: 2.5 },
   { p: 0.5, at: [-0.1, 0.84, 0], w: 3.6, h: 2.0 },
   { p: 0.75, at: [2.9, 0.98, 0], w: 3.2, h: 1.9 },

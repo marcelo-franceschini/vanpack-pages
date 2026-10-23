@@ -5,10 +5,8 @@
 # números: confira cada um antes do go-live (docs/go-live.md).
 # Ponha sempre os textos entre aspas.
 
-etiqueta: "O que fabricamos"
 titulo: "Caixas, divisórias e chapas sob medida"
-regiao: "Atendemos {{regiao}}"
-botao: "Pedir orçamento deste produto"
+botao: "Pedir orçamento"
 
 itens:
 
