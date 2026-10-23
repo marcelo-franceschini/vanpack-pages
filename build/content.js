@@ -15,7 +15,6 @@ export const CONTENT_FILES = [
   'empresa',
   'site',
   'historia',
-  'confianca',
   'produtos',
   'diferenciais',
   'clientes',

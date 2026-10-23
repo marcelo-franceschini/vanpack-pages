@@ -87,7 +87,9 @@ describe('o foco de teclado nunca fica totalmente atrás do cabeçalho ou do bot
           `"${state.label}" ficou totalmente coberto (topo e base ${state.box})`,
         );
       }
-      assert.ok(new Set(seen).size > 15, `percorreu a página (${new Set(seen).size} elementos)`);
+      // o piso só denuncia uma caminhada travada; a página tem uns 15 pontos de parada (sem os 3
+      // controles do carrossel e sem os 2 links da faixa de confiança, que saíram de propósito)
+      assert.ok(new Set(seen).size > 10, `percorreu a página (${new Set(seen).size} elementos)`);
       await context.close();
     });
   }

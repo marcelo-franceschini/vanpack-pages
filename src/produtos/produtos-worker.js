@@ -11,7 +11,7 @@ import { createVitrine } from './cena.js';
 const FPS = 30;
 const TURN = (2 * Math.PI) / 20; // rad/s: uma volta em 20 s
 const POSE = 0; // de frente e de lado para a câmera (a pose parada do movimento reduzido)
-const PHASE = 0.5; // rad entre um cartão e o seguinte, para os 3 não girarem em uníssono
+const PHASE = 0.5; // rad entre um cartão e o seguinte, para os cartões não girarem em uníssono
 const AUDIT = import.meta.env.MODE === 'audit';
 
 let canvas = null;

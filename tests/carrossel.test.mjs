@@ -1,6 +1,9 @@
 // Carrossel de clientes (src/carrossel.js): esteira automática da direita para a esquerda em qualquer
-// largura, pausa (mouse, foco de teclado, toque, botão), setas, teclado e arrasto, movimento reduzido,
-// poucos itens parados, cópias fora da leitura e do foco, layout sem sobreposição e alvos de 44 px.
+// largura e SEM nenhum controle (nem pausa, nem setas); pausa sozinha (mouse, foco de teclado, toque,
+// aba oculta e fora da tela), movimento reduzido (parada), poucos itens (a esteira anda do mesmo jeito),
+// cópias fora da leitura e do foco, e layout sem sobreposição nem rolagem horizontal.
+// A lista de clientes de content/ pode ter qualquer tamanho: cada teste põe no HTML servido a
+// quantidade de cartões de que precisa (`items`), com nomes "Cliente 1", "Cliente 2"...
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
 import { launch, openPage, startServer } from '../scripts/lib.mjs';
@@ -14,6 +17,7 @@ const SCREENS = {
     deviceScaleFactor: 2,
   },
 };
+const MANY = 8; // anda em qualquer largura (a esteira anda a partir de 6 em 1440 e de 3 em 390)
 
 let server;
 let browser;
@@ -27,10 +31,10 @@ after(async () => {
 });
 
 /**
- * Abre a página com o carrossel no meio da tela. `keep` deixa só os N primeiros clientes no HTML
- * servido (o .env do build tem 6), para testar poucos itens.
+ * Abre a página com o carrossel no meio da tela, com `items` clientes no HTML servido. Sem `expected`,
+ * espera o estado de quem anda (ou de quem está pausado, com movimento reduzido).
  */
-async function open(screen, { reducedMotion = 'no-preference', keep } = {}) {
+async function open(screen, { reducedMotion = 'no-preference', items = MANY, expected } = {}) {
   const opened = await openPage(
     browser,
     `${server.url}?tour=0`,
@@ -38,15 +42,17 @@ async function open(screen, { reducedMotion = 'no-preference', keep } = {}) {
     {
       waitFor: 'settled',
       setup: ({ page }) =>
-        keep &&
         page.route(
           (url) => url.pathname === '/',
           async (route) => {
             const response = await route.fetch();
-            let n = 0;
+            const list = Array.from(
+              { length: items },
+              (_, i) => `<li class="cliente"><span class="logo-name">Cliente ${i + 1}</span></li>`,
+            ).join('');
             const body = (await response.text()).replace(
-              /<li class="cliente">[\s\S]*?<\/li>/g,
-              (item) => (++n <= keep ? item : ''),
+              /(<ul class="carrossel-trilho">)[\s\S]*?(<\/ul>)/,
+              (_, open, close) => open + list + close,
             );
             await route.fulfill({ response, body });
           },
@@ -58,10 +64,10 @@ async function open(screen, { reducedMotion = 'no-preference', keep } = {}) {
     document.querySelector('#clientes').scrollIntoView({ block: 'center' }),
   );
   // o IntersectionObserver vê o carrossel na tela e solta a pausa de "fora da tela"
-  const expected = keep ? 'estatico' : reducedMotion === 'reduce' ? 'pausado' : 'rodando';
+  const state = expected ?? (reducedMotion === 'reduce' ? 'pausado' : 'rodando');
   await page.waitForFunction(
-    (expected) => document.querySelector('.carrossel')?.dataset.estado === expected,
-    expected,
+    (state) => document.querySelector('.carrossel')?.dataset.estado === state,
+    state,
     { timeout: 10_000 },
   );
   return opened;
@@ -85,16 +91,6 @@ const position = (page) =>
 const leftward = (a, b) => (((a.x - b.x) % a.loop) + a.loop) % a.loop;
 const estado = (page) => page.evaluate(() => document.querySelector('.carrossel').dataset.estado);
 
-/** Espera o deslize das setas ou do teclado terminar. */
-async function settled(page) {
-  await page.waitForFunction(
-    () => !document.querySelector('.carrossel').hasAttribute('data-deslizando'),
-    null,
-    { timeout: 10_000 },
-  );
-  return position(page);
-}
-
 async function still(page, ms = 700) {
   const a = await position(page);
   await page.waitForTimeout(ms);
@@ -111,7 +107,7 @@ async function moving(page, ms = 1000) {
 
 for (const screen of Object.keys(SCREENS)) {
   describe(`carrossel em ${screen}`, () => {
-    test('anda sozinho em demo, da direita para a esquerda, devagar', async () => {
+    test('anda sozinho, da direita para a esquerda, devagar', async () => {
       const { page, context, problems } = await open(screen);
       assert.equal(await estado(page), 'rodando');
       // a esteira só parte no 1º quadro da animação, que atrasa se a máquina estiver ocupada: espera
@@ -133,7 +129,7 @@ for (const screen of Object.keys(SCREENS)) {
       await context.close();
     });
 
-    test('cópias do loop ficam fora da leitura e do foco; só os 6 originais são lidos', async () => {
+    test(`cópias do loop ficam fora da leitura e do foco; só os ${MANY} originais são lidos`, async () => {
       const { page, context } = await open(screen);
       const info = await page.evaluate(() => {
         const items = [...document.querySelectorAll('.carrossel-trilho .cliente')];
@@ -145,51 +141,32 @@ for (const screen of Object.keys(SCREENS)) {
           originals: items.filter((li) => !li.hasAttribute('aria-hidden') && !li.inert).length,
         };
       });
-      assert.equal(info.originals, 6);
-      assert.ok(info.copies >= 6 && info.copies % 6 === 0, `${info.copies} cópias`);
+      assert.equal(info.originals, MANY);
+      assert.ok(info.copies >= MANY && info.copies % MANY === 0, `${info.copies} cópias`);
       assert.ok(info.inert, 'toda cópia é inert');
       const snapshot = await page.locator('.carrossel-trilho').ariaSnapshot();
-      assert.equal((snapshot.match(/- listitem/g) ?? []).length, 6, snapshot);
+      assert.equal((snapshot.match(/- listitem/g) ?? []).length, MANY, snapshot);
       assert.equal((snapshot.match(/Cliente 1\b/g) ?? []).length, 1, 'sem leitura duplicada');
       await context.close();
     });
 
-    test('pausa no botão (aria-pressed, "Retomar") e só volta pelo botão', async () => {
+    test('não tem nenhum controle: nem botão de pausa, nem setas', async () => {
       const { page, context } = await open(screen);
-      const pause = page.locator('.carrossel-btn[data-acao="pausa"]');
-      await pause.click();
-      assert.equal(await pause.getAttribute('aria-pressed'), 'true');
-      assert.equal((await pause.textContent()).trim(), 'Retomar');
-      await page.mouse.move(5, 5);
-      assert.ok(await still(page, 1200), 'parado com o mouse longe');
-      assert.equal(await estado(page), 'pausado');
-      await pause.click();
-      assert.equal(await pause.getAttribute('aria-pressed'), 'false');
-      assert.equal((await pause.textContent()).trim(), 'Pausar');
-      await page.mouse.move(5, 5);
-      assert.ok(await moving(page), 'voltou a andar');
-      await context.close();
-    });
-
-    test('setas movem 1 ou 2 itens, alinhadas, e voltam', async () => {
-      const { page, context } = await open(screen);
-      await page.locator('.carrossel-btn[data-acao="pausa"]').click();
-      const a = await position(page);
-      await page.locator('.carrossel-btn[data-acao="proximo"]').click();
-      const b = await settled(page);
-      const moved = leftward(a, b);
-      assert.ok(moved > 0.5 * a.step && moved <= 2 * a.step + 0.5, `próximo andou ${moved}`);
-      const aligned = ((-b.x % a.step) + a.step) % a.step;
-      assert.ok(aligned < 1 || aligned > a.step - 1, `alinhado ao item (${aligned})`);
-      await page.locator('.carrossel-btn[data-acao="anterior"]').click();
-      const c = await settled(page);
-      assert.ok(leftward(c, b) > 0.5 * a.step, 'anterior volta para a direita');
+      const controls = await page.evaluate(() => {
+        const area = document.querySelector('#clientes');
+        return {
+          buttons: area.querySelectorAll('button, [role="button"], input').length,
+          links: area.querySelectorAll('a[href]').length,
+          legacy: area.querySelectorAll('[data-acao], .carrossel-controles, .carrossel-btn').length,
+        };
+      });
+      assert.deepEqual(controls, { buttons: 0, links: 0, legacy: 0 });
       await context.close();
     });
   });
 }
 
-describe('carrossel: mouse, teclado e toque', () => {
+describe('carrossel: pausas automáticas (mouse, teclado e toque)', () => {
   test('mouse em cima pausa e, ao sair, volta a andar', async () => {
     const { page, context } = await open('1440×900');
     await page.locator('.carrossel-janela').hover();
@@ -201,7 +178,7 @@ describe('carrossel: mouse, teclado e toque', () => {
     await context.close();
   });
 
-  test('foco de teclado pausa, as setas do teclado movem e, ao sair, volta a andar', async () => {
+  test('foco de teclado pausa e, ao sair, volta a andar', async () => {
     const { page, context } = await open('1440×900');
     await page.locator('.carrossel-janela').focus();
     assert.equal(
@@ -212,31 +189,22 @@ describe('carrossel: mouse, teclado e toque', () => {
     assert.ok(await still(page), 'parado com foco');
     const a = await position(page);
     await page.keyboard.press('ArrowRight');
-    const b = await settled(page);
-    assert.ok(leftward(a, b) > 0.5 * a.step, '→ avança');
-    await page.keyboard.press('ArrowLeft');
-    assert.ok(leftward(await settled(page), b) > 0.5 * a.step, '← volta');
-    await page.keyboard.press('Tab');
+    assert.ok(await still(page, 400), 'as setas do teclado não movem a esteira');
+    assert.ok(Math.abs((await position(page)).x - a.x) < 0.5);
+    await page.locator('.carrossel-janela').blur(); // o foco sai da região (o Tab levaria a rolagem à próxima seção e a esteira pararia por estar fora da tela)
     assert.ok(await moving(page), 'voltou a andar sem o foco');
     await context.close();
   });
 
-  test('arrastar com o mouse move a esteira', async () => {
+  test('clicar na faixa com o mouse não deixa a esteira parada depois que o mouse sai', async () => {
     const { page, context } = await open('1440×900');
-    await page.locator('.carrossel-btn[data-acao="pausa"]').click();
-    const box = await page.locator('.carrossel-janela').boundingBox();
-    const a = await position(page);
-    const y = box.y + box.height / 2;
-    await page.mouse.move(box.x + 700, y);
-    await page.mouse.down();
-    for (let dx = 0; dx <= 160; dx += 20) await page.mouse.move(box.x + 700 - dx, y);
-    await page.mouse.up();
-    const moved = leftward(a, await position(page));
-    assert.ok(Math.abs(moved - 160) < 25, `arrastou ${moved.toFixed(1)} px`);
+    await page.locator('.carrossel-janela').click();
+    await page.mouse.move(5, 5);
+    assert.ok(await moving(page), 'o clique dá foco, mas não é foco de teclado');
     await context.close();
   });
 
-  test('tocar e arrastar com o dedo pausa, move e retoma sozinho depois', async () => {
+  test('tocar com o dedo pausa e a esteira retoma sozinha depois de soltar', async () => {
     const { page, context } = await open('390×844');
     const cdp = await context.newCDPSession(page);
     const box = await page.locator('.carrossel-janela').boundingBox();
@@ -249,19 +217,12 @@ describe('carrossel: mouse, teclado e toque', () => {
     await touch('touchStart', box.x + 300);
     await page.waitForTimeout(100);
     assert.equal(await estado(page), 'pausado', 'parado ao tocar');
-    const a = await position(page);
-    for (let dx = 20; dx <= 120; dx += 20) await touch('touchMove', box.x + 300 - dx);
-    await page.waitForTimeout(100);
-    const moved = leftward(a, await position(page));
-    assert.ok(moved > 60 && moved < 160, `arrastou ${moved.toFixed(1)} px`);
     await touch('touchEnd');
     assert.equal(await estado(page), 'pausado', 'ainda parado logo depois de soltar');
     await page.waitForFunction(
       () => document.querySelector('.carrossel').dataset.estado === 'rodando',
       null,
-      {
-        timeout: 4000,
-      },
+      { timeout: 4000 },
     );
     await context.close();
   });
@@ -302,53 +263,66 @@ describe('carrossel: aba oculta e fora da tela', () => {
 
 describe('carrossel com movimento reduzido', () => {
   for (const screen of Object.keys(SCREENS)) {
-    test(`${screen}: não anda sozinho, sem botão de pausa, e as setas movem`, async () => {
+    test(`${screen}: não anda sozinho e não tem controle para pôr em movimento`, async () => {
       const { page, context } = await open(screen, { reducedMotion: 'reduce' });
       assert.equal(await estado(page), 'pausado');
       assert.ok(await still(page, 1200), 'parado');
-      assert.equal(await page.locator('.carrossel-btn[data-acao="pausa"]').isVisible(), false);
-      const a = await position(page);
-      await page.locator('.carrossel-btn[data-acao="proximo"]').click();
-      await page.waitForTimeout(100);
-      assert.ok(leftward(a, await position(page)) > 0.5 * a.step, 'próximo move');
+      assert.equal(await page.locator('#clientes button').count(), 0);
       await context.close();
     });
   }
 });
 
-describe('poucos clientes: cabem na largura', () => {
-  const cases = [
-    ['1440×900', 3],
-    ['1440×900', 2],
+describe('poucos clientes: a esteira anda do mesmo jeito', () => {
+  for (const [screen, items] of [
+    ['1440×900', 1],
+    ['1440×900', 4],
+    ['390×844', 1],
     ['390×844', 2],
-  ];
-  for (const [screen, keep] of cases) {
-    test(`${screen} com ${keep}: parado, centralizado, sem cópias nem controles`, async () => {
-      const { page, context } = await open(screen, { keep });
+  ]) {
+    test(`${screen} com ${items}: anda, e as cópias enchem a janela`, async () => {
+      const { page, context } = await open(screen, { items });
+      assert.equal(await estado(page), 'rodando');
+      const info = await page.evaluate(() => {
+        const view = document.querySelector('.carrossel-janela').getBoundingClientRect();
+        const all = [...document.querySelectorAll('.carrossel-trilho .cliente')];
+        const last = all.at(-1).getBoundingClientRect();
+        return {
+          originals: all.filter((li) => !li.hasAttribute('aria-hidden')).length,
+          right: last.right - view.right,
+        };
+      });
+      assert.equal(info.originals, items);
+      assert.ok(info.right >= 0, 'a janela fica cheia até a borda direita');
+      await context.close();
+    });
+  }
+
+  for (const [screen, items] of [
+    ['1440×900', 1],
+    ['390×844', 1],
+  ]) {
+    test(`${screen} com ${items} e movimento reduzido: parado, centralizado, sem cópias`, async () => {
+      const { page, context } = await open(screen, {
+        items,
+        reducedMotion: 'reduce',
+        expected: 'estatico',
+      });
       assert.equal(await estado(page), 'estatico');
       const info = await page.evaluate(() => {
         const view = document.querySelector('.carrossel-janela').getBoundingClientRect();
-        const items = [...document.querySelectorAll('.carrossel-trilho .cliente')];
-        const first = items[0].getBoundingClientRect();
-        const last = items.at(-1).getBoundingClientRect();
+        const first = document.querySelector('.carrossel-trilho .cliente').getBoundingClientRect();
         return {
-          items: items.length,
           copies: document.querySelectorAll('.cliente[aria-hidden]').length,
-          controls: document.querySelector('.carrossel-controles').hidden,
-          transform: getComputedStyle(document.querySelector('.carrossel-trilho')).transform,
           left: first.left - view.left,
-          right: view.right - last.right,
+          right: view.right - first.right,
         };
       });
-      assert.equal(info.items, keep);
       assert.equal(info.copies, 0);
-      assert.equal(info.controls, true, 'sem setas nem pausa');
-      assert.equal(info.transform, 'none');
       assert.ok(
         Math.abs(info.left - info.right) < 2,
         `centralizado (${info.left} × ${info.right})`,
       );
-      assert.ok(await still(page), 'parado');
       await context.close();
     });
   }
@@ -356,39 +330,27 @@ describe('poucos clientes: cabem na largura', () => {
 
 describe('layout do carrossel', () => {
   for (const screen of Object.keys(SCREENS)) {
-    test(`${screen}: sem sobreposição, sem rolagem horizontal e alvos de 44 px`, async () => {
+    test(`${screen}: sem sobreposição e sem rolagem horizontal da página`, async () => {
       const { page, context } = await open(screen);
       const info = await page.evaluate(() => {
-        const rect = (el) => el.getBoundingClientRect();
-        const view = rect(document.querySelector('.carrossel-janela'));
-        const buttons = [...document.querySelectorAll('.carrossel-btn')]
-          .filter((b) => !b.hidden)
-          .map(rect);
+        const view = document.querySelector('.carrossel-janela').getBoundingClientRect();
+        const section = document.querySelector('#clientes').getBoundingClientRect();
+        const cards = [...document.querySelectorAll('.carrossel-trilho .cliente')].map((li) => {
+          const r = li.getBoundingClientRect();
+          return { w: r.width, h: r.height };
+        });
         return {
-          view,
-          buttons: buttons.map((b) => ({
-            top: b.top,
-            left: b.left,
-            right: b.right,
-            w: b.width,
-            h: b.height,
-          })),
+          view: { top: view.top, bottom: view.bottom },
+          section: { top: section.top, bottom: section.bottom },
+          cards,
           scrollWidth: document.documentElement.scrollWidth,
           innerWidth,
         };
       });
       assert.ok(info.scrollWidth <= info.innerWidth, 'sem rolagem horizontal da página');
-      assert.equal(info.buttons.length, 3);
-      for (const b of info.buttons) {
-        assert.ok(b.w >= 44 - 0.5 && b.h >= 44 - 0.5, `alvo de ${b.w}×${b.h}`);
-        assert.ok(
-          b.top >= info.view.bottom - 0.5,
-          'controles abaixo da faixa, sem cobrir os logos',
-        );
-        assert.ok(b.left >= -0.5 && b.right <= info.innerWidth + 0.5, 'dentro da tela');
-      }
-      for (let i = 1; i < info.buttons.length; i++) {
-        assert.ok(info.buttons[i].left >= info.buttons[i - 1].right - 0.5, 'botões lado a lado');
+      assert.ok(info.view.top >= info.section.top && info.view.bottom <= info.section.bottom);
+      for (const card of info.cards) {
+        assert.ok(card.w >= 150 && card.h >= 100, `cartão de ${card.w}×${card.h}`);
       }
       await context.close();
     });

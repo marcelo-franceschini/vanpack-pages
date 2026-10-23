@@ -5,7 +5,7 @@
   "description": "Os produtos da seção \"O que fabricamos\". Cada um tem um 3D girando no topo do cartão e um botão de orçamento.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["etiqueta", "titulo", "fatos", "botao", "itens"],
+  "required": ["etiqueta", "titulo", "regiao", "botao", "itens"],
   "properties": {
     "etiqueta": {
       "type": "string",
@@ -19,51 +19,11 @@
       "maxLength": 55,
       "description": "Título da seção."
     },
-    "fatos": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["pedido_minimo", "regiao"],
-      "description": "Os dois dados operacionais acima dos cartões. Cada um some se não houver dado em content/empresa.yaml.",
-      "properties": {
-        "pedido_minimo": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["rotulo", "valor"],
-          "properties": {
-            "rotulo": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 25,
-              "description": "Rótulo."
-            },
-            "valor": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 40,
-              "description": "Valor."
-            }
-          }
-        },
-        "regiao": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["rotulo", "valor"],
-          "properties": {
-            "rotulo": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 21,
-              "description": "Rótulo."
-            },
-            "valor": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 22,
-              "description": "Valor."
-            }
-          }
-        }
-      }
+    "regiao": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40,
+      "description": "Linha sob o título da seção com a região atendida. Some se não houver região em content/empresa.yaml."
     },
     "botao": {
       "type": "string",
@@ -74,15 +34,15 @@
     "itens": {
       "type": "array",
       "minItems": 1,
-      "maxItems": 3,
-      "description": "Um cartão por produto, na ordem em que aparecem. O 3D de cada um é uma peça pronta (corte-e-vinco, divisorias ou chapas): não dá para criar um produto novo só por aqui.",
+      "maxItems": 4,
+      "description": "Um cartão por produto, na ordem em que aparecem. O 3D de cada um é uma peça pronta (caixa-normal, corte-e-vinco, divisorias ou chapas): não dá para criar um produto novo só por aqui.",
       "items": {
         "type": "object",
         "additionalProperties": false,
         "required": ["id", "nome", "mensagem", "peca", "texto"],
         "properties": {
           "id": {
-            "enum": ["corte-e-vinco", "divisorias", "chapas"],
+            "enum": ["corte-e-vinco", "divisorias", "chapas", "caixa-normal"],
             "description": "Qual peça 3D e qual ilustração o cartão usa. Também vira o código de origem do botão: [site-produtos-<id>]."
           },
           "nome": {

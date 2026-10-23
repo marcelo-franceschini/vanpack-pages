@@ -5,7 +5,6 @@ Landing page oficial da **Vanpack** (caixas de papelão sob medida, divisórias 
 - **Manual da marca e diretrizes:** [`docs/manual-da-marca.md`](docs/manual-da-marca.md).
 - **3D de cada produto** (referência, decisões e como funciona): [`docs/produtos-3d.md`](docs/produtos-3d.md).
 - **Contratos, faixas do scroll, tokens e decisões da v4:** [`docs/notas-de-integracao-v4.md`](docs/notas-de-integracao-v4.md).
-- **Slogan:** "Do projeto à entrega".
 - **Passo a passo para ir ao ar com dados reais:** [`docs/go-live.md`](docs/go-live.md).
 - **Experimentos A/B** (regras, métrica, amostra e como ligar): [`docs/experimentos.md`](docs/experimentos.md).
 - **Assets oficiais em vetor:** [`public/brand/`](public/brand/).
@@ -34,7 +33,7 @@ npm run hooks:instalar # opcional: pre-push que roda lint e tipos antes de cada 
 Auditorias (medem; os orçamentos estão no cabeçalho de cada script):
 
 ```bash
-npm run audit:bundle      # gzip/brotli por arquivo, JS inicial (≤ 132 KB gzip), visita completa, maiores módulos
+npm run audit:bundle      # gzip/brotli por arquivo, JS inicial (≤ 131 KB gzip), visita completa, maiores módulos
 npm run audit:scene       # draw calls e triângulos nos 5 centros (≤ 90 desktop, ≤ 60 celular)
 npm run audit:produtos    # draw calls do 3D de cada produto (≤ 60 por modelo) e memória ao rolar (precisa do build:audit)
 npm run audit:runtime     # tarefas longas e quadros ao rolar a história, com CPU 1× e 4×
@@ -58,7 +57,7 @@ node scripts/produtos-svg.mjs   # regenera as ilustrações dos produtos (public
 
 ## Seções da página
 
-Cabeçalho fixo, a história 3D (`#processo`, com 5 cartões que nunca somem), a faixa de confiança (`#confianca`: cidade, CNPJ, "Nunca pedimos pagamento para conta de pessoa física", anos de mercado, formas de pagamento, mapa e telefone), "O que fabricamos" (`#produtos`: Corte e vinco; Divisórias, tabuleiros e separadores; Chapas de papelão ondulado, cada um com um 3D da peça girando no topo do cartão e o seu botão de orçamento, e pedido mínimo e região; o 3D só é baixado quando a seção chega perto e, em aparelho sem condição, vira uma ilustração em SVG: [`docs/produtos-3d.md`](docs/produtos-3d.md)), os diferenciais (`#diferenciais`, de `content/diferenciais.yaml`), os clientes (`#clientes`: carrossel de logos de `content/clientes.yaml` em qualquer largura, uma esteira lenta da direita para a esquerda com botão Pausar/Retomar, setas, teclado e arrasto, que fica parada e centralizada quando os logos cabem na largura; só cliente autorizado em production e exemplos em demo; e depoimentos autorizados), o CTA final (`#orcamento`) e o rodapé. As seções alternam Papel, tint e Floresta, com a onda de papelão como divisor. A página não tem e-mail, prazo, promessa de tempo de resposta nem texto sobre o processo de fabricação (o `tests/conteudo.test.mjs` confere). O botão do WhatsApp fica fixo: no desktop é redondo e aparece depois da história; em telas de até 768 px é uma barra de largura total com o telefone, que aparece já no 2º capítulo (o botão do cabeçalho sai enquanto ela está à vista); os dois somem com o CTA final à vista. Se a página continua à vista 2,5 s depois do toque num botão do WhatsApp, sobe a folha "O WhatsApp não abriu?" (`#zap-ajuda`): copiar o número, ligar e, dentro do Instagram, Facebook ou TikTok, como abrir no navegador. Cada seção sem dado (e o link para ela) some sozinha.
+Cabeçalho fixo, a história 3D (`#processo`, com 5 cartões que nunca somem), "O que fabricamos" (`#produtos`: Caixa normal; Corte e vinco; Divisórias, tabuleiros e separadores; Chapas de papelão ondulado, cada um com um 3D da peça girando no topo do cartão e o seu botão de orçamento, e a região atendida numa linha sob o título; o 3D só é baixado quando a seção chega perto e, em aparelho sem condição, vira uma ilustração em SVG: [`docs/produtos-3d.md`](docs/produtos-3d.md)), os diferenciais (`#diferenciais`, de `content/diferenciais.yaml`), os clientes (`#clientes`: carrossel de logos de `content/clientes.yaml` em qualquer largura, uma esteira lenta da direita para a esquerda, sem nenhum controle (ela pausa sozinha com o mouse em cima, com o foco de teclado, ao tocar, com a aba oculta, fora da tela e com movimento reduzido), que fica parada e centralizada quando os logos cabem na largura; só o logo, com o nome no `alt`; só cliente autorizado em production e, em demo, o que ainda não tem autorização leva o rótulo "Exemplo"; e depoimentos autorizados), o CTA final (`#orcamento`) e o rodapé. As seções alternam Papel, tint e Floresta, com a onda de papelão como divisor. A página não tem e-mail, prazo, promessa de tempo de resposta nem texto sobre o processo de fabricação (o `tests/conteudo.test.mjs` confere). O botão do WhatsApp fica fixo: no desktop é redondo e aparece depois da história; em telas de até 768 px é uma barra de largura total com o telefone, que aparece já no 2º capítulo (o botão do cabeçalho sai enquanto ela está à vista); os dois somem com o CTA final à vista. Se a página continua à vista 2,5 s depois do toque num botão do WhatsApp, sobe a folha "O WhatsApp não abriu?" (`#zap-ajuda`): copiar o número, ligar e, dentro do Instagram, Facebook ou TikTok, como abrir no navegador. Cada seção sem dado (e o link para ela) some sozinha.
 
 ---
 
@@ -66,8 +65,8 @@ Cabeçalho fixo, a história 3D (`#processo`, com 5 cartões que nunca somem), a
 
 Os dados da empresa e todos os textos do site vivem na pasta [`content/`](content/): arquivos YAML pequenos, um por assunto, cada um com o seu JSON Schema em `content/schemas/` (o editor sublinha o erro e autocompleta). O `.env` guarda só o que muda por ambiente. [`docs/go-live.md`](docs/go-live.md) explica como trocar tudo pelos dados reais. O que não tem dado **não aparece** no HTML (nada de valor de exemplo), e nenhum desses dados é escrito à mão no código (um teste confere).
 
-- `content/empresa.yaml`: razão social, CNPJ, WhatsApp, telefone, endereço, horário, mapa, ano de fundação (o "N anos de mercado" e o © são calculados dele, no build e de novo no navegador, então não precisam de edição anual), pedido mínimo, região e formas de pagamento. É a fonte única do rodapé, do JSON-LD, dos links do WhatsApp, do `robots.txt` e do `sitemap.xml`. O WhatsApp é obrigatório nos dois modos (`55` + DDD + número); o build nunca gera `wa.me/?text=…` sem número.
-- `content/site.yaml` (nome, slogan, título e descrição da página, texto da imagem de compartilhamento e menus), `historia.yaml` (os 5 cartões da história), `confianca.yaml`, `orcamento.yaml` (a seção final), `whatsapp.yaml` (mensagem e texto de cada botão e a folha "O WhatsApp não abriu?") e `rodape.yaml`: os textos da página. Nos textos, `{{cidade}}` puxa um dado da empresa e `{{#se cidade}}...{{/se}}` só aparece se houver o dado (a lista de variáveis está na mensagem de erro de uma variável errada). O `index.html` só tem a estrutura e `{{arquivo.campo}}` no lugar de cada texto; um teste (`tests/template.test.mjs`) prova que nenhum texto de negócio ficou escrito à mão nele nem no `build/render.js`. Ficam no código só os rótulos de interface ("Pular para o conteúdo", "Fechar", os controles do carrossel, os `aria-label` dos menus).
+- `content/empresa.yaml`: razão social, CNPJ, WhatsApp, telefone, endereço, horário, mapa, ano de fundação (o "N anos de mercado" e o © são calculados dele, no build e de novo no navegador, então não precisam de edição anual), região e formas de pagamento. É a fonte única do rodapé, do JSON-LD, dos links do WhatsApp, do `robots.txt` e do `sitemap.xml`. O WhatsApp é obrigatório nos dois modos (`55` + DDD + número); o build nunca gera `wa.me/?text=…` sem número.
+- `content/site.yaml` (nome, título e descrição da página, texto da imagem de compartilhamento e menus), `historia.yaml` (os 5 cartões da história), `orcamento.yaml` (a seção final), `whatsapp.yaml` (mensagem e texto de cada botão e a folha "O WhatsApp não abriu?") e `rodape.yaml`: os textos da página. Nos textos, `{{cidade}}` puxa um dado da empresa e `{{#se cidade}}...{{/se}}` só aparece se houver o dado (a lista de variáveis está na mensagem de erro de uma variável errada). O `index.html` só tem a estrutura e `{{arquivo.campo}}` no lugar de cada texto; um teste (`tests/template.test.mjs`) prova que nenhum texto de negócio ficou escrito à mão nele nem no `build/render.js`. Ficam no código só os rótulos de interface ("Pular para o conteúdo", "Fechar", os controles do carrossel, os `aria-label` dos menus).
 - `content/privacidade.md`: o texto da política de privacidade, em Markdown mínimo (`# título`, `## seção`, parágrafos, links `[texto](https://...)`, `[texto](tel:{{telefone}})` e `[texto](wa:privacidade)`), com as mesmas `{{variáveis}}` e `{{#se}}...{{/se}}` dos outros textos (`{{#se rua cidade_uf}}` vale quando todas têm valor). HTML escrito à mão, título `###` ou outro tipo de link é erro de build. O interpretador é o `build/privacidade.js` (sem dependência).
 - `content/produtos.yaml`, `diferenciais.yaml` (até 6; ícone `fabrica`, `lotes`, `conversa` ou `caixa`), `clientes.yaml` e `clientes/` (até 12; logo só em SVG, até 20 KB, que o build otimiza com o svgo; em production só aparece o cliente com `autorizado: true`, que precisa de registro em [`docs/provas/`](docs/provas/README.md)) e `provas.yaml` (depoimentos e nota do Google, só autorizados). Seção sem item some, junto com o link para ela.
 - `content/exemplo/empresa.yaml`: os valores fictícios de referência. Em production o build recusa um valor de `empresa.yaml` que ainda seja igual ao daqui (cidade, UF e ano de fundação ficam de fora: já são reais).
@@ -96,21 +95,20 @@ Quem edita: qualquer pessoa que consiga abrir um arquivo de texto. Você **não 
 
 ### Onde está cada coisa
 
-| Para mudar...                                                                          | Edite                                         |
-| -------------------------------------------------------------------------------------- | --------------------------------------------- |
-| Telefone, WhatsApp, endereço, CNPJ, horário, mapa, ano de fundação, pedido mínimo      | `content/empresa.yaml`                        |
-| Nome, slogan, título e descrição da página, texto da imagem de compartilhamento, menus | `content/site.yaml`                           |
-| Os 5 cartões da história (a abertura da página)                                        | `content/historia.yaml`                       |
-| A faixa "Quem somos"                                                                   | `content/confianca.yaml`                      |
-| Os 3 produtos                                                                          | `content/produtos.yaml`                       |
-| "Por que a Vanpack" (até 6 cartões)                                                    | `content/diferenciais.yaml`                   |
-| Clientes (até 12) e seus logos                                                         | `content/clientes.yaml` e `content/clientes/` |
-| Depoimentos e nota do Google (só com autorização)                                      | `content/provas.yaml`                         |
-| A seção final do orçamento e os 3 passos de "Como pedir"                               | `content/orcamento.yaml`                      |
-| A mensagem de cada botão do WhatsApp e a folha "O WhatsApp não abriu?"                 | `content/whatsapp.yaml`                       |
-| Rótulos do rodapé                                                                      | `content/rodape.yaml`                         |
-| A política de privacidade                                                              | `content/privacidade.md`                      |
-| Modo demo × production, endereço do site, medição                                      | `.env`                                        |
+| Para mudar...                                                                  | Edite                                         |
+| ------------------------------------------------------------------------------ | --------------------------------------------- |
+| Telefone, WhatsApp, endereço, CNPJ, horário, mapa, ano de fundação             | `content/empresa.yaml`                        |
+| Nome, título e descrição da página, texto da imagem de compartilhamento, menus | `content/site.yaml`                           |
+| Os 5 cartões da história (a abertura da página)                                | `content/historia.yaml`                       |
+| Os 4 produtos                                                                  | `content/produtos.yaml`                       |
+| "Por que a Vanpack" (até 6 cartões)                                            | `content/diferenciais.yaml`                   |
+| Clientes (até 12) e seus logos                                                 | `content/clientes.yaml` e `content/clientes/` |
+| Depoimentos e nota do Google (só com autorização)                              | `content/provas.yaml`                         |
+| A seção final do orçamento e os 3 passos de "Como pedir"                       | `content/orcamento.yaml`                      |
+| A mensagem de cada botão do WhatsApp e a folha "O WhatsApp não abriu?"         | `content/whatsapp.yaml`                       |
+| Rótulos do rodapé e o aviso do pagamento                                       | `content/rodape.yaml`                         |
+| A política de privacidade                                                      | `content/privacidade.md`                      |
+| Modo demo × production, endereço do site, medição                              | `.env`                                        |
 
 ### Passo a passo
 
@@ -143,7 +141,7 @@ Troque aqui e pronto: o rodapé, os botões, o JSON-LD do Google e o mapa usam e
 
 1. Peça ao cliente a **autorização por escrito** (e-mail ou WhatsApp) para mostrar o logo.
 2. Ponha o logo em `content/clientes/`: só **SVG** (vetor), com nome em minúsculas, sem acento e com hífens (`padaria-real.svg`), até **20 KB**, com `viewBox`, sem script nem imagem embutida. O site otimiza o arquivo ao publicar, sem mudar o desenho.
-3. Em `content/clientes.yaml`, troque um dos clientes de exemplo (ou acrescente, até 12):
+3. Em `content/clientes.yaml`, acrescente o cliente (até 12):
 
    ```yaml
    clientes:
@@ -182,21 +180,21 @@ Cada linha diz **o arquivo, a linha, o campo e o problema**. `npm run build` mos
 
 Dentro de qualquer texto de `content/`, `{{nome}}` puxa o dado. `{{#se cidade}} Fábrica em {{cidade}}.{{/se}}` só aparece se houver cidade (`{{#se rua cidade_uf}}` vale quando todas têm valor; `{{#senao cidade}}...{{/senao}}` é o contrário). Uma variável com nome errado é recusada e o erro lista os nomes certos.
 
-| Variável                                                                       | O que é                                                                                                                                                                         |
-| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `{{nome}}`, `{{slogan}}`                                                       | Nome e slogan da marca (`content/site.yaml`)                                                                                                                                    |
-| `{{razao_social}}`, `{{titular}}`                                              | Razão social; `titular` é a razão social ou, sem ela, o nome da marca                                                                                                           |
-| `{{cnpj}}`                                                                     | CNPJ                                                                                                                                                                            |
-| `{{rua}}`, `{{bairro}}`, `{{cidade}}`, `{{uf}}`, `{{cep}}`                     | Endereço, em pedaços                                                                                                                                                            |
-| `{{cidade_uf}}`                                                                | "Santo André-SP"                                                                                                                                                                |
-| `{{telefone}}`, `{{telefone_exibicao}}`                                        | Telefone em `+55...` e como aparece na página                                                                                                                                   |
-| `{{whatsapp}}`, `{{whatsapp_exibicao}}`                                        | WhatsApp só com dígitos e como aparece: (11) 91234-5678                                                                                                                         |
-| `{{horario}}`                                                                  | Horário de atendimento                                                                                                                                                          |
-| `{{ano_fundacao}}`                                                             | Ano de fundação                                                                                                                                                                 |
-| `{{anos}}`, `{{ano}}`, `{{ano_atual}}`                                         | Anos de mercado e ano atual, que se atualizam sozinhos (`ano_atual`: texto simples)                                                                                             |
-| `{{pedido_minimo}}`, `{{regiao}}`, `{{pagamento}}`                             | Dados operacionais                                                                                                                                                              |
-| `{{medicao_nome}}`, `{{sem_medicao}}`                                          | Para a política de privacidade: a ferramenta de medição, ou "não há"                                                                                                            |
-| `{{tem_fatos}}`, `{{tem_diferenciais}}`, `{{tem_provas}}`, `{{tem_confianca}}` | "sim" ou vazio, para usar em `{{#se ...}}`: há pedido mínimo ou região; há diferenciais; há cliente, depoimento ou nota para mostrar; a faixa de confiança tem ao menos um item |
+| Variável                                                   | O que é                                                                                                  |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `{{nome}}`                                                 | Nome da marca (`content/site.yaml`)                                                                      |
+| `{{razao_social}}`, `{{titular}}`                          | Razão social; `titular` é a razão social ou, sem ela, o nome da marca                                    |
+| `{{cnpj}}`                                                 | CNPJ                                                                                                     |
+| `{{rua}}`, `{{bairro}}`, `{{cidade}}`, `{{uf}}`, `{{cep}}` | Endereço, em pedaços                                                                                     |
+| `{{cidade_uf}}`                                            | "Santo André-SP"                                                                                         |
+| `{{telefone}}`, `{{telefone_exibicao}}`                    | Telefone em `+55...` e como aparece na página                                                            |
+| `{{whatsapp}}`, `{{whatsapp_exibicao}}`                    | WhatsApp só com dígitos e como aparece: (11) 91234-5678                                                  |
+| `{{horario}}`                                              | Horário de atendimento                                                                                   |
+| `{{ano_fundacao}}`                                         | Ano de fundação                                                                                          |
+| `{{anos}}`, `{{ano}}`, `{{ano_atual}}`                     | Anos de mercado e ano atual, que se atualizam sozinhos (`ano_atual`: texto simples)                      |
+| `{{regiao}}`, `{{pagamento}}`                              | Dados operacionais                                                                                       |
+| `{{medicao_nome}}`, `{{sem_medicao}}`                      | Para a política de privacidade: a ferramenta de medição, ou "não há"                                     |
+| `{{tem_diferenciais}}`, `{{tem_provas}}`                   | "sim" ou vazio, para usar em `{{#se ...}}`: há diferenciais; há cliente, depoimento ou nota para mostrar |
 
 ### O que NÃO mexer (sem falar com quem programa)
 
@@ -207,7 +205,7 @@ Dentro de qualquer texto de `content/`, `{{nome}}` puxa o dado. `{{#se cidade}} 
 - `public/brand/`, `public/produtos/`, `src/brand/marks.js`: arte da marca e dos produtos, geradas.
 - `tests/fixtures/3d-lock.json`: trava da animação 3D.
 
-**O que fica no código, de propósito (rótulos de interface, não são texto de negócio):** o link "Pular para o conteúdo", "ROLE ↓" da abertura, "Fechar" na folha do WhatsApp, os controles do carrossel (Pausar, Retomar, Anterior, Próximo, o rótulo "Exemplo"), os `aria-label` dos menus e das regiões da página (para leitor de tela), os textos do assistente de orçamento (experimento desligado) e as mensagens de "número copiado". Se um dia precisarem mudar, é com quem programa.
+**O que fica no código, de propósito (rótulos de interface, não são texto de negócio):** o link "Pular para o conteúdo", "ROLE ↓" da abertura, "Fechar" na folha do WhatsApp, o rótulo "Exemplo" do carrossel de clientes, os `aria-label` dos menus e das regiões da página (para leitor de tela), os textos do assistente de orçamento (experimento desligado) e as mensagens de "número copiado". Se um dia precisarem mudar, é com quem programa.
 
 ---
 
@@ -259,8 +257,8 @@ src/vitals.js              Core Web Vitals reais (web-vitals, carregado com o na
 src/experiments.js         Experimentos A/B (variante por visita no sessionStorage, ?exp_<nome>=B força)
 src/wizard.js              Assistente de orçamento da variante B do experimento quote_wizard
 src/handoff.js             "O WhatsApp não abriu?": folha de ajuda e navegador embutido (Instagram, Facebook, TikTok)
-src/carrossel.js           Carrossel de clientes: esteira na Web Animations API, pausa, setas, teclado e arrasto
-src/produtos/              3D de cada produto: gatilho (JS inicial), montagem na página, worker com um WebGL só e os 3 modelos
+src/carrossel.js           Carrossel de clientes: esteira na Web Animations API, sem controles (pausa sozinha)
+src/produtos/              3D de cada produto: gatilho (JS inicial), montagem na página, worker com um WebGL só e os 4 modelos
 build/csp.js               CSP por hash dos <style> (e o servidor da medição, se houver)
 politica-de-privacidade.html  2ª página: política de privacidade com os dados de content/
 src/render/stage.js        Liga o canvas ao render: Web Worker (OffscreenCanvas) ou thread principal
@@ -291,7 +289,7 @@ docs/                      Manual da marca, notas da v4, 3D dos produtos, experi
 
 - `tests/conversion.test.mjs`: nenhum botão do WhatsApp sem número, código de origem `[site-…]` na mensagem, mensagem curta (sem lacunas) e campanha (`utm_*`) no texto, sem cookie nem storage.
 - `tests/handoff.test.mjs`: folha "O WhatsApp não abriu?" (sobe em 2,5 s com a página à vista, não sobe se o app abre, fecha sozinha se ele abre depois, Esc, "Fechar", Ctrl+clique e copiar número) e navegador embutido (user agent, código `[site-hero-ig]` e a instrução). Usa o relógio falso do Playwright.
-- `tests/trust.test.mjs`: faixa de confiança (com a regra do pagamento) e anos de mercado/© recalculados no navegador (relógio em 2031).
+- `tests/anos.test.mjs`: anos de mercado e © recalculados no navegador (relógio em 2031).
 - `tests/analytics.test.mjs`: eventos no Umami (interceptado, nenhum tráfego real), resumo da visita, sem cookie nem storage, nada enviado fora do host do site e nada enviado por navegador automatizado (`navigator.webdriver`), com o `dataLayer` completo.
 - `tests/site-config.test.mjs`: config, trava de go-live (demo × production), render com a config vazia, os 5 cartões com qualquer config, produtos, diferenciais e clientes de `content/`, logos e registros de autorização, JSON-LD, robots e sitemap; puro, sem navegador.
 - `tests/conteudo.test.mjs`: nada de e-mail, prazo, promessa de tempo de resposta, texto de processo industrial ou travessão no que a página mostra ou faz um leitor de tela ler (texto, aria-label, alt, title, metas, JSON-LD e mensagens do WhatsApp), em demo, em production e no build publicado; puro.
@@ -303,9 +301,9 @@ docs/                      Manual da marca, notas da v4, 3D dos produtos, experi
 - `tests/site-url.test.mjs`: build em production com domínio próprio: canonical, Open Graph, JSON-LD, robots, sitemap e medição derivam todos da `VITE_SITE_URL`.
 - `tests/experiments.test.mjs` e `tests/wizard.test.mjs`: sorteio, persistência, data de término e variante forçada; o assistente de 3 passos (mensagem, validação, teclado, rótulos, contraste e celular).
 - `tests/tour.test.mjs`: início automático, percurso e parada no fim da história, interrupções (roda, tecla, clique, toque, scroll, aba oculta e o link "Ver produtos ↓"), `?tour=0`, `#hash`, movimento reduzido e, no celular, o pulso da barra no fim. Usa o relógio falso do Playwright.
-- `tests/carrossel.test.mjs`: carrossel de clientes em 1440×900 e 390×844: anda sozinho para a esquerda, pausa com o mouse, com foco de teclado, ao tocar e pelo botão (que só volta pelo botão), setas, teclado e arrasto movem, movimento reduzido sem movimento automático, poucos clientes parados e centralizados sem cópias nem controles, cópias com `aria-hidden` e `inert`, sem sobreposição, sem rolagem horizontal e alvos de 44 px.
+- `tests/carrossel.test.mjs`: carrossel de clientes em 1440×900 e 390×844: anda sozinho para a esquerda, pausa com o mouse, com foco de teclado e ao tocar (e retoma sozinho ao soltar), com a aba oculta e fora da tela, nenhum controle (nem botão de pausa, nem setas), movimento reduzido sem movimento automático, poucos clientes parados e centralizados sem cópias, a esteira só anda a partir de 6 cartões em 1440 e de 3 em 390, cópias com `aria-hidden` e `inert`, sem sobreposição, sem rolagem horizontal e alvos de 44 px.
 - `tests/produtos.test.mjs`: 3D de cada produto: nenhum chunk antes de a seção chegar perto, monta ao rolar e não fica em branco, gira, só desenha o que está à vista, longe libera tudo e o worker sai, movimento reduzido parado, no máximo 1 contexto WebGL além do da história, sem vazamento ao rolar para dentro e para fora, contexto perdido e restaurado, ilustração em SVG sem WebGL, com economia de dados, rede 3g ou 2 GB de memória (sem salto de layout), e os 3 botões de orçamento funcionando.
-- `tests/layout.test.mjs`: cartão × cabeçalho × botão flutuante × dica sem sobreposição em 1440×900, 1366×768, 924×540, 720×450, 360×640, 390×844 e 844×390, nos 5 capítulos; alvos de toque ≥ 44 px; no celular, a barra do 2º capítulo em diante e a 1ª tela com título, pedido mínimo, botão e linha de risco sem rolar; produtos em 3 colunas no desktop e 1 no celular, com a área 4:3 do 3D no topo de cada cartão, sem salto de layout ao carregar.
+- `tests/layout.test.mjs`: cartão × cabeçalho × botão flutuante × dica sem sobreposição em 1440×900, 1366×768, 924×540, 720×450, 360×640, 390×844 e 844×390, nos 5 capítulos; alvos de toque ≥ 44 px; no celular, a barra do 2º capítulo em diante e a 1ª tela com título, botão, 2º chamado e região sem rolar; produtos em 2 colunas (2 × 2) no desktop e 1 no celular, com a área 4:3 do 3D no topo de cada cartão, sem salto de layout ao carregar.
 - `tests/a11y.test.mjs`: estrutura, ordem e visibilidade do foco, cartões `inert`, movimento reduzido e contraste calculado nos estilos reais.
 - `tests/robustness.test.mjs`: sem WebGL, worker bloqueado (fallback na thread principal) e contexto WebGL perdido e restaurado.
 - `tests/brand.test.mjs`: paleta, tipografia, efeitos proibidos, ausência de raster/rota/pinos/formulário, SVGs da marca, CSP e requisições.
@@ -330,6 +328,6 @@ docs/                      Manual da marca, notas da v4, 3D dos produtos, experi
 ## Marca, produto e segurança
 
 - Cores: só Floresta, Carvão, Papel e Kraft (o Kraft é o material, nunca texto ou botão); só Archivo; logotipo sempre em curvas, em negativo sobre Floresta, com respiro de ¼ do símbolo.
-- Sem imagem raster (nenhuma foto: só SVG; logos de clientes também só em SVG), sem formulário, sem números ou alegações inventados. Logo de cliente (de `content/clientes.yaml`, com `autorizado: true`), depoimento e nota do Google só com autorização registrada em [`docs/provas/`](docs/provas/README.md); em demo, os clientes de exemplo levam o rótulo "Exemplo".
+- Sem imagem raster (nenhuma foto: só SVG; logos de clientes também só em SVG), sem formulário, sem números ou alegações inventados. Logo de cliente (de `content/clientes.yaml`, com `autorizado: true`), depoimento e nota do Google só com autorização registrada em [`docs/provas/`](docs/provas/README.md); em demo, o cliente ainda sem autorização leva o rótulo "Exemplo".
 - Sem PWA: sem manifest, sem service worker e sem instalação como app (decisão do dono: é uma landing de um só objetivo). Ficam `theme-color`, os favicons, o `apple-touch-icon` e o `icon-512.png`, que o JSON-LD usa como logo.
 - CSP por `<meta>` com hash de cada `<style>` (`script-src 'self'`, sem CDN, sem `eval`); o único domínio externo é o servidor da medição (Umami), e só com provedor configurado; links externos com `rel="noopener"`.

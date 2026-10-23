@@ -37,9 +37,9 @@ export function mountQuoteWizard(section, { models }) {
   if (!original) return;
   const base = new URL(original.href);
   const wizard = el('div', { class: 'wizard', role: 'group', 'aria-label': 'Monte seu pedido' });
-  // o assistente fica no lugar do texto, do botão e dos avisos do CTA final (que seguem no HTML)
+  // o assistente fica no lugar do texto, do botão e do telefone do CTA final (que seguem no HTML)
   for (const node of /** @type {NodeListOf<HTMLElement>} */ (
-    section.querySelectorAll('.lead, a[data-cta="orcamento"], .cta-note, .alt')
+    section.querySelectorAll('.lead, a[data-cta="orcamento"], .alt')
   )) {
     node.hidden = true;
   }

@@ -7,7 +7,9 @@ import { ilustrar } from './gatilho.js';
 
 const MOBILE = '(max-width: 760px), (pointer: coarse)'; // o mesmo critério do 3D principal
 const REDUCED = '(prefers-reduced-motion: reduce)';
-const MAX_DENSITY = { desktop: 2, mobile: 1.5 };
+// 1,5 também no desktop: na grade 2×2 até 4 cartões ficam à vista, e a 2× eles desenhariam 3,6× mais
+// pixels por quadro que os 3 de antes (medido no WebGL por software: 18 contra 5 quadros por segundo)
+const MAX_DENSITY = { desktop: 1.5, mobile: 1.5 };
 const NEAR = '300px 0px';
 const DISPOSE_WAIT_MS = 2000; // tempo para o worker liberar a GPU antes de ser encerrado
 
@@ -138,10 +140,8 @@ export function montarProdutos(areas) {
     send({ type: 'add', id, modelo: card.area.dataset.modelo, width, height, visible });
   }
 
-  function leave(card) {
-    send({ type: 'remove', id: card.id });
-    if (cards.some((c) => c.near)) return;
-    // nenhum cartão perto: o worker libera tudo e sai
+  // nenhum cartão perto: o worker libera tudo e sai
+  function retire() {
     const old = worker;
     worker = null;
     old.postMessage({ type: 'dispose' });
@@ -155,8 +155,11 @@ export function montarProdutos(areas) {
         if (card.near === isIntersecting) continue;
         card.near = isIntersecting;
         if (isIntersecting) approach(card);
-        else leave(card);
+        else send({ type: 'remove', id: card.id });
       }
+      // só depois de tratar o lote todo: num salto de rolagem uns cartões saem e outros entram de uma vez,
+      // e o worker só sai se, no fim, nenhum ficou perto (senão seria encerrado e criado de novo)
+      if (worker && !cards.some((c) => c.near)) retire();
     },
     { rootMargin: NEAR },
   );

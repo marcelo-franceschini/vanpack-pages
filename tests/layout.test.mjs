@@ -143,7 +143,7 @@ for (const screen of SCREENS) {
 
 describe('1ª tela do celular', () => {
   for (const screen of SCREENS.filter((s) => s.mobile && s.width <= 768)) {
-    test(`${screen.name}: H1, pedido mínimo, botão e linha de risco sem rolar; o 2º chamado é link`, async () => {
+    test(`${screen.name}: H1, botão, 2º chamado e região sem rolar; o 2º chamado é link e a nota de risco não existe`, async () => {
       const { page, context } = await openPage(browser, server.url, {
         viewport: { width: screen.width, height: screen.height },
         reducedMotion: 'reduce',
@@ -164,13 +164,13 @@ describe('1ª tela do celular', () => {
           header: document.querySelector('#hdr').getBoundingClientRect().bottom,
           parts: {
             título: rect(card.querySelector('h1')),
-            'pedido mínimo': rect(card.querySelector('.seals li')),
             botão: rect(card.querySelector('[data-cta="hero"]')),
-            'linha de risco': rect(card.querySelector('.cta-note')),
+            região: rect(card.querySelector('.seal')),
           },
-          seals: [...card.querySelectorAll('.seals li')]
-            .filter((li) => getComputedStyle(li).display !== 'none')
-            .map((li) => li.textContent.trim()),
+          seals: [...card.querySelectorAll('.seal')]
+            .filter((el) => getComputedStyle(el).display !== 'none')
+            .map((el) => el.textContent.trim()),
+          note: card.querySelectorAll('.cta-note').length,
           link: {
             ...rect(card.querySelector('.actions a[href="#produtos"]')),
             background: getComputedStyle(card.querySelector('.actions a[href="#produtos"]'))
@@ -185,8 +185,13 @@ describe('1ª tela do celular', () => {
           `${name} inteiro na 1ª tela (${part.top} a ${part.bottom} de ${first.height})`,
         );
       }
-      assert.match(first.seals[0], /^Pedido mínimo/);
-      assert.ok(!first.seals.some((s) => /prazo/i.test(s)), 'sem selo de prazo');
+      assert.deepEqual(first.seals.length, 1, 'só a região, sem pedido mínimo');
+      assert.match(first.seals[0], /^Atendemos /);
+      assert.ok(
+        !first.seals.some((s) => /prazo|mínimo|compromisso/i.test(s)),
+        'sem prazo nem pedido mínimo',
+      );
+      assert.equal(first.note, 0, 'sem a nota "Sem compromisso"');
       assert.ok(
         first.link.width < first.parts.botão.width * 0.75,
         'o 2º chamado não é outro bloco',
@@ -242,24 +247,30 @@ describe('seção de produtos', () => {
   for (const screen of SCREENS.filter((s) =>
     ['1440×900', '390×844 (celular em pé)'].includes(s.name),
   )) {
-    test(`${screen.name}: ${screen.mobile ? '1 coluna' : '3 colunas'}, área 4:3 no topo antes e depois do 3D, nada sobreposto`, async () => {
+    test(`${screen.name}: ${screen.mobile ? '1 coluna' : '2 colunas (2×2)'}, área 4:3 no topo antes e depois do 3D, nada sobreposto`, async () => {
       const { page, context } = await openPage(browser, server.url, {
         viewport: { width: screen.width, height: screen.height },
         reducedMotion: 'reduce',
         ...(screen.mobile ? { hasTouch: true, isMobile: true, deviceScaleFactor: 2 } : {}),
       });
       const before = await cards(page);
-      assert.equal(before.length, 3);
+      assert.equal(before.length, 4);
       if (screen.mobile) {
-        for (let i = 1; i < 3; i++) {
+        for (let i = 1; i < 4; i++) {
           assert.ok(Math.abs(before[i].card.left - before[0].card.left) < 1, 'mesma coluna');
           assert.ok(before[i].card.top >= before[i - 1].card.bottom, 'um embaixo do outro');
         }
       } else {
-        for (let i = 1; i < 3; i++) {
-          assert.ok(Math.abs(before[i].card.top - before[0].card.top) < 1, 'mesma linha');
-          assert.ok(before[i].card.left >= before[i - 1].card.right, 'lado a lado');
+        // 2×2: o 1º e o 2º na mesma linha, o 3º e o 4º na de baixo, cada coluna com o mesmo recuo
+        for (const [a, b] of [
+          [0, 1],
+          [2, 3],
+        ]) {
+          assert.ok(Math.abs(before[b].card.top - before[a].card.top) < 1, 'mesma linha');
+          assert.ok(before[b].card.left >= before[a].card.right, 'lado a lado');
         }
+        assert.ok(before[2].card.top >= before[0].card.bottom, 'a 2ª linha vem embaixo da 1ª');
+        assert.ok(Math.abs(before[2].card.left - before[0].card.left) < 1, 'mesma coluna');
       }
       for (const { card, area, title, text, button } of before) {
         const ratio = (area.bottom - area.top) / (area.right - area.left);

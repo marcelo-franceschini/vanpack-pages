@@ -5,19 +5,13 @@
   "description": "Nome da marca, título e descrição da página e links do menu.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["nome", "slogan", "descricao", "pagina", "menu", "privacidade", "nao_encontrada"],
+  "required": ["nome", "descricao", "pagina", "menu", "privacidade", "nao_encontrada"],
   "properties": {
     "nome": {
       "type": "string",
       "minLength": 1,
       "maxLength": 19,
       "description": "Nome da marca. Aparece no © do rodapé, no título das páginas e nos textos que usam {{nome}}."
-    },
-    "slogan": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 32,
-      "description": "Slogan do manual da marca. Aparece no rodapé."
     },
     "descricao": {
       "type": "string",

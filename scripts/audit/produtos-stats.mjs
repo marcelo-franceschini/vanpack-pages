@@ -1,4 +1,4 @@
-// Draw calls, triângulos e o que fica na GPU do 3D de cada produto, no desktop (3 cartões à vista) e no
+// Draw calls, triângulos e o que fica na GPU do 3D de cada produto, no desktop (os cartões à vista) e no
 // celular (um cartão por vez), mais a memória depois de rolar para dentro e para fora 3 vezes. Usa o
 // build de auditoria (`npm run build:audit`), em que o worker dos produtos devolve o `renderer.info`.
 // Sai com erro se um modelo passar de 60 draw calls ou se geometrias e texturas crescerem a cada volta.
@@ -6,7 +6,7 @@ import { existsSync } from 'node:fs';
 import { ROOT, launch, openPage, startServer } from '../lib.mjs';
 
 const BUDGET = 60; // draw calls por modelo, igual no desktop e no celular (não há sombra em tempo real)
-const MODELS = ['corte-e-vinco', 'divisorias', 'chapas'];
+const MODELS = ['caixa-normal', 'corte-e-vinco', 'divisorias', 'chapas']; // na ordem dos cartões
 const DEVICES = {
   desktop: { viewport: { width: 1440, height: 900 } },
   mobile: {
@@ -57,7 +57,7 @@ for (const [name, device] of Object.entries(DEVICES)) {
   console.log(`  orçamento: <= ${BUDGET} draw calls por modelo`);
 
   if (name === 'mobile') {
-    // Vazamento: com o 2º cartão no meio da tela os 3 modelos estão montados; indo até os
+    // Vazamento: com o 2º cartão no meio da tela os 3 modelos de perto estão montados; indo até os
     // diferenciais o 1º se afasta (é liberado) e o worker continua vivo pelo 3º. De volta ao mesmo
     // ponto, a GPU tem de ter as mesmas geometrias e texturas, volta após volta.
     // `card`: espera um quadro desse cartão (à vista) antes de ler; sem ele, só espera assentar

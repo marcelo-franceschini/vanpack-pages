@@ -160,13 +160,27 @@ describe('trava de go-live', () => {
       'endereco.cep',
       'horario',
       'regiao',
-      'clientes\\[0\\]',
-      'clientes\\[5\\]',
     ]) {
       assert.match(all, new RegExp(`› ${path}`), `${path} sobrou na empresa`);
     }
     assert.ok(!/diferenciais/.test(all), 'os diferenciais não contam como fictícios');
     assert.match(all, /não é um CNPJ válido/, 'o CNPJ fictício também é inválido');
+  });
+
+  test('production recusa cliente de exemplo (exemplo: true), mas não o cliente real ainda sem autorização', () => {
+    const clientes = (lista) =>
+      realContent({ clientes: { ...baseContent.clientes, clientes: lista } });
+    const comExemplo = errorsOf({
+      env: PRODUCTION,
+      content: clientes([{ nome: 'Cliente 1', exemplo: true }]),
+    });
+    assert.match(comExemplo, /› clientes\[0\] \("Cliente 1"\) é um cliente de exemplo/);
+    // o cliente real sem autorização não derruba o build: fica fora da página até o registro
+    const semAutorizacao = errorsOf({
+      env: PRODUCTION,
+      content: clientes([{ nome: 'Biscoitê', logo: 'biscoite.svg', autorizado: false }]),
+    });
+    assert.ok(!/clientes/.test(semAutorizacao), semAutorizacao);
   });
 
   test('production com dados reais passa; cidade e UF iguais ao exemplo não contam como fictício', () => {
@@ -190,33 +204,46 @@ describe('trava de go-live', () => {
     );
   });
 
-  test('valor real igual ao de exemplo (horário, pedido mínimo, região, pagamento) só passa se confirmado', () => {
+  test('production avisa, sem recusar, do cliente listado sem autorização', () => {
+    const clientes = [{ nome: 'Biscoitê', logo: 'biscoite.svg', autorizado: false }];
+    const { errors, warnings } = validate({
+      env: PRODUCTION,
+      content: realContent({ clientes: { ...baseContent.clientes, clientes } }),
+    });
+    assert.deepEqual(errors, []);
+    assert.ok(
+      warnings.some((w) => w.includes('Biscoitê') && w.includes('docs/provas/biscoite.md')),
+      warnings.join('\n'),
+    );
+  });
+
+  test('valor real igual ao de exemplo (horário, região, pagamento) só passa se confirmado', () => {
     // um horário comercial como "Seg a Sex, 8h às 17h" pode ser o real: sem confirmação o build recusa
     // (para pegar o que ficou esquecido) e diz como confirmar
     const igual = {
       ...realEmpresa,
       horario: DEMO_EMPRESA.horario,
       horario_schema: DEMO_EMPRESA.horario_schema,
-      pedido_minimo: DEMO_EMPRESA.pedido_minimo,
+      regiao: DEMO_EMPRESA.regiao,
     };
     const clientes = { ...baseContent.clientes, clientes: [] };
     const content = (empresa) => withEmpresa(empresa, { clientes });
     const sem = errorsOf({ env: PRODUCTION, content: content(igual) });
     assert.match(sem, /› horario \("Seg a Sex, 8h às 17h"\) ainda é o valor fictício/);
     assert.match(sem, /liste "horario" em "confirmados" no content\/empresa\.yaml/);
-    assert.match(sem, /› pedido_minimo /);
-    // confirmar só o horário: sobra o pedido mínimo
+    assert.match(sem, /› regiao /);
+    // confirmar só o horário: sobra a região
     const parcial = errorsOf({
       env: PRODUCTION,
       content: content({ ...igual, confirmados: ['horario', 'horario_schema'] }),
     });
     assert.doesNotMatch(parcial, /› horario/);
-    assert.match(parcial, /› pedido_minimo /);
+    assert.match(parcial, /› regiao /);
     // confirmados os três: passa
     assert.deepEqual(
       validate({
         env: PRODUCTION,
-        content: content({ ...igual, confirmados: ['horario', 'horario_schema', 'pedido_minimo'] }),
+        content: content({ ...igual, confirmados: ['horario', 'horario_schema', 'regiao'] }),
       }).errors,
       [],
     );
@@ -345,7 +372,7 @@ describe('render', () => {
   test('com a empresa vazia nenhum campo, elemento vazio ou {{placeholder}} sobra na página', () => {
     const out = renderPage(html, empty);
     assert.ok(!/data-need|data-field|\{\{/.test(out), 'sem marcas nem placeholders');
-    assert.match(out, /<p class="slogan">Do projeto à entrega<\/p>/, 'o slogan do manual fica');
+    assert.ok(!/slogan|Do projeto à entrega/.test(out), 'sem slogan por enquanto');
     assert.ok(!/<dl|<dt|<dd/.test(out), 'sem campos de rodapé vazios');
     assert.ok(!out.includes('Fábrica própria'), 'sem cidade o eyebrow some');
     assert.ok(!/Atendemos (?!lojas)/.test(out), 'sem região, nenhum "Atendemos" da região');
@@ -395,17 +422,6 @@ describe('render', () => {
       `${DEMO_EMPRESA.endereco.rua}, ${DEMO_EMPRESA.endereco.bairro}`,
     );
     assert.ok(!('aggregateRating' in ld), 'sem avaliação própria');
-  });
-
-  test('a faixa de confiança some inteira sem dado e, com pouco dado, mostra só o que existe', () => {
-    assert.ok(!renderPage(html, empty).includes('id="confianca"'));
-    const onlyCnpj = siteWith({
-      content: withEmpresa({ whatsapp: '5511912345678', cnpj: realEmpresa.cnpj }),
-    });
-    const strip = renderPage(html, onlyCnpj).match(/<section class="trust"[\s\S]*?<\/section>/)[0];
-    assert.ok(strip.includes(`CNPJ ${realEmpresa.cnpj}`));
-    assert.ok(strip.includes('Nunca pedimos pagamento para conta de pessoa física'));
-    assert.ok(!/anos de mercado|tel:|mailto:|Fábrica própria|Pagamento:/.test(strip), strip);
   });
 
   test('sem ano de fundação não há anos de mercado nem "Desde"; o cartão 2 usa o texto alternativo', () => {
@@ -543,8 +559,6 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
   const demo = siteWith();
   const production = siteWith({ env: PRODUCTION, content: realContent() });
   const empty = emptySite();
-  const strip = (site) =>
-    renderPage(html, site).match(/<section class="trust"[\s\S]*?<\/section>/)?.[0] ?? '';
   const diferenciais = (itens) =>
     siteWith({ content: { ...baseContent, diferenciais: { ...baseContent.diferenciais, itens } } });
   const pillars = (site) =>
@@ -552,11 +566,11 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
       (m) => m[0],
     );
 
-  test('os 3 produtos têm cada um o seu botão, com o produto na mensagem e o código de origem', () => {
+  test('os 4 produtos têm cada um o seu botão, com o produto na mensagem e o código de origem', () => {
     const produtos = baseContent.produtos.itens;
     assert.deepEqual(
       produtos.map(({ id }) => id),
-      ['corte-e-vinco', 'divisorias', 'chapas'],
+      ['caixa-normal', 'corte-e-vinco', 'divisorias', 'chapas'],
     );
     const cards = [
       ...renderPage(html, demo).matchAll(/<article class="model">[\s\S]*?<\/article>/g),
@@ -576,22 +590,23 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
     }
   });
 
-  test('a regra do pagamento fica na faixa de confiança, com as formas de pagamento quando há', () => {
+  test('a faixa de confiança (#confianca) não existe mais, em nenhum modo', () => {
+    for (const site of [demo, production, empty]) {
+      const out = renderPage(html, site);
+      assert.ok(!/id="confianca"|class="trust|Quem somos/.test(out));
+    }
+  });
+
+  test('o rodapé leva a regra do pagamento, e só quando há CNPJ', () => {
     const rule = 'Nunca pedimos pagamento para conta de pessoa física';
-    assert.ok(strip(production).includes(rule));
-    assert.ok(strip(production).includes(`Pagamento: ${realEmpresa.pagamento}`));
-    const semPagamento = strip(
-      siteWith({
-        env: PRODUCTION,
-        content: realContent({ empresa: { ...realEmpresa, pagamento: '' } }),
-      }),
-    );
-    assert.ok(semPagamento.includes(rule) && !semPagamento.includes('Pagamento:'));
+    const footer = (site) => renderPage(html, site).match(/<footer>[\s\S]*<\/footer>/)?.[0] ?? '';
+    assert.ok(footer(demo).includes(rule));
+    assert.ok(footer(production).includes(rule));
     const semCnpj = siteWith({
       env: PRODUCTION,
       content: realContent({ empresa: { ...realEmpresa, cnpj: '' } }),
     });
-    assert.ok(!strip(semCnpj).includes(rule), 'só com CNPJ');
+    assert.ok(!footer(semCnpj).includes(rule), 'sem CNPJ a página não promete nada');
   });
 
   test('diferenciais vêm de content/: item sem ícone ou texto se adapta e, sem nenhum, a seção e os links somem', () => {
@@ -622,26 +637,43 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
     assert.deepEqual(schema.properties.itens.items.properties.icone.enum, DIFF_ICONS);
   });
 
-  test('clientes vêm de content/: demo mostra os 6 exemplos rotulados; production só os autorizados', () => {
+  test('clientes vêm de content/: demo mostra todos, só com o logo (o nome fica no alt), rotulados; production só os autorizados', () => {
     const carrossel = (site) =>
       renderPage(html, site).match(
-        /<div class="carrossel" data-carrossel>[\s\S]*?<\/button><\/div><\/div>/,
+        /<div class="carrossel" data-carrossel>[\s\S]*?<\/section><\/div>/,
       )?.[0] ?? '';
     const emDemo = carrossel(demo);
     assert.match(
       emDemo,
       /<section class="carrossel-janela" aria-roledescription="carrossel" aria-label="[^"]+" tabindex="0">/,
     );
-    assert.equal((emDemo.match(/<li class="cliente">/g) ?? []).length, 6, 'só os originais');
+    const listados = baseContent.clientes.clientes;
+    assert.ok(
+      listados.length >= 1 && listados.every((c) => c.logo),
+      'todo cliente listado tem logo',
+    );
+    assert.equal(
+      (emDemo.match(/<li class="cliente">/g) ?? []).length,
+      listados.length,
+      'só os originais',
+    );
     assert.ok(!/<li[^>]*aria-hidden/.test(emDemo), 'as cópias do loop são do JS, não do build');
-    // controles escondidos até o JS ver que os itens não cabem na largura
-    assert.match(emDemo, /<div class="carrossel-controles" hidden>/);
-    assert.match(emDemo, /data-acao="pausa" aria-pressed="false">[\s\S]*?<span>Pausar<\/span>/);
-    assert.match(emDemo, /data-acao="anterior" aria-label="Anterior"/);
-    assert.match(emDemo, /data-acao="proximo" aria-label="Próximo"/);
-    assert.equal((emDemo.match(/<span class="tag">Exemplo<\/span>/g) ?? []).length, 6);
-    assert.ok(emDemo.includes('<span class="logo-name">Cliente 1</span>'));
-    assert.ok(!emDemo.includes('<img'), 'exemplo sem logo real');
+    // nenhum controle: nem botão de pausa, nem setas
+    assert.ok(
+      !/<button|data-acao|carrossel-controles/.test(emDemo),
+      'o carrossel não tem controle',
+    );
+    const naoAutorizados = listados.filter((c) => !c.autorizado).length;
+    assert.equal((emDemo.match(/<span class="tag">Exemplo<\/span>/g) ?? []).length, naoAutorizados);
+    assert.ok(!emDemo.includes('logo-name'), 'sem nome visível: só o logo');
+    for (const { nome, logo, alt } of listados) {
+      assert.ok(
+        emDemo.includes(
+          `<img src="./clientes/${logo}" alt="${alt ?? nome}" width="160" height="64"`,
+        ),
+        `${nome}: logo com o nome no alt`,
+      );
+    }
     const site = siteWith({
       env: PRODUCTION,
       content: realContent({

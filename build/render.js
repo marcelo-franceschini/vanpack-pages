@@ -80,7 +80,6 @@ export function footerFields(site) {
   const link = (href, label, extra = '') =>
     `<a href="${escapeHtml(href)}"${extra}>${escapeHtml(label)}</a>`;
   return {
-    slogan: escapeHtml(site.slogan),
     razao: site.legalName && escapeHtml(site.legalName),
     cnpj: site.cnpj && escapeHtml(site.cnpj),
     endereco: place && escapeHtml(place),
@@ -278,9 +277,9 @@ const BLOCKS = {
 
   // Prova social: o carrossel de logos dos clientes (em production só os que autorizaram; em
   // demo também os exemplos, com o rótulo "Exemplo") e os depoimentos e a nota do Google autorizados.
-  // O HTML leva só os itens originais e os controles escondidos: as cópias do loop e os controles são
-  // do src/carrossel.js. O logo é relativo à página (./clientes/…): o render roda depois de o Vite
-  // reescrever as URLs, e um caminho absoluto quebraria no subcaminho do GitHub Pages.
+  // O HTML leva só os itens originais: as cópias do loop são do src/carrossel.js, que não tem controle
+  // nenhum. O logo é relativo à página (./clientes/…): o render roda depois de o Vite reescrever as
+  // URLs, e um caminho absoluto quebraria no subcaminho do GitHub Pages.
   clientes: (site) => {
     const clients = visibleClients(site.clients, site.dataMode);
     const { testimonials, googleRating } = visibleProofs(site.proofs);
@@ -290,18 +289,11 @@ const BLOCKS = {
           ? `<img src="./clientes/${escapeHtml(logo)}" alt="${escapeHtml(alt || name)}" width="160" height="64" loading="lazy" decoding="async" draggable="false" />`
           : `<span class="logo-name">${escapeHtml(name)}</span>`
       }${authorized ? '' : '<span class="tag">Exemplo</span>'}</li>`;
-    const button = (action, content, extra = '') =>
-      `<button type="button" class="carrossel-btn" data-acao="${action}"${extra}>${content}</button>`;
-    const icon = (id) => `<svg aria-hidden="true"><use href="#i-${id}" /></svg>`;
     return [
       clients.length
         ? `<div class="carrossel" data-carrossel><section class="carrossel-janela" aria-roledescription="carrossel" aria-label="Logos de clientes" tabindex="0"><ul class="carrossel-trilho">${clients
             .map(client)
-            .join('')}</ul></section><div class="carrossel-controles" hidden>${[
-            button('pausa', `${icon('pausa')}<span>Pausar</span>`, ' aria-pressed="false"'),
-            button('anterior', icon('anterior'), ' aria-label="Anterior"'),
-            button('proximo', icon('proximo'), ' aria-label="Próximo"'),
-          ].join('')}</div></div>`
+            .join('')}</ul></section></div>`
         : '',
       testimonials.length
         ? `<div class="proofs">${testimonials

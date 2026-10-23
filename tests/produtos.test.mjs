@@ -2,7 +2,7 @@
 // fica em branco, gira, para fora da tela e libera tudo longe dela, fica parado com movimento reduzido,
 // cai na ilustração em SVG sem WebGL ou sem condição (sem salto de layout), no máximo 1 contexto WebGL
 // além do da história, sem vazamento ao rolar para dentro e para fora, contexto perdido e restaurado, e
-// os 3 botões de orçamento seguem funcionando.
+// os 4 botões de orçamento seguem funcionando.
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
 import { launch, openPage, scrollToProgress, startServer } from '../scripts/lib.mjs';
@@ -137,6 +137,22 @@ describe('carregamento preguiçoso', () => {
   });
 });
 
+describe('densidade do 3D', () => {
+  test('no desktop o canvas desenha no máximo 1,5 pixel por pixel da tela, mesmo numa tela 2×', async () => {
+    const { page, context } = await open(prod, {
+      viewport: { width: 1440, height: 900 },
+      deviceScaleFactor: 2,
+    });
+    await showProducts(page, 1);
+    const ratio = await page.evaluate(() => {
+      const canvas = document.querySelector('.model-3d canvas');
+      return canvas.width / canvas.getBoundingClientRect().width;
+    });
+    assert.ok(ratio > 1.4 && ratio <= 1.51, `densidade ${ratio.toFixed(2)}`);
+    await context.close();
+  });
+});
+
 describe('3D nos cartões', () => {
   for (const [name, device] of [
     ['1440×900', {}],
@@ -144,7 +160,7 @@ describe('3D nos cartões', () => {
   ]) {
     test(`${name}: monta, não fica em branco, gira e tem descrição`, async () => {
       const { page, context, problems } = await open(prod, device);
-      const cards = name === '390×844' ? [0, 1, 2] : [0];
+      const cards = name === '390×844' ? [0, 1, 2, 3] : [0];
       for (const i of cards) {
         await page.evaluate(
           (i) => document.querySelectorAll('.model-3d')[i].scrollIntoView({ block: 'center' }),
@@ -188,7 +204,7 @@ describe('3D nos cartões', () => {
     await page.waitForTimeout(1500);
     assert.equal((await pixels(page, 0)).signature, a.signature, 'parado');
     const label = await page.getAttribute('.model-3d canvas', 'aria-label');
-    assert.equal(label, 'Modelo 3D de caixa com corte e vinco');
+    assert.equal(label, 'Modelo 3D de caixa normal fechada');
     await context.close();
   });
 
@@ -333,7 +349,7 @@ describe('contextos WebGL e memória', () => {
   ]) {
     test(`${name}: no máximo 1 contexto WebGL dos produtos, além do da história`, async () => {
       const { page, context } = await open(prod, device, { setup: instrument });
-      for (const i of [0, 1, 2]) {
+      for (const i of [0, 1, 2, 3]) {
         await page.evaluate(
           (i) => document.querySelectorAll('.model-3d')[i].scrollIntoView({ block: 'center' }),
           i,
@@ -455,7 +471,7 @@ describe('ilustração em SVG no lugar do 3D', () => {
       () =>
         [...document.querySelectorAll('.model-3d img')].filter(
           (img) => img.complete && img.naturalWidth,
-        ).length === 3,
+        ).length === 4,
       null,
       { timeout: 20_000 },
     );
@@ -469,7 +485,7 @@ describe('ilustração em SVG no lugar do 3D', () => {
     );
     for (const item of info) {
       assert.equal(item.canvas, 0);
-      assert.match(item.src, /^\.\/produtos\/(corte-e-vinco|divisorias|chapas)\.svg$/);
+      assert.match(item.src, /^\.\/produtos\/(caixa-normal|corte-e-vinco|divisorias|chapas)\.svg$/);
       assert.match(item.alt, /^Ilustração de /);
       assert.equal(item.width, '400');
     }
@@ -537,7 +553,7 @@ describe('botões de orçamento dos produtos', () => {
     ['1440×900', {}],
     ['390×844', MOBILE],
   ]) {
-    test(`${name}: os 3 continuam à vista, com 44 px, por cima do 3D e com o código de origem`, async () => {
+    test(`${name}: os 4 continuam à vista, com 44 px, por cima do 3D e com o código de origem`, async () => {
       const { page, context } = await open(prod, device);
       await showProducts(page, name === '1440×900' ? 3 : 1);
       await page.evaluate(() =>
@@ -547,7 +563,7 @@ describe('botões de orçamento dos produtos', () => {
           true,
         ),
       );
-      for (const id of ['corte-e-vinco', 'divisorias', 'chapas']) {
+      for (const id of ['caixa-normal', 'corte-e-vinco', 'divisorias', 'chapas']) {
         const button = page.locator(`a[data-cta="produtos-${id}"]`);
         await button.scrollIntoViewIfNeeded();
         const href = await button.getAttribute('href');

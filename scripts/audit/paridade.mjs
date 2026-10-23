@@ -46,7 +46,7 @@ const SCREENS = [
 ];
 const screens = SCREENS.filter(({ name }) => !only || only.split(',').includes(name));
 const CENTERS = [0, 0.25, 0.5, 0.75, 1];
-const SECTIONS = ['confianca', 'produtos', 'diferenciais', 'clientes', 'orcamento'];
+const SECTIONS = ['produtos', 'diferenciais', 'clientes', 'orcamento'];
 
 /** `vite build` com a pasta `cwd` como raiz (o vite.config.js lê o .env do diretório de trabalho). */
 function buildIn(cwd, outDir) {

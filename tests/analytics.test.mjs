@@ -206,9 +206,9 @@ describe('Umami Cloud', () => {
     const whatsapp = await waitFor(calls, named('whatsapp_click'));
     assert.deepEqual(whatsapp.payload.data, { cta: 'hero' });
     for (const kind of ['phone', 'map']) {
-      await page.locator(`#confianca a[data-contact="${kind}"]`).click();
+      await page.locator(`footer a[data-contact="${kind}"]`).click();
       const click = await waitFor(calls, named(`${kind}_click`));
-      assert.deepEqual(click.payload.data, { cta: 'confianca' }, kind);
+      assert.deepEqual(click.payload.data, { cta: 'rodape' }, kind);
     }
     await context.close();
   });

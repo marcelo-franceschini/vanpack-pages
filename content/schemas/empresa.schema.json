@@ -83,10 +83,6 @@
       "type": ["integer", "string"],
       "description": "Ano de fundação, ex.: 2010. O \"N anos de mercado\" da página é calculado a partir dele, sem edição anual."
     },
-    "pedido_minimo": {
-      "type": ["integer", "string"],
-      "description": "Pedido mínimo, em unidades (só o número)."
-    },
     "regiao": {
       "type": "string",
       "maxLength": 80,
@@ -100,8 +96,8 @@
     "confirmados": {
       "type": "array",
       "uniqueItems": true,
-      "items": { "enum": ["horario", "horario_schema", "pedido_minimo", "regiao", "pagamento"] },
-      "description": "Só no go-live. Se o valor REAL de um destes campos for igual ao valor de exemplo (acontece com horário, pedido mínimo, região e pagamento), liste o campo aqui para o build aceitar: é a sua confirmação de que o valor foi conferido. Ex.: [horario, pedido_minimo]. CNPJ, telefones, WhatsApp e endereço nunca podem ser iguais ao exemplo."
+      "items": { "enum": ["horario", "horario_schema", "regiao", "pagamento"] },
+      "description": "Só no go-live. Se o valor REAL de um destes campos for igual ao valor de exemplo (acontece com horário, região e pagamento), liste o campo aqui para o build aceitar: é a sua confirmação de que o valor foi conferido. Ex.: [horario, regiao]. CNPJ, telefones, WhatsApp e endereço nunca podem ser iguais ao exemplo."
     }
   }
 }

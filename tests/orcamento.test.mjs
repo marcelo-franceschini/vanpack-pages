@@ -18,7 +18,13 @@
 // schemas aceitam (dist-limite/, que tests/limites.test.mjs confere com este mesmo teste), medido no Node 24
 // (o maior dos dois Node), mais 0,1 a 0,2 KB: three.js 111,71, JS inicial 131,29, carga 171,12 e visita 180,72
 // KB. Descem 7,8 KB cada um (three.js, JS inicial, carga) e 7,4 KB (visita); nenhum sobe.
-// O teto de JS inicial de npm run audit:bundle foi de 165 para 140 e agora para 132 KB (o do teste acima é 131,5).
+// Rodada 4 (ajustes estéticos): sem a faixa de confiança, o selo, a nota, o slogan e os controles do carrossel, o HTML
+// e o script da página encolheram; a marca "SUA MARCA" nas caixas 3D (em vez do logo da Vanpack, que vinha junto
+// no worker dos produtos) tirou 1,0 KB do produtos-worker e a caixa normal custou 0,2. Os tetos descem de novo ao
+// pior caso (dist-limite, Node 24) mais 0,1 a 0,2 KB: script da página 7,7, produtos-worker 6,5, HTML 10,6,
+// JS inicial 130,8, carga 170,2 e visita 179,0 KB. O único que sobe é o dos SVGs (13,5 para 13,7): a ilustração
+// da caixa normal, o fallback do 3D novo, pesa 0,33 KB.
+// O teto de JS inicial de npm run audit:bundle foi de 165 para 140, depois 132 e agora 131 KB (o do teste acima é 130,8).
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { describe, test } from 'node:test';
@@ -31,17 +37,17 @@ const KB = 1024;
 
 // Cada arquivo de assets/ tem o prefixo do nome sem o hash (index-BsPmJb_d.js → index).
 const JS = {
-  index: 8.3, // o script da página (sem o three.js)
+  index: 7.7, // o script da página (sem o three.js)
   worker: 11.6, // a cena da história, no Web Worker (o three.js vem do arquivo three)
   three: 111.9, // o three.js, num arquivo só para os dois workers e o render de reserva
   controller: 11.6, // o mesmo render da história, só se o worker falhar (thread principal)
-  'produtos-worker': 7.3, // a vitrine dos produtos, baixada perto da seção
+  'produtos-worker': 6.5, // a vitrine dos produtos, baixada perto da seção
   montar: 1.7, // montagem do 3D dos produtos
   'web-vitals': 3.1,
   wizard: 2.2, // assistente do experimento (só na variante B)
 };
 const FILES = {
-  'index.html': 11.2, // folga maior que a dos JS: o go-live troca textos e logos de clientes
+  'index.html': 10.6, // o conteúdo no limite dos schemas (dist-limite) mais 0,2 KB
   'politica-de-privacidade.html': 3.6,
   '404.html': 2,
   'fonts/archivo-latin.woff2': 27.8,
@@ -49,11 +55,11 @@ const FILES = {
   'icon-512.png': 7.4,
   'apple-touch-icon.png': 3.4,
 };
-const SVG_TOTAL = 13.5; // todos os SVGs de brand/ e produtos/
+const SVG_TOTAL = 13.7; // todos os SVGs de brand/ e produtos/ (13,5 + o SVG da caixa normal, 0,3 KB)
 const TOTAL = {
-  jsInicial: 131.5, // script da página + worker da história + three.js
-  carga: 171.4, // HTML + JS inicial + fonte + os 2 logos do topo e da cena
-  visita: 181.0, // a carga + o 3D dos produtos + o logo do CTA final
+  jsInicial: 130.8, // script da página + worker da história + three.js
+  carga: 170.2, // HTML + JS inicial + fonte + os 2 logos do topo e da cena
+  visita: 179.0, // a carga + o 3D dos produtos + o logo do CTA final
 };
 
 const built = existsSync(`${DIST}index.html`);

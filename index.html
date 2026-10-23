@@ -438,31 +438,27 @@
         gap: 0.75rem;
         margin-top: 1.75rem;
       }
-      /* microcopy de risco ao lado do botão: sem compromisso */
-      .card .cta-note {
-        margin-top: 0.875rem;
-        font-size: 0.9375rem;
-        font-weight: 600;
-        line-height: 1.35;
-      }
-      .seals {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem 1.5rem;
-        margin-top: 1.5rem;
-      }
-      .seals li {
-        display: flex;
+      /* região atendida no cartão da abertura: só onde a linha pequena acima do título (.optional) não
+         a mostra, isto é, no celular; no desktop ela já está lá. Fica antes do modo compacto, que a esconde. */
+      .seal {
+        display: none;
         align-items: center;
         gap: 0.5rem;
+        margin-top: 1.5rem;
         font: 600 0.9375rem/1.2 var(--font);
         color: var(--carvao-muted);
       }
-      .seals li::before {
+      .seal::before {
         content: '';
+        flex: none;
         width: 0.5rem;
         height: 0.5rem;
         background: var(--floresta);
+      }
+      @media (max-width: 760px), (max-aspect-ratio: 1/1) {
+        .seal {
+          display: flex;
+        }
       }
       .more {
         display: inline-flex;
@@ -507,10 +503,9 @@
           min-height: 3rem;
           padding: 0 1.25rem;
         }
-        .seals,
+        .seal,
         .scrollcue,
-        .optional,
-        .cta-note {
+        .optional {
           display: none;
         }
       }
@@ -577,17 +572,13 @@
           background: none;
           color: var(--floresta-dark);
         }
-        /* pedido mínimo e região antes do clique, numa linha compacta */
-        .seals {
-          gap: 0.25rem 1rem;
-          margin-top: 0.75rem;
-        }
-        .seals li {
+        /* a região antes do clique, numa linha compacta */
+        .seal {
+          margin-top: 1rem;
           font-size: 0.875rem;
         }
         .scrollcue,
-        .optional,
-        .seals .optional {
+        .optional {
           display: none;
         }
       }
@@ -608,8 +599,12 @@
         line-height: 1.05;
         text-wrap: balance;
       }
+      /* o título dos clientes é curto: numa linha só onde couber (no celular ele quebra) */
+      #clientes .sec-head {
+        max-width: none;
+      }
       /* faixas: as seções alternam Papel, tint e Floresta (o CTA final), e a onda de papelão (Kraft,
-         o material) divide a história da faixa de confiança e os produtos dos diferenciais */
+         o material) divide a história dos produtos e os produtos dos diferenciais */
       .tint {
         background: var(--tint);
       }
@@ -622,38 +617,6 @@
         width: 100%;
         height: 1.25rem;
         color: var(--kraft);
-      }
-      /* faixa de confiança logo depois da história: dados verificáveis da empresa */
-      .trust {
-        background: var(--tint);
-        padding: 0.5rem 0;
-      }
-      .trust-list {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0 1.75rem;
-        font: 600 0.9375rem/1.3 var(--font);
-        color: var(--carvao);
-      }
-      .trust-list li {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        min-height: 2.75rem;
-      }
-      .trust-list li::before {
-        content: '';
-        flex: none;
-        width: 0.375rem;
-        height: 0.375rem;
-        background: var(--floresta);
-      }
-      .trust-list a {
-        display: inline-flex;
-        align-items: center;
-        min-height: 2.75rem;
-        font-weight: 700;
       }
       .grid3 {
         display: grid;
@@ -683,30 +646,15 @@
         line-height: 1.55;
         color: var(--carvao-muted);
       }
-      /* o que fabricamos: dados operacionais e modelos */
-      .facts {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-        gap: 1rem 1.5rem;
-        margin-bottom: 2rem;
-      }
-      .facts li {
-        padding-left: 1rem;
-        border-left: 0.25rem solid var(--floresta);
-        font-size: 1.125rem;
-        line-height: 1.35;
-      }
-      .facts b {
-        display: block;
-        margin-bottom: 0.25rem;
-        font: 700 0.875rem/1.2 var(--font);
-        letter-spacing: 0.09em;
-        text-transform: uppercase;
+      /* o que fabricamos: a região atendida, numa linha sob o título, e os modelos */
+      .sec-head .sub {
+        margin-top: 1rem;
+        font-size: clamp(1.125rem, 1.35vw, 1.25rem);
         color: var(--carvao-muted);
       }
       .models {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 1.25rem;
       }
       .model {
@@ -765,9 +713,9 @@
       /* clientes: só prova autorizada (ou exemplo, em demo), num carrossel (src/carrossel.js) em
          qualquer largura. Sem JS a janela rola na horizontal; com JS (.on) os itens andam devagar da
          direita para a esquerda numa esteira sem fim (transform, no compositor), com degradê Papel
-         nas bordas, botão de pausa e setas. Se os itens cabem na largura (.estatico), ficam parados,
-         centralizados e sem controles. A largura fixa do item faz os 6 exemplos passarem da largura
-         máxima do .wrap: o demo anima também no desktop. */
+         nas bordas e sem nenhum controle (ela pausa sozinha, ver src/carrossel.js). Com poucos logos os
+         itens se repetem para encher a janela; só com movimento reduzido e itens que cabem na largura
+         (.estatico) ficam parados e centralizados. */
       .carrossel-janela {
         position: relative;
         overflow-x: auto;
@@ -775,9 +723,6 @@
       }
       .carrossel.on .carrossel-janela {
         overflow: hidden;
-        touch-action: pan-y; /* o arrasto na horizontal é do carrossel; na vertical, da página */
-        -webkit-user-select: none;
-        user-select: none;
       }
       .carrossel.on:not(.estatico) .carrossel-janela::before,
       .carrossel.on:not(.estatico) .carrossel-janela::after {
@@ -813,17 +758,17 @@
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
-        width: 10rem;
-        min-height: 6.5rem;
-        padding: 1rem;
+        width: 15rem;
+        min-height: 9.5rem;
+        padding: 1.5rem;
         border-radius: 0.5rem;
         background: var(--tint); /* cartão tint sobre a faixa Papel */
         text-align: center;
       }
       .cliente img {
         width: 100%;
-        max-width: 10rem;
-        height: 4rem;
+        max-width: 12rem;
+        height: 6rem;
         object-fit: contain;
       }
       .logo-name {
@@ -834,43 +779,14 @@
       .cliente .tag {
         margin-left: 0;
       }
-      .carrossel-controles {
-        display: flex;
-        justify-content: flex-end;
-        gap: 0.5rem;
-        margin-top: 1rem;
-      }
-      .carrossel-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        min-width: 2.75rem;
-        min-height: 2.75rem;
-        padding: 0;
-        border: 0;
-        border-radius: 0.375rem;
-        background: var(--tint-2);
-        color: var(--carvao);
-        font: 700 0.9375rem/1 var(--font);
-        cursor: pointer;
-      }
-      .carrossel-btn:hover {
-        background: var(--soft-hover);
-      }
-      /* largura de "Retomar": trocar o texto não empurra as setas */
-      .carrossel-btn[data-acao='pausa'] {
-        min-width: 7.5rem;
-        padding: 0 1rem;
-      }
-      .carrossel-btn svg {
-        flex: none;
-        width: 1.25rem;
-        height: 1.25rem;
-      }
       @media (min-width: 861px) {
         .cliente {
-          width: 12.5rem;
+          width: 20rem;
+          min-height: 12rem;
+        }
+        .cliente img {
+          max-width: 16rem;
+          height: 8rem;
         }
       }
       .carrossel + .proofs {
@@ -952,7 +868,7 @@
         margin-bottom: 2rem;
       }
       .cta .alt {
-        margin-top: 0.5rem;
+        margin-top: 1rem;
         font-size: 1rem;
       }
       .cta .alt a {
@@ -961,13 +877,6 @@
         min-height: 2.75rem;
         color: var(--papel);
         font-weight: 700;
-      }
-      .cta .cta-note {
-        margin-top: 1rem;
-        font-size: 0.9375rem;
-        font-weight: 600;
-        line-height: 1.35;
-        color: var(--papel);
       }
       .cta :focus-visible {
         outline-color: var(--papel);
@@ -1119,32 +1028,25 @@
       footer {
         padding: 3.5rem 0 calc(6rem + env(safe-area-inset-bottom));
       }
-      footer .wrap {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 2rem 3rem;
-        align-items: flex-start;
-      }
-      .foot-brand {
+      /* a marca à esquerda e, ao lado, 3 colunas (como falar, quando e quem); embaixo, uma faixa com o
+         © e os links */
+      .foot-main {
         display: grid;
-        gap: 1rem;
+        grid-template-columns: 8.5rem minmax(0, 1fr);
+        gap: 1.5rem 3rem;
+        align-items: start;
       }
-      .foot-brand img {
+      .foot-logo {
         height: 2.125rem;
         width: auto;
-      }
-      .slogan {
-        font: 700 0.8125rem/1.25rem var(--font);
-        letter-spacing: 0.2em;
-        text-transform: uppercase;
-        color: var(--carvao);
+        margin-top: 0.375rem;
       }
       .foot-info {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1.5rem 3rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr));
+        gap: 1.5rem 2.5rem;
         font-size: 1rem;
+        line-height: 1.5;
         color: var(--carvao-muted);
       }
       .foot-info dt {
@@ -1152,12 +1054,26 @@
         letter-spacing: 0.09em;
         text-transform: uppercase;
         color: var(--carvao);
-        margin-bottom: 0.25rem;
+      }
+      /* 10 px acima e abaixo do texto: o link (44 px de alvo) e o texto simples começam na mesma linha */
+      .foot-info dd {
+        padding-block: 0.625rem;
       }
       .foot-info a {
         display: inline-flex;
         align-items: center;
         min-height: 2.75rem;
+        margin-block: -0.625rem; /* o alvo de 44 px não aumenta a linha: o link e o texto simples alinham */
+      }
+      .foot-legal {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.25rem 2rem;
+        margin-top: 2.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--tint-2);
       }
       .foot-nav {
         display: flex;
@@ -1174,10 +1090,41 @@
       .foot-nav a:hover {
         color: var(--floresta);
       }
+      .foot-aviso {
+        grid-column: 2;
+        font-size: 0.9375rem;
+        line-height: 1.5;
+        color: var(--carvao-muted);
+        text-wrap: balance;
+      }
       .legal {
-        flex: 1 1 100%;
         font-size: 0.9375rem;
         color: var(--carvao-muted);
+      }
+      @media (max-width: 760px) {
+        .foot-main {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 1.5rem;
+        }
+        .foot-info {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 1rem 1.5rem;
+        }
+        .foot-aviso {
+          grid-column: 1;
+        }
+        .f-endereco,
+        .f-razao {
+          grid-column: 1 / -1;
+        }
+        .foot-legal {
+          flex-direction: column;
+          align-items: flex-start;
+          margin-top: 1.5rem;
+        }
+        .legal {
+          order: 2;
+        }
       }
 
       /* botão do WhatsApp: redondo no desktop, depois da história; até 768 px vira uma barra de
@@ -1478,31 +1425,6 @@
           stroke-linecap="square"
         />
       </symbol>
-      <!-- controles do carrossel de clientes -->
-      <symbol id="i-pausa" viewBox="0 0 24 24">
-        <path d="M6 4h4v16H6zM14 4h4v16h-4z" fill="currentColor" />
-      </symbol>
-      <symbol id="i-retomar" viewBox="0 0 24 24">
-        <path d="M7 4l13 8-13 8z" fill="currentColor" />
-      </symbol>
-      <symbol id="i-anterior" viewBox="0 0 24 24">
-        <path
-          d="M15 4l-8 8 8 8"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.4"
-          stroke-linecap="square"
-        />
-      </symbol>
-      <symbol id="i-proximo" viewBox="0 0 24 24">
-        <path
-          d="M9 4l8 8-8 8"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.4"
-          stroke-linecap="square"
-        />
-      </symbol>
     </svg>
 
     <a class="skip" href="#conteudo">Pular para o conteúdo</a>
@@ -1555,11 +1477,7 @@
                     >
                     <a class="btn btn-soft" href="#produtos">{{historia.hero.link_produtos}}</a>
                   </div>
-                  <p class="cta-note">{{historia.hero.nota}}</p>
-                  <ul class="seals" data-need="tem_fatos">
-                    <li data-need="pedido_minimo">{{historia.hero.selo_pedido_minimo}}</li>
-                    <li data-need="regiao">{{historia.hero.selo_regiao}}</li>
-                  </ul>
+                  <div class="seal" data-need="regiao">{{historia.hero.selo_regiao}}</div>
                 </div>
               </div>
             </div>
@@ -1624,34 +1542,13 @@
         </svg>
       </div>
 
-      <section class="trust" id="confianca" aria-label="Quem somos" data-need="tem_confianca">
-        <div class="wrap">
-          <ul class="trust-list">
-            <li data-need="cidade_uf">{{confianca.cidade}}</li>
-            <li data-need="cnpj">{{confianca.cnpj}}</li>
-            <li data-need="cnpj">{{confianca.regra_pagamento}}</li>
-            <li data-need="ano_fundacao">{{confianca.anos}}</li>
-            <li data-need="pagamento">{{confianca.pagamento}}</li>
-            <li data-field="mapa" hidden></li>
-            <li data-field="telefone" hidden></li>
-          </ul>
-        </div>
-      </section>
-
       <section class="block" id="produtos">
         <div class="wrap">
           <div class="sec-head">
             <span class="k">{{produtos.etiqueta}}</span>
             <h2>{{produtos.titulo}}</h2>
+            <p class="sub" data-need="regiao">{{produtos.regiao}}</p>
           </div>
-          <ul class="facts" data-need="tem_fatos">
-            <li data-need="pedido_minimo">
-              <b>{{produtos.fatos.pedido_minimo.rotulo}}</b>{{produtos.fatos.pedido_minimo.valor}}
-            </li>
-            <li data-need="regiao">
-              <b>{{produtos.fatos.regiao.rotulo}}</b>{{produtos.fatos.regiao.valor}}
-            </li>
-          </ul>
           <div class="models">
             <!--render:produtos-->
           </div>
@@ -1708,7 +1605,6 @@
             <a class="btn btn-light" data-cta="orcamento" data-wa="{{whatsapp.mensagens.orcamento}}"
               ><svg aria-hidden="true"><use href="#i-wa" /></svg>{{orcamento.botao}}</a
             >
-            <p class="cta-note">{{orcamento.nota}}</p>
             <p class="alt" data-need="telefone">
               {{orcamento.ligar}}
               <a href="tel:{{telefone}}" data-contact="phone">{{telefone_exibicao}}</a>
@@ -1725,8 +1621,9 @@
 
     <footer>
       <div class="wrap">
-        <div class="foot-brand">
+        <div class="foot-main">
           <img
+            class="foot-logo"
             src="/brand/vanpack-horizontal.svg"
             alt="{{nome}}"
             width="136"
@@ -1734,45 +1631,47 @@
             loading="lazy"
             decoding="async"
           />
-          <p class="slogan" data-field="slogan"></p>
+          <dl class="foot-info">
+            <div class="f-telefone" data-field="telefone" hidden>
+              <dt>{{rodape.rotulos.telefone}}</dt>
+              <dd></dd>
+            </div>
+            <div class="f-mapa" data-field="mapa" hidden>
+              <dt>{{rodape.rotulos.mapa}}</dt>
+              <dd></dd>
+            </div>
+            <div class="f-endereco" data-field="endereco" hidden>
+              <dt>{{rodape.rotulos.endereco}}</dt>
+              <dd></dd>
+            </div>
+            <div class="f-horario" data-field="horario" hidden>
+              <dt>{{rodape.rotulos.horario}}</dt>
+              <dd></dd>
+            </div>
+            <div class="f-cnpj" data-field="cnpj" hidden>
+              <dt>{{rodape.rotulos.cnpj}}</dt>
+              <dd></dd>
+            </div>
+            <div class="f-razao" data-field="razao" hidden>
+              <dt>{{rodape.rotulos.razao_social}}</dt>
+              <dd></dd>
+            </div>
+          </dl>
+          <p class="foot-aviso" data-need="cnpj">{{rodape.aviso_pagamento}}</p>
         </div>
-        <dl class="foot-info">
-          <div data-field="razao" hidden>
-            <dt>{{rodape.rotulos.razao_social}}</dt>
-            <dd></dd>
-          </div>
-          <div data-field="cnpj" hidden>
-            <dt>{{rodape.rotulos.cnpj}}</dt>
-            <dd></dd>
-          </div>
-          <div data-field="endereco" hidden>
-            <dt>{{rodape.rotulos.endereco}}</dt>
-            <dd></dd>
-          </div>
-          <div data-field="horario" hidden>
-            <dt>{{rodape.rotulos.horario}}</dt>
-            <dd></dd>
-          </div>
-          <div data-field="telefone" hidden>
-            <dt>{{rodape.rotulos.telefone}}</dt>
-            <dd></dd>
-          </div>
-          <div data-field="mapa" hidden>
-            <dt>{{rodape.rotulos.mapa}}</dt>
-            <dd></dd>
-          </div>
-        </dl>
-        <nav class="foot-nav" aria-label="Rodapé">
-          <a href="#produtos">{{site.menu.produtos}}</a
-          ><a href="#diferenciais">{{site.menu.diferenciais}}</a
-          ><a href="#clientes">{{site.menu.clientes}}</a
-          ><a href="#orcamento">{{site.menu.orcamento}}</a
-          ><a href="./politica-de-privacidade.html">{{site.menu.privacidade}}</a>
-        </nav>
-        <p class="legal">
-          © {{ano}} {{titular}}<span data-need="cidade_uf"> · {{cidade_uf}}</span
-          ><span data-need="ano_fundacao"> · {{rodape.desde}}</span>
-        </p>
+        <div class="foot-legal">
+          <p class="legal">
+            © {{ano}} {{titular}}<span data-need="cidade_uf"> · {{cidade_uf}}</span
+            ><span data-need="ano_fundacao"> · {{rodape.desde}}</span>
+          </p>
+          <nav class="foot-nav" aria-label="Rodapé">
+            <a href="#produtos">{{site.menu.produtos}}</a
+            ><a href="#diferenciais">{{site.menu.diferenciais}}</a
+            ><a href="#clientes">{{site.menu.clientes}}</a
+            ><a href="#orcamento">{{site.menu.orcamento}}</a
+            ><a href="./politica-de-privacidade.html">{{site.menu.privacidade}}</a>
+          </nav>
+        </div>
       </div>
     </footer>
 

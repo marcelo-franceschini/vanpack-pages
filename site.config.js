@@ -10,7 +10,6 @@ export const DIFF_ICONS = ['fabrica', 'lotes', 'conversa', 'caixa'];
 /** Variáveis que os textos de content/ e os data-need do HTML podem usar (`{{cidade}}`...). */
 export const VAR_NAMES = [
   'nome',
-  'slogan',
   'razao_social',
   'titular',
   'cnpj',
@@ -29,15 +28,12 @@ export const VAR_NAMES = [
   'anos',
   'ano',
   'ano_atual',
-  'pedido_minimo',
   'regiao',
   'pagamento',
   'medicao_nome',
   'sem_medicao',
-  'tem_fatos',
   'tem_diferenciais',
   'tem_provas',
-  'tem_confianca',
 ];
 
 /** Variáveis cujo valor já é HTML montado aqui (o número que o navegador recalcula): não são escapadas. */
@@ -129,7 +125,6 @@ export function createSiteConfig({
   const brand = content.site ?? {};
   const site = {
     name: text(brand.nome),
-    slogan: text(brand.slogan),
     description: text(brand.descricao),
     content,
     products,
@@ -155,7 +150,6 @@ export function createSiteConfig({
     hoursSchema: text(empresa.horario_schema),
     mapUrl: text(empresa.mapa),
     foundedYear,
-    minOrder: text(empresa.pedido_minimo),
     serviceArea: text(empresa.regiao),
     paymentMethods: text(empresa.pagamento),
     // "Por que a Vanpack" e a faixa de logos
@@ -218,7 +212,6 @@ export function createSiteConfig({
   const shownClients = visibleClients(site.clients, site.dataMode);
   site.vars = {
     nome: site.name,
-    slogan: site.slogan,
     razao_social: legalName,
     titular: legalName || site.name, // titular do ©
     cnpj: site.cnpj,
@@ -244,24 +237,11 @@ export function createSiteConfig({
     medicao_nome: site.analytics.provider === 'umami' ? 'Umami Cloud' : '',
     sem_medicao: site.analytics.provider ? '' : 'sim',
     // seções que só existem se tiverem algo a mostrar
-    tem_fatos: site.minOrder || site.serviceArea ? 'sim' : '',
     tem_diferenciais: site.differentials.length ? 'sim' : '',
     tem_provas:
       shownClients.length || shownProofs.testimonials.length || shownProofs.googleRating
         ? 'sim'
         : '',
-    // a faixa de confiança só existe se tiver ao menos um item
-    tem_confianca: [
-      cityState,
-      site.cnpj,
-      foundedYear,
-      site.mapUrl,
-      phone,
-      site.paymentMethods,
-    ].some(Boolean)
-      ? 'sim'
-      : '',
-    pedido_minimo: site.minOrder,
     regiao: site.serviceArea,
     pagamento: site.paymentMethods,
   };

@@ -1,4 +1,4 @@
-// Ilustrações em SVG dos 3 produtos (public/produtos/<id>.svg): o que aparece no lugar do 3D quando o
+// Ilustrações em SVG dos 4 produtos (public/produtos/<id>.svg): o que aparece no lugar do 3D quando o
 // aparelho não tem condição (sem WebGL, economia de dados, rede 2g/3g, até 2 GB de memória). Projeta
 // formas simples das mesmas peças de src/produtos/modelos.js com a câmera de três quartos do 3D
 // (projeção ortográfica), pinta cada face com um tom do material da cena conforme a luz (a face interna
@@ -203,6 +203,16 @@ function corteEVinco() {
   ];
 }
 
+/** Caixa normal (RSC): fechada, com as abas de cima se encontrando no meio (as das faces longas por cima). */
+function caixaNormal() {
+  const [L, W, H, T, GAP] = [0.44, 0.3, 0.34, 0.012, 0.006];
+  return [
+    ...box([-L / 2, 0, -W / 2], [L / 2, H, W / 2]),
+    ...box([-L / 2, H, -W / 2], [L / 2, H + T, -GAP / 2]),
+    ...box([-L / 2, H, GAP / 2], [L / 2, H + T, W / 2]),
+  ];
+}
+
 /** Divisórias: tabuleiro baixo e grade 3 × 3, com uma divisória levantada. */
 function divisorias() {
   const [S, HT, T, HD] = [0.4, 0.06, 0.01, 0.15];
@@ -263,6 +273,7 @@ const write = (id, svg) => {
   console.log(`public/produtos/${id}.svg  ${(svg.length / 1024).toFixed(1)} KB`);
 };
 write('corte-e-vinco', render(corteEVinco()));
+write('caixa-normal', render(caixaNormal()));
 write('divisorias', render(divisorias()));
 const pile = chapas();
 write('chapas', render(pile.faces, { flutes: pile.flutes }));

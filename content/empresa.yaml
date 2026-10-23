@@ -35,12 +35,12 @@ mapa: "https://maps.google.com/?q=Santo+Andre+SP"
 # O "N anos de mercado" da página é calculado a partir do ano de fundação.
 ano_fundacao: 2010
 
-# Dados operacionais (aparecem na abertura, em "O que fabricamos" e na faixa de confiança).
-pedido_minimo: 500
+# Dados operacionais: a região aparece na abertura e em "O que fabricamos"; as formas de pagamento não
+# aparecem na página hoje (ficam disponíveis como {{pagamento}} para os textos de content/).
 regiao: "Santo André, ABC e Grande São Paulo"
 pagamento: "Pix, boleto faturado e cartão"
 
-# Só no go-live: se o valor REAL de horário, horario_schema, pedido_minimo, regiao ou pagamento for igual ao
-# de exemplo acima (é comum: "Seg a Sex, 8h às 17h", 500 unidades...), o build de production recusa por
-# achar que sobrou dado fictício. Liste aqui os campos que você conferiu e são mesmo assim:
-#   confirmados: [horario, pedido_minimo]
+# Só no go-live: se o valor REAL de horário, horario_schema, regiao ou pagamento for igual ao de exemplo
+# acima (é comum: "Seg a Sex, 8h às 17h"...), o build de production recusa por achar que sobrou dado
+# fictício. Liste aqui os campos que você conferiu e são mesmo assim:
+#   confirmados: [horario, regiao]

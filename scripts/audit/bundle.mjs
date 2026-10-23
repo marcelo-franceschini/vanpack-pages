@@ -2,14 +2,14 @@
 // normal (página + worker da história + three.js) e no fallback, o CSS inline, a carga inicial, o 3D
 // dos produtos (baixado só perto da seção, fora da carga inicial), a visita completa e os maiores
 // módulos. O three.js é um arquivo só, compartilhado pelos dois workers e pelo fallback
-// (build/three-compartilhado.js). Sai com erro se o JS inicial passar do orçamento de 132 KB gzip ou
+// (build/three-compartilhado.js). Sai com erro se o JS inicial passar do orçamento de 131 KB gzip ou
 // se o script da página levar o three.js. Os tetos por arquivo ficam em tests/orcamento.test.mjs.
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { brotliCompressSync, constants, gzipSync } from 'node:zlib';
 import { buildThree } from '../../build/three-compartilhado.js';
 import { ROOT } from '../lib.mjs';
 
-const BUDGET_KB = 132;
+const BUDGET_KB = 131;
 const dist = `${ROOT}dist/`;
 if (!existsSync(`${dist}index.html`)) {
   console.error('Sem dist/: rode `npm run build` antes.');
