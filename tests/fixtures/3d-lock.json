@@ -4,7 +4,7 @@
     "src/render/stage.js": "3c9cac2358cc7a95cc03e8a5349d5014699b829b90a0209d4b5bdea6424b77a6",
     "src/render/worker.js": "c32b0f1080c3ad43ed74ca41a3813bd20bd13589ccbdcc6641e77dbbb83632f0",
     "src/scene/camera.js": "34e80b3ecc9cb8216db7878945991c5e4a473eb484e53c316556cf4eded298ba",
-    "src/scene/constants.js": "4247f776f4af895989fb5316e75563c36a5d69be3ff295aab941081dc396d796",
+    "src/scene/constants.js": "7dc65e4a8bd4e7a600d4e20222639159a647b5454082630cda7416d20dabb741",
     "src/scene/factory.js": "ef921c7ee32b0ed30ee16a853103f50d54da8575461a7b4251fc15331c9ecd21",
     "src/scene/geometry.js": "eaa228f1285272b4a3d7b7ca5c43d2317dd476fa64c56fc9c65db1d36bc62c24",
     "src/scene/hero.js": "9ebe47df1a84dfde2e3fb962d0b9099010a87c383d265829cadd8113bcd8594b",
