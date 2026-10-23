@@ -80,7 +80,6 @@ export function footerFields(site) {
   const link = (href, label, extra = '') =>
     `<a href="${escapeHtml(href)}"${extra}>${escapeHtml(label)}</a>`;
   return {
-    slogan: escapeHtml(site.slogan),
     razao: site.legalName && escapeHtml(site.legalName),
     cnpj: site.cnpj && escapeHtml(site.cnpj),
     endereco: place && escapeHtml(place),

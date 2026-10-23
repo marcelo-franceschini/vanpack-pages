@@ -232,7 +232,6 @@ describe('contraste (calculado nos estilos reais)', () => {
     ['.btn-light', 7],
     ['.how li', 7],
     ['.foot-nav a', 7],
-    ['.slogan', 7],
     ['.legal', 7],
   ];
 

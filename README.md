@@ -5,7 +5,6 @@ Landing page oficial da **Vanpack** (caixas de papelão sob medida, divisórias 
 - **Manual da marca e diretrizes:** [`docs/manual-da-marca.md`](docs/manual-da-marca.md).
 - **3D de cada produto** (referência, decisões e como funciona): [`docs/produtos-3d.md`](docs/produtos-3d.md).
 - **Contratos, faixas do scroll, tokens e decisões da v4:** [`docs/notas-de-integracao-v4.md`](docs/notas-de-integracao-v4.md).
-- **Slogan:** "Do projeto à entrega".
 - **Passo a passo para ir ao ar com dados reais:** [`docs/go-live.md`](docs/go-live.md).
 - **Experimentos A/B** (regras, métrica, amostra e como ligar): [`docs/experimentos.md`](docs/experimentos.md).
 - **Assets oficiais em vetor:** [`public/brand/`](public/brand/).
@@ -67,7 +66,7 @@ Cabeçalho fixo, a história 3D (`#processo`, com 5 cartões que nunca somem), a
 Os dados da empresa e todos os textos do site vivem na pasta [`content/`](content/): arquivos YAML pequenos, um por assunto, cada um com o seu JSON Schema em `content/schemas/` (o editor sublinha o erro e autocompleta). O `.env` guarda só o que muda por ambiente. [`docs/go-live.md`](docs/go-live.md) explica como trocar tudo pelos dados reais. O que não tem dado **não aparece** no HTML (nada de valor de exemplo), e nenhum desses dados é escrito à mão no código (um teste confere).
 
 - `content/empresa.yaml`: razão social, CNPJ, WhatsApp, telefone, endereço, horário, mapa, ano de fundação (o "N anos de mercado" e o © são calculados dele, no build e de novo no navegador, então não precisam de edição anual), pedido mínimo, região e formas de pagamento. É a fonte única do rodapé, do JSON-LD, dos links do WhatsApp, do `robots.txt` e do `sitemap.xml`. O WhatsApp é obrigatório nos dois modos (`55` + DDD + número); o build nunca gera `wa.me/?text=…` sem número.
-- `content/site.yaml` (nome, slogan, título e descrição da página, texto da imagem de compartilhamento e menus), `historia.yaml` (os 5 cartões da história), `confianca.yaml`, `orcamento.yaml` (a seção final), `whatsapp.yaml` (mensagem e texto de cada botão e a folha "O WhatsApp não abriu?") e `rodape.yaml`: os textos da página. Nos textos, `{{cidade}}` puxa um dado da empresa e `{{#se cidade}}...{{/se}}` só aparece se houver o dado (a lista de variáveis está na mensagem de erro de uma variável errada). O `index.html` só tem a estrutura e `{{arquivo.campo}}` no lugar de cada texto; um teste (`tests/template.test.mjs`) prova que nenhum texto de negócio ficou escrito à mão nele nem no `build/render.js`. Ficam no código só os rótulos de interface ("Pular para o conteúdo", "Fechar", os controles do carrossel, os `aria-label` dos menus).
+- `content/site.yaml` (nome, título e descrição da página, texto da imagem de compartilhamento e menus), `historia.yaml` (os 5 cartões da história), `confianca.yaml`, `orcamento.yaml` (a seção final), `whatsapp.yaml` (mensagem e texto de cada botão e a folha "O WhatsApp não abriu?") e `rodape.yaml`: os textos da página. Nos textos, `{{cidade}}` puxa um dado da empresa e `{{#se cidade}}...{{/se}}` só aparece se houver o dado (a lista de variáveis está na mensagem de erro de uma variável errada). O `index.html` só tem a estrutura e `{{arquivo.campo}}` no lugar de cada texto; um teste (`tests/template.test.mjs`) prova que nenhum texto de negócio ficou escrito à mão nele nem no `build/render.js`. Ficam no código só os rótulos de interface ("Pular para o conteúdo", "Fechar", os controles do carrossel, os `aria-label` dos menus).
 - `content/privacidade.md`: o texto da política de privacidade, em Markdown mínimo (`# título`, `## seção`, parágrafos, links `[texto](https://...)`, `[texto](tel:{{telefone}})` e `[texto](wa:privacidade)`), com as mesmas `{{variáveis}}` e `{{#se}}...{{/se}}` dos outros textos (`{{#se rua cidade_uf}}` vale quando todas têm valor). HTML escrito à mão, título `###` ou outro tipo de link é erro de build. O interpretador é o `build/privacidade.js` (sem dependência).
 - `content/produtos.yaml`, `diferenciais.yaml` (até 6; ícone `fabrica`, `lotes`, `conversa` ou `caixa`), `clientes.yaml` e `clientes/` (até 12; logo só em SVG, até 20 KB, que o build otimiza com o svgo; em production só aparece o cliente com `autorizado: true`, que precisa de registro em [`docs/provas/`](docs/provas/README.md)) e `provas.yaml` (depoimentos e nota do Google, só autorizados). Seção sem item some, junto com o link para ela.
 - `content/exemplo/empresa.yaml`: os valores fictícios de referência. Em production o build recusa um valor de `empresa.yaml` que ainda seja igual ao daqui (cidade, UF e ano de fundação ficam de fora: já são reais).
@@ -96,21 +95,21 @@ Quem edita: qualquer pessoa que consiga abrir um arquivo de texto. Você **não 
 
 ### Onde está cada coisa
 
-| Para mudar...                                                                          | Edite                                         |
-| -------------------------------------------------------------------------------------- | --------------------------------------------- |
-| Telefone, WhatsApp, endereço, CNPJ, horário, mapa, ano de fundação, pedido mínimo      | `content/empresa.yaml`                        |
-| Nome, slogan, título e descrição da página, texto da imagem de compartilhamento, menus | `content/site.yaml`                           |
-| Os 5 cartões da história (a abertura da página)                                        | `content/historia.yaml`                       |
-| A faixa "Quem somos"                                                                   | `content/confianca.yaml`                      |
-| Os 3 produtos                                                                          | `content/produtos.yaml`                       |
-| "Por que a Vanpack" (até 6 cartões)                                                    | `content/diferenciais.yaml`                   |
-| Clientes (até 12) e seus logos                                                         | `content/clientes.yaml` e `content/clientes/` |
-| Depoimentos e nota do Google (só com autorização)                                      | `content/provas.yaml`                         |
-| A seção final do orçamento e os 3 passos de "Como pedir"                               | `content/orcamento.yaml`                      |
-| A mensagem de cada botão do WhatsApp e a folha "O WhatsApp não abriu?"                 | `content/whatsapp.yaml`                       |
-| Rótulos do rodapé                                                                      | `content/rodape.yaml`                         |
-| A política de privacidade                                                              | `content/privacidade.md`                      |
-| Modo demo × production, endereço do site, medição                                      | `.env`                                        |
+| Para mudar...                                                                     | Edite                                         |
+| --------------------------------------------------------------------------------- | --------------------------------------------- |
+| Telefone, WhatsApp, endereço, CNPJ, horário, mapa, ano de fundação, pedido mínimo | `content/empresa.yaml`                        |
+| Nome, título e descrição da página, texto da imagem de compartilhamento, menus    | `content/site.yaml`                           |
+| Os 5 cartões da história (a abertura da página)                                   | `content/historia.yaml`                       |
+| A faixa "Quem somos"                                                              | `content/confianca.yaml`                      |
+| Os 3 produtos                                                                     | `content/produtos.yaml`                       |
+| "Por que a Vanpack" (até 6 cartões)                                               | `content/diferenciais.yaml`                   |
+| Clientes (até 12) e seus logos                                                    | `content/clientes.yaml` e `content/clientes/` |
+| Depoimentos e nota do Google (só com autorização)                                 | `content/provas.yaml`                         |
+| A seção final do orçamento e os 3 passos de "Como pedir"                          | `content/orcamento.yaml`                      |
+| A mensagem de cada botão do WhatsApp e a folha "O WhatsApp não abriu?"            | `content/whatsapp.yaml`                       |
+| Rótulos do rodapé                                                                 | `content/rodape.yaml`                         |
+| A política de privacidade                                                         | `content/privacidade.md`                      |
+| Modo demo × production, endereço do site, medição                                 | `.env`                                        |
 
 ### Passo a passo
 
@@ -184,7 +183,7 @@ Dentro de qualquer texto de `content/`, `{{nome}}` puxa o dado. `{{#se cidade}} 
 
 | Variável                                                                       | O que é                                                                                                                                                                         |
 | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `{{nome}}`, `{{slogan}}`                                                       | Nome e slogan da marca (`content/site.yaml`)                                                                                                                                    |
+| `{{nome}}`                                                                     | Nome da marca (`content/site.yaml`)                                                                                                                                             |
 | `{{razao_social}}`, `{{titular}}`                                              | Razão social; `titular` é a razão social ou, sem ela, o nome da marca                                                                                                           |
 | `{{cnpj}}`                                                                     | CNPJ                                                                                                                                                                            |
 | `{{rua}}`, `{{bairro}}`, `{{cidade}}`, `{{uf}}`, `{{cep}}`                     | Endereço, em pedaços                                                                                                                                                            |

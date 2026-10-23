@@ -359,7 +359,7 @@ describe('render', () => {
   test('com a empresa vazia nenhum campo, elemento vazio ou {{placeholder}} sobra na página', () => {
     const out = renderPage(html, empty);
     assert.ok(!/data-need|data-field|\{\{/.test(out), 'sem marcas nem placeholders');
-    assert.match(out, /<p class="slogan">Do projeto à entrega<\/p>/, 'o slogan do manual fica');
+    assert.ok(!/slogan|Do projeto à entrega/.test(out), 'sem slogan por enquanto');
     assert.ok(!/<dl|<dt|<dd/.test(out), 'sem campos de rodapé vazios');
     assert.ok(!out.includes('Fábrica própria'), 'sem cidade o eyebrow some');
     assert.ok(!/Atendemos (?!lojas)/.test(out), 'sem região, nenhum "Atendemos" da região');

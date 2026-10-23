@@ -228,7 +228,7 @@ describe('os textos', () => {
     );
     assert.match(
       all,
-      /› itens\[0\]\.mensagem: a variável \{\{cidde\}\} não existe; use: nome, slogan/,
+      /› itens\[0\]\.mensagem: a variável \{\{cidde\}\} não existe; use: nome, razao_social/,
     );
     assert.match(all, /› itens\[0\]\.peca: \{\{#se cidade\}\} sem fechamento/);
   });

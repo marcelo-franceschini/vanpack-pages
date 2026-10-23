@@ -79,8 +79,7 @@ O símbolo da Vanpack é formado por uma caixa aberta com 4 abas inscrita em um 
 
 ---
 
-## 7. Slogan Oficial
+## 7. Slogan
 
-- Texto: `"Do projeto à entrega"`
-- Posição: Rodapé, sob a marca horizontal, respeitando rigorosamente a área de respiro.
-- Estilo: Caixa-alta, espaçamento largo entre letras, em Carvão `#1B1A17` ou Floresta `#14513A`.
+- Por enquanto a marca não usa slogan: a página não mostra nenhum.
+- Se um dia houver, o texto, a posição e o estilo oficiais entram aqui, e a regra 8 da seção 6 vale para ele.

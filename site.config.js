@@ -10,7 +10,6 @@ export const DIFF_ICONS = ['fabrica', 'lotes', 'conversa', 'caixa'];
 /** Variáveis que os textos de content/ e os data-need do HTML podem usar (`{{cidade}}`...). */
 export const VAR_NAMES = [
   'nome',
-  'slogan',
   'razao_social',
   'titular',
   'cnpj',
@@ -129,7 +128,6 @@ export function createSiteConfig({
   const brand = content.site ?? {};
   const site = {
     name: text(brand.nome),
-    slogan: text(brand.slogan),
     description: text(brand.descricao),
     content,
     products,
@@ -218,7 +216,6 @@ export function createSiteConfig({
   const shownClients = visibleClients(site.clients, site.dataMode);
   site.vars = {
     nome: site.name,
-    slogan: site.slogan,
     razao_social: legalName,
     titular: legalName || site.name, // titular do ©
     cnpj: site.cnpj,

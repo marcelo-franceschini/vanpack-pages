@@ -143,10 +143,10 @@ describe('produto', () => {
     );
   });
 
-  test('o rodapé tem o slogan do manual e nenhuma marca de campo sobra no HTML publicado', () => {
+  test('o rodapé não tem slogan e nenhuma marca de campo sobra no HTML publicado', () => {
     // o rodapé sem dado (campos que somem) é testado com a config vazia em site-config.test.mjs
     const dist = read('dist/index.html');
-    assert.match(dist, /<p class="slogan">Do projeto à entrega<\/p>/);
+    assert.ok(!/slogan|Do projeto à entrega/.test(dist), 'sem slogan por enquanto');
     assert.ok(!/data-field|data-need|\{\{/.test(dist), 'todas as marcas foram resolvidas');
   });
 });
