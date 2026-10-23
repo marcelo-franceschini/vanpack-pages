@@ -5,7 +5,7 @@
   "description": "Rótulos do rodapé.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["rotulos", "ver_mapa", "desde", "aviso_pagamento"],
+  "required": ["rotulos", "ver_mapa", "desde"],
   "properties": {
     "rotulos": {
       "type": "object",
@@ -68,12 +68,6 @@
       "minLength": 1,
       "maxLength": 35,
       "description": "Trecho do © do rodapé. Some se não houver ano de fundação."
-    },
-    "aviso_pagamento": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 60,
-      "description": "Aviso contra golpe, numa linha sob os dados da empresa. Só aparece com CNPJ. É uma promessa: confirme com o financeiro."
     }
   }
 }

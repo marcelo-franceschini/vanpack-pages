@@ -597,18 +597,6 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
     }
   });
 
-  test('o rodapé leva a regra do pagamento, e só quando há CNPJ', () => {
-    const rule = 'Nunca pedimos pagamento para conta de pessoa física';
-    const footer = (site) => renderPage(html, site).match(/<footer>[\s\S]*<\/footer>/)?.[0] ?? '';
-    assert.ok(footer(demo).includes(rule));
-    assert.ok(footer(production).includes(rule));
-    const semCnpj = siteWith({
-      env: PRODUCTION,
-      content: realContent({ empresa: { ...realEmpresa, cnpj: '' } }),
-    });
-    assert.ok(!footer(semCnpj).includes(rule), 'sem CNPJ a página não promete nada');
-  });
-
   test('diferenciais vêm de content/: item sem ícone ou texto se adapta e, sem nenhum, a seção e os links somem', () => {
     const [primeiro, ...resto] = baseContent.diferenciais.itens;
     const shown = pillars(demo);

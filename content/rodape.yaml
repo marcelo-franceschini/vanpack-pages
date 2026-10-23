@@ -15,4 +15,3 @@ rotulos:
   cep: "CEP"
 ver_mapa: "Ver no mapa"
 desde: "Desde {{ano_fundacao}}"
-aviso_pagamento: "Nunca pedimos pagamento para conta de pessoa física"
