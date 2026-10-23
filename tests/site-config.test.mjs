@@ -625,7 +625,7 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
   test('clientes vêm de content/: demo mostra os 6 exemplos rotulados; production só os autorizados', () => {
     const carrossel = (site) =>
       renderPage(html, site).match(
-        /<div class="carrossel" data-carrossel>[\s\S]*?<\/button><\/div><\/div>/,
+        /<div class="carrossel" data-carrossel>[\s\S]*?<\/section><\/div>/,
       )?.[0] ?? '';
     const emDemo = carrossel(demo);
     assert.match(
@@ -634,11 +634,11 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
     );
     assert.equal((emDemo.match(/<li class="cliente">/g) ?? []).length, 6, 'só os originais');
     assert.ok(!/<li[^>]*aria-hidden/.test(emDemo), 'as cópias do loop são do JS, não do build');
-    // controles escondidos até o JS ver que os itens não cabem na largura
-    assert.match(emDemo, /<div class="carrossel-controles" hidden>/);
-    assert.match(emDemo, /data-acao="pausa" aria-pressed="false">[\s\S]*?<span>Pausar<\/span>/);
-    assert.match(emDemo, /data-acao="anterior" aria-label="Anterior"/);
-    assert.match(emDemo, /data-acao="proximo" aria-label="Próximo"/);
+    // nenhum controle: nem botão de pausa, nem setas
+    assert.ok(
+      !/<button|data-acao|carrossel-controles/.test(emDemo),
+      'o carrossel não tem controle',
+    );
     assert.equal((emDemo.match(/<span class="tag">Exemplo<\/span>/g) ?? []).length, 6);
     assert.ok(emDemo.includes('<span class="logo-name">Cliente 1</span>'));
     assert.ok(!emDemo.includes('<img'), 'exemplo sem logo real');

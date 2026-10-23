@@ -15,7 +15,6 @@ const INTERFACE_TEXT = [
   'ROLE ↓', // dica de rolagem da abertura
   'Fechar', // botão da folha "O WhatsApp não abriu?"
   'Exemplo', // rótulo do cliente de demonstração
-  'Pausar', // controles do carrossel de clientes
 ];
 const INTERFACE_ATTRIBUTES = [
   'Principal', // aria-label dos menus e das regiões
@@ -23,8 +22,6 @@ const INTERFACE_ATTRIBUTES = [
   'Quem somos',
   'Como pedir',
   'Logos de clientes',
-  'Anterior',
-  'Próximo',
   'carrossel',
   'Apresentação da', // + {{nome}}
   'Animação 3D da', // + {{nome}} + "com caixas de papelão e o caminhão de entrega"

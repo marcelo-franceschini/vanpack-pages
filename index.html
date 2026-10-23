@@ -765,9 +765,9 @@
       /* clientes: só prova autorizada (ou exemplo, em demo), num carrossel (src/carrossel.js) em
          qualquer largura. Sem JS a janela rola na horizontal; com JS (.on) os itens andam devagar da
          direita para a esquerda numa esteira sem fim (transform, no compositor), com degradê Papel
-         nas bordas, botão de pausa e setas. Se os itens cabem na largura (.estatico), ficam parados,
-         centralizados e sem controles. A largura fixa do item faz os 6 exemplos passarem da largura
-         máxima do .wrap: o demo anima também no desktop. */
+         nas bordas e sem nenhum controle (ela pausa sozinha, ver src/carrossel.js). Se os itens cabem
+         na largura (.estatico), ficam parados e centralizados. A largura fixa do item (10 rem, 12,5 rem
+         a partir de 861 px) decide a partir de quantos clientes a esteira anda. */
       .carrossel-janela {
         position: relative;
         overflow-x: auto;
@@ -775,9 +775,6 @@
       }
       .carrossel.on .carrossel-janela {
         overflow: hidden;
-        touch-action: pan-y; /* o arrasto na horizontal é do carrossel; na vertical, da página */
-        -webkit-user-select: none;
-        user-select: none;
       }
       .carrossel.on:not(.estatico) .carrossel-janela::before,
       .carrossel.on:not(.estatico) .carrossel-janela::after {
@@ -833,40 +830,6 @@
       }
       .cliente .tag {
         margin-left: 0;
-      }
-      .carrossel-controles {
-        display: flex;
-        justify-content: flex-end;
-        gap: 0.5rem;
-        margin-top: 1rem;
-      }
-      .carrossel-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        min-width: 2.75rem;
-        min-height: 2.75rem;
-        padding: 0;
-        border: 0;
-        border-radius: 0.375rem;
-        background: var(--tint-2);
-        color: var(--carvao);
-        font: 700 0.9375rem/1 var(--font);
-        cursor: pointer;
-      }
-      .carrossel-btn:hover {
-        background: var(--soft-hover);
-      }
-      /* largura de "Retomar": trocar o texto não empurra as setas */
-      .carrossel-btn[data-acao='pausa'] {
-        min-width: 7.5rem;
-        padding: 0 1rem;
-      }
-      .carrossel-btn svg {
-        flex: none;
-        width: 1.25rem;
-        height: 1.25rem;
       }
       @media (min-width: 861px) {
         .cliente {
@@ -1475,31 +1438,6 @@
           fill="none"
           stroke="currentColor"
           stroke-width="1.6"
-          stroke-linecap="square"
-        />
-      </symbol>
-      <!-- controles do carrossel de clientes -->
-      <symbol id="i-pausa" viewBox="0 0 24 24">
-        <path d="M6 4h4v16H6zM14 4h4v16h-4z" fill="currentColor" />
-      </symbol>
-      <symbol id="i-retomar" viewBox="0 0 24 24">
-        <path d="M7 4l13 8-13 8z" fill="currentColor" />
-      </symbol>
-      <symbol id="i-anterior" viewBox="0 0 24 24">
-        <path
-          d="M15 4l-8 8 8 8"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.4"
-          stroke-linecap="square"
-        />
-      </symbol>
-      <symbol id="i-proximo" viewBox="0 0 24 24">
-        <path
-          d="M9 4l8 8-8 8"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.4"
           stroke-linecap="square"
         />
       </symbol>

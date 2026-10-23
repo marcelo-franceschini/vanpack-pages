@@ -227,7 +227,6 @@ describe('contraste (calculado nos estilos reais)', () => {
     ['.model p', 7],
     ['.logo-name', 7],
     ['.cliente .tag', 7],
-    ['.carrossel-btn', 7],
     ['.cta .alt a', 7],
     ['.fab-wa', 7],
     ['.fab-tel a', 7],
