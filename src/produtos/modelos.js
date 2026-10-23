@@ -1,4 +1,4 @@
-// Os 3 modelos dos produtos, só geometria própria, no material do 3D principal: Kraft por fora (as
+// Os 4 modelos dos produtos, só geometria própria, no material do 3D principal: Kraft por fora (as
 // texturas do corpo e da aba da cena), face interna mais clara, borda com a onda do miolo e a marca
 // genérica "SUA MARCA" (src/produtos/marca.js) impressa onde cabe. Unidades em metros, a peça apoiada em y = 0 e a frente virada para +z
 // (a câmera de três quartos vê a frente e o lado -x). Cada modelo devolve o grupo, a pegada da sombra
@@ -294,4 +294,55 @@ function chapas(track) {
   });
 }
 
-export const MODELOS = { 'corte-e-vinco': corteEVinco, divisorias, chapas };
+/**
+ * Caixa normal (RSC): a caixa de peça única, fechada, com as abas de cima dobradas para dentro e se
+ * encontrando no meio. As abas das faces longas ficam por cima e deixam uma fresta fina entre elas, por
+ * onde se vê as das faces curtas, que ficam por baixo. Proporções da caixa do 3D principal (BOX em
+ * src/scene/constants.js): 0,44 × 0,30 × 0,34 m. Marca nas duas faces longas. Sem fundo (a câmera, de cima,
+ * nunca o vê).
+ */
+function caixaNormal(track) {
+  const { textures, materials } = kit(track, { marca: true });
+  const pieces = new Pieces();
+  const L = 0.44; // largura (x), as faces longas
+  const W = 0.3; // profundidade (z), as faces curtas
+  const H = 0.34; // altura
+  const T = 0.008;
+  const GAP = 0.006; // fresta entre as duas abas de cima das faces longas
+  const io = { a: 'externa', b: 'interna' };
+  const oi = { a: 'interna', b: 'externa' };
+
+  // faces longas, um pouco mais altas (T): sustentam as abas de cima; a de trás olha para -z
+  pieces.plate(rect(-L / 2, 0, L / 2, H + T), T, at(0, 0, W / 2 - T / 2), io);
+  pieces.plate(rect(-L / 2, 0, L / 2, H + T), T, at(0, 0, -W / 2 + T / 2), oi);
+  // faces curtas, entre as longas
+  for (const side of [-1, 1]) {
+    const ry = (side * Math.PI) / 2;
+    pieces.plate(rect(-W / 2 + T, 0, W / 2 - T, H), T, at(side * (L / 2 - T / 2), 0, 0, 0, ry), io);
+  }
+  // abas das faces curtas, por baixo: metade da face curta, a partir de cada ponta
+  const inner = W / 2 - T;
+  pieces.plate(rect(L / 2 - inner, -inner, L / 2, inner), T, at(0, H + T / 2, 0, FLAT), io);
+  pieces.plate(rect(-L / 2, -inner, -L / 2 + inner, inner), T, at(0, H + T / 2, 0, FLAT), io);
+  // abas das faces longas, por cima: do alto da face até a fresta do meio
+  const outer = W / 2 - GAP / 2;
+  pieces.plate(rect(-L / 2, 0, L / 2, outer), T, at(0, H + 1.5 * T, W / 2, FLAT), io);
+  pieces.plate(rect(-L / 2, 0, L / 2, outer), T, at(0, H + 1.5 * T, -W / 2, FLAT, Math.PI), io);
+  // a marca nas duas faces longas
+  brandMark(pieces, materials, 0.24, at(0, H / 2, W / 2 + PRINT_GAP));
+  brandMark(pieces, materials, 0.24, at(0, H / 2, -W / 2 - PRINT_GAP, 0, Math.PI));
+
+  return finish(track, pieces, materials, {
+    textures,
+    footprint: [-L / 2, L / 2, -W / 2, W / 2],
+    radius: Math.hypot(L / 2, W / 2),
+    top: H + 2 * T,
+  });
+}
+
+export const MODELOS = {
+  'corte-e-vinco': corteEVinco,
+  'caixa-normal': caixaNormal,
+  divisorias,
+  chapas,
+};

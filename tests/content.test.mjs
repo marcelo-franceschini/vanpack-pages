@@ -180,15 +180,15 @@ describe('listas', () => {
     assert.match(all, /› clientes\[12\]\.link: o campo "link" não existe/);
   });
 
-  test('produtos: peça 3D que não existe e mais de 3 cartões', () => {
+  test('produtos: peça 3D que não existe e mais de 4 cartões', () => {
     const item = { id: 'chapas', nome: 'N', mensagem: 'M', peca: 'P', texto: 'T' };
     const all = joined({
-      'produtos.yaml': stringify({ itens: [item, item, item, { ...item, id: 'cubos' }] }),
+      'produtos.yaml': stringify({ itens: [item, item, item, item, { ...item, id: 'cubos' }] }),
     });
-    assert.match(all, /› itens: tem 4 itens; o máximo é 3/);
+    assert.match(all, /› itens: tem 5 itens; o máximo é 4/);
     assert.match(
       all,
-      /› itens\[3\]\.id: valor não aceito; use um destes: corte-e-vinco, divisorias, chapas/,
+      /› itens\[4\]\.id: valor não aceito; use um destes: corte-e-vinco, divisorias, chapas, caixa-normal/,
     );
   });
 

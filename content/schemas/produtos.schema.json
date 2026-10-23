@@ -34,15 +34,15 @@
     "itens": {
       "type": "array",
       "minItems": 1,
-      "maxItems": 3,
-      "description": "Um cartão por produto, na ordem em que aparecem. O 3D de cada um é uma peça pronta (corte-e-vinco, divisorias ou chapas): não dá para criar um produto novo só por aqui.",
+      "maxItems": 4,
+      "description": "Um cartão por produto, na ordem em que aparecem. O 3D de cada um é uma peça pronta (caixa-normal, corte-e-vinco, divisorias ou chapas): não dá para criar um produto novo só por aqui.",
       "items": {
         "type": "object",
         "additionalProperties": false,
         "required": ["id", "nome", "mensagem", "peca", "texto"],
         "properties": {
           "id": {
-            "enum": ["corte-e-vinco", "divisorias", "chapas"],
+            "enum": ["corte-e-vinco", "divisorias", "chapas", "caixa-normal"],
             "description": "Qual peça 3D e qual ilustração o cartão usa. Também vira o código de origem do botão: [site-produtos-<id>]."
           },
           "nome": {

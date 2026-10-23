@@ -553,11 +553,11 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
       (m) => m[0],
     );
 
-  test('os 3 produtos têm cada um o seu botão, com o produto na mensagem e o código de origem', () => {
+  test('os 4 produtos têm cada um o seu botão, com o produto na mensagem e o código de origem', () => {
     const produtos = baseContent.produtos.itens;
     assert.deepEqual(
       produtos.map(({ id }) => id),
-      ['corte-e-vinco', 'divisorias', 'chapas'],
+      ['caixa-normal', 'corte-e-vinco', 'divisorias', 'chapas'],
     );
     const cards = [
       ...renderPage(html, demo).matchAll(/<article class="model">[\s\S]*?<\/article>/g),

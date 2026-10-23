@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=./schemas/produtos.schema.json
 #
 # Os produtos da seção "O que fabricamos", na ordem em que aparecem. Cada um tem um 3D girando no topo
-# do cartão: o "id" escolhe a peça (corte-e-vinco, divisorias ou chapas). Textos genéricos e sem
+# do cartão: o "id" escolhe a peça (caixa-normal, corte-e-vinco, divisorias ou chapas). Textos genéricos e sem
 # números: confira cada um antes do go-live (docs/go-live.md).
 # Ponha sempre os textos entre aspas.
 
@@ -11,6 +11,13 @@ regiao: "Atendemos {{regiao}}"
 botao: "Pedir orçamento deste produto"
 
 itens:
+
+  - id: caixa-normal
+    nome: "Caixa normal"
+    mensagem: "Olá! Quero um orçamento de caixas normais."
+    peca: "caixa normal fechada"
+    texto: "Caixas de papelão ondulado de formato tradicional, com as abas se encontrando no meio, sob medida."
+
   - id: corte-e-vinco
     nome: "Corte e vinco"
     # a mensagem pronta do botão; o site acrescenta o código de origem [site-produtos-corte-e-vinco]

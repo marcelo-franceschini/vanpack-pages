@@ -54,7 +54,7 @@ anunciado. Depois do deploy, peça a indexação no Search Console.
 
 Os outros arquivos de `content/` (os textos da página: `site.yaml`, `historia.yaml`, `orcamento.yaml`, `whatsapp.yaml`, `rodape.yaml` e o texto da política em `privacidade.md`, além destes):
 
-- `produtos.yaml`: os 3 produtos (nome, descrição, mensagem do botão e descrição do 3D para leitor de tela).
+- `produtos.yaml`: os 4 produtos (nome, descrição, mensagem do botão e descrição do 3D para leitor de tela).
 - `diferenciais.yaml`: até 6 cartões de "Por que a Vanpack" (título, texto e ícone: `fabrica`, `lotes`,
   `conversa` ou `caixa`). Sem nenhum, a seção some.
 - `clientes.yaml` e `clientes/`: até 12 clientes da faixa de logos, com o logo em SVG. O Biscoitê está
@@ -83,7 +83,7 @@ Região e diferenciais também são promessas: confirme cada um com a
 
 Estes textos estão em `content/` e foram escritos como rascunho: confira cada um com quem sabe.
 
-- **Produtos** (3 cartões em "O que fabricamos", `content/produtos.yaml`): nomes, descrições, a mensagem de cada botão e a descrição de cada 3D para leitor de tela (`peca`).
+- **Produtos** (4 cartões em "O que fabricamos", `content/produtos.yaml`): nomes, descrições, a mensagem de cada botão e a descrição de cada 3D para leitor de tela (`peca`).
 - **Textos dos 5 cartões da história** (`content/historia.yaml`) e **diferenciais** (`content/diferenciais.yaml`): são rascunho e podem mudar depois da pesquisa de posicionamento. Nenhum pode falar de prazo, de tempo de resposta ou do processo de fabricação (o `tests/conteudo.test.mjs` confere).
 - **Clientes**: o Biscoitê está listado sem autorização; New Millen, Grupo Arte Visão e Kisabor entram quando mandarem o SVG oficial. Para publicar um cliente, ponha o nome, o logo em SVG (em `content/clientes/`) e `autorizado: true` em `content/clientes.yaml`, com a autorização registrada; siga [`docs/provas/README.md`](provas/README.md). Depoimentos (`content/provas.yaml`) também só com autorização.
 - **Fotos**: o site não usa nenhuma foto (decisão do dono). Se um dia quiser, a única permitida é a da fachada.

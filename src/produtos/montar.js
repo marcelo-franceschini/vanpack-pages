@@ -7,7 +7,9 @@ import { ilustrar } from './gatilho.js';
 
 const MOBILE = '(max-width: 760px), (pointer: coarse)'; // o mesmo critério do 3D principal
 const REDUCED = '(prefers-reduced-motion: reduce)';
-const MAX_DENSITY = { desktop: 2, mobile: 1.5 };
+// 1,5 também no desktop: na grade 2×2 até 4 cartões ficam à vista, e a 2× eles desenhariam 3,6× mais
+// pixels por quadro que os 3 de antes (medido no WebGL por software: 18 contra 5 quadros por segundo)
+const MAX_DENSITY = { desktop: 1.5, mobile: 1.5 };
 const NEAR = '300px 0px';
 const DISPOSE_WAIT_MS = 2000; // tempo para o worker liberar a GPU antes de ser encerrado
 

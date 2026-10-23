@@ -49,7 +49,7 @@ const FILES = {
   'icon-512.png': 7.4,
   'apple-touch-icon.png': 3.4,
 };
-const SVG_TOTAL = 13.5; // todos os SVGs de brand/ e produtos/
+const SVG_TOTAL = 13.7; // todos os SVGs de brand/ e produtos/ (13,5 + o SVG da caixa normal, 0,3 KB)
 const TOTAL = {
   jsInicial: 131.5, // script da página + worker da história + three.js
   carga: 171.4, // HTML + JS inicial + fonte + os 2 logos do topo e da cena

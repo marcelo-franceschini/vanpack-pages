@@ -247,24 +247,30 @@ describe('seção de produtos', () => {
   for (const screen of SCREENS.filter((s) =>
     ['1440×900', '390×844 (celular em pé)'].includes(s.name),
   )) {
-    test(`${screen.name}: ${screen.mobile ? '1 coluna' : '3 colunas'}, área 4:3 no topo antes e depois do 3D, nada sobreposto`, async () => {
+    test(`${screen.name}: ${screen.mobile ? '1 coluna' : '2 colunas (2×2)'}, área 4:3 no topo antes e depois do 3D, nada sobreposto`, async () => {
       const { page, context } = await openPage(browser, server.url, {
         viewport: { width: screen.width, height: screen.height },
         reducedMotion: 'reduce',
         ...(screen.mobile ? { hasTouch: true, isMobile: true, deviceScaleFactor: 2 } : {}),
       });
       const before = await cards(page);
-      assert.equal(before.length, 3);
+      assert.equal(before.length, 4);
       if (screen.mobile) {
-        for (let i = 1; i < 3; i++) {
+        for (let i = 1; i < 4; i++) {
           assert.ok(Math.abs(before[i].card.left - before[0].card.left) < 1, 'mesma coluna');
           assert.ok(before[i].card.top >= before[i - 1].card.bottom, 'um embaixo do outro');
         }
       } else {
-        for (let i = 1; i < 3; i++) {
-          assert.ok(Math.abs(before[i].card.top - before[0].card.top) < 1, 'mesma linha');
-          assert.ok(before[i].card.left >= before[i - 1].card.right, 'lado a lado');
+        // 2×2: o 1º e o 2º na mesma linha, o 3º e o 4º na de baixo, cada coluna com o mesmo recuo
+        for (const [a, b] of [
+          [0, 1],
+          [2, 3],
+        ]) {
+          assert.ok(Math.abs(before[b].card.top - before[a].card.top) < 1, 'mesma linha');
+          assert.ok(before[b].card.left >= before[a].card.right, 'lado a lado');
         }
+        assert.ok(before[2].card.top >= before[0].card.bottom, 'a 2ª linha vem embaixo da 1ª');
+        assert.ok(Math.abs(before[2].card.left - before[0].card.left) < 1, 'mesma coluna');
       }
       for (const { card, area, title, text, button } of before) {
         const ratio = (area.bottom - area.top) / (area.right - area.left);

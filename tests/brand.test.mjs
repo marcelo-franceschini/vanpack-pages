@@ -192,9 +192,14 @@ describe('SVGs da marca (public/brand)', () => {
 describe('ilustrações dos produtos (public/produtos)', () => {
   // o material da cena: Kraft, a face interna mais clara e o Kraft escuro (src/scene/constants.js)
   const MATERIAL = new Set(['#B78C5C', '#CFA978', '#9A7447', '#FBF8F2']);
-  test('as 3 existem, em 4:3, só com as cores do material, sem texto, imagem, efeito ou script', () => {
+  test('as 4 existem, em 4:3, só com as cores do material, sem texto, imagem, efeito ou script', () => {
     const files = readdirSync(`${ROOT}public/produtos`).sort();
-    assert.deepEqual(files, ['chapas.svg', 'corte-e-vinco.svg', 'divisorias.svg']);
+    assert.deepEqual(files, [
+      'caixa-normal.svg',
+      'chapas.svg',
+      'corte-e-vinco.svg',
+      'divisorias.svg',
+    ]);
     for (const file of files) {
       const svg = read(`public/produtos/${file}`);
       assert.match(svg, /viewBox="0 0 400 300"/, file);

@@ -1,4 +1,4 @@
-// Vitrine dos produtos: um renderer só (no worker, em OffscreenCanvas) para os 3 cartões. Cada modelo
+// Vitrine dos produtos: um renderer só (no worker, em OffscreenCanvas) para os cartões. Cada modelo
 // gira em torno do eixo vertical, como a caixa na mesa giratória do 3D principal, com a mesma câmera de
 // três quartos, a mesma luz, o piso que esmaece no Papel e uma sombra falsa (sem sombra em tempo real).
 // Seguro para Web Worker: não acessa DOM.
@@ -132,7 +132,7 @@ export function createVitrine(canvas) {
   }
 
   return {
-    /** Monta o modelo `name` (corte-e-vinco, divisorias ou chapas) para o cartão `id`. */
+    /** Monta o modelo `name` (caixa-normal, corte-e-vinco, divisorias ou chapas) para o cartão `id`. */
     add(id, name) {
       if (!shown.has(id)) shown.set(id, build(name));
     },
