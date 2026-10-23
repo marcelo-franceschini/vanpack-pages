@@ -119,7 +119,7 @@ hero:
   titulo: 'Caixas de papelão sob medida, com a sua marca' # troque só o que está entre aspas
 ```
 
-Passe o mouse sobre um campo para ver a explicação dele e o tamanho máximo. Texto maior que o máximo é recusado, porque quebraria o layout. Os máximos foram escolhidos testando a página inteira com **todos** os textos no limite, em todos os tamanhos de tela (`tests/limites.test.mjs`). O cartão da abertura é o mais apertado: no celular deitado ele só tem 2 px de folga, por isso o título aceita 48 caracteres e a linha pequena acima dele (`Fábrica própria em {{cidade_uf}}`), já com a cidade no lugar, não pode passar de 48; o build avisa se passar.
+Passe o mouse sobre um campo para ver a explicação dele e o tamanho máximo. Texto maior que o máximo é recusado, porque quebraria o layout. Os máximos foram escolhidos testando a página inteira com **todos** os textos no limite, em todos os tamanhos de tela (`tests/limites.test.mjs`). O cartão da abertura é o mais apertado: no celular deitado ele só tem 2 px de folga, por isso o título aceita 48 caracteres.
 
 **Trocar telefone, WhatsApp ou endereço.** Em `content/empresa.yaml`:
 

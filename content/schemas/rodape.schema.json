@@ -10,14 +10,8 @@
     "rotulos": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["razao_social", "cnpj", "endereco", "horario", "telefone", "mapa", "cep"],
+      "required": ["cnpj", "endereco", "horario", "telefone", "mapa", "cep"],
       "properties": {
-        "razao_social": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 24,
-          "description": "Rótulo do campo."
-        },
         "cnpj": {
           "type": "string",
           "minLength": 1,

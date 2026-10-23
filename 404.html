@@ -13,7 +13,7 @@
         --carvao: #1b1a17;
         --carvao-muted: #5a544b;
         --papel: #fbf8f2;
-        --line: #e5ded3;
+        --tint: #ece9e3;
         --font: 'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
       *,
@@ -38,10 +38,8 @@
       .card {
         max-width: 32rem;
         padding: 3rem 2rem;
-        background: #fff;
-        border: 2px solid var(--line);
-        border-radius: 6px;
-        box-shadow: 0 4px 24px rgb(27 26 23 / 0.06);
+        background: var(--tint);
+        border-radius: 0.5rem;
       }
       .logo {
         display: inline-block;
@@ -61,7 +59,7 @@
         color: var(--carvao);
       }
       p {
-        color: var(--carvao-muted);
+        color: var(--carvao);
         font-size: 1.125rem;
         line-height: 1.5;
         margin-bottom: 2rem;

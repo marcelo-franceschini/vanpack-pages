@@ -14,7 +14,6 @@ const INTERFACE_TEXT = [
   'Pular para o conteúdo', // link de pular, só para teclado e leitor de tela
   'ROLE ↓', // dica de rolagem da abertura
   'Fechar', // botão da folha "O WhatsApp não abriu?"
-  'Exemplo', // rótulo do cliente de demonstração
 ];
 const INTERFACE_ATTRIBUTES = [
   'Principal', // aria-label dos menus e das regiões

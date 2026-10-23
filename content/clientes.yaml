@@ -2,7 +2,7 @@
 #
 # A faixa de logos dos clientes (até 12). Em production só aparece quem tem "autorizado: true", com o
 # registro da autorização em docs/provas/<nome em minúsculas, sem acento e com hífens>.md. Em demo
-# aparecem todos, e o não autorizado leva o rótulo "Exemplo". O nome não aparece na página: só o logo
+# aparecem todos, sem rótulo. O nome não aparece na página: só o logo
 # (o "alt" é o texto que o leitor de tela lê).
 #
 # Para pôr um cliente de verdade, acrescente:

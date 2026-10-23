@@ -8,8 +8,6 @@
 # da empresa (content/empresa.yaml); {{#se variavel}}trecho{{/se}} só aparece se a variável tiver valor.
 
 hero:
-  etiqueta: "Fábrica própria em {{cidade_uf}}"
-  etiqueta_regiao: "Atendemos {{regiao}}"
   titulo: "Caixas de papelão sob medida, com a sua marca"
   texto: "Você manda a medida e a quantidade. A gente cuida do resto"
   texto_extra: ", direto da fábrica e sem intermediário"

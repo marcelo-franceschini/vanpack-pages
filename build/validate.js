@@ -20,17 +20,10 @@ export class SiteConfigError extends Error {
 }
 
 // Textos que, depois de trocadas as {{variáveis}}, não podem passar de um tamanho, senão o cartão da
-// abertura estoura no celular deitado (844 x 390), onde ele tem 2 px de folga. O tamanho de cada campo
-// em si é do schema; aqui conta o texto pronto (ex.: a cidade entra na linha "Fábrica própria em ...").
+// abertura estoura no celular deitado (844 x 390), onde ele tem 2 px de folga. Hoje nenhum campo pede
+// isso (o tamanho de cada um é do schema); a lista fica para o próximo que precisar.
 /** @type {[string, string, number, string][]} */
-const RENDERED_LIMITS = [
-  [
-    'historia',
-    'hero.etiqueta',
-    48,
-    'a linha pequena acima do título (cabe numa linha no celular deitado)',
-  ],
-];
+const RENDERED_LIMITS = [];
 const MAX_LOGO_BYTES = 20 * 1024;
 
 // Campos que podem ter o mesmo valor do exemplo mesmo em produção: já são reais desde já (cidade, UF,
