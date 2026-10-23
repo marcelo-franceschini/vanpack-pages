@@ -13,7 +13,7 @@ README ("Como editar o conteúdo").
 1. Troque os valores de `content/empresa.yaml` pelos reais (tabela abaixo). Campo vazio é aceito nos
    opcionais: o trecho correspondente simplesmente some da página, nada é inventado. Ponha sempre os
    textos entre aspas.
-2. Troque os clientes de exemplo de `content/clientes.yaml` por clientes autorizados (ou apague as linhas)
+2. Em `content/clientes.yaml`, deixe só clientes autorizados, com o logo em SVG (ou apague as linhas)
    e confira os produtos e os diferenciais.
 3. Troque `VITE_DATA_MODE` de `demo` para `production` no `.env`.
 4. Rode `npm run build`. Em `production` o build **falha** e lista o que ainda não está pronto, com o
@@ -58,9 +58,10 @@ Os outros arquivos de `content/` (os textos da página: `site.yaml`, `historia.y
 - `produtos.yaml`: os 3 produtos (nome, descrição, mensagem do botão e descrição do 3D para leitor de tela).
 - `diferenciais.yaml`: até 6 cartões de "Por que a Vanpack" (título, texto e ícone: `fabrica`, `lotes`,
   `conversa` ou `caixa`). Sem nenhum, a seção some.
-- `clientes.yaml` e `clientes/`: até 12 clientes da faixa de logos, com o logo em SVG. Os 6 "Cliente N"
-  são exemplos (`exemplo: true`): o build de production recusa enquanto sobrar algum. `autorizado: true`
-  exige o registro em `docs/provas/<id>.md`.
+- `clientes.yaml` e `clientes/`: até 12 clientes da faixa de logos, com o logo em SVG. O Biscoitê está
+  listado com `autorizado: false`: em production ele fica fora da página até existir o registro em
+  `docs/provas/<id>.md` (`autorizado: true` exige esse registro). Um cliente com `exemplo: true` o build de
+  production recusa.
 - `provas.yaml`: depoimentos e nota do Google, só com autorização registrada.
 - `exemplo/empresa.yaml`: os valores fictícios de referência. Não edite: o build compara com ele para
   reconhecer, em production, um dado que ainda é de demonstração (cidade, UF e ano de fundação ficam de
@@ -86,7 +87,7 @@ Estes textos estão em `content/` e foram escritos como rascunho: confira cada u
 - **Produtos** (3 cartões em "O que fabricamos", `content/produtos.yaml`): nomes, descrições, a mensagem de cada botão e a descrição de cada 3D para leitor de tela (`peca`).
 - **Textos dos 5 cartões da história** (`content/historia.yaml`) e **diferenciais** (`content/diferenciais.yaml`): são rascunho e podem mudar depois da pesquisa de posicionamento. Nenhum pode falar de prazo, de tempo de resposta ou do processo de fabricação (o `tests/conteudo.test.mjs` confere).
 - **Faixa de confiança**: "Nunca pedimos pagamento para conta de pessoa física" é promessa; confirme com o financeiro.
-- **Clientes**: os 6 "Cliente N" são exemplos. Para publicar um cliente, ponha o nome, o logo em SVG (em `content/clientes/`) e `autorizado: true` em `content/clientes.yaml`, com a autorização registrada; siga [`docs/provas/README.md`](provas/README.md). Depoimentos (`content/provas.yaml`) também só com autorização.
+- **Clientes**: o Biscoitê está listado sem autorização; New Millen, Grupo Arte Visão e Kisabor entram quando mandarem o SVG oficial. Para publicar um cliente, ponha o nome, o logo em SVG (em `content/clientes/`) e `autorizado: true` em `content/clientes.yaml`, com a autorização registrada; siga [`docs/provas/README.md`](provas/README.md). Depoimentos (`content/provas.yaml`) também só com autorização.
 - **Fotos**: o site não usa nenhuma foto (decisão do dono). Se um dia quiser, a única permitida é a da fachada.
 
 ## Domínio próprio
@@ -118,7 +119,7 @@ A medição só liga com `VITE_DATA_MODE=production`: no site de demonstração 
 - [ ] `<meta name="robots" content="noindex,nofollow">` não existe mais no HTML publicado.
 - [ ] `robots.txt` libera o site e o `sitemap.xml` tem a URL final.
 - [ ] A política de privacidade foi revisada pelo jurídico.
-- [ ] Produtos, textos dos cartões e diferenciais conferidos; clientes de exemplo trocados por clientes autorizados (ou apagados).
+- [ ] Produtos, textos dos cartões e diferenciais conferidos; clientes listados com `autorizado: true` e o registro em `docs/provas/` (ou apagados).
 - [ ] O assistente (chatbot) do WhatsApp já está no ar: o passo 2 de "Como pedir" diz que ele pergunta medida, quantidade e impressão, e o CTA final convida a mandar a foto do produto. A página não promete tempo de resposta.
 - [ ] Depois do deploy, abra o link de dentro do Instagram (e do Facebook) num celular: o botão abre o WhatsApp? Se não abrir, a folha "O WhatsApp não abriu?" aparece?
 - [ ] `npm run og` gera de novo `public/og.jpg`: a imagem atual ainda mostra o texto antigo do hero ("A gente fabrica, imprime e entrega") e precisa ser refeita antes do go-live.

@@ -2,36 +2,26 @@
 #
 # A faixa de logos dos clientes (até 12). Em production só aparece quem tem "autorizado: true", com o
 # registro da autorização em docs/provas/<nome em minúsculas, sem acento e com hífens>.md. Em demo
-# aparecem todos, e o não autorizado leva o rótulo "Exemplo".
+# aparecem todos, e o não autorizado leva o rótulo "Exemplo". O nome não aparece na página: só o logo
+# (o "alt" é o texto que o leitor de tela lê).
 #
-# Para pôr um cliente de verdade, troque um exemplo por:
+# Para pôr um cliente de verdade, acrescente:
 #
 #   - nome: "Padaria Real"
 #     logo: "padaria-real.svg"       # arquivo SVG em content/clientes/ (até 20 KB); sem logo, aparece o nome
 #     alt: "Padaria Real"            # opcional; sem ele, vale o nome
 #     autorizado: true
 #
-# Os 6 clientes abaixo são exemplos: em production o site recusa publicar se sobrar algum. Troque-os
-# pelos reais ou apague as linhas. Ponha sempre os textos entre aspas.
+# Ponha sempre os textos entre aspas.
+#
+# Faltam os logos de New Millen, Grupo Arte Visão e Kisabor: os sites deles só têm imagem raster (PNG, JPG),
+# que o site não aceita. Entram aqui quando o cliente mandar o SVG oficial.
 
 etiqueta: "Clientes"
 titulo: "Quem já pede com a gente"
 
 clientes:
-  - nome: "Cliente 1"
-    exemplo: true
-
-  - nome: "Cliente 2"
-    exemplo: true
-
-  - nome: "Cliente 3"
-    exemplo: true
-
-  - nome: "Cliente 4"
-    exemplo: true
-
-  - nome: "Cliente 5"
-    exemplo: true
-
-  - nome: "Cliente 6"
-    exemplo: true
+  # logo do site do cliente (biscoite.com.br): o SVG que o próprio site dele usa, só otimizado pelo svgo
+  - nome: "Biscoitê"
+    logo: "biscoite.svg"
+    autorizado: false

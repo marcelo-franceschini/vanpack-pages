@@ -160,13 +160,27 @@ describe('trava de go-live', () => {
       'endereco.cep',
       'horario',
       'regiao',
-      'clientes\\[0\\]',
-      'clientes\\[5\\]',
     ]) {
       assert.match(all, new RegExp(`› ${path}`), `${path} sobrou na empresa`);
     }
     assert.ok(!/diferenciais/.test(all), 'os diferenciais não contam como fictícios');
     assert.match(all, /não é um CNPJ válido/, 'o CNPJ fictício também é inválido');
+  });
+
+  test('production recusa cliente de exemplo (exemplo: true), mas não o cliente real ainda sem autorização', () => {
+    const clientes = (lista) =>
+      realContent({ clientes: { ...baseContent.clientes, clientes: lista } });
+    const comExemplo = errorsOf({
+      env: PRODUCTION,
+      content: clientes([{ nome: 'Cliente 1', exemplo: true }]),
+    });
+    assert.match(comExemplo, /› clientes\[0\] \("Cliente 1"\) é um cliente de exemplo/);
+    // o cliente real sem autorização não derruba o build: fica fora da página até o registro
+    const semAutorizacao = errorsOf({
+      env: PRODUCTION,
+      content: clientes([{ nome: 'Biscoitê', logo: 'biscoite.svg', autorizado: false }]),
+    });
+    assert.ok(!/clientes/.test(semAutorizacao), semAutorizacao);
   });
 
   test('production com dados reais passa; cidade e UF iguais ao exemplo não contam como fictício', () => {
@@ -622,7 +636,7 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
     assert.deepEqual(schema.properties.itens.items.properties.icone.enum, DIFF_ICONS);
   });
 
-  test('clientes vêm de content/: demo mostra os 6 exemplos rotulados; production só os autorizados', () => {
+  test('clientes vêm de content/: demo mostra todos, só com o logo (o nome fica no alt), rotulados; production só os autorizados', () => {
     const carrossel = (site) =>
       renderPage(html, site).match(
         /<div class="carrossel" data-carrossel>[\s\S]*?<\/section><\/div>/,
@@ -632,16 +646,33 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
       emDemo,
       /<section class="carrossel-janela" aria-roledescription="carrossel" aria-label="[^"]+" tabindex="0">/,
     );
-    assert.equal((emDemo.match(/<li class="cliente">/g) ?? []).length, 6, 'só os originais');
+    const listados = baseContent.clientes.clientes;
+    assert.ok(
+      listados.length >= 1 && listados.every((c) => c.logo),
+      'todo cliente listado tem logo',
+    );
+    assert.equal(
+      (emDemo.match(/<li class="cliente">/g) ?? []).length,
+      listados.length,
+      'só os originais',
+    );
     assert.ok(!/<li[^>]*aria-hidden/.test(emDemo), 'as cópias do loop são do JS, não do build');
     // nenhum controle: nem botão de pausa, nem setas
     assert.ok(
       !/<button|data-acao|carrossel-controles/.test(emDemo),
       'o carrossel não tem controle',
     );
-    assert.equal((emDemo.match(/<span class="tag">Exemplo<\/span>/g) ?? []).length, 6);
-    assert.ok(emDemo.includes('<span class="logo-name">Cliente 1</span>'));
-    assert.ok(!emDemo.includes('<img'), 'exemplo sem logo real');
+    const naoAutorizados = listados.filter((c) => !c.autorizado).length;
+    assert.equal((emDemo.match(/<span class="tag">Exemplo<\/span>/g) ?? []).length, naoAutorizados);
+    assert.ok(!emDemo.includes('logo-name'), 'sem nome visível: só o logo');
+    for (const { nome, logo, alt } of listados) {
+      assert.ok(
+        emDemo.includes(
+          `<img src="./clientes/${logo}" alt="${alt ?? nome}" width="160" height="64"`,
+        ),
+        `${nome}: logo com o nome no alt`,
+      );
+    }
     const site = siteWith({
       env: PRODUCTION,
       content: realContent({
