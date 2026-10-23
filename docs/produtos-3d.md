@@ -1,8 +1,8 @@
 # 3D de cada produto
 
-Cada cartão de "O que fabricamos" tem no topo um 3D da peça, girando devagar em torno do eixo vertical, como a caixa na mesa giratória do capítulo 4 do 3D principal: mesma câmera de três quartos (`CAMERA_DIRECTION`, FOV 22), mesma luz, piso que esmaece no Papel, sombra falsa, papelão Kraft com a face interna mais clara e a borda com a onda do miolo (`edgeTexture`), marca Vanpack em Floresta impressa onde cabe. O 3D principal não muda: tudo fica em `src/produtos/` e reaproveita por importação o que `src/scene/` exporta.
+Cada cartão de "O que fabricamos" tem no topo um 3D da peça, girando devagar em torno do eixo vertical, como a caixa na mesa giratória do capítulo 4 do 3D principal: mesma câmera de três quartos (`CAMERA_DIRECTION`, FOV 22), mesma luz, piso que esmaece no Papel, sombra falsa, papelão Kraft com a face interna mais clara e a borda com a onda do miolo (`edgeTexture`), a marca "SUA MARCA" em Floresta impressa onde cabe. O 3D principal não muda: tudo fica em `src/produtos/` e reaproveita por importação o que `src/scene/` exporta.
 
-Arquivos: `src/produtos/gatilho.js` (no JS inicial), `montar.js` (página), `produtos-worker.js` (worker), `cena.js` (renderer, luz, câmera e enquadramento), `papelao.js` (placa de papelão a partir de um contorno) e `modelos.js` (as 3 peças). Ilustrações do fallback: `public/produtos/<id>.svg`, geradas por `node scripts/produtos-svg.mjs`.
+Arquivos: `src/produtos/gatilho.js` (no JS inicial), `montar.js` (página), `produtos-worker.js` (worker), `cena.js` (renderer, luz, câmera e enquadramento), `papelao.js` (placa de papelão a partir de um contorno), `marca.js` (a marca genérica "SUA MARCA") e `modelos.js` (as 4 peças). Ilustrações do fallback: `public/produtos/<id>.svg`, geradas por `node scripts/produtos-svg.mjs`.
 
 ## Referência: o 3D dos produtos da Trombini
 
@@ -25,7 +25,7 @@ Consultada em 2026-10-20, só nos 3 produtos que a Vanpack vende. As páginas de
 
 ### O que ficou diferente da referência
 
-- Nenhuma cor, logo, padrão de impressão ou texto da Trombini: Kraft liso, face interna mais clara e só a marca Vanpack.
+- Nenhuma cor, logo, padrão de impressão ou texto da Trombini: Kraft liso, face interna mais clara e só a marca genérica "SUA MARCA" (a do cliente demo do 3D principal), nunca a Vanpack: o produto é da marca de quem pede.
 - A caixa aparece aberta e girando, não fechada nem dobrando; a referência mostra a montagem passo a passo.
 - As divisórias ganharam o tabuleiro e uma peça levantada; a referência é só a grade.
 - Proporções próprias (caixa mais alta, divisórias mais baixas) e a pilha de chapas com a chapa de cima girada.

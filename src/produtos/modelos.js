@@ -1,15 +1,16 @@
 // Os 3 modelos dos produtos, só geometria própria, no material do 3D principal: Kraft por fora (as
 // texturas do corpo e da aba da cena), face interna mais clara, borda com a onda do miolo e a marca
-// Vanpack impressa onde cabe. Unidades em metros, a peça apoiada em y = 0 e a frente virada para +z
+// genérica "SUA MARCA" (src/produtos/marca.js) impressa onde cabe. Unidades em metros, a peça apoiada em y = 0 e a frente virada para +z
 // (a câmera de três quartos vê a frente e o lado -x). Cada modelo devolve o grupo, a pegada da sombra
 // falsa, o raio em torno do eixo vertical e a altura (para o enquadramento) e as texturas (para
 // restaurar o contexto). Formas e decisões: docs/produtos-3d.md.
 import { DoubleSide, Group, Matrix4, MeshLambertMaterial, PlaneGeometry, Vector3 } from 'three';
 import { KRAFT, KRAFT_INNER } from '../scene/constants.js';
-import { bodyTexture, edgeTexture, flapTexture, truckLogoTexture } from '../scene/textures.js';
+import { bodyTexture, edgeTexture, flapTexture } from '../scene/textures.js';
+import { suaMarcaTexture } from './marca.js';
 import { Pieces, rect } from './papelao.js';
 
-const BRAND_ASPECT = 4; // o logo horizontal ocupa 1600 × 400 na textura do baú
+const BRAND_ASPECT = 4; // a marca ocupa 1600 × 400 na textura (src/produtos/marca.js)
 const PRINT_GAP = 0.0015; // a impressão fica rente à face, sem brigar com ela no depth buffer
 
 /** Matriz: translada para (x, y, z) e gira `ry` em torno de y e depois `rx` em torno de x. */
@@ -40,7 +41,7 @@ function kit(track, { aba = false, marca = false } = {}) {
     textures.push(flap);
     materials.aba = lambert(kraft(flap));
   }
-  const brand = marca ? track(truckLogoTexture()) : null;
+  const brand = marca ? track(suaMarcaTexture()) : null;
   if (brand) {
     textures.push(brand);
     materials.marca = lambert({
@@ -56,7 +57,7 @@ function kit(track, { aba = false, marca = false } = {}) {
   return { textures: textures.filter(Boolean), materials };
 }
 
-/** Logo Vanpack de largura `w`, no plano xy de `matrix` (virado para +z, em pé). */
+/** "SUA MARCA" de largura `w`, no plano xy de `matrix` (virada para +z, em pé). */
 function brandMark(pieces, materials, w, matrix) {
   if (materials.marca) pieces.add('marca', new PlaneGeometry(w, w / BRAND_ASPECT), matrix);
 }
