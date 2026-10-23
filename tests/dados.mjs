@@ -43,7 +43,6 @@ export const realEmpresa = {
   horario_schema: 'Mo-Fr 07:30-17:30',
   mapa: 'https://maps.google.com/?q=Av+das+Caixas+500',
   ano_fundacao: baseContent.empresa.ano_fundacao,
-  pedido_minimo: 300,
   regiao: 'Grande São Paulo',
   pagamento: 'Pix e boleto',
 };

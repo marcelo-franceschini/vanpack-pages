@@ -35,9 +35,9 @@ só experimento configurado, o `quote_wizard`. Não existe experimento que tire 
   de origem `[site-orcamento-assistente]`, e o da A, `[site-orcamento]`.
 - **Métrica principal:** conversas qualificadas por 100 visitas, contadas pelo código `[site-*]` da
   primeira mensagem (planilha semanal do atendimento). Qualificada é a conversa com medida e
-  quantidade, dentro da região atendida e do pedido mínimo.
+  quantidade, dentro da região atendida.
 - **Guardrails:** LCP p75 no celular de até 2,5 s (o `visit_summary` leva o `lcp` de cada visita, por
-  variante), taxa de erro de JavaScript, e a proporção de conversas fora da região ou abaixo do mínimo.
+  variante), taxa de erro de JavaScript, e a proporção de conversas fora da região.
 - **Amostra:** `npm run amostra -- 0.05 0.06` (ajuste as taxas à conversão real antes de ligar).
 - **Término:** `endsAt` fixo em `site.config.js`; ao passar a data só a A vale, sem novo deploy.
 - **Exceção à regra "sem formulário":** o assistente usa controles soltos (`<input>`, rótulos, botões),

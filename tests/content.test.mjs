@@ -123,7 +123,7 @@ describe('campos e tipos', () => {
     );
     assert.match(
       joined({ 'empresa.yaml': stringify({ ...empresa, confirmados: ['horario', 'cnpj'] }) }),
-      /› confirmados\[1\]: valor não aceito; use um destes: horario, horario_schema, pedido_minimo, regiao, pagamento/,
+      /› confirmados\[1\]: valor não aceito; use um destes: horario, horario_schema, regiao, pagamento/,
     );
   });
 

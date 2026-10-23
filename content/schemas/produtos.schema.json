@@ -22,28 +22,9 @@
     "fatos": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["pedido_minimo", "regiao"],
-      "description": "Os dois dados operacionais acima dos cartões. Cada um some se não houver dado em content/empresa.yaml.",
+      "required": ["regiao"],
+      "description": "O dado operacional acima dos cartões. Some se não houver dado em content/empresa.yaml.",
       "properties": {
-        "pedido_minimo": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["rotulo", "valor"],
-          "properties": {
-            "rotulo": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 25,
-              "description": "Rótulo."
-            },
-            "valor": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 40,
-              "description": "Valor."
-            }
-          }
-        },
         "regiao": {
           "type": "object",
           "additionalProperties": false,

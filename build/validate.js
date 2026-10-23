@@ -36,10 +36,9 @@ const MAX_LOGO_BYTES = 20 * 1024;
 // Campos que podem ter o mesmo valor do exemplo mesmo em produção: já são reais desde já (cidade, UF,
 // ano de fundação).
 const REAL_BY_NATURE = new Set(['endereco.cidade', 'endereco.uf', 'ano_fundacao']);
-// Campos cujo valor real pode coincidir com o de exemplo (horário comercial, pedido mínimo, região,
-// pagamento): o dono confirma listando-os em `confirmados` no empresa.yaml (o schema aceita só estes).
+// Campos cujo valor real pode coincidir com o de exemplo (horário comercial, região, pagamento): o dono confirma listando-os em `confirmados` no empresa.yaml (o schema aceita só estes).
 // Dado que identifica a empresa (CNPJ, telefones, WhatsApp, endereço) nunca pode ser igual ao exemplo.
-const CONFIRMABLE = new Set(['horario', 'horario_schema', 'pedido_minimo', 'regiao', 'pagamento']);
+const CONFIRMABLE = new Set(['horario', 'horario_schema', 'regiao', 'pagamento']);
 
 // Obrigatórios em produção (o WhatsApp e a URL do site valem nos dois modos).
 const REQUIRED_IN_PRODUCTION = [

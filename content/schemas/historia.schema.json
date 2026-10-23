@@ -18,8 +18,6 @@
         "texto_extra",
         "botao",
         "link_produtos",
-        "nota",
-        "selo_pedido_minimo",
         "selo_regiao"
       ],
       "properties": {
@@ -65,23 +63,11 @@
           "maxLength": 16,
           "description": "Segundo chamado: leva à seção de produtos."
         },
-        "nota": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 25,
-          "description": "Linha de risco logo abaixo do botão."
-        },
-        "selo_pedido_minimo": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 60,
-          "description": "Selo com o pedido mínimo. Some se não houver."
-        },
         "selo_regiao": {
           "type": "string",
           "minLength": 1,
           "maxLength": 30,
-          "description": "Selo com a região. Some se não houver."
+          "description": "Região atendida, numa linha abaixo dos botões, só no celular (no desktop ela já está na linha pequena acima do título). Some se não houver."
         }
       },
       "description": "Cartão 1 da história: a abertura da página."

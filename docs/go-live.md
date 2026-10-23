@@ -1,7 +1,7 @@
 # Go-live: dos dados fictícios para os dados reais
 
 Hoje o site roda com **dados fictícios** (`VITE_DATA_MODE=demo` no `.env`): CNPJ, telefone, WhatsApp,
-endereço, pedido mínimo e clientes de exemplo inventados, o HTML sai com `noindex` e o `robots.txt`
+endereço inventados e clientes ainda sem autorização, o HTML sai com `noindex` e o `robots.txt`
 bloqueia tudo, para o Google não indexar um CNPJ falso. Os dados da empresa e os textos do site vivem na
 pasta `content/` (o `.env` guarda só o que muda por ambiente). Para ir ao ar com dados reais, **edite só
 `content/` e o `.env`**; nenhum telefone, CNPJ, endereço, diferencial ou cliente está escrito à mão no
@@ -20,7 +20,7 @@ README ("Como editar o conteúdo").
    arquivo, a linha e o campo: dado obrigatório vazio, formato inválido (CNPJ com dígito verificador
    errado, telefone sem `+55`, URL sem `https`), qualquer valor que ainda seja o fictício de
    `content/exemplo/empresa.yaml` e os clientes de exemplo que sobraram. Se o valor **real** de horário,
-   pedido mínimo, região ou pagamento for igual ao de exemplo (é comum), o build também recusa, mas a
+   região ou pagamento for igual ao de exemplo (é comum), o build também recusa, mas a
    mensagem diz como confirmar: liste o campo em `confirmados` no `content/empresa.yaml`.
 5. Confira a página com `npm run preview`: rodapé, botões do WhatsApp, diferenciais
    e clientes.
@@ -48,10 +48,9 @@ anunciado. Depois do deploy, peça a indexação no Search Console.
 | `horario_schema`    | Horário no formato do schema.org, ex.: `Mo-Fr 08:00-17:00` | não         | Vai só para o JSON-LD                               |
 | `mapa`              | Link do Google Maps para o endereço (`https://`)           | não         | Abra o link                                         |
 | `ano_fundacao`      | Ano de fundação                                            | não         | Confirme o ano: o "N anos de mercado" sai dele      |
-| `pedido_minimo`     | Pedido mínimo, em unidades                                 | não         | Confirme com a produção                             |
 | `regiao`            | Região atendida                                            | não         | Confirme com o comercial                            |
-| `pagamento`         | Formas de pagamento                                        | não         | Confirme com o financeiro                           |
-| `confirmados`       | Campos cujo valor real é igual ao de exemplo (lista)       | não         | Ex.: `[horario, pedido_minimo]`; só esses cinco     |
+| `pagamento`         | Formas de pagamento (hoje nenhum texto da página as usa)   | não         | Confirme com o financeiro                           |
+| `confirmados`       | Campos cujo valor real é igual ao de exemplo (lista)       | não         | Ex.: `[horario, regiao]`; só esses quatro           |
 
 Os outros arquivos de `content/` (os textos da página: `site.yaml`, `historia.yaml`, `orcamento.yaml`, `whatsapp.yaml`, `rodape.yaml` e o texto da política em `privacidade.md`, além destes):
 
@@ -77,7 +76,7 @@ Os outros arquivos de `content/` (os textos da página: `site.yaml`, `historia.y
 | `VITE_ANALYTICS_SITE`     | Website ID do site no Umami Cloud                | com umami   | Painel do Umami, em Settings do site  |
 | `VITE_ANALYTICS_ENDPOINT` | Servidor do Umami, só se tiver instância própria | não         | Deixe vazio para usar o Umami Cloud   |
 
-Pedido mínimo, região, formas de pagamento e diferenciais também são promessas: confirme cada um com a
+Região e diferenciais também são promessas: confirme cada um com a
 área responsável antes de publicar.
 
 ## Conteúdo para conferir

@@ -5,7 +5,7 @@
   "description": "Os textos da seção final da página.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["titulo", "texto", "botao", "nota", "ligar", "passos"],
+  "required": ["titulo", "texto", "botao", "ligar", "passos"],
   "properties": {
     "titulo": {
       "type": "string",
@@ -24,12 +24,6 @@
       "minLength": 1,
       "maxLength": 40,
       "description": "Texto do botão."
-    },
-    "nota": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 27,
-      "description": "Linha de risco logo abaixo do botão."
     },
     "ligar": {
       "type": "string",

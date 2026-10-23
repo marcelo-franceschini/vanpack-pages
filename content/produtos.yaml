@@ -8,9 +8,6 @@
 etiqueta: "O que fabricamos"
 titulo: "Caixas, divisórias e chapas sob medida"
 fatos:
-  pedido_minimo:
-    rotulo: "Pedido mínimo"
-    valor: "{{pedido_minimo}} unidades"
   regiao:
     rotulo: "Atendemos"
     valor: "{{regiao}}"

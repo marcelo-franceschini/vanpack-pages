@@ -438,31 +438,27 @@
         gap: 0.75rem;
         margin-top: 1.75rem;
       }
-      /* microcopy de risco ao lado do botão: sem compromisso */
-      .card .cta-note {
-        margin-top: 0.875rem;
-        font-size: 0.9375rem;
-        font-weight: 600;
-        line-height: 1.35;
-      }
-      .seals {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem 1.5rem;
-        margin-top: 1.5rem;
-      }
-      .seals li {
-        display: flex;
+      /* região atendida no cartão da abertura: só onde a linha pequena acima do título (.optional) não
+         a mostra, isto é, no celular; no desktop ela já está lá. Fica antes do modo compacto, que a esconde. */
+      .seal {
+        display: none;
         align-items: center;
         gap: 0.5rem;
+        margin-top: 1.5rem;
         font: 600 0.9375rem/1.2 var(--font);
         color: var(--carvao-muted);
       }
-      .seals li::before {
+      .seal::before {
         content: '';
+        flex: none;
         width: 0.5rem;
         height: 0.5rem;
         background: var(--floresta);
+      }
+      @media (max-width: 760px), (max-aspect-ratio: 1/1) {
+        .seal {
+          display: flex;
+        }
       }
       .more {
         display: inline-flex;
@@ -507,10 +503,9 @@
           min-height: 3rem;
           padding: 0 1.25rem;
         }
-        .seals,
+        .seal,
         .scrollcue,
-        .optional,
-        .cta-note {
+        .optional {
           display: none;
         }
       }
@@ -577,17 +572,13 @@
           background: none;
           color: var(--floresta-dark);
         }
-        /* pedido mínimo e região antes do clique, numa linha compacta */
-        .seals {
-          gap: 0.25rem 1rem;
-          margin-top: 0.75rem;
-        }
-        .seals li {
+        /* a região antes do clique, numa linha compacta */
+        .seal {
+          margin-top: 1rem;
           font-size: 0.875rem;
         }
         .scrollcue,
-        .optional,
-        .seals .optional {
+        .optional {
           display: none;
         }
       }
@@ -883,7 +874,7 @@
         margin-bottom: 2rem;
       }
       .cta .alt {
-        margin-top: 0.5rem;
+        margin-top: 1rem;
         font-size: 1rem;
       }
       .cta .alt a {
@@ -892,13 +883,6 @@
         min-height: 2.75rem;
         color: var(--papel);
         font-weight: 700;
-      }
-      .cta .cta-note {
-        margin-top: 1rem;
-        font-size: 0.9375rem;
-        font-weight: 600;
-        line-height: 1.35;
-        color: var(--papel);
       }
       .cta :focus-visible {
         outline-color: var(--papel);
@@ -1455,11 +1439,7 @@
                     >
                     <a class="btn btn-soft" href="#produtos">{{historia.hero.link_produtos}}</a>
                   </div>
-                  <p class="cta-note">{{historia.hero.nota}}</p>
-                  <ul class="seals" data-need="tem_fatos">
-                    <li data-need="pedido_minimo">{{historia.hero.selo_pedido_minimo}}</li>
-                    <li data-need="regiao">{{historia.hero.selo_regiao}}</li>
-                  </ul>
+                  <div class="seal" data-need="regiao">{{historia.hero.selo_regiao}}</div>
                 </div>
               </div>
             </div>
@@ -1531,9 +1511,6 @@
             <h2>{{produtos.titulo}}</h2>
           </div>
           <ul class="facts" data-need="tem_fatos">
-            <li data-need="pedido_minimo">
-              <b>{{produtos.fatos.pedido_minimo.rotulo}}</b>{{produtos.fatos.pedido_minimo.valor}}
-            </li>
             <li data-need="regiao">
               <b>{{produtos.fatos.regiao.rotulo}}</b>{{produtos.fatos.regiao.valor}}
             </li>
@@ -1594,7 +1571,6 @@
             <a class="btn btn-light" data-cta="orcamento" data-wa="{{whatsapp.mensagens.orcamento}}"
               ><svg aria-hidden="true"><use href="#i-wa" /></svg>{{orcamento.botao}}</a
             >
-            <p class="cta-note">{{orcamento.nota}}</p>
             <p class="alt" data-need="telefone">
               {{orcamento.ligar}}
               <a href="tel:{{telefone}}" data-contact="phone">{{telefone_exibicao}}</a>

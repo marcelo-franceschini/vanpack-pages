@@ -15,8 +15,6 @@ hero:
   texto_extra: ", direto da fábrica e sem intermediário"
   botao: "Pedir orçamento no WhatsApp"
   link_produtos: "Ver produtos ↓"
-  nota: "Sem compromisso"
-  selo_pedido_minimo: "Pedido mínimo a partir de {{pedido_minimo}} unidades"
   selo_regiao: "Atendemos {{regiao}}"
 anos:
   etiqueta: "Anos de mercado"
@@ -30,7 +28,7 @@ qualidade:
 orcamento:
   etiqueta: "Orçamento"
   titulo: "Peça o seu pelo WhatsApp"
-  texto: "Mande medida, quantidade e o que vai impresso. Sem formulário e sem compromisso."
+  texto: "Mande medida, quantidade e o que vai impresso. Sem formulário."
 entrega:
   etiqueta: "Entrega"
   titulo: "Entregamos até você"

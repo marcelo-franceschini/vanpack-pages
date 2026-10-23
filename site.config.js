@@ -28,7 +28,6 @@ export const VAR_NAMES = [
   'anos',
   'ano',
   'ano_atual',
-  'pedido_minimo',
   'regiao',
   'pagamento',
   'medicao_nome',
@@ -152,7 +151,6 @@ export function createSiteConfig({
     hoursSchema: text(empresa.horario_schema),
     mapUrl: text(empresa.mapa),
     foundedYear,
-    minOrder: text(empresa.pedido_minimo),
     serviceArea: text(empresa.regiao),
     paymentMethods: text(empresa.pagamento),
     // "Por que a Vanpack" e a faixa de logos
@@ -240,13 +238,12 @@ export function createSiteConfig({
     medicao_nome: site.analytics.provider === 'umami' ? 'Umami Cloud' : '',
     sem_medicao: site.analytics.provider ? '' : 'sim',
     // seções que só existem se tiverem algo a mostrar
-    tem_fatos: site.minOrder || site.serviceArea ? 'sim' : '',
+    tem_fatos: site.serviceArea ? 'sim' : '',
     tem_diferenciais: site.differentials.length ? 'sim' : '',
     tem_provas:
       shownClients.length || shownProofs.testimonials.length || shownProofs.googleRating
         ? 'sim'
         : '',
-    pedido_minimo: site.minOrder,
     regiao: site.serviceArea,
     pagamento: site.paymentMethods,
   };

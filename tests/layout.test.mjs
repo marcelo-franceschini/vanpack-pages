@@ -143,7 +143,7 @@ for (const screen of SCREENS) {
 
 describe('1ª tela do celular', () => {
   for (const screen of SCREENS.filter((s) => s.mobile && s.width <= 768)) {
-    test(`${screen.name}: H1, pedido mínimo, botão e linha de risco sem rolar; o 2º chamado é link`, async () => {
+    test(`${screen.name}: H1, botão, 2º chamado e região sem rolar; o 2º chamado é link e a nota de risco não existe`, async () => {
       const { page, context } = await openPage(browser, server.url, {
         viewport: { width: screen.width, height: screen.height },
         reducedMotion: 'reduce',
@@ -164,13 +164,13 @@ describe('1ª tela do celular', () => {
           header: document.querySelector('#hdr').getBoundingClientRect().bottom,
           parts: {
             título: rect(card.querySelector('h1')),
-            'pedido mínimo': rect(card.querySelector('.seals li')),
             botão: rect(card.querySelector('[data-cta="hero"]')),
-            'linha de risco': rect(card.querySelector('.cta-note')),
+            região: rect(card.querySelector('.seal')),
           },
-          seals: [...card.querySelectorAll('.seals li')]
-            .filter((li) => getComputedStyle(li).display !== 'none')
-            .map((li) => li.textContent.trim()),
+          seals: [...card.querySelectorAll('.seal')]
+            .filter((el) => getComputedStyle(el).display !== 'none')
+            .map((el) => el.textContent.trim()),
+          note: card.querySelectorAll('.cta-note').length,
           link: {
             ...rect(card.querySelector('.actions a[href="#produtos"]')),
             background: getComputedStyle(card.querySelector('.actions a[href="#produtos"]'))
@@ -185,8 +185,13 @@ describe('1ª tela do celular', () => {
           `${name} inteiro na 1ª tela (${part.top} a ${part.bottom} de ${first.height})`,
         );
       }
-      assert.match(first.seals[0], /^Pedido mínimo/);
-      assert.ok(!first.seals.some((s) => /prazo/i.test(s)), 'sem selo de prazo');
+      assert.deepEqual(first.seals.length, 1, 'só a região, sem pedido mínimo');
+      assert.match(first.seals[0], /^Atendemos /);
+      assert.ok(
+        !first.seals.some((s) => /prazo|mínimo|compromisso/i.test(s)),
+        'sem prazo nem pedido mínimo',
+      );
+      assert.equal(first.note, 0, 'sem a nota "Sem compromisso"');
       assert.ok(
         first.link.width < first.parts.botão.width * 0.75,
         'o 2º chamado não é outro bloco',
