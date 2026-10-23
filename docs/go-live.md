@@ -86,6 +86,7 @@ Estes textos estão em `content/` e foram escritos como rascunho: confira cada u
 - **Produtos** (4 cartões em "O que fabricamos", `content/produtos.yaml`): nomes, descrições, a mensagem de cada botão e a descrição de cada 3D para leitor de tela (`peca`).
 - **Textos dos 5 cartões da história** (`content/historia.yaml`) e **diferenciais** (`content/diferenciais.yaml`): são rascunho e podem mudar depois da pesquisa de posicionamento. Nenhum pode falar de prazo, de tempo de resposta ou do processo de fabricação (o `tests/conteudo.test.mjs` confere).
 - **Clientes**: o Biscoitê está listado sem autorização; New Millen, Grupo Arte Visão e Kisabor entram quando mandarem o SVG oficial. Para publicar um cliente, ponha o nome, o logo em SVG (em `content/clientes/`) e `autorizado: true` em `content/clientes.yaml`, com a autorização registrada; siga [`docs/provas/README.md`](provas/README.md). Depoimentos (`content/provas.yaml`) também só com autorização.
+- **Rodapé**: "Nunca pedimos pagamento para conta de pessoa física" (`aviso_pagamento` em `content/rodape.yaml`) é promessa; confirme com o financeiro. Só aparece com CNPJ.
 - **Fotos**: o site não usa nenhuma foto (decisão do dono). Se um dia quiser, a única permitida é a da fachada.
 
 ## Domínio próprio

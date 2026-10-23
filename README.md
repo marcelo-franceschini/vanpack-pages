@@ -106,7 +106,7 @@ Quem edita: qualquer pessoa que consiga abrir um arquivo de texto. Você **não 
 | Depoimentos e nota do Google (só com autorização)                              | `content/provas.yaml`                         |
 | A seção final do orçamento e os 3 passos de "Como pedir"                       | `content/orcamento.yaml`                      |
 | A mensagem de cada botão do WhatsApp e a folha "O WhatsApp não abriu?"         | `content/whatsapp.yaml`                       |
-| Rótulos do rodapé                                                              | `content/rodape.yaml`                         |
+| Rótulos do rodapé e o aviso do pagamento                                       | `content/rodape.yaml`                         |
 | A política de privacidade                                                      | `content/privacidade.md`                      |
 | Modo demo × production, endereço do site, medição                              | `.env`                                        |
 

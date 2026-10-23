@@ -580,8 +580,20 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
   test('a faixa de confiança (#confianca) não existe mais, em nenhum modo', () => {
     for (const site of [demo, production, empty]) {
       const out = renderPage(html, site);
-      assert.ok(!/id="confianca"|class="trust|Nunca pedimos pagamento|Quem somos/.test(out));
+      assert.ok(!/id="confianca"|class="trust|Quem somos/.test(out));
     }
+  });
+
+  test('o rodapé leva a regra do pagamento, e só quando há CNPJ', () => {
+    const rule = 'Nunca pedimos pagamento para conta de pessoa física';
+    const footer = (site) => renderPage(html, site).match(/<footer>[\s\S]*<\/footer>/)?.[0] ?? '';
+    assert.ok(footer(demo).includes(rule));
+    assert.ok(footer(production).includes(rule));
+    const semCnpj = siteWith({
+      env: PRODUCTION,
+      content: realContent({ empresa: { ...realEmpresa, cnpj: '' } }),
+    });
+    assert.ok(!footer(semCnpj).includes(rule), 'sem CNPJ a página não promete nada');
   });
 
   test('diferenciais vêm de content/: item sem ícone ou texto se adapta e, sem nenhum, a seção e os links somem', () => {
