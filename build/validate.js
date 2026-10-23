@@ -268,6 +268,10 @@ export function validateSite({
         errors.push(
           `${field('clientes', `clientes[${i}]`)} ("${client.name}") é um cliente de exemplo: troque por um cliente real autorizado ou apague a linha.`,
         );
+      } else if (!client.authorized) {
+        warnings.push(
+          `${field('clientes', `clientes[${i}]`)} ("${client.name}") ainda não está autorizado e fica fora da página em production: registre docs/provas/${client.id}.md e ponha "autorizado: true".`,
+        );
       }
     }
     if (!provider) {

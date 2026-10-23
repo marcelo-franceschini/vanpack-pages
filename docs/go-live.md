@@ -60,7 +60,7 @@ Os outros arquivos de `content/` (os textos da página: `site.yaml`, `historia.y
 - `clientes.yaml` e `clientes/`: até 12 clientes da faixa de logos, com o logo em SVG. O Biscoitê está
   listado com `autorizado: false`: em production ele fica fora da página até existir o registro em
   `docs/provas/<id>.md` (`autorizado: true` exige esse registro). Um cliente com `exemplo: true` o build de
-  production recusa.
+  production recusa. O build de production também avisa, sem recusar, de cada cliente listado sem autorização.
 - `provas.yaml`: depoimentos e nota do Google, só com autorização registrada.
 - `exemplo/empresa.yaml`: os valores fictícios de referência. Não edite: o build compara com ele para
   reconhecer, em production, um dado que ainda é de demonstração (cidade, UF e ano de fundação ficam de

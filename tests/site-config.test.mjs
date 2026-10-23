@@ -204,6 +204,19 @@ describe('trava de go-live', () => {
     );
   });
 
+  test('production avisa, sem recusar, do cliente listado sem autorização', () => {
+    const clientes = [{ nome: 'Biscoitê', logo: 'biscoite.svg', autorizado: false }];
+    const { errors, warnings } = validate({
+      env: PRODUCTION,
+      content: realContent({ clientes: { ...baseContent.clientes, clientes } }),
+    });
+    assert.deepEqual(errors, []);
+    assert.ok(
+      warnings.some((w) => w.includes('Biscoitê') && w.includes('docs/provas/biscoite.md')),
+      warnings.join('\n'),
+    );
+  });
+
   test('valor real igual ao de exemplo (horário, região, pagamento) só passa se confirmado', () => {
     // um horário comercial como "Seg a Sex, 8h às 17h" pode ser o real: sem confirmação o build recusa
     // (para pegar o que ficou esquecido) e diz como confirmar
