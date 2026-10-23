@@ -411,17 +411,6 @@ describe('render', () => {
     assert.ok(!('aggregateRating' in ld), 'sem avaliação própria');
   });
 
-  test('a faixa de confiança some inteira sem dado e, com pouco dado, mostra só o que existe', () => {
-    assert.ok(!renderPage(html, empty).includes('id="confianca"'));
-    const onlyCnpj = siteWith({
-      content: withEmpresa({ whatsapp: '5511912345678', cnpj: realEmpresa.cnpj }),
-    });
-    const strip = renderPage(html, onlyCnpj).match(/<section class="trust"[\s\S]*?<\/section>/)[0];
-    assert.ok(strip.includes(`CNPJ ${realEmpresa.cnpj}`));
-    assert.ok(strip.includes('Nunca pedimos pagamento para conta de pessoa física'));
-    assert.ok(!/anos de mercado|tel:|mailto:|Fábrica própria|Pagamento:/.test(strip), strip);
-  });
-
   test('sem ano de fundação não há anos de mercado nem "Desde"; o cartão 2 usa o texto alternativo', () => {
     const semAno = siteWith({ content: withEmpresa(setPath(DEMO_EMPRESA, 'ano_fundacao', '')) });
     const out = renderPage(html, semAno);
@@ -557,8 +546,6 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
   const demo = siteWith();
   const production = siteWith({ env: PRODUCTION, content: realContent() });
   const empty = emptySite();
-  const strip = (site) =>
-    renderPage(html, site).match(/<section class="trust"[\s\S]*?<\/section>/)?.[0] ?? '';
   const diferenciais = (itens) =>
     siteWith({ content: { ...baseContent, diferenciais: { ...baseContent.diferenciais, itens } } });
   const pillars = (site) =>
@@ -590,22 +577,11 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
     }
   });
 
-  test('a regra do pagamento fica na faixa de confiança, com as formas de pagamento quando há', () => {
-    const rule = 'Nunca pedimos pagamento para conta de pessoa física';
-    assert.ok(strip(production).includes(rule));
-    assert.ok(strip(production).includes(`Pagamento: ${realEmpresa.pagamento}`));
-    const semPagamento = strip(
-      siteWith({
-        env: PRODUCTION,
-        content: realContent({ empresa: { ...realEmpresa, pagamento: '' } }),
-      }),
-    );
-    assert.ok(semPagamento.includes(rule) && !semPagamento.includes('Pagamento:'));
-    const semCnpj = siteWith({
-      env: PRODUCTION,
-      content: realContent({ empresa: { ...realEmpresa, cnpj: '' } }),
-    });
-    assert.ok(!strip(semCnpj).includes(rule), 'só com CNPJ');
+  test('a faixa de confiança (#confianca) não existe mais, em nenhum modo', () => {
+    for (const site of [demo, production, empty]) {
+      const out = renderPage(html, site);
+      assert.ok(!/id="confianca"|class="trust|Nunca pedimos pagamento|Quem somos/.test(out));
+    }
   });
 
   test('diferenciais vêm de content/: item sem ícone ou texto se adapta e, sem nenhum, a seção e os links somem', () => {

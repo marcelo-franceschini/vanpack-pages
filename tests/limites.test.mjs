@@ -63,7 +63,6 @@ const NAMES = [
   'empresa',
   'site',
   'historia',
-  'confianca',
   'produtos',
   'diferenciais',
   'clientes',

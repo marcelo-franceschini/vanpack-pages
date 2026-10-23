@@ -609,7 +609,7 @@
         text-wrap: balance;
       }
       /* faixas: as seções alternam Papel, tint e Floresta (o CTA final), e a onda de papelão (Kraft,
-         o material) divide a história da faixa de confiança e os produtos dos diferenciais */
+         o material) divide a história dos produtos e os produtos dos diferenciais */
       .tint {
         background: var(--tint);
       }
@@ -622,38 +622,6 @@
         width: 100%;
         height: 1.25rem;
         color: var(--kraft);
-      }
-      /* faixa de confiança logo depois da história: dados verificáveis da empresa */
-      .trust {
-        background: var(--tint);
-        padding: 0.5rem 0;
-      }
-      .trust-list {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 0 1.75rem;
-        font: 600 0.9375rem/1.3 var(--font);
-        color: var(--carvao);
-      }
-      .trust-list li {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        min-height: 2.75rem;
-      }
-      .trust-list li::before {
-        content: '';
-        flex: none;
-        width: 0.375rem;
-        height: 0.375rem;
-        background: var(--floresta);
-      }
-      .trust-list a {
-        display: inline-flex;
-        align-items: center;
-        min-height: 2.75rem;
-        font-weight: 700;
       }
       .grid3 {
         display: grid;
@@ -1555,20 +1523,6 @@
           />
         </svg>
       </div>
-
-      <section class="trust" id="confianca" aria-label="Quem somos" data-need="tem_confianca">
-        <div class="wrap">
-          <ul class="trust-list">
-            <li data-need="cidade_uf">{{confianca.cidade}}</li>
-            <li data-need="cnpj">{{confianca.cnpj}}</li>
-            <li data-need="cnpj">{{confianca.regra_pagamento}}</li>
-            <li data-need="ano_fundacao">{{confianca.anos}}</li>
-            <li data-need="pagamento">{{confianca.pagamento}}</li>
-            <li data-field="mapa" hidden></li>
-            <li data-field="telefone" hidden></li>
-          </ul>
-        </div>
-      </section>
 
       <section class="block" id="produtos">
         <div class="wrap">

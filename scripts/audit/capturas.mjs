@@ -13,7 +13,7 @@ const CENTERS = [
   [0.75, 'caixa'],
   [1, 'entrega-ultimo-quadro'],
 ];
-const SECTIONS = ['confianca', 'produtos', 'diferenciais', 'clientes', 'orcamento'];
+const SECTIONS = ['produtos', 'diferenciais', 'clientes', 'orcamento'];
 const DEVICES = {
   'desktop-1440x900': { viewport: { width: 1440, height: 900 } },
   'celular-390x844': {

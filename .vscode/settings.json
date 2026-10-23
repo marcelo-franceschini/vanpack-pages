@@ -6,7 +6,6 @@
     ],
     "./content/schemas/site.schema.json": "content/site.yaml",
     "./content/schemas/historia.schema.json": "content/historia.yaml",
-    "./content/schemas/confianca.schema.json": "content/confianca.yaml",
     "./content/schemas/produtos.schema.json": "content/produtos.yaml",
     "./content/schemas/diferenciais.schema.json": "content/diferenciais.yaml",
     "./content/schemas/clientes.schema.json": "content/clientes.yaml",

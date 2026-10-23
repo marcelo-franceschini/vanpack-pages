@@ -61,7 +61,7 @@
       "type": "string",
       "minLength": 1,
       "maxLength": 23,
-      "description": "Texto do link do mapa (rodapé e faixa de confiança)."
+      "description": "Texto do link do mapa (rodapé)."
     },
     "desde": {
       "type": "string",

@@ -19,7 +19,6 @@ const INTERFACE_TEXT = [
 const INTERFACE_ATTRIBUTES = [
   'Principal', // aria-label dos menus e das regiões
   'Rodapé',
-  'Quem somos',
   'Como pedir',
   'Logos de clientes',
   'carrossel',

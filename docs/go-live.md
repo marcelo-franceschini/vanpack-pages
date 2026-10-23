@@ -22,7 +22,7 @@ README ("Como editar o conteúdo").
    `content/exemplo/empresa.yaml` e os clientes de exemplo que sobraram. Se o valor **real** de horário,
    pedido mínimo, região ou pagamento for igual ao de exemplo (é comum), o build também recusa, mas a
    mensagem diz como confirmar: liste o campo em `confirmados` no `content/empresa.yaml`.
-5. Confira a página com `npm run preview`: rodapé, faixa de confiança, botões do WhatsApp, diferenciais
+5. Confira a página com `npm run preview`: rodapé, botões do WhatsApp, diferenciais
    e clientes.
 6. Abra um pull request e, com o CI verde, faça o merge na `master`. Os valores de `content/` e do
    `.env` são públicos (vão para o HTML); nunca coloque segredo neles.
@@ -53,7 +53,7 @@ anunciado. Depois do deploy, peça a indexação no Search Console.
 | `pagamento`         | Formas de pagamento                                        | não         | Confirme com o financeiro                           |
 | `confirmados`       | Campos cujo valor real é igual ao de exemplo (lista)       | não         | Ex.: `[horario, pedido_minimo]`; só esses cinco     |
 
-Os outros arquivos de `content/` (os textos da página: `site.yaml`, `historia.yaml`, `confianca.yaml`, `orcamento.yaml`, `whatsapp.yaml`, `rodape.yaml` e o texto da política em `privacidade.md`, além destes):
+Os outros arquivos de `content/` (os textos da página: `site.yaml`, `historia.yaml`, `orcamento.yaml`, `whatsapp.yaml`, `rodape.yaml` e o texto da política em `privacidade.md`, além destes):
 
 - `produtos.yaml`: os 3 produtos (nome, descrição, mensagem do botão e descrição do 3D para leitor de tela).
 - `diferenciais.yaml`: até 6 cartões de "Por que a Vanpack" (título, texto e ícone: `fabrica`, `lotes`,
@@ -86,7 +86,6 @@ Estes textos estão em `content/` e foram escritos como rascunho: confira cada u
 
 - **Produtos** (3 cartões em "O que fabricamos", `content/produtos.yaml`): nomes, descrições, a mensagem de cada botão e a descrição de cada 3D para leitor de tela (`peca`).
 - **Textos dos 5 cartões da história** (`content/historia.yaml`) e **diferenciais** (`content/diferenciais.yaml`): são rascunho e podem mudar depois da pesquisa de posicionamento. Nenhum pode falar de prazo, de tempo de resposta ou do processo de fabricação (o `tests/conteudo.test.mjs` confere).
-- **Faixa de confiança**: "Nunca pedimos pagamento para conta de pessoa física" é promessa; confirme com o financeiro.
 - **Clientes**: o Biscoitê está listado sem autorização; New Millen, Grupo Arte Visão e Kisabor entram quando mandarem o SVG oficial. Para publicar um cliente, ponha o nome, o logo em SVG (em `content/clientes/`) e `autorizado: true` em `content/clientes.yaml`, com a autorização registrada; siga [`docs/provas/README.md`](provas/README.md). Depoimentos (`content/provas.yaml`) também só com autorização.
 - **Fotos**: o site não usa nenhuma foto (decisão do dono). Se um dia quiser, a única permitida é a da fachada.
 

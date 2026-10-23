@@ -36,7 +36,6 @@ export const VAR_NAMES = [
   'tem_fatos',
   'tem_diferenciais',
   'tem_provas',
-  'tem_confianca',
 ];
 
 /** Variáveis cujo valor já é HTML montado aqui (o número que o navegador recalcula): não são escapadas. */
@@ -247,17 +246,6 @@ export function createSiteConfig({
       shownClients.length || shownProofs.testimonials.length || shownProofs.googleRating
         ? 'sim'
         : '',
-    // a faixa de confiança só existe se tiver ao menos um item
-    tem_confianca: [
-      cityState,
-      site.cnpj,
-      foundedYear,
-      site.mapUrl,
-      phone,
-      site.paymentMethods,
-    ].some(Boolean)
-      ? 'sim'
-      : '',
     pedido_minimo: site.minOrder,
     regiao: site.serviceArea,
     pagamento: site.paymentMethods,

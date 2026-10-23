@@ -219,8 +219,6 @@ describe('contraste (calculado nos estilos reais)', () => {
     ['.cta h2', 7],
     ['.cta p.lead', 7],
     ['.cta .cta-note', 7],
-    ['.trust-list li', 7],
-    ['.trust-list a', 7],
     ['.facts li', 7],
     ['.facts b', 7],
     ['.model h3', 7],

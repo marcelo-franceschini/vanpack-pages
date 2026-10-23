@@ -88,8 +88,8 @@ describe('o foco de teclado nunca fica totalmente atrás do cabeçalho ou do bot
         );
       }
       // o piso só denuncia uma caminhada travada; a página tem uns 15 pontos de parada (sem os 3
-      // controles do carrossel, que saíram de propósito)
-      assert.ok(new Set(seen).size > 12, `percorreu a página (${new Set(seen).size} elementos)`);
+      // controles do carrossel e sem os 2 links da faixa de confiança, que saíram de propósito)
+      assert.ok(new Set(seen).size > 10, `percorreu a página (${new Set(seen).size} elementos)`);
       await context.close();
     });
   }
