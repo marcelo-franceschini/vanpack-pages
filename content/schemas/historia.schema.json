@@ -75,14 +75,8 @@
     "anos": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["etiqueta", "titulo", "titulo_sem_ano", "texto"],
+      "required": ["titulo", "titulo_sem_ano", "texto"],
       "properties": {
-        "etiqueta": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 27,
-          "description": "Linha pequena acima do título."
-        },
         "titulo": {
           "type": "string",
           "minLength": 1,
@@ -107,14 +101,8 @@
     "qualidade": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["etiqueta", "titulo", "texto"],
+      "required": ["titulo", "texto"],
       "properties": {
-        "etiqueta": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 21,
-          "description": "Linha pequena acima do título."
-        },
         "titulo": {
           "type": "string",
           "minLength": 1,
@@ -133,14 +121,8 @@
     "orcamento": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["etiqueta", "titulo", "texto"],
+      "required": ["titulo", "texto"],
       "properties": {
-        "etiqueta": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 21,
-          "description": "Linha pequena acima do título."
-        },
         "titulo": {
           "type": "string",
           "minLength": 1,
@@ -159,14 +141,8 @@
     "entrega": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["etiqueta", "titulo", "texto", "texto_sem_regiao", "link"],
+      "required": ["titulo", "texto", "texto_sem_regiao", "link"],
       "properties": {
-        "etiqueta": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 19,
-          "description": "Linha pequena acima do título."
-        },
         "titulo": {
           "type": "string",
           "minLength": 1,

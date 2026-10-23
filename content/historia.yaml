@@ -17,20 +17,16 @@ hero:
   link_produtos: "Ver produtos ↓"
   selo_regiao: "Atendemos {{regiao}}"
 anos:
-  etiqueta: "Anos de mercado"
   titulo: "{{anos}} anos de mercado"
   titulo_sem_ano: "Experiência em caixas de papelão"
   texto: "Atendemos lojas, vendedores de marketplace e indústrias."
 qualidade:
-  etiqueta: "Qualidade"
   titulo: "Caixas na medida que você pediu"
   texto: "Do primeiro ao último pedido, a mesma medida e a mesma impressão."
 orcamento:
-  etiqueta: "Orçamento"
   titulo: "Peça o seu pelo WhatsApp"
   texto: "Mande medida, quantidade e o que vai impresso. Sem formulário."
 entrega:
-  etiqueta: "Entrega"
   titulo: "Entregamos até você"
   texto: "Atendemos {{regiao}}."
   texto_sem_regiao: "Da nossa fábrica até o seu endereço."

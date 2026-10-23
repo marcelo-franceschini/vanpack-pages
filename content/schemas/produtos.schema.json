@@ -5,14 +5,8 @@
   "description": "Os produtos da seção \"O que fabricamos\". Cada um tem um 3D girando no topo do cartão e um botão de orçamento.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["etiqueta", "titulo", "regiao", "botao", "itens"],
+  "required": ["titulo", "regiao", "botao", "itens"],
   "properties": {
-    "etiqueta": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 28,
-      "description": "Linha pequena acima do título da seção."
-    },
     "titulo": {
       "type": "string",
       "minLength": 1,

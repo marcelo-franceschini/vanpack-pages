@@ -5,14 +5,8 @@
   "description": "A faixa de logos dos clientes. Em production só aparece quem tem autorizado: true (com registro em docs/provas/<id>.md); em demo aparecem todos e o não autorizado leva o rótulo \"Exemplo\".",
   "type": "object",
   "additionalProperties": false,
-  "required": ["etiqueta", "titulo", "clientes"],
+  "required": ["titulo", "clientes"],
   "properties": {
-    "etiqueta": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 20,
-      "description": "Linha pequena acima do título da seção."
-    },
     "titulo": {
       "type": "string",
       "minLength": 1,
