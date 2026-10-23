@@ -194,7 +194,7 @@ Dentro de qualquer texto de `content/`, `{{nome}}` puxa o dado. `{{#se cidade}} 
 | `{{anos}}`, `{{ano}}`, `{{ano_atual}}`                     | Anos de mercado e ano atual, que se atualizam sozinhos (`ano_atual`: texto simples)                      |
 | `{{regiao}}`, `{{pagamento}}`                              | Dados operacionais                                                                                       |
 | `{{medicao_nome}}`, `{{sem_medicao}}`                      | Para a política de privacidade: a ferramenta de medição, ou "não há"                                     |
-| `{{tem_fatos}}`, `{{tem_diferenciais}}`, `{{tem_provas}}`  | "sim" ou vazio, para usar em `{{#se ...}}`: há diferenciais; há cliente, depoimento ou nota para mostrar |
+| `{{tem_diferenciais}}`, `{{tem_provas}}`                   | "sim" ou vazio, para usar em `{{#se ...}}`: há diferenciais; há cliente, depoimento ou nota para mostrar |
 
 ### O que NÃO mexer (sem falar com quem programa)
 

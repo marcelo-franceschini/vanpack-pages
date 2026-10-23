@@ -5,7 +5,7 @@
   "description": "Os produtos da seção \"O que fabricamos\". Cada um tem um 3D girando no topo do cartão e um botão de orçamento.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["etiqueta", "titulo", "fatos", "botao", "itens"],
+  "required": ["etiqueta", "titulo", "regiao", "botao", "itens"],
   "properties": {
     "etiqueta": {
       "type": "string",
@@ -19,32 +19,11 @@
       "maxLength": 55,
       "description": "Título da seção."
     },
-    "fatos": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["regiao"],
-      "description": "O dado operacional acima dos cartões. Some se não houver dado em content/empresa.yaml.",
-      "properties": {
-        "regiao": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["rotulo", "valor"],
-          "properties": {
-            "rotulo": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 21,
-              "description": "Rótulo."
-            },
-            "valor": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 22,
-              "description": "Valor."
-            }
-          }
-        }
-      }
+    "regiao": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40,
+      "description": "Linha sob o título da seção com a região atendida. Some se não houver região em content/empresa.yaml."
     },
     "botao": {
       "type": "string",

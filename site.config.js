@@ -32,7 +32,6 @@ export const VAR_NAMES = [
   'pagamento',
   'medicao_nome',
   'sem_medicao',
-  'tem_fatos',
   'tem_diferenciais',
   'tem_provas',
 ];
@@ -238,7 +237,6 @@ export function createSiteConfig({
     medicao_nome: site.analytics.provider === 'umami' ? 'Umami Cloud' : '',
     sem_medicao: site.analytics.provider ? '' : 'sim',
     // seções que só existem se tiverem algo a mostrar
-    tem_fatos: site.serviceArea ? 'sim' : '',
     tem_diferenciais: site.differentials.length ? 'sim' : '',
     tem_provas:
       shownClients.length || shownProofs.testimonials.length || shownProofs.googleRating

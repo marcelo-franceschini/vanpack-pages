@@ -642,25 +642,10 @@
         line-height: 1.55;
         color: var(--carvao-muted);
       }
-      /* o que fabricamos: dados operacionais e modelos */
-      .facts {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-        gap: 1rem 1.5rem;
-        margin-bottom: 2rem;
-      }
-      .facts li {
-        padding-left: 1rem;
-        border-left: 0.25rem solid var(--floresta);
-        font-size: 1.125rem;
-        line-height: 1.35;
-      }
-      .facts b {
-        display: block;
-        margin-bottom: 0.25rem;
-        font: 700 0.875rem/1.2 var(--font);
-        letter-spacing: 0.09em;
-        text-transform: uppercase;
+      /* o que fabricamos: a região atendida, numa linha sob o título, e os modelos */
+      .sec-head .sub {
+        margin-top: 1rem;
+        font-size: clamp(1.125rem, 1.35vw, 1.25rem);
         color: var(--carvao-muted);
       }
       .models {
@@ -1509,12 +1494,8 @@
           <div class="sec-head">
             <span class="k">{{produtos.etiqueta}}</span>
             <h2>{{produtos.titulo}}</h2>
+            <p class="sub" data-need="regiao">{{produtos.regiao}}</p>
           </div>
-          <ul class="facts" data-need="tem_fatos">
-            <li data-need="regiao">
-              <b>{{produtos.fatos.regiao.rotulo}}</b>{{produtos.fatos.regiao.valor}}
-            </li>
-          </ul>
           <div class="models">
             <!--render:produtos-->
           </div>
