@@ -12,6 +12,7 @@ const REDUCED = '(prefers-reduced-motion: reduce)';
 const MAX_DENSITY = { desktop: 1.5, mobile: 1.5 };
 const NEAR = '300px 0px';
 const DRAG_RAD = 0.012; // rad girados por pixel arrastado
+const KEY_RAD = 0.2; // rad girados por toque numa seta do teclado
 const DISPOSE_WAIT_MS = 2000; // tempo para o worker liberar a GPU antes de ser encerrado
 
 /** Por que este aparelho fica com a ilustração (ou '' se o 3D pode rodar). */
@@ -55,6 +56,7 @@ export function montarProdutos(areas) {
     ctx: null,
     near: false,
     visible: false,
+    nudged: false,
     width: 0,
     height: 0,
   }));
@@ -85,7 +87,12 @@ export function montarProdutos(areas) {
     near.disconnect();
     seen.disconnect();
     sizes.disconnect();
-    cards.forEach((card) => ilustrar(card.area));
+    cards.forEach((card) => {
+      card.area.removeAttribute('tabindex');
+      card.area.removeAttribute('role');
+      card.area.removeAttribute('aria-label');
+      ilustrar(card.area);
+    });
   }
 
   function onMessage(from, msg) {
@@ -169,6 +176,11 @@ export function montarProdutos(areas) {
       const card = byArea.get(target);
       card.visible = isIntersecting;
       if (card.near) send({ type: 'visible', id: card.id, on: isIntersecting });
+      // a primeira vez à vista, um giro um pouco mais rápido avisa que a peça responde ao arrasto
+      if (isIntersecting && card.near && !card.nudged && !reducedQuery.matches) {
+        card.nudged = true;
+        send({ type: 'nudge', id: card.id });
+      }
     }
   });
   const sizes = new ResizeObserver((entries) => {
@@ -203,6 +215,17 @@ export function montarProdutos(areas) {
       area.classList.remove('arrastando');
       send({ type: 'grab', id: card.id, on: false });
     };
+    // teclado: setas giram a peça em foco (o mesmo arrasto, em passos)
+    area.tabIndex = 0;
+    area.setAttribute('role', 'group');
+    area.setAttribute('aria-label', `${label(card)}. Use as setas do teclado para girar.`);
+    area.addEventListener('keydown', (e) => {
+      const turn = { ArrowLeft: -KEY_RAD, ArrowRight: KEY_RAD }[e.key];
+      if (!turn || !card.near) return;
+      e.preventDefault();
+      send({ type: 'drag', id: card.id, turn });
+      send({ type: 'grab', id: card.id, on: false }); // segura o giro automático por um instante
+    });
     area.addEventListener('pointerup', release);
     area.addEventListener('pointercancel', release);
   }

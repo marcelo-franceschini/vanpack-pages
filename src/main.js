@@ -28,6 +28,26 @@ for (const el of document.querySelectorAll('[data-year]')) {
   el.textContent = String(new Date().getFullYear());
 }
 
+// Menu do celular e do tablet (<details>): fecha ao escolher uma seção, com Esc ou ao tocar fora.
+const menu = /** @type {HTMLDetailsElement | null} */ (document.querySelector('.menu'));
+if (menu) {
+  const close = () => {
+    menu.open = false;
+  };
+  menu.addEventListener('click', (e) => {
+    if (/** @type {Element} */ (e.target).closest('a')) close();
+  });
+  document.addEventListener('click', (e) => {
+    if (!menu.contains(/** @type {Node} */ (e.target))) close();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && menu.open) {
+      close();
+      menu.querySelector('summary')?.focus();
+    }
+  });
+}
+
 const storyEl = $('.story');
 const dock = $('#hdr .btn'); // "Pedir orçamento" do cabeçalho: pulsa quando o tour termina
 const fab = $('#fab'); // botão do WhatsApp fixo (a barra, até 768 px)

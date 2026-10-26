@@ -3,7 +3,7 @@
 // devolve um ImageBitmap por cartão à vista, a 30 quadros por segundo, e espera a página receber antes
 // de desenhar o seguinte. Com movimento reduzido desenha uma vez, parado. Sem DOM.
 //
-// página → worker: init, add, remove, resize, visible, pause, resume, reduced, ack, dispose, grab, drag
+// página → worker: init, add, remove, resize, visible, pause, resume, reduced, ack, dispose, grab, drag, nudge
 // (e, só no build de auditoria, audit-lose e audit-memory)
 // worker → página: ready, error, frame, lost, restored, stats, disposed
 import { createVitrine } from './cena.js';
@@ -11,13 +11,15 @@ import { createVitrine } from './cena.js';
 const FPS = 30;
 const TURN = (2 * Math.PI) / 20; // rad/s: uma volta em 20 s
 const POSE = 0; // de frente e de lado para a câmera (a pose parada do movimento reduzido)
+const NUDGE = 0.7; // rad a mais no giro da primeira vez à vista (o aviso de que a peça gira com o arrasto)
+const NUDGE_RATE = 1.4; // rad/s desse giro extra
 const HOLD = 1500; // ms que o giro automático espera depois de soltar o arrasto
 const PHASE = 0.5; // rad entre um cartão e o seguinte, para os cartões não girarem em uníssono
 const AUDIT = import.meta.env.MODE === 'audit';
 
 let canvas = null;
 let vitrine = null;
-/** @type {Map<number, { width: number, height: number, visible: boolean, angle: number, held: number }>} */
+/** @type {Map<number, { width: number, height: number, visible: boolean, angle: number, held: number, boost: number }>} */
 const cards = new Map();
 let reduced = false;
 let paused = false;
@@ -48,7 +50,8 @@ function frame(now) {
     wake();
     return;
   }
-  const step = last ? Math.min(0.1, (now - last) / 1000) * TURN : 0;
+  const dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
+  const step = dt * TURN;
   last = now;
   dirty = false;
   const frames = [];
@@ -57,6 +60,11 @@ function frame(now) {
     if (!card.visible) continue;
     // o giro automático segue só quando ninguém segura a peça (nem a soltou há pouco)
     if (!reduced && now > card.held) card.angle += step;
+    if (card.boost > 0) {
+      const extra = Math.min(card.boost, NUDGE_RATE * dt);
+      card.angle += extra;
+      card.boost -= extra;
+    }
     const yaw = POSE + card.angle + (reduced ? 0 : id * PHASE);
     if (!vitrine.render(id, card.width, card.height, yaw)) continue;
     frames.push({ id, bitmap: canvas.transferToImageBitmap() });
@@ -120,6 +128,7 @@ self.onmessage = ({ data: msg }) => {
         visible: msg.visible,
         angle: 0,
         held: 0,
+        boost: 0,
       });
       dirty = true;
       memory();
@@ -141,6 +150,9 @@ self.onmessage = ({ data: msg }) => {
     case 'grab':
       // segurada: sem giro automático até soltar e esperar HOLD
       if (card) card.held = msg.on ? Infinity : performance.now() + HOLD;
+      break;
+    case 'nudge':
+      if (card && !reduced) card.boost = NUDGE;
       break;
     case 'drag':
       if (card) card.angle += msg.turn;
