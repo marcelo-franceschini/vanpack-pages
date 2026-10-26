@@ -12,7 +12,7 @@ import { ROOT, baseContent, siteWith } from './dados.mjs';
 // Rótulos de interface: não são texto de negócio e ficam no código (a lista é o contrato; ver o README).
 const INTERFACE_TEXT = [
   'Pular para o conteúdo', // link de pular, só para teclado e leitor de tela
-  'ROLE ↓', // dica de rolagem da abertura
+  'Role para ver ↓', // dica de rolagem da abertura
   'Fechar', // botão da folha "O WhatsApp não abriu?"
 ];
 const INTERFACE_ATTRIBUTES = [

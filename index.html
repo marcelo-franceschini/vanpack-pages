@@ -81,6 +81,17 @@
       *::after {
         box-sizing: border-box;
       }
+      /* telas grandes: tudo está em rem, então a página cresce junto (o texto não fica miúdo no 2560) */
+      @media (min-width: 1800px) {
+        html {
+          font-size: 112.5%;
+        }
+      }
+      @media (min-width: 2400px) {
+        html {
+          font-size: 125%;
+        }
+      }
       html {
         -webkit-text-size-adjust: 100%;
         scroll-padding-top: var(--hdr-h);
@@ -358,8 +369,14 @@
         font-weight: 600;
         font-size: var(--t-small);
       }
-      .nav a:hover {
+      .nav a:hover,
+      .nav a[aria-current] {
         color: var(--floresta);
+      }
+      .nav a[aria-current] {
+        text-decoration: underline;
+        text-decoration-thickness: 0.15em;
+        text-underline-offset: 0.45em;
       }
       .hdr .btn {
         min-height: 2.75rem;
@@ -436,7 +453,6 @@
         bottom: max(1.5rem, env(safe-area-inset-bottom));
         transform: translateX(-50%);
         font: 700 var(--t-small) / 1 var(--font);
-        letter-spacing: 0.12em;
         color: var(--carvao-muted);
         transition: opacity 0.4s;
         z-index: 6;
@@ -502,6 +518,11 @@
       .card p {
         color: var(--carvao-muted);
         font-size: var(--t-lead);
+      }
+      @media (max-width: 768px) {
+        .actions.card-cta {
+          display: none; /* a barra do WhatsApp, fixa embaixo, já é o botão desse capítulo */
+        }
       }
       .actions {
         display: flex;
@@ -1767,6 +1788,15 @@
                 <div class="card">
                   <h2>{{historia.orcamento.titulo}}</h2>
                   <p>{{historia.orcamento.texto}}</p>
+                  <div class="actions card-cta">
+                    <a
+                      class="btn btn-primary"
+                      data-cta="historia-pedido"
+                      data-wa="{{whatsapp.mensagens.orcamento}}"
+                      ><svg aria-hidden="true"><use href="#i-wa" /></svg
+                      >{{whatsapp.botoes.cabecalho}}</a
+                    >
+                  </div>
                 </div>
               </div>
             </div>
@@ -1783,7 +1813,7 @@
               </div>
             </div>
           </div>
-          <div class="scrollcue" id="cue" aria-hidden="true">ROLE ↓</div>
+          <div class="scrollcue" id="cue" aria-hidden="true">Role para ver ↓</div>
         </div>
       </section>
 
