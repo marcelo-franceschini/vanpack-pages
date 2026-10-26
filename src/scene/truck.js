@@ -5,7 +5,8 @@ import { RAIL_Y } from './constants.js';
 import { Batch } from './geometry.js';
 
 const RAIL = RAIL_Y;
-const GAP = 0.005; // recuo das caixas internas para não haver faces coplanares de materiais diferentes
+const PROUD = 0.003; // a coluna da moldura avança 3 mm sobre a parede de dentro: esconde o começo dela, sem face rente
+const GAP = 0.01; // recuo das caixas internas para não haver faces coplanares de materiais diferentes
 
 /**
  * @param {Record<string, import('three').Material>} M materiais por cor
@@ -22,15 +23,16 @@ export function buildTruck(M, logoTexture, track) {
     b.box(M.white, -0.02, 3.02, 2.38, 2.44, -0.97, 0.97, 0.01);
     for (const s of [-1, 1]) {
       b.box(M.white, 0, 3.0, RAIL, 2.38, s > 0 ? 0.92 : -0.95, s > 0 ? 0.95 : -0.92, 0.01);
-      b.box(M.light2, 0, 3.0, RAIL, 2.38, s > 0 ? 0.9 : -0.92, s > 0 ? 0.92 : -0.9, 0.005);
+      // a parede de dentro começa onde a coluna da moldura termina (x = 0,05): por baixo da coluna ela brigava com a face dela
+      b.box(M.light2, 0.05, 3.0, RAIL, 2.38, s > 0 ? 0.9 : -0.92, s > 0 ? 0.92 : -0.9, 0.005);
       b.box(
         M.dark2,
         -0.03,
         0.05,
         RAIL,
         2.22,
-        s > 0 ? 0.9 + GAP : -0.97,
-        s > 0 ? 0.97 : -0.9 - GAP,
+        s > 0 ? 0.9 - PROUD : -0.97,
+        s > 0 ? 0.97 : -0.9 + PROUD,
         0.01,
       );
       b.box(M.white, 3.2, 3.85, 1.52, 2.02, s > 0 ? 0.895 : -0.9, s > 0 ? 0.9 : -0.895, 0.004);
@@ -74,8 +76,8 @@ export function buildTruck(M, logoTexture, track) {
       }
     }
     // porta de enrolar: encolhe em y a partir do topo
-    doorPivot.position.set(0.035, 2.3, 0);
-    const doorGeometry = new BoxGeometry(0.03, 2.3 - RAIL, 1.8);
+    doorPivot.position.set(0.033, 2.3, 0); // 2 mm recuada: a face de dentro não fica rente à da moldura
+    const doorGeometry = new BoxGeometry(0.03, 2.3 - RAIL, 1.82);
     doorGeometry.translate(0, -(2.3 - RAIL) / 2, 0);
     doorPivot.add(new Mesh(track(doorGeometry), M.light));
     truck.add(doorPivot);

@@ -6,9 +6,12 @@ import { lerp, smooth, within } from './math.js';
 
 const FOV_LANDSCAPE = 22;
 const FOV_PORTRAIT = 27;
+const NEAR = 2.5;
 
 export function createCameraRig() {
-  const camera = new PerspectiveCamera(FOV_LANDSCAPE, 1, 0.5, 140);
+  // A câmera nunca chega a menos de ~7,7 m do alvo: near 2,5 dá ao buffer de profundidade (mesmo com 16 bits)
+  // 5× mais precisão que 0,5 e acaba com o pisca das peças a poucos mm uma da outra (cinta e pilha, baú).
+  const camera = new PerspectiveCamera(FOV_LANDSCAPE, 1, NEAR, 140);
   const direction = new Vector3(...CAMERA_DIRECTION).normalize();
   const target = new Vector3();
   let reach = 0;

@@ -25,6 +25,7 @@ const GLUE_NOZZLE_X = -0.73; // bocal de cola, em x
 const FOLD_RISE = 0.006;
 const TURNTABLE_CLEARANCE = 0.006;
 const LIFT = TURNTABLE_TOP - RAIL_Y - FOLD_RISE + TURNTABLE_CLEARANCE;
+const STACK_CLEARANCE = 0.006; // a caixa assenta 6 mm acima do topo da pilha: a camada de baixo não fica rente a ele
 const HOP_HEIGHT = 0.38; // altura do salto da mesa para o palete
 const DRIVE_DISTANCE = 9.5; // metros percorridos pelo caminhão na estrada
 const TRUCK_PIVOT = 2.1; // distância da traseira ao centro do eixo, em x
@@ -76,7 +77,11 @@ export function createTimeline({
     const palletX = lerp(PALLET_X, PALLET_END_X, ramp(p, PHASE.slide));
     const x = lerp(sheetX, palletX, hop);
     const y =
-      lerp(RAIL_Y + FOLD_RISE * fold + LIFT * ramp(p, PHASE.lift), RAIL_Y + STACK_TOP, hop) +
+      lerp(
+        RAIL_Y + FOLD_RISE * fold + LIFT * ramp(p, PHASE.lift),
+        RAIL_Y + STACK_TOP + STACK_CLEARANCE,
+        hop,
+      ) +
       HOP_HEIGHT * Math.sin(Math.PI * hop);
     const yaw =
       2 * Math.PI * ramp(p, PHASE.turn) -
