@@ -511,6 +511,15 @@
         font-size: var(--t-display);
         margin-bottom: 1rem;
       }
+      /* o capítulo dos anos de mercado: o número (calculado, data-since) é o elemento grande do cartão */
+      .card h2 [data-since] {
+        display: block;
+        margin-bottom: 0.25rem;
+        color: var(--floresta);
+        font-size: clamp(4.5rem, 9vw, 8rem);
+        letter-spacing: -0.05em;
+        line-height: 0.9;
+      }
       .card h2 {
         font-size: var(--t-title);
         margin-bottom: 0.875rem;
@@ -576,6 +585,10 @@
         .card h2 {
           font-size: 1.75rem;
           margin-bottom: 0.5rem;
+        }
+        .card h2 [data-since] {
+          font-size: 3.5rem;
+          margin-bottom: 0;
         }
         .card p {
           font-size: 1rem;
