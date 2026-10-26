@@ -251,7 +251,7 @@ function divisorias(track) {
   pieces.plate(rect(-Sf / 2, -Sf / 2, Sf / 2, Sf / 2), T, at(0, T / 2, 0, FLAT), oi);
   const wallRise = HT - T / 2 - R;
   const reachSide = S / 2 - T - 0.0005; // os lados terminam rente à frente e ao fundo
-  for (const [origin, heading, range] of /** @type {[Vector3, Vector3, number[]][]} */ ([
+  for (const [origin, heading, range] of /** @type {[Vector3, Vector3, [number, number]][]} */ ([
     [V(0, T / 2, Sf / 2), V(0, 0, 1), [-S / 2, S / 2]],
     [V(0, T / 2, -Sf / 2), V(0, 0, -1), [-S / 2, S / 2]],
     [V(Sf / 2, T / 2, 0), V(1, 0, 0), [-reachSide, reachSide]],

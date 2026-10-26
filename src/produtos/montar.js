@@ -10,6 +10,7 @@ const REDUCED = '(prefers-reduced-motion: reduce)';
 // 1,5 também no desktop: na grade 2×2 até 4 cartões ficam à vista, e a 2× eles desenhariam 3,6× mais
 // pixels por quadro que os 3 de antes (medido no WebGL por software: 18 contra 5 quadros por segundo)
 const MAX_DENSITY = { desktop: 1.5, mobile: 1.5 };
+const MAX_PIXELS = 700_000; // pixels desenhados por cartão: o 3D grande não pesa mais que os pequenos
 const NEAR = '300px 0px';
 const DRAG_RAD = 0.012; // rad girados por pixel arrastado
 const KEY_RAD = 0.2; // rad girados por toque numa seta do teclado
@@ -70,8 +71,13 @@ export function montarProdutos(areas) {
   const send = (msg) => worker?.postMessage(msg);
 
   function measure(card, rect = card.area.getBoundingClientRect()) {
-    card.width = Math.max(1, Math.round(rect.width * density));
-    card.height = Math.max(1, Math.round(rect.height * density));
+    // o cartão em destaque é grande: acima de MAX_PIXELS o 3D é desenhado menor e o canvas estica
+    const shrink = Math.min(
+      1,
+      Math.sqrt(MAX_PIXELS / (rect.width * density * rect.height * density || 1)),
+    );
+    card.width = Math.max(1, Math.round(rect.width * density * shrink));
+    card.height = Math.max(1, Math.round(rect.height * density * shrink));
     if (card.canvas) {
       card.canvas.width = card.width;
       card.canvas.height = card.height;

@@ -247,7 +247,7 @@ describe('seção de produtos', () => {
   for (const screen of SCREENS.filter((s) =>
     ['1440×900', '390×844 (celular em pé)'].includes(s.name),
   )) {
-    test(`${screen.name}: ${screen.mobile ? '1 coluna' : '2 colunas (2×2)'}, área 4:3 no topo antes e depois do 3D, nada sobreposto`, async () => {
+    test(`${screen.name}: ${screen.mobile ? '1 coluna' : '1 em destaque + 3'}, área 4:3 no topo antes e depois do 3D, nada sobreposto`, async () => {
       const { page, context } = await openPage(browser, server.url, {
         viewport: { width: screen.width, height: screen.height },
         reducedMotion: 'reduce',
@@ -261,21 +261,33 @@ describe('seção de produtos', () => {
           assert.ok(before[i].card.top >= before[i - 1].card.bottom, 'um embaixo do outro');
         }
       } else {
-        // 2×2: o 1º e o 2º na mesma linha, o 3º e o 4º na de baixo, cada coluna com o mesmo recuo
+        // o 1º ocupa a linha toda (3D ao lado do texto); o 2º, o 3º e o 4º dividem a linha de baixo
+        assert.ok(
+          before[0].card.right - before[0].card.left > 0.9 * (screen.width - 2 * 40),
+          'o 1º ocupa a linha',
+        );
+        assert.ok(before[1].card.top >= before[0].card.bottom, 'a 2ª linha vem embaixo da 1ª');
         for (const [a, b] of [
-          [0, 1],
+          [1, 2],
           [2, 3],
         ]) {
           assert.ok(Math.abs(before[b].card.top - before[a].card.top) < 1, 'mesma linha');
           assert.ok(before[b].card.left >= before[a].card.right, 'lado a lado');
         }
-        assert.ok(before[2].card.top >= before[0].card.bottom, 'a 2ª linha vem embaixo da 1ª');
-        assert.ok(Math.abs(before[2].card.left - before[0].card.left) < 1, 'mesma coluna');
+        assert.ok(Math.abs(before[1].card.left - before[0].card.left) < 1, 'mesma coluna');
       }
-      for (const { card, area, title, text, button } of before) {
+      for (const [i, { card, area, title, text, button }] of before.entries()) {
         const ratio = (area.bottom - area.top) / (area.right - area.left);
         assert.ok(Math.abs(ratio - 0.75) < 0.01, `área 4:3 (${ratio.toFixed(3)})`);
-        assert.ok(area.top >= card.top && area.bottom <= title.top, 'a área vem antes do título');
+        if (i === 0 && !screen.mobile) {
+          // o produto em destaque: a área à esquerda e o texto à direita dela
+          assert.ok(
+            area.right <= title.left && area.top >= card.top,
+            'a área fica ao lado do título',
+          );
+        } else {
+          assert.ok(area.top >= card.top && area.bottom <= title.top, 'a área vem antes do título');
+        }
         assert.ok(title.bottom <= text.top + 0.5 && text.bottom <= button.top + 0.5, 'em ordem');
         assert.ok(button.bottom - button.top >= 44 - 0.5, 'botão com 44 px');
         assert.ok(card.right <= screen.width + 0.5 && card.left >= -0.5, 'dentro da tela');

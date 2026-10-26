@@ -511,8 +511,8 @@
         font-size: var(--t-display);
         margin-bottom: 1rem;
       }
-      /* o capítulo dos anos de mercado: o número (calculado, data-since) é o elemento grande do cartão */
-      .card h2 [data-since] {
+      /* o capítulo dos anos de mercado: o número, calculado pelo navegador, é o elemento grande do cartão */
+      .card h2 .anos {
         display: block;
         margin-bottom: 0.25rem;
         color: var(--floresta);
@@ -586,7 +586,7 @@
           font-size: 1.75rem;
           margin-bottom: 0.5rem;
         }
-        .card h2 [data-since] {
+        .card h2 .anos {
           font-size: 3.5rem;
           margin-bottom: 0;
         }
@@ -888,8 +888,12 @@
       .model .btn {
         align-self: flex-start;
         margin-top: 1.25rem;
+        max-width: 100%;
         background: var(--floresta);
         color: var(--papel);
+        line-height: 1.2;
+        padding-block: 0.5rem;
+        white-space: normal; /* um rótulo longo quebra em vez de vazar do cartão */
       }
       .model .btn:hover {
         background: var(--floresta-dark);

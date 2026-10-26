@@ -229,7 +229,7 @@ export function createSiteConfig({
     ano_fundacao: foundedYear,
     // os números que o navegador recalcula (src/main.js lê data-since e data-year)
     anos: site.yearsInBusiness
-      ? `<span data-since="${foundedYear}">${site.yearsInBusiness}</span>`
+      ? `<span class="anos" data-since="${foundedYear}">${site.yearsInBusiness}</span>`
       : '',
     ano: `<span data-year>${site.year}</span>`,
     ano_atual: site.year, // o mesmo ano em texto puro, para a página sem script (política de privacidade)

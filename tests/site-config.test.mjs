@@ -73,7 +73,7 @@ describe('createSiteConfig', () => {
     assert.equal(site.year, '2031');
     assert.equal(
       site.vars.anos,
-      '<span data-since="2010">21</span>',
+      '<span class="anos" data-since="2010">21</span>',
       'o número que o navegador recalcula',
     );
     assert.equal(site.vars.ano, '<span data-year>2031</span>');
@@ -418,7 +418,7 @@ describe('render', () => {
     assert.ok(out.includes('Experiência em caixas de papelão'));
     const comAno = renderPage(html, demo);
     assert.ok(comAno.includes('Desde 2010'));
-    assert.match(comAno, /<span data-since="2010">\d+<\/span> anos de\s+mercado/);
+    assert.match(comAno, /<span class="anos" data-since="2010">\d+<\/span> anos de\s+mercado/);
     assert.ok(!comAno.includes('Experiência em caixas de papelão'));
   });
 

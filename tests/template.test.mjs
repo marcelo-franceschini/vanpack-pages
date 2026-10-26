@@ -17,6 +17,7 @@ const INTERFACE_TEXT = [
 ];
 const INTERFACE_ATTRIBUTES = [
   'Principal', // aria-label dos menus e das regiões
+  'Menu', // o botão e a lista do menu do celular e do tablet
   'Rodapé',
   'Como pedir',
   'Logos de clientes',
