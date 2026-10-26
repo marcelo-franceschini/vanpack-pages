@@ -659,8 +659,8 @@
         text-wrap: balance;
       }
       .pillar p {
-        font-size: var(--t-body);
-        line-height: 1.55;
+        font-size: var(--t-lead);
+        line-height: 1.5;
         color: var(--carvao);
       }
       /* sem ícone ou sem texto, o título ocupa o que sobra da linha */
@@ -668,10 +668,43 @@
         grid-column: 1 / 3;
       }
       /* o que fabricamos: os modelos */
+      /* o primeiro produto domina (3D grande de um lado, texto do outro); os demais dividem a fileira de baixo */
       .models {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(6, minmax(0, 1fr));
         gap: 1.25rem;
+      }
+      .model {
+        grid-column: span 2;
+      }
+      .model:first-child {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+        grid-template-rows: 1fr auto auto auto 1fr;
+        column-gap: clamp(1.5rem, 4vw, 4rem);
+        align-items: start;
+      }
+      .model:first-child .model-3d {
+        grid-row: 1 / -1;
+        margin-bottom: 0;
+      }
+      .model:first-child h3 {
+        grid-column: 2;
+        grid-row: 2;
+        font-size: var(--t-title);
+      }
+      .model:first-child p {
+        grid-column: 2;
+        grid-row: 3;
+        flex: none;
+        font-size: var(--t-lead);
+      }
+      .model:first-child .btn {
+        grid-column: 2;
+        grid-row: 4;
+        justify-self: start;
+        margin-top: 1.5rem;
       }
       .model {
         display: flex;
@@ -702,6 +735,16 @@
       .model-3d.pronto::before,
       .model-3d:has(img)::before {
         opacity: 0;
+      }
+      /* o 3D gira com o arrasto horizontal; a rolagem vertical continua passando pelo cartão */
+      .model-3d {
+        cursor: grab;
+        touch-action: pan-y;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+      .model-3d.arrastando {
+        cursor: grabbing;
       }
       .model-3d canvas,
       .model-3d img {
@@ -744,22 +787,16 @@
         line-height: 1.55;
         color: var(--carvao);
       }
+      /* o botão de cada produto é o mesmo botão verde da página */
       .model .btn {
         align-self: flex-start;
-        min-height: 2.75rem;
-        margin-top: 0.75rem;
-        padding: 0.5rem 0;
-        background: none;
-        color: var(--floresta);
-        font-size: 1rem;
-        line-height: 1.2;
-        text-decoration: underline;
-        text-underline-offset: 0.2em;
-        white-space: normal;
+        margin-top: 1.25rem;
+        background: var(--floresta);
+        color: var(--papel);
       }
       .model .btn:hover {
-        background: none;
-        color: var(--floresta-dark);
+        background: var(--floresta-dark);
+        color: var(--papel);
       }
 
       /* clientes: só prova autorizada (ou exemplo, em demo), num carrossel (src/carrossel.js) em
@@ -877,6 +914,27 @@
       @media (max-width: 860px) {
         .models {
           grid-template-columns: minmax(0, 1fr);
+        }
+        .model,
+        .model:first-child {
+          grid-column: auto;
+        }
+        .model:first-child {
+          display: flex;
+          align-items: stretch;
+        }
+        .model:first-child .model-3d {
+          margin-bottom: 1.5rem;
+        }
+        .model:first-child h3 {
+          font-size: var(--t-item);
+        }
+        .model:first-child p {
+          flex: 1;
+          font-size: var(--t-body);
+        }
+        .model:first-child .btn {
+          margin-top: 1.25rem;
         }
         .pillar {
           grid-template-columns: minmax(0, 1fr);

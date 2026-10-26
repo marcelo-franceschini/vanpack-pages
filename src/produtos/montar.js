@@ -11,6 +11,7 @@ const REDUCED = '(prefers-reduced-motion: reduce)';
 // pixels por quadro que os 3 de antes (medido no WebGL por software: 18 contra 5 quadros por segundo)
 const MAX_DENSITY = { desktop: 1.5, mobile: 1.5 };
 const NEAR = '300px 0px';
+const DRAG_RAD = 0.012; // rad girados por pixel arrastado
 const DISPOSE_WAIT_MS = 2000; // tempo para o worker liberar a GPU antes de ser encerrado
 
 /** Por que este aparelho fica com a ilustração (ou '' se o 3D pode rodar). */
@@ -180,6 +181,31 @@ export function montarProdutos(areas) {
       }
     }
   });
+  // arrastar na horizontal gira a peça (o worker segura o giro automático durante o arrasto)
+  for (const card of cards) {
+    let from = null;
+    const area = card.area;
+    area.addEventListener('pointerdown', (e) => {
+      if (!card.near || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      from = e.clientX;
+      area.setPointerCapture(e.pointerId);
+      area.classList.add('arrastando');
+      send({ type: 'grab', id: card.id, on: true });
+    });
+    area.addEventListener('pointermove', (e) => {
+      if (from === null) return;
+      send({ type: 'drag', id: card.id, turn: (e.clientX - from) * DRAG_RAD });
+      from = e.clientX;
+    });
+    const release = () => {
+      if (from === null) return;
+      from = null;
+      area.classList.remove('arrastando');
+      send({ type: 'grab', id: card.id, on: false });
+    };
+    area.addEventListener('pointerup', release);
+    area.addEventListener('pointercancel', release);
+  }
   for (const card of cards) {
     near.observe(card.area);
     seen.observe(card.area);
