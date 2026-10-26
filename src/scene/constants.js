@@ -33,6 +33,7 @@ export const LAYER = 0.013; // espessura de uma camada dobrada
 export const SHEET_Y = 0.85; // plano da chapa
 export const RAIL_Y = SHEET_Y - LAYER; // topo dos trilhos e piso do baú
 export const TURNTABLE_X = 2.65; // mesa giratória
+export const TURNTABLE_TOP = RAIL_Y + 0.018; // topo do disco da mesa
 export const PALLET_X = 3.75; // palete
 export const PALLET_H = 0.12;
 const FLATS = 14; // caixas dobradas empilhadas no palete
@@ -79,7 +80,7 @@ export const MACHINE_A = {
 export const PHASE = {
   heroFromX: -3.8, // a chapa sai da máquina de impressão e corte: entra a peça "herói"
   fold: { fromX: -0.55, toX: 0.3 }, // dobra enquanto passa pela máquina de cola (em x)
-  lift: [0.61, 0.63], // sobe 15 mm ao chegar à mesa giratória
+  lift: [0.57, 0.595], // sobe acima do disco antes de a ponta da chapa alcançá-lo (x≈2,0)
   open: [0.64, 0.73],
   close: [0.765, 0.81],
   turn: [0.665, 0.745], // uma volta na mesa

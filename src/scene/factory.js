@@ -2,7 +2,7 @@
 // recolhimento das aparas, máquina de dobra e cola (B), esteira de trilhos e mesa giratória. Tudo
 // é mesclado por material (um draw call por material); só os marcadores giratórios da máquina A
 // ficam em malhas à parte (machine.js).
-import { RAIL_Y, TURNTABLE_X } from './constants.js';
+import { RAIL_Y, TURNTABLE_TOP, TURNTABLE_X } from './constants.js';
 import { Batch } from './geometry.js';
 import { buildMachineA } from './machine.js';
 
@@ -69,7 +69,7 @@ export function buildFactory(parent, M) {
   st.cyl(M.dark2, 1.12, 0.925, 0, 0.07, 1.0);
   st.cyl(M.dark2, 1.12, 0.757, 0, 0.07, 0.6);
   // mesa giratória
-  st.cyl(M.dark2, XT, RAIL + 0.008, 0, 0.64, 0.02, 'y', 40);
+  st.cyl(M.dark2, XT, TURNTABLE_TOP - 0.01, 0, 0.64, 0.02, 'y', 40);
   st.build(parent);
   return machine;
 }
