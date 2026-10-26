@@ -41,7 +41,7 @@ const JS = {
   worker: 11.6, // a cena da história, no Web Worker (o three.js vem do arquivo three)
   three: 111.9, // o three.js, num arquivo só para os dois workers e o render de reserva
   controller: 11.6, // o mesmo render da história, só se o worker falhar (thread principal)
-  'produtos-worker': 6.5, // a vitrine dos produtos, baixada perto da seção
+  'produtos-worker': 7.5, // a vitrine dos produtos, baixada perto da seção (7,3 com as dobras de papelão e o papel granulado, aprovado pelo dono em 2026-10-26)
   montar: 1.7, // montagem do 3D dos produtos
   'web-vitals': 3.1,
   wizard: 2.2, // assistente do experimento (só na variante B)
@@ -59,7 +59,7 @@ const SVG_TOTAL = 13.7; // todos os SVGs de brand/ e produtos/ (13,5 + o SVG da 
 const TOTAL = {
   jsInicial: 130.8, // script da página + worker da história + three.js
   carga: 170.2, // HTML + JS inicial + fonte + os 2 logos do topo e da cena
-  visita: 179.0, // a carga + o 3D dos produtos + o logo do CTA final
+  visita: 181.0, // a carga + o 3D dos produtos + o logo do CTA final
 };
 
 const built = existsSync(`${DIST}index.html`);
