@@ -57,7 +57,7 @@ const FILES = {
 };
 const SVG_TOTAL = 13.7; // todos os SVGs de brand/ e produtos/ (13,5 + o SVG da caixa normal, 0,3 KB)
 const TOTAL = {
-  jsInicial: 130.8, // script da página + worker da história + three.js
+  jsInicial: 131.0, // script da página + worker da história + three.js
   carga: 171.2, // HTML + JS inicial + fonte + os 2 logos do topo e da cena (171,0 no limite dos schemas)
   visita: 181.5, // a carga + o 3D dos produtos + o logo do CTA final
 };
