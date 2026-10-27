@@ -143,12 +143,17 @@ describe('densidade do 3D', () => {
       viewport: { width: 1440, height: 900 },
       deviceScaleFactor: 2,
     });
-    await showProducts(page, 1);
-    const ratio = await page.evaluate(() => {
-      const canvas = document.querySelector('.model-3d canvas');
-      return canvas.width / canvas.getBoundingClientRect().width;
-    });
-    assert.ok(ratio > 1.4 && ratio <= 1.51, `densidade ${ratio.toFixed(2)}`);
+    await showProducts(page, 2);
+    // o 2º cartão é pequeno: densidade cheia. O 1º, em destaque, é grande e passa do teto de pixels
+    // (700 mil por cartão): é desenhado menor e o canvas estica, nunca acima de 1,5
+    const ratios = await page.evaluate(() =>
+      [0, 1].map((i) => {
+        const canvas = document.querySelectorAll('.model-3d canvas')[i];
+        return canvas.width / canvas.getBoundingClientRect().width;
+      }),
+    );
+    assert.ok(ratios[1] > 1.4 && ratios[1] <= 1.51, `densidade do 2º ${ratios[1].toFixed(2)}`);
+    assert.ok(ratios[0] > 1 && ratios[0] <= 1.51, `densidade do 1º ${ratios[0].toFixed(2)}`);
     await context.close();
   });
 });
@@ -213,8 +218,10 @@ describe('3D nos cartões', () => {
     await showProducts(page);
     const frames = () => page.evaluate(() => window.__audit.produtos.frames);
     const start = await frames();
-    await page.waitForTimeout(1000);
-    assert.ok((await frames()) > start, 'à vista: desenha');
+    // à vista, os quadros seguem chegando (com WebGL por software um quadro pode levar mais de 1 s)
+    await page.waitForFunction((n) => window.__audit.produtos.frames > n, start, {
+      timeout: 15_000,
+    });
     // longe: nada perto, o worker é encerrado e os quadros param
     await page.evaluate(() => scrollTo(0, 0));
     await awayFromProducts(page);
@@ -416,10 +423,13 @@ describe('contextos WebGL e memória', () => {
         `volta ${round + 1}: o modelo longe sai (perto: ${JSON.stringify(seen.at(-1))}, longe: ${JSON.stringify(away)})`,
       );
     }
-    for (const m of seen) {
+    // a 1ª volta aquece: os vizinhos do cartão só sobem à GPU quando passam pela tela (nas voltas
+    // seguintes já passaram). O que não pode é crescer depois disso.
+    assert.ok(seen[0].geometries <= seen[1].geometries, JSON.stringify(seen));
+    for (const m of seen.slice(1)) {
       assert.deepEqual(
         [m.models, m.geometries, m.textures],
-        [seen[0].models, seen[0].geometries, seen[0].textures],
+        [seen[1].models, seen[1].geometries, seen[1].textures],
         JSON.stringify(seen),
       );
     }

@@ -10,7 +10,10 @@ const REDUCED = '(prefers-reduced-motion: reduce)';
 // 1,5 também no desktop: na grade 2×2 até 4 cartões ficam à vista, e a 2× eles desenhariam 3,6× mais
 // pixels por quadro que os 3 de antes (medido no WebGL por software: 18 contra 5 quadros por segundo)
 const MAX_DENSITY = { desktop: 1.5, mobile: 1.5 };
+const MAX_PIXELS = 700_000; // pixels desenhados por cartão: o 3D grande não pesa mais que os pequenos
 const NEAR = '300px 0px';
+const DRAG_RAD = 0.012; // rad girados por pixel arrastado
+const KEY_RAD = 0.2; // rad girados por toque numa seta do teclado
 const DISPOSE_WAIT_MS = 2000; // tempo para o worker liberar a GPU antes de ser encerrado
 
 /** Por que este aparelho fica com a ilustração (ou '' se o 3D pode rodar). */
@@ -54,6 +57,7 @@ export function montarProdutos(areas) {
     ctx: null,
     near: false,
     visible: false,
+    nudged: false,
     width: 0,
     height: 0,
   }));
@@ -67,8 +71,13 @@ export function montarProdutos(areas) {
   const send = (msg) => worker?.postMessage(msg);
 
   function measure(card, rect = card.area.getBoundingClientRect()) {
-    card.width = Math.max(1, Math.round(rect.width * density));
-    card.height = Math.max(1, Math.round(rect.height * density));
+    // o cartão em destaque é grande: acima de MAX_PIXELS o 3D é desenhado menor e o canvas estica
+    const shrink = Math.min(
+      1,
+      Math.sqrt(MAX_PIXELS / (rect.width * density * rect.height * density || 1)),
+    );
+    card.width = Math.max(1, Math.round(rect.width * density * shrink));
+    card.height = Math.max(1, Math.round(rect.height * density * shrink));
     if (card.canvas) {
       card.canvas.width = card.width;
       card.canvas.height = card.height;
@@ -84,7 +93,12 @@ export function montarProdutos(areas) {
     near.disconnect();
     seen.disconnect();
     sizes.disconnect();
-    cards.forEach((card) => ilustrar(card.area));
+    cards.forEach((card) => {
+      card.area.removeAttribute('tabindex');
+      card.area.removeAttribute('role');
+      card.area.removeAttribute('aria-label');
+      ilustrar(card.area);
+    });
   }
 
   function onMessage(from, msg) {
@@ -168,6 +182,11 @@ export function montarProdutos(areas) {
       const card = byArea.get(target);
       card.visible = isIntersecting;
       if (card.near) send({ type: 'visible', id: card.id, on: isIntersecting });
+      // a primeira vez à vista, um giro um pouco mais rápido avisa que a peça responde ao arrasto
+      if (isIntersecting && card.near && !card.nudged && !reducedQuery.matches) {
+        card.nudged = true;
+        send({ type: 'nudge', id: card.id });
+      }
     }
   });
   const sizes = new ResizeObserver((entries) => {
@@ -180,6 +199,42 @@ export function montarProdutos(areas) {
       }
     }
   });
+  // arrastar na horizontal gira a peça (o worker segura o giro automático durante o arrasto)
+  for (const card of cards) {
+    let from = null;
+    const area = card.area;
+    area.addEventListener('pointerdown', (e) => {
+      if (!card.near || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      from = e.clientX;
+      area.setPointerCapture(e.pointerId);
+      area.classList.add('arrastando');
+      send({ type: 'grab', id: card.id, on: true });
+    });
+    area.addEventListener('pointermove', (e) => {
+      if (from === null) return;
+      send({ type: 'drag', id: card.id, turn: (e.clientX - from) * DRAG_RAD });
+      from = e.clientX;
+    });
+    const release = () => {
+      if (from === null) return;
+      from = null;
+      area.classList.remove('arrastando');
+      send({ type: 'grab', id: card.id, on: false });
+    };
+    // teclado: setas giram a peça em foco (o mesmo arrasto, em passos)
+    area.tabIndex = 0;
+    area.setAttribute('role', 'group');
+    area.setAttribute('aria-label', `${label(card)}. Use as setas do teclado para girar.`);
+    area.addEventListener('keydown', (e) => {
+      const turn = { ArrowLeft: -KEY_RAD, ArrowRight: KEY_RAD }[e.key];
+      if (!turn || !card.near) return;
+      e.preventDefault();
+      send({ type: 'drag', id: card.id, turn });
+      send({ type: 'grab', id: card.id, on: false }); // segura o giro automático por um instante
+    });
+    area.addEventListener('pointerup', release);
+    area.addEventListener('pointercancel', release);
+  }
   for (const card of cards) {
     near.observe(card.area);
     seen.observe(card.area);

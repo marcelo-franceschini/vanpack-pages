@@ -8,9 +8,11 @@ import { DoubleSide, Group, Matrix4, MeshLambertMaterial, PlaneGeometry, Vector3
 import { KRAFT, KRAFT_INNER } from '../scene/constants.js';
 import { bodyTexture, edgeTexture, flapTexture } from '../scene/textures.js';
 import { suaMarcaTexture } from './marca.js';
+import { papelTexture } from './papel.js';
 import { Pieces, rect } from './papelao.js';
 
 const BRAND_ASPECT = 4; // a marca ocupa 1600 × 400 na textura (src/produtos/marca.js)
+const PAPELAO_T = 0.006; // espessura do papelão (exagerada, para a onda da borda aparecer na tela)
 const PRINT_GAP = 0.0015; // a impressão fica rente à face, sem brigar com ela no depth buffer
 
 /** Matriz: translada para (x, y, z) e gira `ry` em torno de y e depois `rx` em torno de x. */
@@ -25,21 +27,30 @@ const FLAT = -Math.PI / 2; // rx que deita uma placa: o contorno (x, y) vira (x,
  * Materiais e texturas de um modelo (cada modelo tem os seus: liberar um não afeta os outros). A aba e
  * a marca só existem nos modelos que as usam.
  */
-function kit(track, { aba = false, marca = false } = {}) {
+function kit(track, { aba = false, marca = false, papel = true } = {}) {
   const lambert = (options) => track(new MeshLambertMaterial(options));
   const kraft = (map) => (map ? { map } : { color: KRAFT });
-  const body = track(bodyTexture(false));
   const edge = track(edgeTexture());
-  const textures = [body, edge];
-  const materials = {
-    externa: lambert(kraft(body)),
-    interna: lambert({ color: KRAFT_INNER }),
-    borda: lambert({ map: edge }),
-  };
-  if (aba) {
-    const flap = track(flapTexture());
-    textures.push(flap);
-    materials.aba = lambert(kraft(flap));
+  const textures = [edge];
+  const materials = { borda: lambert({ map: edge }) };
+  if (papel) {
+    // faces com granulado e fibras de papel, no lugar do corpo da cena (que tem faixas de vinco nas pontas)
+    const outer = track(papelTexture(KRAFT));
+    const inner = track(papelTexture(KRAFT_INNER));
+    textures.push(outer, inner);
+    materials.externa = lambert(kraft(outer));
+    materials.interna = lambert(inner ? { map: inner } : { color: KRAFT_INNER });
+    if (aba) materials.aba = materials.externa; // a aba é a mesma folha: mesma face de fora
+  } else {
+    const body = track(bodyTexture(false));
+    textures.push(body);
+    materials.externa = lambert(kraft(body));
+    materials.interna = lambert({ color: KRAFT_INNER });
+    if (aba) {
+      const flap = track(flapTexture());
+      textures.push(flap);
+      materials.aba = lambert(kraft(flap));
+    }
   }
   const brand = marca ? track(suaMarcaTexture()) : null;
   if (brand) {
@@ -68,10 +79,20 @@ function finish(track, pieces, materials, model) {
   return { group, ...model };
 }
 
+/** Matriz de uma folha: origem, direção do trecho (+y local) e a normal da face externa (+z local). */
+const frame = (origin, heading, normal) =>
+  new Matrix4()
+    .makeBasis(new Vector3().crossVectors(heading, normal), heading, normal)
+    .setPosition(origin);
+const V = (x, y, z) => new Vector3(x, y, z);
+const BEND = 0.55; // raio da dobra, em espessuras: a face de dentro quase não tem folga
+
 /**
- * Corte e vinco: caixa tipo maleta, baixa, com a tampa articulada aberta. Paredes da frente e dos
- * lados duplas (a borda mostra as duas camadas), meia-lua de dedo na frente, rasgos de trava no fundo,
- * tampa com orelhas laterais chanfradas e aba frontal com duas linguetas. Marca na frente e na tampa.
+ * Corte e vinco: caixa tipo maleta, baixa, com a tampa articulada aberta. Fundo, frente, lados e tampa
+ * são a mesma folha de papelão dobrada: as paredes da frente e dos lados sobem do fundo e voltam para dentro
+ * numa dobra por cima (paredes duplas, a dobra mostra o vinco), a tampa sai da parede de trás, e a
+ * aba frontal (com duas linguetas) e as orelhas laterais (chanfradas) saem da tampa, cada uma por uma dobra.
+ * Rasgos de trava no fundo. Marca na frente e na tampa.
  */
 function corteEVinco(track) {
   const { textures, materials } = kit(track, { aba: true, marca: true });
@@ -79,93 +100,102 @@ function corteEVinco(track) {
   const L = 0.42; // largura (x)
   const W = 0.3; // profundidade (z)
   const H = 0.1; // altura
-  const T = 0.008;
+  const T = PAPELAO_T;
+  const R = BEND * T;
   const OPEN = (100 * Math.PI) / 180; // tampa aberta, um pouco além do vertical
-  const NOTCH = 0.02;
-  const io = { a: 'externa', b: 'interna' };
+  const Lf = L - 2 * R - T; // o fundo termina onde as dobras começam
+  const Wf = W - 2 * R - T;
+  const floorY = T / 2;
+  const doubled = 2 * R + T; // a parede dupla, de fora até a face de dentro
   const oi = { a: 'interna', b: 'externa' };
+  const up = H - T - 2 * R; // trecho reto da parede até a dobra de cima
+  const down = up - 0.8 * T; // a camada de dentro volta quase até o fundo
 
   // fundo, com os dois rasgos de trava da parede da frente
   const slots = [-L / 4, L / 4].map((x) =>
     rect(x - 0.03, -W / 2 + 2.2 * T, x + 0.03, -W / 2 + 3.2 * T),
   );
-  pieces.plate(rect(-L / 2, -W / 2, L / 2, W / 2), T, at(0, T / 2, 0, FLAT), {
+  pieces.plate(rect(-Lf / 2, -Wf / 2, Lf / 2, Wf / 2), T, at(0, floorY, 0, FLAT), {
     ...oi,
     holes: slots,
   });
 
-  // frente dupla com a meia-lua de dedo
-  const front = (h) => {
-    const arc = [];
-    for (let i = 0; i <= 8; i++) {
-      const a = (Math.PI * i) / 8;
-      arc.push([NOTCH * Math.cos(a), h - NOTCH * Math.sin(a)]);
-    }
-    return [[-L / 2 + T, 0], [L / 2 - T, 0], [L / 2 - T, h], ...arc, [-L / 2 + T, h]];
-  };
-  pieces.plate(front(H), T, at(0, 0, W / 2 - T / 2), io);
-  pieces.plate(front(H - T), T, at(0, T, W / 2 - 1.5 * T), io);
+  // frente: sobe, dobra para dentro e desce
+  pieces.sheet(frame(V(0, floorY, Wf / 2), V(0, 0, 1), V(0, -1, 0)), [-L / 2, L / 2], T, R, [
+    { bend: Math.PI / 2 },
+    up,
+    { bend: Math.PI },
+    down,
+  ]);
   brandMark(pieces, materials, 0.17, at(0, 0.04, W / 2 + PRINT_GAP));
 
-  // fundo e lados: o lado é duplo (a camada de dentro vem dobrada por cima)
-  pieces.plate(rect(-L / 2, 0, L / 2, H), T, at(0, 0, -W / 2 + T / 2), oi);
+  // lados: a camada de dentro vem dobrada por cima; terminam rente às paredes da frente e de trás
+  const reachSide = W / 2 - doubled - 0.0005;
   for (const side of [-1, 1]) {
-    const ry = (side * Math.PI) / 2;
-    const span = rect(-W / 2 + T, 0, W / 2 - 2 * T, H);
-    pieces.plate(span, T, at(side * (L / 2 - T / 2), 0, 0, 0, ry), io);
-    pieces.plate(
-      rect(-W / 2 + T, T, W / 2 - 2 * T, H),
+    pieces.sheet(
+      frame(V(side * (Lf / 2), floorY, 0), V(side, 0, 0), V(0, -1, 0)),
+      [-reachSide, reachSide],
       T,
-      at(side * (L / 2 - 1.5 * T), 0, 0, 0, ry),
-      io,
+      R,
+      [{ bend: Math.PI / 2 }, up, { bend: Math.PI }, down],
     );
   }
 
-  // tampa articulada na borda de cima do fundo; no referencial dela, fechada ela vai de z = 0 a W
-  const lid = (matrix) => at(0, H, -W / 2, -OPEN).multiply(matrix);
-  pieces.plate(rect(-L / 2, -W, L / 2, 0), T, lid(at(0, T / 2, 0, FLAT)), io);
-  // marca na face de fora da tampa, para ler com a tampa aberta (de pé, olhando para trás)
-  const outside = new Matrix4().makeBasis(
-    new Vector3(-1, 0, 0),
-    new Vector3(0, 0, 1),
-    new Vector3(0, 1, 0),
+  // fundo da caixa (parede de trás) e a tampa, na mesma folha: sobe, dobra para trás na tampa aberta
+  const lidWidth = L / 2 - doubled - T - R - 0.0005; // meia largura: as orelhas descem por dentro dos lados
+  const wall = pieces.sheet(
+    frame(V(0, floorY, -Wf / 2), V(0, 0, -1), V(0, -1, 0)),
+    [-L / 2, L / 2],
+    T,
+    R,
+    [{ bend: Math.PI / 2 }, H - floorY - 2 * R - T / 2],
   );
-  brandMark(pieces, materials, 0.24, lid(at(0, T + PRINT_GAP, W / 2).multiply(outside)));
-  // aba frontal com as duas linguetas de trava
-  const tuck = H - 2 * T;
-  const tab = (c) => [
-    [c + 0.03, -tuck],
-    [c + 0.025, -tuck - 0.014],
-    [c - 0.025, -tuck - 0.014],
-    [c - 0.03, -tuck],
-  ];
-  const tuckOutline = [
-    [-L / 2 + 3 * T, 0],
-    [L / 2 - 3 * T, 0],
-    [L / 2 - 3 * T, -tuck + 0.01],
-    [L / 2 - 3 * T - 0.01, -tuck],
-    ...tab(L / 4),
-    ...tab(-L / 4),
-    [-L / 2 + 3 * T + 0.01, -tuck],
-    [-L / 2 + 3 * T, -tuck + 0.01],
-  ];
-  pieces.plate(tuckOutline, T, lid(at(0, 0, W - 1.5 * T)), { a: 'aba', b: 'interna' });
+  const lidLength = W - T;
+  const lid = pieces.sheet(wall[2], [-lidWidth, lidWidth], T, R, [
+    { bend: Math.PI / 2 - OPEN }, // fechada seriam 90° para dentro; aberta a 100° volta 10° para fora
+    lidLength,
+    { bend: Math.PI / 2 },
+    {
+      flat: H - 3 * T,
+      outline: tuckOutline(lidWidth, H - 3 * T, L / 4),
+    },
+  ]);
+  const lidFrame = lid[1];
   // orelhas laterais chanfradas, por dentro das paredes duplas
   const ear = H - 2.5 * T;
   const reach = W / 2 - 3 * T;
   for (const side of [-1, 1]) {
-    pieces.plate(
-      [
-        [-reach, 0],
-        [reach, 0],
-        [reach - 0.035, -ear],
-        [-reach + 0.035, -ear],
-      ],
+    const earFrame = lidFrame
+      .clone()
+      .multiply(new Matrix4().makeTranslation(side * lidWidth, lidLength / 2, 0))
+      .multiply(frame(V(0, 0, 0), V(side, 0, 0), V(0, 0, 1)));
+    pieces.sheet(
+      earFrame,
+      [-reach, reach],
       T,
-      lid(at(side * (L / 2 - 3.5 * T), 0, W / 2, 0, (side * Math.PI) / 2)),
+      R,
+      [
+        { bend: Math.PI / 2 },
+        {
+          flat: ear,
+          outline: [
+            [-reach, 0],
+            [reach, 0],
+            [reach - 0.035, ear],
+            [-reach + 0.035, ear],
+          ],
+        },
+      ],
       { a: 'aba', b: 'interna' },
     );
   }
+  // marca na face de fora da tampa, para ler com a tampa aberta (de pé, olhando para trás)
+  brandMark(
+    pieces,
+    materials,
+    0.24,
+    lidFrame.clone().multiply(at(0, lidLength / 2, T / 2 + PRINT_GAP)),
+  );
 
   const back = -W / 2 + W * Math.cos(OPEN);
   return finish(track, pieces, materials, {
@@ -174,6 +204,26 @@ function corteEVinco(track) {
     radius: Math.hypot(L / 2, Math.max(W / 2, -back)),
     top: H + W * Math.sin(OPEN),
   });
+}
+
+/** Contorno da aba frontal: duas linguetas de trava (em ±`tabX`) na ponta, de 0 a `length` (y). */
+function tuckOutline(half, length, tabX) {
+  const tab = (c) => [
+    [c + 0.03, length],
+    [c + 0.025, length + 0.014],
+    [c - 0.025, length + 0.014],
+    [c - 0.03, length],
+  ];
+  return [
+    [-half, 0],
+    [half, 0],
+    [half, length - 0.01],
+    [half - 0.01, length],
+    ...tab(-tabX),
+    ...tab(tabX),
+    [-half + 0.01, length],
+    [-half, length - 0.01],
+  ];
 }
 
 /**
@@ -186,7 +236,7 @@ function divisorias(track) {
   const pieces = new Pieces();
   const S = 0.4; // tabuleiro quadrado
   const HT = 0.06;
-  const T = 0.008;
+  const T = PAPELAO_T;
   const HD = 0.15; // altura das divisórias
   const LD = S - 2 * T - 0.006;
   const CELL = LD / 3;
@@ -194,19 +244,23 @@ function divisorias(track) {
   const LIFT = 0.55 * HD;
   const both = { a: 'externa', b: 'externa' };
   const oi = { a: 'interna', b: 'externa' };
-  const io = { a: 'externa', b: 'interna' };
 
-  // tabuleiro: fundo e 4 paredes baixas
-  pieces.plate(rect(-S / 2, -S / 2, S / 2, S / 2), T, at(0, T / 2, 0, FLAT), oi);
-  pieces.plate(rect(-S / 2, 0, S / 2, HT), T, at(0, 0, S / 2 - T / 2), io);
-  pieces.plate(rect(-S / 2, 0, S / 2, HT), T, at(0, 0, -S / 2 + T / 2), oi);
-  for (const side of [-1, 1]) {
-    pieces.plate(
-      rect(-S / 2 + T, 0, S / 2 - T, HT),
-      T,
-      at(side * (S / 2 - T / 2), 0, 0, 0, (side * Math.PI) / 2),
-      io,
-    );
+  // tabuleiro: o fundo e as 4 paredes baixas são a mesma folha, dobrada nas bordas
+  const R = BEND * T;
+  const Sf = S - 2 * R - T;
+  pieces.plate(rect(-Sf / 2, -Sf / 2, Sf / 2, Sf / 2), T, at(0, T / 2, 0, FLAT), oi);
+  const wallRise = HT - T / 2 - R;
+  const reachSide = S / 2 - T - 0.0005; // os lados terminam rente à frente e ao fundo
+  for (const [origin, heading, range] of /** @type {[Vector3, Vector3, [number, number]][]} */ ([
+    [V(0, T / 2, Sf / 2), V(0, 0, 1), [-S / 2, S / 2]],
+    [V(0, T / 2, -Sf / 2), V(0, 0, -1), [-S / 2, S / 2]],
+    [V(Sf / 2, T / 2, 0), V(1, 0, 0), [-reachSide, reachSide]],
+    [V(-Sf / 2, T / 2, 0), V(-1, 0, 0), [-reachSide, reachSide]],
+  ])) {
+    pieces.sheet(frame(origin, heading, V(0, -1, 0)), range, T, R, [
+      { bend: Math.PI / 2 },
+      wallRise,
+    ]);
   }
   brandMark(pieces, materials, 0.16, at(0, HT / 2, S / 2 + PRINT_GAP));
 
@@ -262,7 +316,7 @@ function divisorias(track) {
  * uma pilha de verdade, e a chapa de cima deslocada e girada. Chapa sai lisa, sem impressão.
  */
 function chapas(track) {
-  const { textures, materials } = kit(track);
+  const { textures, materials } = kit(track, { papel: false });
   const pieces = new Pieces();
   const W = 0.5;
   const D = 0.36;
@@ -307,27 +361,32 @@ function caixaNormal(track) {
   const L = 0.44; // largura (x), as faces longas
   const W = 0.3; // profundidade (z), as faces curtas
   const H = 0.34; // altura
-  const T = 0.008;
+  const T = PAPELAO_T;
+  const R = BEND * T;
   const GAP = 0.006; // fresta entre as duas abas de cima das faces longas
-  const io = { a: 'externa', b: 'interna' };
-  const oi = { a: 'interna', b: 'externa' };
+  const STACK = 0.0005; // as abas longas ficam por cima das curtas, sem se tocar
 
-  // faces longas, um pouco mais altas (T): sustentam as abas de cima; a de trás olha para -z
-  pieces.plate(rect(-L / 2, 0, L / 2, H + T), T, at(0, 0, W / 2 - T / 2), io);
-  pieces.plate(rect(-L / 2, 0, L / 2, H + T), T, at(0, 0, -W / 2 + T / 2), oi);
-  // faces curtas, entre as longas
+  // cada face sobe, dobra para dentro e a aba segue na mesma folha. As curtas dobram um pouco mais
+  // baixo, para as abas longas passarem por cima delas.
+  const face = (origin, heading, normal, range, rise, flap) =>
+    pieces.sheet(frame(origin, heading, normal), range, T, R, [rise, { bend: Math.PI / 2 }, flap]);
+  const longRise = H + T / 2 - R + STACK;
+  const longFlap = W / 2 - T / 2 - R - GAP / 2;
+  const shortRise = H - T / 2 - R;
+  const shortFlap = W / 2 - T;
+  const edge = W / 2 - T / 2;
+  face(V(0, 0, edge), V(0, 1, 0), V(0, 0, 1), [-L / 2, L / 2], longRise, longFlap);
+  face(V(0, 0, -edge), V(0, 1, 0), V(0, 0, -1), [-L / 2, L / 2], longRise, longFlap);
   for (const side of [-1, 1]) {
-    const ry = (side * Math.PI) / 2;
-    pieces.plate(rect(-W / 2 + T, 0, W / 2 - T, H), T, at(side * (L / 2 - T / 2), 0, 0, 0, ry), io);
+    face(
+      V(side * (L / 2 - T / 2), 0, 0),
+      V(0, 1, 0),
+      V(side, 0, 0),
+      [-(W / 2 - T), W / 2 - T],
+      shortRise,
+      shortFlap,
+    );
   }
-  // abas das faces curtas, por baixo: metade da face curta, a partir de cada ponta
-  const inner = W / 2 - T;
-  pieces.plate(rect(L / 2 - inner, -inner, L / 2, inner), T, at(0, H + T / 2, 0, FLAT), io);
-  pieces.plate(rect(-L / 2, -inner, -L / 2 + inner, inner), T, at(0, H + T / 2, 0, FLAT), io);
-  // abas das faces longas, por cima: do alto da face até a fresta do meio
-  const outer = W / 2 - GAP / 2;
-  pieces.plate(rect(-L / 2, 0, L / 2, outer), T, at(0, H + 1.5 * T, W / 2, FLAT), io);
-  pieces.plate(rect(-L / 2, 0, L / 2, outer), T, at(0, H + 1.5 * T, -W / 2, FLAT, Math.PI), io);
   // a marca nas duas faces longas
   brandMark(pieces, materials, 0.24, at(0, H / 2, W / 2 + PRINT_GAP));
   brandMark(pieces, materials, 0.24, at(0, H / 2, -W / 2 - PRINT_GAP, 0, Math.PI));
@@ -336,7 +395,7 @@ function caixaNormal(track) {
     textures,
     footprint: [-L / 2, L / 2, -W / 2, W / 2],
     radius: Math.hypot(L / 2, W / 2),
-    top: H + 2 * T,
+    top: H + T + STACK,
   });
 }
 

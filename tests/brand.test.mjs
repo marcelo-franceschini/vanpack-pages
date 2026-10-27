@@ -79,8 +79,8 @@ describe('paleta e tipografia (index.html)', () => {
     assert.ok(!/backdrop-filter|text-shadow|drop-shadow|blur\(|(?<![-\w])filter:/.test(styles));
     assert.equal(
       [...styles.matchAll(/box-shadow/g)].length,
-      1,
-      'uma só sombra: o fio do cabeçalho',
+      2,
+      'duas sombras de 1 px: o fio do cabeçalho e o do menu aberto',
     );
     assert.ok(!/rotate\(|skew\(/.test(styles));
     assert.ok(!/will-change/.test(styles), 'sem camadas forçadas');
@@ -191,7 +191,7 @@ describe('SVGs da marca (public/brand)', () => {
 
 describe('ilustrações dos produtos (public/produtos)', () => {
   // o material da cena: Kraft, a face interna mais clara e o Kraft escuro (src/scene/constants.js)
-  const MATERIAL = new Set(['#B78C5C', '#CFA978', '#9A7447', '#FBF8F2']);
+  const MATERIAL = new Set(['#B78C5C', '#CFA978', '#9A7447', '#FBF8F2', '#ECE9E3']); // + o tom do cartão (fundo)
   test('as 4 existem, em 4:3, só com as cores do material, sem texto, imagem, efeito ou script', () => {
     const files = readdirSync(`${ROOT}public/produtos`).sort();
     assert.deepEqual(files, [

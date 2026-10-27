@@ -13,7 +13,10 @@ import {
   Vector3,
   WebGLRenderer,
 } from 'three';
-import { CAMERA_DIRECTION, PALETTE } from '../scene/constants.js';
+import { CAMERA_DIRECTION } from '../scene/constants.js';
+
+// O fundo e o piso do 3D têm o tom do cartão do produto (--tint em index.html): a peça fica solta no cartão, sem moldura; só a sombra falsa marca o chão.
+const BACKDROP = '#ece9e3';
 import { fadedFloor, softRects } from '../scene/geometry.js';
 import { MODELOS } from './modelos.js';
 
@@ -37,7 +40,7 @@ export function createVitrine(canvas) {
     powerPreference: 'low-power', // não acorda a placa de vídeo dedicada para uma peça girando
   });
   renderer.setPixelRatio(1); // os tamanhos já chegam em pixels do aparelho
-  renderer.setClearColor(PALETTE.paper);
+  renderer.setClearColor(BACKDROP);
   renderer.debug.checkShaderErrors = import.meta.env.MODE !== 'production';
 
   const scene = new Scene();
@@ -46,7 +49,7 @@ export function createVitrine(canvas) {
   sun.position.copy(SUN_OFFSET);
   scene.add(sun, sun.target);
 
-  const floorGeometry = fadedFloor(3.2, 3.2, 1.2, PALETTE.floor, PALETTE.paper);
+  const floorGeometry = fadedFloor(3.2, 3.2, 1.2, BACKDROP, BACKDROP);
   const floorMaterial = new MeshBasicMaterial({ vertexColors: true });
   scene.add(new Mesh(floorGeometry, floorMaterial));
   const blobMaterial = new MeshBasicMaterial({

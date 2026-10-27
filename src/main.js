@@ -28,6 +28,50 @@ for (const el of document.querySelectorAll('[data-year]')) {
   el.textContent = String(new Date().getFullYear());
 }
 
+// Menu do celular e do tablet (<details>): fecha ao escolher uma seção, com Esc ou ao tocar fora.
+const menu = /** @type {HTMLDetailsElement | null} */ (document.querySelector('.menu'));
+if (menu) {
+  const close = () => {
+    menu.open = false;
+  };
+  menu.addEventListener('click', (e) => {
+    if (/** @type {Element} */ (e.target).closest('a')) close();
+  });
+  document.addEventListener('click', (e) => {
+    if (!menu.contains(/** @type {Node} */ (e.target))) close();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && menu.open) {
+      close();
+      menu.querySelector('summary')?.focus();
+    }
+  });
+}
+
+// Link da seção à vista no menu do cabeçalho (aria-current): quem rola sabe onde está.
+{
+  const links = new Map(
+    [...document.querySelectorAll('.nav a[href^="#"]')].map((a) => [a.getAttribute('href'), a]),
+  );
+  const spy = new IntersectionObserver(
+    (entries) => {
+      for (const { target, isIntersecting } of entries) {
+        const link = links.get(`#${target.id}`);
+        if (!link) continue;
+        if (isIntersecting) {
+          for (const other of links.values()) other.removeAttribute('aria-current');
+          link.setAttribute('aria-current', 'true');
+        } else link.removeAttribute('aria-current');
+      }
+    },
+    { rootMargin: '-40% 0px -55% 0px' }, // a seção que cruza a faixa de 40 a 45% da altura da tela
+  );
+  for (const id of links.keys()) {
+    const section = document.querySelector(id ?? '');
+    if (section) spy.observe(section);
+  }
+}
+
 const storyEl = $('.story');
 const dock = $('#hdr .btn'); // "Pedir orçamento" do cabeçalho: pulsa quando o tour termina
 const fab = $('#fab'); // botão do WhatsApp fixo (a barra, até 768 px)

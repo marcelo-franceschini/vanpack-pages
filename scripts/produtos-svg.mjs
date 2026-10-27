@@ -10,6 +10,8 @@ import { CAMERA_DIRECTION, KRAFT, KRAFT_INNER, PALETTE } from '../src/scene/cons
 const OUT = new URL('../public/produtos/', import.meta.url).pathname;
 const SIZE = { w: 400, h: 300 }; // 4:3, o espaço reservado no cartão
 const MARGIN = 0.12;
+// o fundo é o tom do cartão do produto (--tint em index.html), o mesmo do 3D (src/produtos/cena.js)
+const BACKDROP = '#ece9e3';
 const TONES = { light: KRAFT_INNER, mid: KRAFT, dark: PALETTE.kraftDark };
 
 const norm = ([x, y, z]) => {
@@ -184,7 +186,7 @@ function render(faces, { flutes = [] } = {}) {
       `<path d="M${line.map((p) => p.map(fmt).join(' ')).join('L')}" fill="none" stroke="${TONES.dark}" stroke-width="0.9"/>`,
     );
   }
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SIZE.w} ${SIZE.h}" width="${SIZE.w}" height="${SIZE.h}"><rect width="${SIZE.w}" height="${SIZE.h}" fill="${PALETTE.paper}"/>${shapes.join('')}</svg>\n`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SIZE.w} ${SIZE.h}" width="${SIZE.w}" height="${SIZE.h}"><rect width="${SIZE.w}" height="${SIZE.h}" fill="${BACKDROP}"/>${shapes.join('')}</svg>\n`;
 }
 
 /** Corte e vinco: caixa tipo maleta com a tampa aberta, orelhas e aba frontal. */

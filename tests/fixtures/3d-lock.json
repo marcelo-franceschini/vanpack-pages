@@ -3,17 +3,17 @@
     "src/render/controller.js": "e3fd8ef4ee2067577e39a2df151481be1d2db91cdcb9bbfc18ef08156c60ad8e",
     "src/render/stage.js": "3c9cac2358cc7a95cc03e8a5349d5014699b829b90a0209d4b5bdea6424b77a6",
     "src/render/worker.js": "c32b0f1080c3ad43ed74ca41a3813bd20bd13589ccbdcc6641e77dbbb83632f0",
-    "src/scene/camera.js": "34e80b3ecc9cb8216db7878945991c5e4a473eb484e53c316556cf4eded298ba",
-    "src/scene/constants.js": "c630489f1e934d81067ce5748a531c2b392692b41f3765cd00015fdbf3577083",
-    "src/scene/factory.js": "ef921c7ee32b0ed30ee16a853103f50d54da8575461a7b4251fc15331c9ecd21",
+    "src/scene/camera.js": "cd73284addb6da518dcbffd2442dcd5aa70a8fffaa87c1f82aeb2fc21ec06ec9",
+    "src/scene/constants.js": "6368e495c25785930268daa66cb0624079e9e395261ffb7bd708c5c00a93cb7f",
+    "src/scene/factory.js": "0fd7e3ec6c35580d9893e94b08eafad159f9ea4bb43a2d28be020bee043ff3c0",
     "src/scene/geometry.js": "eaa228f1285272b4a3d7b7ca5c43d2317dd476fa64c56fc9c65db1d36bc62c24",
     "src/scene/hero.js": "9ebe47df1a84dfde2e3fb962d0b9099010a87c383d265829cadd8113bcd8594b",
     "src/scene/index.js": "764ba62f34bbf651cd47ae2f6bd8b438be8e48d5ea852e7bad2f3c3cdee164ed",
     "src/scene/machine.js": "7796cf56c7ee45cf30ea2ae57665420e922c78f9daabf75bfe131b73702c7358",
     "src/scene/math.js": "daaa1be8bb179fbd5a068c1129225cc08c7adad8839ba114a91ef8cf700fb4b3",
     "src/scene/textures.js": "6c371f383286134192b5b1f5f5100ef7bd1b806672a732de38bc0b1f61ca797f",
-    "src/scene/timeline.js": "83ae7e9191c62f862d51b6c1d030cdf5be7e8e9708adc552fff20a34e4b747ff",
-    "src/scene/truck.js": "ab4008e0e255b2b2234ef375a46dd0910cb957416b7d9c19e274c000f8041c32",
+    "src/scene/timeline.js": "d5660135cf444c9b08daa62bd669118950d00682df385670925bd7a17d8f512c",
+    "src/scene/truck.js": "50696baf9be447ae4c4499d3c3decd44c07e59223a7e20207ffc3205c7bfb03e",
     "tests/scene.test.mjs": "f1cb930850c045b979d2e4625e5aee4ebe009ae970b3a1755157d88e2ce4b129"
   }
 }

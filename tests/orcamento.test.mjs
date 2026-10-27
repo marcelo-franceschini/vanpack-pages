@@ -37,17 +37,17 @@ const KB = 1024;
 
 // Cada arquivo de assets/ tem o prefixo do nome sem o hash (index-BsPmJb_d.js → index).
 const JS = {
-  index: 7.7, // o script da página (sem o three.js)
+  index: 7.9, // o script da página (sem o three.js); 7,8 com o menu do celular e a seção ativa do menu
   worker: 11.6, // a cena da história, no Web Worker (o three.js vem do arquivo three)
   three: 111.9, // o three.js, num arquivo só para os dois workers e o render de reserva
   controller: 11.6, // o mesmo render da história, só se o worker falhar (thread principal)
-  'produtos-worker': 6.5, // a vitrine dos produtos, baixada perto da seção
-  montar: 1.7, // montagem do 3D dos produtos
+  'produtos-worker': 7.5, // a vitrine dos produtos, baixada perto da seção (7,3 com as dobras de papelão e o papel granulado, aprovado pelo dono em 2026-10-26)
+  montar: 2.0, // montagem do 3D dos produtos (1,9 com o giro por arrasto e por teclado e o aviso do arrasto)
   'web-vitals': 3.1,
   wizard: 2.2, // assistente do experimento (só na variante B)
 };
 const FILES = {
-  'index.html': 10.6, // o conteúdo no limite dos schemas (dist-limite) mais 0,2 KB
+  'index.html': 11.4, // o conteúdo no limite dos schemas (dist-limite, 11,3 KB) mais 0,1 KB: menu do celular, produtos em destaque e botão do pedido
   'politica-de-privacidade.html': 3.6,
   '404.html': 2,
   'fonts/archivo-latin.woff2': 27.8,
@@ -57,9 +57,9 @@ const FILES = {
 };
 const SVG_TOTAL = 13.7; // todos os SVGs de brand/ e produtos/ (13,5 + o SVG da caixa normal, 0,3 KB)
 const TOTAL = {
-  jsInicial: 130.8, // script da página + worker da história + three.js
-  carga: 170.2, // HTML + JS inicial + fonte + os 2 logos do topo e da cena
-  visita: 179.0, // a carga + o 3D dos produtos + o logo do CTA final
+  jsInicial: 131.0, // script da página + worker da história + three.js
+  carga: 171.2, // HTML + JS inicial + fonte + os 2 logos do topo e da cena (171,0 no limite dos schemas)
+  visita: 181.5, // a carga + o 3D dos produtos + o logo do CTA final
 };
 
 const built = existsSync(`${DIST}index.html`);

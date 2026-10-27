@@ -2,7 +2,7 @@
 // rasgos), no mesmo material do 3D principal: face externa Kraft, face interna mais clara e a borda com
 // as duas capas e a onda do miolo (a edgeTexture da cena). As placas de um modelo se acumulam e viram
 // uma malha por material, então cada modelo fica em poucos draw calls.
-import { BufferGeometry, Float32BufferAttribute, Mesh, ShapeUtils, Vector2 } from 'three';
+import { BufferGeometry, Float32BufferAttribute, Matrix4, Mesh, ShapeUtils, Vector2 } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 // A edgeTexture tem 2 ondas por ladrilho. Um ladrilho a cada 3,6 espessuras dá uma onda a cada 1,8
@@ -90,6 +90,81 @@ export function plate(points, t, holes = []) {
   return { a: flat(...faces.a), b: flat(...faces.b), edge: flat(position, normal, uv) };
 }
 
+// Passos de uma dobra de 90°: o arco fica liso sem pesar em triângulos.
+const BEND_STEPS = 6;
+
+/**
+ * Dobra do papelão: a placa sai da origem na direção +y (o eixo da dobra é x, de `x0` a `x1`) e curva
+ * `angle` rad, para o lado de -z se positivo (a face `b`, a de dentro, fica no lado de dentro da curva) ou de +z
+ * se negativo. O raio `radius` é o da linha do meio da espessura `t`. A face `a` é a de +z, a `b` a de -z.
+ * @returns {{ a: BufferGeometry, b: BufferGeometry, edge: BufferGeometry }}
+ */
+export function bend(x0, x1, t, radius, angle) {
+  const s = Math.sign(angle) || 1;
+  const total = Math.abs(angle);
+  const steps = Math.max(2, Math.ceil((total / (Math.PI / 2)) * BEND_STEPS));
+  const h = t / 2;
+  // ponto da face (+1 = a, -1 = b) no ângulo `a`: [y, z] e a normal da face
+  const at = (a, side) => {
+    const ny = s * Math.sin(a);
+    const nz = Math.cos(a);
+    return [radius * Math.sin(a) + side * h * ny, -s * radius * (1 - Math.cos(a)) + side * h * nz];
+  };
+  const faces = { a: [[], [], []], b: [[], [], []] };
+  const edge = [[], [], []];
+  const quad = (target, corners, normal) => {
+    const [position, normals, uv] = target;
+    for (const index of [0, 1, 2, 0, 2, 3]) {
+      const [x, y, z, u, v] = corners[index];
+      position.push(x, y, z);
+      normals.push(...normal(index));
+      uv.push(u, v);
+    }
+  };
+  for (let i = 0; i < steps; i++) {
+    const a0 = (total * i) / steps;
+    const a1 = (total * (i + 1)) / steps;
+    for (const [key, side] of /** @type {[string, number][]} */ ([
+      ['a', 1],
+      ['b', -1],
+    ])) {
+      const p0 = at(a0, side);
+      const p1 = at(a1, side);
+      const corners = [
+        [x0, p0[0], p0[1], 0, 0.5],
+        [x1, p0[0], p0[1], 1, 0.5],
+        [x1, p1[0], p1[1], 1, 0.5],
+        [x0, p1[0], p1[1], 0, 0.5],
+      ];
+      if (side < 0) corners.reverse();
+      const angles = side < 0 ? [a1, a1, a0, a0] : [a0, a0, a1, a1];
+      quad(faces[key], corners, (k) => [
+        0,
+        side * s * Math.sin(angles[k]),
+        side * Math.cos(angles[k]),
+      ]);
+    }
+    // as duas pontas da dobra mostram as capas e a onda do miolo
+    for (const [x, sign] of [
+      [x0, -1],
+      [x1, 1],
+    ]) {
+      const [b0, a0p, a1p, b1] = [at(a0, -1), at(a0, 1), at(a1, 1), at(a1, -1)];
+      const along0 = (radius * a0) / (TILE * t);
+      const along1 = (radius * a1) / (TILE * t);
+      const corners = [
+        [x, b0[0], b0[1], along0, 0],
+        [x, a0p[0], a0p[1], along0, LINER],
+        [x, a1p[0], a1p[1], along1, LINER],
+        [x, b1[0], b1[1], along1, 0],
+      ];
+      if (sign > 0) corners.reverse();
+      quad(edge, corners, () => [sign, 0, 0]);
+    }
+  }
+  return { a: flat(...faces.a), b: flat(...faces.b), edge: flat(...edge) };
+}
+
 /** Retângulo [x0, y0] a [x1, y1] como contorno. */
 export const rect = (x0, y0, x1, y1) => [
   [x0, y0],
@@ -145,6 +220,55 @@ export class Pieces {
     this.add(a, pieces.a, matrix);
     this.add(b, pieces.b, matrix);
     this.add(edge, pieces.edge, matrix);
+  }
+
+  /**
+   * Folha de papelão de uma peça só: uma sequência de trechos planos e dobras de raio `radius`, saindo
+   * de `matrix` na direção +y local (face `a` para +z). Cada trecho é um número (comprimento de um
+   * retângulo de `x0` a `x1`), `{ flat, outline, holes }` (contorno próprio, em coordenadas do trecho)
+   * ou `{ bend }` (ângulo em rad; negativo dobra para o outro lado). Devolve a posição onde cada trecho
+   * termina, `[início, …]`, para outras folhas saírem dela (as orelhas, por exemplo).
+   * @param {import('three').Matrix4} matrix
+   * @param {[number, number]} range
+   * @param {number} t espessura
+   * @param {number} radius
+   * @param {(number | { flat: number, outline?: number[][], holes?: number[][][] } | { bend: number })[]} steps
+   * @param {{ a?: string, b?: string, edge?: string }} [options]
+   * @returns {Matrix4[]}
+   */
+  sheet(matrix, [x0, x1], t, radius, steps, { a = 'externa', b = 'interna', edge = 'borda' } = {}) {
+    const frames = [matrix.clone()];
+    for (const step of steps) {
+      const frame = frames[frames.length - 1];
+      if (typeof step === 'object' && 'bend' in step) {
+        const pieces = bend(x0, x1, t, radius, step.bend);
+        this.add(a, pieces.a, frame);
+        this.add(b, pieces.b, frame);
+        this.add(edge, pieces.edge, frame);
+        const turn = Math.abs(step.bend);
+        const side = Math.sign(step.bend) || 1;
+        frames.push(
+          frame
+            .clone()
+            .multiply(
+              new Matrix4().makeTranslation(
+                0,
+                radius * Math.sin(turn),
+                -side * radius * (1 - Math.cos(turn)),
+              ),
+            )
+            .multiply(new Matrix4().makeRotationX(-side * turn)),
+        );
+        continue;
+      }
+      const length = typeof step === 'number' ? step : step.flat;
+      const outline =
+        typeof step === 'object' && step.outline ? step.outline : rect(x0, 0, x1, length);
+      const holes = typeof step === 'object' ? step.holes : undefined;
+      this.plate(outline, t, frame, { a, b, edge, holes });
+      frames.push(frame.clone().multiply(new Matrix4().makeTranslation(0, length, 0)));
+    }
+    return frames;
   }
 
   /**

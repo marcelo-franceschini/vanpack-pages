@@ -205,7 +205,7 @@ Dentro de qualquer texto de `content/`, `{{nome}}` puxa o dado. `{{#se cidade}} 
 - `public/brand/`, `public/produtos/`, `src/brand/marks.js`: arte da marca e dos produtos, geradas.
 - `tests/fixtures/3d-lock.json`: trava da animação 3D.
 
-**O que fica no código, de propósito (rótulos de interface, não são texto de negócio):** o link "Pular para o conteúdo", "ROLE ↓" da abertura, "Fechar" na folha do WhatsApp, o rótulo "Exemplo" do carrossel de clientes, os `aria-label` dos menus e das regiões da página (para leitor de tela), os textos do assistente de orçamento (experimento desligado) e as mensagens de "número copiado". Se um dia precisarem mudar, é com quem programa.
+**O que fica no código, de propósito (rótulos de interface, não são texto de negócio):** o link "Pular para o conteúdo", "Role para ver ↓" da abertura, "Fechar" na folha do WhatsApp, o rótulo "Exemplo" do carrossel de clientes, os `aria-label` dos menus e das regiões da página (para leitor de tela), os textos do assistente de orçamento (experimento desligado) e as mensagens de "número copiado". Se um dia precisarem mudar, é com quem programa.
 
 ---
 
