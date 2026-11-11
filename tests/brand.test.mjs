@@ -16,7 +16,14 @@ const ALLOWED_ORIGINS =
     ? [new URL(env.VITE_ANALYTICS_ENDPOINT || 'https://gateway.umami.is').origin]
     : [];
 const html = read('index.html');
-const styles = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join('\n');
+// O CSS de uma página como o build o entrega: os <style> dela com a base comum (src/base.css) no lugar do
+// `@import` que a embute.
+const stylesOf = (source) =>
+  [...source.matchAll(/<style>([\s\S]*?)<\/style>/g)]
+    .map((m) => m[1])
+    .join('\n')
+    .replace(/@import\s+'\/([^']+)';/g, (_, file) => read(file));
+const styles = stylesOf(html);
 const text = (source) =>
   source
     .replace(/<(script|style|svg)[\s\S]*?<\/\1>/g, ' ')
@@ -42,6 +49,18 @@ describe('paleta e tipografia (index.html)', () => {
       assert.deepEqual([r, g, b], [251, 248, 242], `rgb fora do Papel: ${channels}`);
     }
     assert.ok(!/\b(hsl|oklch|lab|lch)\(/.test(styles), 'sem outros espaços de cor');
+  });
+
+  test('a fonte e os tokens têm uma fonte só: as páginas embutem src/base.css e não repetem nada', () => {
+    for (const page of ['index.html', 'politica-de-privacidade.html']) {
+      const own = [...read(page).matchAll(/<style>([\s\S]*?)<\/style>/g)]
+        .map((m) => m[1])
+        .join('\n');
+      assert.match(own, /@import '\/src\/base\.css';/, `${page} embute a base`);
+      assert.ok(!/@font-face|--font:/.test(own), `${page} não repete a fonte`);
+      assert.deepEqual(own.match(/#[0-9a-fA-F]{3,8}\b/g) ?? [], [], `${page}: cor só por token`);
+    }
+    assert.ok(!/@import/.test(read('dist/index.html')), 'no build a base vai embutida no HTML');
   });
 
   test('Kraft é só o material: nunca cor de texto, fundo de botão ou de interface', () => {
