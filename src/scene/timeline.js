@@ -33,7 +33,7 @@ const TRUCK_PIVOT = 2.1; // distância da traseira ao centro do eixo, em x
 /**
  * @param {object} parts
  * @param {import('three').Mesh} parts.plain chapa lisa antes da máquina
- * @param {ReturnType<import('./hero.js').createHero>} parts.hero
+ * @param {ReturnType<typeof import('./hero.js').createHero>} parts.hero
  * @param {import('three').InstancedMesh} parts.scraps
  * @param {import('three').Group} parts.load palete carregado
  * @param {import('three').Group} parts.strap cinta do palete

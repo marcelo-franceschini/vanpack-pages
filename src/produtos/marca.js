@@ -1,73 +1,10 @@
 // A marca genérica "SUA MARCA" (a do cliente demo da cena principal: anel e palavra, numa tinta só,
 // Floresta) como textura transparente 4:1, para o plano da marca nos modelos dos produtos. As letras são as
-// de src/scene/textures.js, que é travado por hash e não as exporta; ali a marca cobre a face inteira da
-// caixa, aqui ela é uma etiqueta pequena sobre o Kraft liso. Seguro para Web Worker: não acessa DOM.
+// de src/scene/textures.js (GLYPHS); ali a marca cobre a face inteira da caixa, aqui ela é uma etiqueta
+// pequena sobre o Kraft liso. Seguro para Web Worker: não acessa DOM.
 import { CanvasTexture, SRGBColorSpace } from 'three';
 import { PALETTE } from '../scene/constants.js';
-
-// Letras geométricas simples, em linhas num quadrado de 1 × 1 (como em src/scene/textures.js).
-const GLYPHS = {
-  S: [
-    [
-      [1, 0],
-      [0, 0],
-      [0, 0.5],
-      [1, 0.5],
-      [1, 1],
-      [0, 1],
-    ],
-  ],
-  U: [
-    [
-      [0, 0],
-      [0, 1],
-      [1, 1],
-      [1, 0],
-    ],
-  ],
-  A: [
-    [
-      [0, 1],
-      [0, 0],
-      [1, 0],
-      [1, 1],
-    ],
-    [
-      [0, 0.5],
-      [1, 0.5],
-    ],
-  ],
-  M: [
-    [
-      [0, 1],
-      [0, 0],
-      [0.5, 0.55],
-      [1, 0],
-      [1, 1],
-    ],
-  ],
-  R: [
-    [
-      [0, 1],
-      [0, 0],
-      [1, 0],
-      [1, 0.5],
-      [0, 0.5],
-    ],
-    [
-      [0.45, 0.5],
-      [1, 1],
-    ],
-  ],
-  C: [
-    [
-      [1, 0],
-      [0, 0],
-      [0, 1],
-      [1, 1],
-    ],
-  ],
-};
+import { GLYPHS } from '../scene/textures.js';
 
 const WIDTH = 1600; // o mesmo 4:1 e a mesma resolução da marca que estava aqui antes
 const HEIGHT = 400;

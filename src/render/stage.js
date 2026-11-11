@@ -51,6 +51,7 @@ export function mountStage(stage) {
     mobile,
     reduced: reducedQuery.matches,
   };
+  /** @type {(msg: import('./controller.js').ControllerMessage) => void} */
   let send = () => {};
   let settle;
   const ready = new Promise((resolve) => (settle = resolve));

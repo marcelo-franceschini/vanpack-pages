@@ -67,7 +67,12 @@ function spinner(parent, x, y, radius, dir, material, draw) {
   return { object, radius, dir };
 }
 
-/** Vão aberto na frente: piso, fundo e forros escuros dão profundidade ao que se vê dentro. */
+/**
+ * Vão aberto na frente: piso, fundo e forros escuros dão profundidade ao que se vê dentro.
+ * @param {import('./geometry.js').Batch} st
+ * @param {Record<string, import('three').Material>} M
+ * @param {number[]} range a faixa [x0, x1] da janela
+ */
 function windowBay(st, M, [w0, w1]) {
   const [y0, y1] = WINDOW_Y;
   const liner = 0.015;

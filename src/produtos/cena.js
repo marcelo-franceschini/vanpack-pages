@@ -14,14 +14,15 @@ import {
   WebGLRenderer,
 } from 'three';
 import { CAMERA_DIRECTION } from '../scene/constants.js';
-
-// O fundo e o piso do 3D têm o tom do cartão do produto (--tint em index.html): a peça fica solta no cartão, sem moldura; só a sombra falsa marca o chão.
-const BACKDROP = '#ece9e3';
 import { fadedFloor, softRects } from '../scene/geometry.js';
 import { MODELOS } from './modelos.js';
 
+// O fundo e o piso do 3D têm o tom do cartão do produto (--tint em src/base.css): a peça fica solta no
+// cartão, sem moldura; só a sombra falsa marca o chão.
+const BACKDROP = '#ece9e3';
 const FOV = 22; // o mesmo do 3D principal em paisagem (src/scene/camera.js)
-// Luz: os mesmos valores do 3D principal (src/scene/index.js, que não os exporta).
+// Luz: os mesmos valores do 3D principal (src/scene/index.js). Ficam copiados de propósito: exportá-los
+// de lá custa bytes no worker da história, que está no teto (medido: +58 bytes gzip).
 const SKY = 0xffffff;
 const GROUND = 0xd9d2c4;
 const SUN = 0xfff6ec;

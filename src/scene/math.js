@@ -12,13 +12,17 @@ export const smooth = (t) => {
 /** Onde `p` cai dentro da faixa [a, b], de 0 a 1. */
 export const within = (p, a, b) => clamp((p - a) / (b - a));
 
-/** Passo suave de `p` ao longo de uma faixa `[a, b]`. */
+/**
+ * Passo suave de `p` ao longo de uma faixa `[a, b]`.
+ * @param {number} p
+ * @param {readonly number[]} range
+ */
 export const ramp = (p, [a, b]) => smooth(within(p, a, b));
 
 /**
  * Interpolação linear entre chaves ordenadas `[[p, valor], …]`.
  * @param {number} p
- * @param {ReadonlyArray<readonly [number, number]>} keys
+ * @param {ReadonlyArray<readonly number[]>} keys
  */
 export function lin(p, keys) {
   if (p <= keys[0][0]) return keys[0][1];

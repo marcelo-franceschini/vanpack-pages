@@ -60,8 +60,9 @@ function dataTexture(width, height, pixel, { repeat = false } = {}) {
   return texture;
 }
 
-// Letras geométricas simples para a marca genérica do cliente ("SUA MARCA").
-const GLYPHS = {
+// Letras geométricas simples para a marca genérica do cliente ("SUA MARCA"); o 3D dos produtos
+// (src/produtos/marca.js) usa as mesmas.
+export const GLYPHS = {
   S: [
     [
       [1, 0],

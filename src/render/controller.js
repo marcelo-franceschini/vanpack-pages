@@ -29,10 +29,16 @@ const frameScheduler = () => {
  */
 
 /**
+ * O que a página manda ao render (src/render/stage.js).
+ * @typedef {{ type: 'progress', value: number } | { type: 'reduced', value: boolean }
+ *   | { type: 'resize', width: number, height: number, dpr: number } | { type: 'audit-lose' }} ControllerMessage
+ */
+
+/**
  * @param {HTMLCanvasElement | OffscreenCanvas} canvas
  * @param {{ width: number, height: number, dpr: number, mobile: boolean, reduced: boolean, progress: number }} init
  * @param {(event: ControllerEvent) => void} emit
- * @returns {{ handle(msg: { type: string } & Record<string, unknown>): void }}
+ * @returns {{ handle(msg: ControllerMessage): void }}
  */
 export function createController(canvas, init, emit) {
   let scene;
