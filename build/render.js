@@ -13,14 +13,7 @@
 
 import { RICH_VARS, visibleClients, visibleProofs } from '../site.config.js';
 import { renderPolicy } from './privacidade.js';
-import { renderText } from './texto.js';
-
-export const escapeHtml = (s) =>
-  String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+import { escapeHtml, renderText } from './texto.js';
 
 export const decodeEntities = (s) =>
   s
