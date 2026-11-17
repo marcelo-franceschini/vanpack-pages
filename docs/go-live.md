@@ -120,7 +120,6 @@ A medição só liga com `VITE_DATA_MODE=production`: no site de demonstração 
 - [ ] Produtos, textos dos cartões e diferenciais conferidos; clientes listados com `autorizado: true` e o registro em `docs/provas/` (ou apagados).
 - [ ] O assistente (chatbot) do WhatsApp já está no ar: o passo 2 de "Como pedir" diz que ele pergunta medida, quantidade e impressão, e o CTA final convida a mandar a foto do produto. A página não promete tempo de resposta.
 - [ ] Depois do deploy, abra o link de dentro do Instagram (e do Facebook) num celular: o botão abre o WhatsApp? Se não abrir, a folha "O WhatsApp não abriu?" aparece?
-- [ ] `npm run og` gera de novo `public/og.jpg`: a imagem atual ainda mostra o texto antigo do hero ("A gente fabrica, imprime e entrega") e precisa ser refeita antes do go-live.
 - [ ] `npm run audit:lighthouse`: SEO 100 só é possível em `production` (em demo o `noindex` reprova o
       item "página bloqueada para indexação", como esperado). O orçamento do script (desempenho 99 no
       mobile, LCP 2,2 s) vale nos dois modos: o 99, e não 100, é o preço do `modulepreload` do three.js.

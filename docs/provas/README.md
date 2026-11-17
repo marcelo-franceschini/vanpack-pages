@@ -10,8 +10,8 @@ Cada item publicado precisa de um arquivo `docs/provas/<id>.md`; um teste confer
 - **Depoimentos e nota do Google:** ficam em `content/provas.yaml`, com `autorizado: true` e um `id`; o
   arquivo é `docs/provas/<id>.md` (a nota do Google usa `google`).
 
-Em modo demo, o cliente de `content/clientes.yaml` que ainda não tem `autorizado: true` aparece com o
-rótulo "Exemplo"; em `production` ele fica fora da página até existir o registro. Um cliente com
+Em modo demo, o cliente de `content/clientes.yaml` que ainda não tem `autorizado: true` aparece
+sem rótulo; em `production` ele fica fora da página até existir o registro. Um cliente com
 `exemplo: true` o build de `production` recusa.
 
 ## O que o arquivo registra

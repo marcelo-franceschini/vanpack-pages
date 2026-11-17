@@ -17,7 +17,7 @@ const SCREENS = {
     deviceScaleFactor: 2,
   },
 };
-const MANY = 8; // anda em qualquer largura (a esteira anda a partir de 6 em 1440 e de 3 em 390)
+const MANY = 8; // quantidade suficiente para encher a tela em qualquer largura
 
 let server;
 let browser;
