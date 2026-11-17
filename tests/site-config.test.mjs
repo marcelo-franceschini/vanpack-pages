@@ -9,7 +9,7 @@ import { contentSecurityPolicy } from '../build/csp.js';
 import { robotsTxt, sitemapXml } from '../build/files.js';
 import { buildJsonLd, footerFields, interpolate, renderPage } from '../build/render.js';
 import { isValidCnpj, logoProblems, validateSite } from '../build/validate.js';
-import { DIFF_ICONS, RICH_VARS, VAR_NAMES, slug } from '../site.config.js';
+import { RICH_VARS, VAR_NAMES, slug } from '../site.config.js';
 import { renderText } from '../build/texto.js';
 import { yearsSince } from '../src/years.js';
 import {
@@ -589,17 +589,15 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
     }
   });
 
-  test('diferenciais vêm de content/: item sem ícone ou texto se adapta e, sem nenhum, a seção e os links somem', () => {
+  test('diferenciais vêm de content/: item sem texto se adapta e, sem nenhum, a seção e os links somem', () => {
     const [primeiro, ...resto] = baseContent.diferenciais.itens;
     const shown = pillars(demo);
     assert.equal(shown.length, 3);
     assert.equal(
       shown[0],
-      `<article class="pillar"><svg aria-hidden="true"><use href="#i-fabrica" /></svg><h3>${primeiro.titulo}</h3><p>${primeiro.texto}</p></article>`,
+      `<article class="pillar"><h3>${primeiro.titulo}</h3><p>${primeiro.texto}</p></article>`,
     );
     assert.equal(pillars(diferenciais(resto)).length, 2);
-    const semIcone = pillars(diferenciais([{ ...primeiro, icone: '' }, ...resto]))[0];
-    assert.ok(!semIcone.includes('<svg') && semIcone.includes(primeiro.titulo));
     const semTexto = pillars(diferenciais([{ ...primeiro, texto: '' }, ...resto]))[0];
     assert.ok(!semTexto.includes('<p>'));
     const nenhum = renderPage(html, diferenciais([]));
@@ -609,12 +607,6 @@ describe('conteúdo: produtos, diferenciais, clientes, prova social e menus', ()
       5,
       'os 5 cartões ficam',
     );
-  });
-
-  test('cada ícone de diferencial tem o seu <symbol> no index.html e está no schema', () => {
-    for (const icon of DIFF_ICONS) assert.ok(html.includes(`<symbol id="i-${icon}"`), icon);
-    const schema = JSON.parse(read('content/schemas/diferenciais.schema.json'));
-    assert.deepEqual(schema.properties.itens.items.properties.icone.enum, DIFF_ICONS);
   });
 
   test('clientes vêm de content/: demo mostra todos, só com o logo (o nome fica no alt) e sem rótulo; production só os autorizados', () => {

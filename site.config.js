@@ -4,9 +4,6 @@
 // Valor vazio = sem dado: o trecho correspondente sai do HTML (nada é inventado nem fica vazio).
 import { yearsSince } from './src/years.js';
 
-/** Ícones dos diferenciais (diferenciais.yaml): cada um é um <symbol id="i-<nome>"> do index.html. */
-export const DIFF_ICONS = ['fabrica', 'lotes', 'conversa', 'caixa'];
-
 /** Variáveis que os textos de content/ e os data-need do HTML podem usar (`{{cidade}}`...). */
 export const VAR_NAMES = [
   'nome',
@@ -156,7 +153,6 @@ export function createSiteConfig({
     differentials: (content.diferenciais?.itens ?? []).map((item) => ({
       title: text(item.titulo),
       text: text(item.texto),
-      icon: text(item.icone),
     })),
     clients: (content.clientes?.clientes ?? []).map((client) => ({
       id: slug(text(client.nome)),

@@ -55,8 +55,8 @@ anunciado. Depois do deploy, peça a indexação no Search Console.
 Os outros arquivos de `content/` (os textos da página: `site.yaml`, `historia.yaml`, `orcamento.yaml`, `whatsapp.yaml`, `rodape.yaml` e o texto da política em `privacidade.md`, além destes):
 
 - `produtos.yaml`: os 4 produtos (nome, descrição, mensagem do botão e descrição do 3D para leitor de tela).
-- `diferenciais.yaml`: até 6 cartões de "Por que a Vanpack" (título, texto e ícone: `fabrica`, `lotes`,
-  `conversa` ou `caixa`). Sem nenhum, a seção some.
+- `diferenciais.yaml`: até 6 cartões de "Por que a Vanpack" (título e texto). Sem nenhum, a seção
+  some.
 - `clientes.yaml` e `clientes/`: até 12 clientes da faixa de logos, com o logo em SVG. O Biscoitê está
   listado com `autorizado: false`: em production ele fica fora da página até existir o registro em
   `docs/provas/<id>.md` (`autorizado: true` exige esse registro). Um cliente com `exemplo: true` o build de

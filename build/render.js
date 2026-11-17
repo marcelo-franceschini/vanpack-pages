@@ -258,14 +258,12 @@ const BLOCKS = {
       )
       .join('\n'),
 
-  // Diferenciais (content/diferenciais.yaml): título, texto e ícone (um <symbol> do index.html).
+  // Diferenciais (content/diferenciais.yaml): título e texto.
   diferenciais: (site) =>
     site.differentials
       .map(
-        ({ title, text: body, icon }) =>
-          `<article class="pillar">${
-            icon ? `<svg aria-hidden="true"><use href="#i-${escapeHtml(icon)}" /></svg>` : ''
-          }<h3>${text(site, title)}</h3>${body ? `<p>${text(site, body)}</p>` : ''}</article>`,
+        ({ title, text: body }) =>
+          `<article class="pillar"><h3>${text(site, title)}</h3>${body ? `<p>${text(site, body)}</p>` : ''}</article>`,
       )
       .join('\n'),
 
