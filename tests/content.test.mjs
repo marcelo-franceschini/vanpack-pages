@@ -146,18 +146,18 @@ describe('campos e tipos', () => {
 });
 
 describe('listas', () => {
-  const diferencial = { titulo: 'Título', texto: 'Texto.', icone: 'fabrica' };
+  const diferencial = { titulo: 'Título', texto: 'Texto.' };
 
-  test('diferenciais: mais de 6, ícone fora da lista e título vazio', () => {
+  test('diferenciais: mais de 6, campo que não existe (o ícone saiu) e título vazio', () => {
     const all = joined({
       'diferenciais.yaml': stringify({
-        itens: [...Array(7).fill(diferencial), { ...diferencial, icone: 'estrela', titulo: '' }],
+        itens: [...Array(7).fill(diferencial), { ...diferencial, icone: 'fabrica', titulo: '' }],
       }),
     });
     assert.match(all, /› itens: tem 8 itens; o máximo é 6/);
     assert.match(
       all,
-      /› itens\[7\]\.icone: valor não aceito; use um destes: fabrica, lotes, conversa, caixa/,
+      /› itens\[7\]\.icone: o campo "icone" não existe; os campos são: titulo, texto/,
     );
     assert.match(all, /› itens\[7\]\.titulo: não pode ficar vazio/);
   });
