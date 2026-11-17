@@ -1,5 +1,6 @@
 // Texturas procedurais da cena. Sem imagens: tudo é desenhado em OffscreenCanvas (impressão, abas,
-// logo do baú; sem ele, as peças ficam sem impressão) ou gerado como DataTexture.
+// logo do baú; sem ele, as peças ficam sem impressão) ou gerado como DataTexture. O 3D dos produtos
+// (src/produtos/) reaproveita a textura em canvas (canvasTexture) e a palavra da marca (drawWord).
 import {
   CanvasTexture,
   DataTexture,
@@ -25,7 +26,7 @@ const SCALE = { body: 0.5, print: 0.75, flap: 0.5, logo: 0.5 };
  * @param {(g: OffscreenCanvasRenderingContext2D, w: number, h: number) => void} draw
  * @returns {CanvasTexture | null} `null` quando o ambiente não tem OffscreenCanvas
  */
-function canvasTexture(width, height, scale, draw) {
+export function canvasTexture(width, height, scale, draw) {
   if (!HAS_OFFSCREEN_CANVAS) return null;
   try {
     const canvas = new OffscreenCanvas(Math.round(width * scale), Math.round(height * scale));
@@ -60,9 +61,10 @@ function dataTexture(width, height, pixel, { repeat = false } = {}) {
   return texture;
 }
 
-// Letras geométricas simples para a marca genérica do cliente ("SUA MARCA"); o 3D dos produtos
-// (src/produtos/marca.js) usa as mesmas.
-export const GLYPHS = {
+// A marca genérica do cliente ("SUA MARCA") em letras geométricas simples, em coordenadas de projeto. A
+// impressão da caixa (drawPrint) e a etiqueta dos produtos (src/produtos/marca.js) desenham a palavra
+// com drawWord.
+const GLYPHS = {
   S: [
     [
       [1, 0],
@@ -125,6 +127,44 @@ export const GLYPHS = {
   ],
 };
 
+const WORD = 'SUA MARCA';
+const GLYPH_W = 50;
+const STROKE = 14;
+const GAP = 22; // entre as letras
+const SPACE = 50; // entre as palavras
+export const WORD_HEIGHT = 64;
+// 8 letras e 1 espaço: o tests/copias-3d.test.mjs confere a conta contra o desenho da palavra
+export const WORD_WIDTH = 8 * (GLYPH_W + GAP) - GAP + SPACE;
+
+/**
+ * Desenha a palavra da marca com o canto superior esquerdo em (x, y), na cor de traço já posta.
+ * @param {OffscreenCanvasRenderingContext2D} g
+ * @param {number} x
+ * @param {number} y
+ */
+export function drawWord(g, x, y) {
+  g.lineWidth = STROKE;
+  g.lineJoin = 'miter';
+  g.lineCap = 'square';
+  for (const ch of WORD) {
+    if (ch === ' ') {
+      x += SPACE;
+      continue;
+    }
+    for (const line of GLYPHS[ch]) {
+      g.beginPath();
+      line.forEach(([u, v], i) => {
+        const px = x + STROKE / 2 + u * (GLYPH_W - STROKE);
+        const py = y + STROKE / 2 + v * (WORD_HEIGHT - STROKE);
+        if (i) g.lineTo(px, py);
+        else g.moveTo(px, py);
+      });
+      g.stroke();
+    }
+    x += GLYPH_W + GAP;
+  }
+}
+
 /** Marca do cliente demo: glifo (anel + ponto) e a palavra, numa tinta só (Floresta). */
 function drawPrint(g, w, h) {
   g.fillStyle = PALETTE.forest;
@@ -138,37 +178,7 @@ function drawPrint(g, w, h) {
   g.beginPath();
   g.arc(cx, cy, 24, 0, Math.PI * 2);
   g.fill();
-
-  const glyphH = 64;
-  const glyphW = 50;
-  const stroke = 14;
-  const gap = 22;
-  const space = 50;
-  const word = 'SUA MARCA';
-  let total = -gap;
-  for (const ch of word) total += ch === ' ' ? space : glyphW + gap;
-  let x = (w - total) / 2;
-  const y = h * 0.62;
-  g.lineWidth = stroke;
-  g.lineJoin = 'miter';
-  g.lineCap = 'square';
-  for (const ch of word) {
-    if (ch === ' ') {
-      x += space;
-      continue;
-    }
-    for (const line of GLYPHS[ch]) {
-      g.beginPath();
-      line.forEach(([u, v], i) => {
-        const px = x + stroke / 2 + u * (glyphW - stroke);
-        const py = y + stroke / 2 + v * (glyphH - stroke);
-        if (i) g.lineTo(px, py);
-        else g.moveTo(px, py);
-      });
-      g.stroke();
-    }
-    x += glyphW + gap;
-  }
+  drawWord(g, (w - WORD_WIDTH) / 2, h * 0.62);
 }
 
 /** Painel do papelão (face externa), com ou sem a impressão do cliente. */

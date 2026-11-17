@@ -11,7 +11,7 @@
     "src/scene/index.js": "764ba62f34bbf651cd47ae2f6bd8b438be8e48d5ea852e7bad2f3c3cdee164ed",
     "src/scene/machine.js": "ec0fbaff9db5dda3c4b283a2eacec861c0ed20a364934b4879f341748d0b8199",
     "src/scene/math.js": "940b4bfcb59d8c1a28705becd1bcfcdbf248353ea1f5a1cc3fbf4a1d5ce43cf7",
-    "src/scene/textures.js": "077f2ca349d003f005c9b500a8b9a8b90db804deb149d6722a1a87da333e9b4a",
+    "src/scene/textures.js": "a75d2d08358a97d8b3bfb3b2accc6a87fab50a3e53669b6e6936bb0ff508f2d0",
     "src/scene/timeline.js": "75c40d1a8a312508df336cb898682e10275eb58236cb39f586181e9daa572620",
     "src/scene/truck.js": "50696baf9be447ae4c4499d3c3decd44c07e59223a7e20207ffc3205c7bfb03e",
     "tests/scene.test.mjs": "f1cb930850c045b979d2e4625e5aee4ebe009ae970b3a1755157d88e2ce4b129"

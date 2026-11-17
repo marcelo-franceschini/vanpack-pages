@@ -1,10 +1,13 @@
-// As cópias de propósito entre o 3D principal e o 3D dos produtos não podem se afastar sem aviso.
-// A luz e o FOV ficam copiados em src/produtos/cena.js porque exportá-los do 3D principal custa bytes no
-// worker da história (58 bytes gzip, medido no e747779), que está no teto. Este teste lê os arquivos:
-// custa zero byte e não toca na trava do 3D. Puro, sem navegador.
+// Números do 3D escritos à mão que precisam bater com outro lugar, sem nada que os trave. A luz e o FOV
+// ficam copiados em src/produtos/cena.js porque exportá-los do 3D principal custa bytes no worker da
+// história (58 bytes gzip, medido no e747779), que está no teto; pelo mesmo motivo, a largura da palavra
+// da marca (src/scene/textures.js) é uma conta de constantes, e não um laço sobre as letras. Os testes
+// leem os arquivos ou desenham num contexto falso: zero byte no site e nada na trava do 3D. Puros, sem
+// navegador.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import { WORD_HEIGHT, WORD_WIDTH, drawWord } from '../src/scene/textures.js';
 
 const read = (file) => readFileSync(new URL(`../${file}`, import.meta.url), 'utf8');
 const grab = (source, pattern, what) => {
@@ -40,4 +43,22 @@ test('a luz e o FOV do 3D dos produtos são os do 3D principal (cópias de prop�
     Number(grab(cena, /new DirectionalLight\(SUN, ([\d.]+)\)/, 'sol')[0]),
     Number(sunPower),
   );
+});
+
+test('a largura e a altura da palavra da marca (WORD_WIDTH, WORD_HEIGHT) são as do desenho', () => {
+  // a palavra é desenhada num contexto que só anota os pontos; a extensão do traço tem de bater com elas
+  const xs = [];
+  const ys = [];
+  const point = (x, y) => {
+    xs.push(x);
+    ys.push(y);
+  };
+  const g = { beginPath() {}, stroke() {}, moveTo: point, lineTo: point };
+  drawWord(g, 0, 0);
+  assert.equal(g.lineCap, 'square', 'a ponta quadrada passa meio traço do último ponto');
+  const half = g.lineWidth / 2;
+  assert.equal(Math.min(...xs) - half, 0);
+  assert.equal(Math.max(...xs) + half, WORD_WIDTH);
+  assert.equal(Math.min(...ys) - half, 0);
+  assert.equal(Math.max(...ys) + half, WORD_HEIGHT);
 });
