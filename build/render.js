@@ -68,13 +68,14 @@ export function footerFields(site) {
         address.postalCode && `${site.content.rodape.rotulos.cep} ${address.postalCode}`,
       ]
         .filter(Boolean)
-        .join(' · ')
+        .map(escapeHtml)
+        .join('<br />')
     : '';
   const link = (href, label, extra = '') =>
     `<a href="${escapeHtml(href)}"${extra}>${escapeHtml(label)}</a>`;
   return {
     cnpj: site.cnpj && escapeHtml(site.cnpj),
-    endereco: place && escapeHtml(place),
+    endereco: place,
     horario: site.hours && escapeHtml(site.hours),
     telefone:
       site.phone &&

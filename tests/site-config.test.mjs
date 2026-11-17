@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { describe, test } from 'node:test';
 import { contentSecurityPolicy } from '../build/csp.js';
 import { robotsTxt, sitemapXml } from '../build/files.js';
-import { buildJsonLd, interpolate, renderPage } from '../build/render.js';
+import { buildJsonLd, footerFields, interpolate, renderPage } from '../build/render.js';
 import { isValidCnpj, logoProblems, validateSite } from '../build/validate.js';
 import { DIFF_ICONS, RICH_VARS, VAR_NAMES, slug } from '../site.config.js';
 import { renderText } from '../build/texto.js';
@@ -390,6 +390,9 @@ describe('render', () => {
     const out = renderPage(html, demo);
     const flat = out.replace(/\s+/g, ' ');
     assert.ok(!/data-need|data-field|\{\{/.test(out));
+    const fields = footerFields(demo);
+    assert.match(fields.endereco, /<br \/>/);
+    assert.ok(out.includes(fields.endereco));
     for (const value of [DEMO_EMPRESA.cnpj, DEMO_EMPRESA.razao_social, DEMO_EMPRESA.horario]) {
       assert.ok(flat.includes(value), value);
     }
