@@ -5,11 +5,11 @@
 // cartões, o worker libera tudo (dispose e forceContextLoss) e é encerrado.
 import { ilustrar } from './gatilho.js';
 
-const MOBILE = '(max-width: 760px), (pointer: coarse)'; // o mesmo critério do 3D principal
 const REDUCED = '(prefers-reduced-motion: reduce)';
-// 1,5 também no desktop: na grade 2×2 até 4 cartões ficam à vista, e a 2× eles desenhariam 3,6× mais
-// pixels por quadro que os 3 de antes (medido no WebGL por software: 18 contra 5 quadros por segundo)
-const MAX_DENSITY = { desktop: 1.5, mobile: 1.5 };
+// Densidade até 1,5 no celular e no desktop: na grade 2×2 até 4 cartões ficam à vista, e a 2× eles
+// desenhariam 3,6× mais pixels por quadro que os 3 de antes (medido no WebGL por software: 18 contra 5
+// quadros por segundo)
+const MAX_DENSITY = 1.5;
 const MAX_PIXELS = 700_000; // pixels desenhados por cartão: o 3D grande não pesa mais que os pequenos
 const NEAR = '300px 0px';
 const DRAG_RAD = 0.012; // rad girados por pixel arrastado
@@ -41,10 +41,7 @@ export function montarProdutos(areas) {
     return;
   }
   const reducedQuery = matchMedia(REDUCED);
-  const density = Math.min(
-    devicePixelRatio || 1,
-    matchMedia(MOBILE).matches ? MAX_DENSITY.mobile : MAX_DENSITY.desktop,
-  );
+  const density = Math.min(devicePixelRatio || 1, MAX_DENSITY);
   /** @type {any} */
   const audit =
     import.meta.env.MODE === 'audit'

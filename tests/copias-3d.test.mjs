@@ -41,9 +41,3 @@ test('a luz e o FOV do 3D dos produtos são os do 3D principal (cópias de prop�
     Number(sunPower),
   );
 });
-
-test('o critério de "celular" do 3D principal e o dos produtos são o mesmo', () => {
-  const stage = grab(read('src/render/stage.js'), /const MOBILE = '([^']+)'/, 'stage.js')[0];
-  const montar = grab(read('src/produtos/montar.js'), /const MOBILE = '([^']+)'/, 'montar.js')[0];
-  assert.equal(montar, stage);
-});
