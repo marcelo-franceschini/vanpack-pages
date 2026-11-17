@@ -183,17 +183,37 @@ describe('3D nos cartões', () => {
         const b = await pixels(page, i);
         assert.notEqual(a.signature, b.signature, `cartão ${i + 1}: o quadro muda (gira)`);
       }
-      const labels = await page.evaluate(() =>
-        [...document.querySelectorAll('.model-3d canvas')].map((c) => ({
-          role: c.getAttribute('role'),
-          label: c.getAttribute('aria-label'),
-          tabIndex: c.tabIndex,
-        })),
+      // o nome fica só na área, que é o elemento focável; o canvas é decorativo (um nome só para o
+      // leitor de tela, em vez do mesmo texto duas vezes)
+      const areas = await page.evaluate(() =>
+        [...document.querySelectorAll('.model-3d')].map((area) => {
+          const canvas = area.querySelector('canvas');
+          return {
+            role: area.getAttribute('role'),
+            label: area.getAttribute('aria-label'),
+            tabIndex: area.tabIndex,
+            canvas: canvas && {
+              hidden: canvas.getAttribute('aria-hidden'),
+              role: canvas.getAttribute('role'),
+              label: canvas.getAttribute('aria-label'),
+              tabIndex: canvas.tabIndex,
+            },
+          };
+        }),
       );
-      for (const { role, label, tabIndex } of labels) {
-        assert.equal(role, 'img');
-        assert.match(label, /^Modelo 3D de .+ girando$/);
-        assert.equal(tabIndex, -1, 'o canvas não recebe foco');
+      assert.ok(
+        areas.some(({ canvas }) => canvas),
+        'algum cartão montou o canvas',
+      );
+      for (const { role, label, tabIndex, canvas } of areas) {
+        assert.equal(role, 'group');
+        assert.equal(tabIndex, 0, 'a área recebe foco');
+        assert.match(label, /^Modelo 3D de .+ girando\. Use as setas do teclado para girar\.$/);
+        if (!canvas) continue;
+        assert.equal(canvas.hidden, 'true', 'o canvas fica fora da árvore de acessibilidade');
+        assert.equal(canvas.role, null, 'o canvas não tem papel próprio');
+        assert.equal(canvas.label, null, 'o canvas não repete o nome');
+        assert.equal(canvas.tabIndex, -1, 'o canvas não recebe foco');
       }
       assert.deepEqual(problems, []);
       await context.close();
@@ -208,8 +228,41 @@ describe('3D nos cartões', () => {
     assert.ok(a.ink > 0.05);
     await page.waitForTimeout(1500);
     assert.equal((await pixels(page, 0)).signature, a.signature, 'parado');
-    const label = await page.getAttribute('.model-3d canvas', 'aria-label');
-    assert.equal(label, 'Modelo 3D de caixa normal fechada');
+    const label = await page.getAttribute('.model-3d', 'aria-label');
+    assert.equal(label, 'Modelo 3D de caixa normal fechada. Use as setas do teclado para girar.');
+    await context.close();
+  });
+
+  test('ligar o movimento reduzido com a página aberta tira o "girando" do nome, e desligar o devolve', async () => {
+    const { page, context } = await open(prod);
+    await showProducts(page, 1);
+    const names = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll('.model-3d')].map((area) => area.getAttribute('aria-label')),
+      );
+    const before = await names();
+    assert.equal(before.length, 4);
+    for (const name of before) {
+      assert.match(name, /^Modelo 3D de .+ girando\. Use as setas do teclado para girar\.$/);
+    }
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.waitForFunction(() =>
+      [...document.querySelectorAll('.model-3d')].every(
+        (area) => !area.getAttribute('aria-label').includes('girando'),
+      ),
+    );
+    assert.deepEqual(
+      await names(),
+      before.map((name) => name.replace(' girando.', '.')),
+      'o nome de cada área perde só o "girando"',
+    );
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await page.waitForFunction(() =>
+      [...document.querySelectorAll('.model-3d')].every((area) =>
+        area.getAttribute('aria-label').includes(' girando.'),
+      ),
+    );
+    assert.deepEqual(await names(), before);
     await context.close();
   });
 

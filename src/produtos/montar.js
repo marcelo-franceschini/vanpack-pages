@@ -66,8 +66,10 @@ export function montarProdutos(areas) {
   let worker = null;
   let failed = false;
 
-  const label = (card) =>
-    `Modelo 3D de ${card.area.dataset.peca}${reducedQuery.matches ? '' : ' girando'}`;
+  // o nome do cartão fica só na área (o elemento focável); o canvas é decorativo, senão o leitor de
+  // tela lê o mesmo texto duas vezes
+  const describe = (card) =>
+    `Modelo 3D de ${card.area.dataset.peca}${reducedQuery.matches ? '' : ' girando'}. Use as setas do teclado para girar.`;
   const send = (msg) => worker?.postMessage(msg);
 
   function measure(card, rect = card.area.getBoundingClientRect()) {
@@ -144,8 +146,7 @@ export function montarProdutos(areas) {
     if (!worker) start();
     if (!card.canvas) {
       card.canvas = document.createElement('canvas');
-      card.canvas.setAttribute('role', 'img');
-      card.canvas.setAttribute('aria-label', label(card));
+      card.canvas.setAttribute('aria-hidden', 'true');
       card.ctx = card.canvas.getContext('bitmaprenderer');
       card.area.prepend(card.canvas);
     }
@@ -224,7 +225,7 @@ export function montarProdutos(areas) {
     // teclado: setas giram a peça em foco (o mesmo arrasto, em passos)
     area.tabIndex = 0;
     area.setAttribute('role', 'group');
-    area.setAttribute('aria-label', `${label(card)}. Use as setas do teclado para girar.`);
+    area.setAttribute('aria-label', describe(card));
     area.addEventListener('keydown', (e) => {
       const turn = { ArrowLeft: -KEY_RAD, ArrowRight: KEY_RAD }[e.key];
       if (!turn || !card.near) return;
@@ -246,7 +247,8 @@ export function montarProdutos(areas) {
   );
   reducedQuery.addEventListener('change', () => {
     send({ type: 'reduced', value: reducedQuery.matches });
-    for (const card of cards) card.canvas?.setAttribute('aria-label', label(card));
+    if (failed) return; // sem 3D, fail() já tirou o papel e o nome das áreas
+    for (const card of cards) card.area.setAttribute('aria-label', describe(card));
   });
   if (audit) {
     audit.loseContext = () => send({ type: 'audit-lose' });
