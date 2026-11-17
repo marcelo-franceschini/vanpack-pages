@@ -235,7 +235,7 @@ A verificação (lint, tipos e a suíte inteira de testes) mora em [`verificar.y
 ## Arquitetura
 
 ```text
-404.html                   Página 404 (passa pelo build: CSP, link para o início da URL do site e textos de content/site.yaml)
+404.html                   Página 404 (passa pelo build: CSP, base com o caminho do site, link para o início da URL do site e textos de content/site.yaml)
 index.html                 Página única: CSS inline, HTML e metadados
 src/base.css               Fonte, tokens da marca e reset, comuns às três páginas (cada uma embute por @import; o build junta no HTML)
 site.config.js             Marca, variáveis dos textos e createSiteConfig({ env, content }): monta a config

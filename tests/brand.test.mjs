@@ -52,7 +52,7 @@ describe('paleta e tipografia (index.html)', () => {
   });
 
   test('a fonte e os tokens têm uma fonte só: as páginas embutem src/base.css e não repetem nada', () => {
-    for (const page of ['index.html', 'politica-de-privacidade.html']) {
+    for (const page of ['index.html', 'politica-de-privacidade.html', '404.html']) {
       const own = [...read(page).matchAll(/<style>([\s\S]*?)<\/style>/g)]
         .map((m) => m[1])
         .join('\n');

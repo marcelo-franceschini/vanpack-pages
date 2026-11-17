@@ -66,6 +66,44 @@ function clientLogosPlugin(site, contentDir) {
   };
 }
 
+/**
+ * A 404 do GitHub Pages é servida em qualquer endereço que não existe, inclusive dentro de subpastas
+ * (/vanpack-pages/a/b), e ali um caminho relativo (./brand/...) aponta para o lugar errado. No build ela
+ * ganha um <base> com o caminho do site (o da VITE_SITE_URL), e tudo passa a sair da raiz do site.
+ */
+function notFoundBasePlugin(site) {
+  const path = new URL(site.siteUrl).pathname;
+  return {
+    name: 'vanpack:404-base',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html, { filename }) {
+        if (basename(filename) !== '404.html') return html;
+        return html.replace(
+          /<meta charset="utf-8"\s*\/?>/i,
+          (m) => `${m}\n    <base href="${path}" />`,
+        );
+      },
+    },
+  };
+}
+
+/** No `vite preview` o site também responde no caminho do site publicado, como no GitHub Pages. */
+function previewSubpathPlugin(site) {
+  const path = new URL(site.siteUrl).pathname;
+  return {
+    name: 'vanpack:preview-subcaminho',
+    configurePreviewServer(server) {
+      if (path === '/') return;
+      server.middlewares.use((req, _res, next) => {
+        if (req.url?.startsWith(path)) req.url = `/${req.url.slice(path.length)}`;
+        next();
+      });
+    },
+  };
+}
+
 /** robots.txt e sitemap.xml saem da URL do site (em demo o robots bloqueia tudo). */
 function siteFilesPlugin(site) {
   return {
@@ -149,6 +187,8 @@ export default defineConfig(({ mode, command }) => {
       ),
       clientLogosPlugin(site, contentDir),
       siteFilesPlugin(site),
+      notFoundBasePlugin(site),
+      previewSubpathPlugin(site),
       cspPlugin(site),
     ],
     // o que a medição precisa saber no navegador (host da página publicada, servidor e site do Umami)

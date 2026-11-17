@@ -31,7 +31,10 @@ function serveUnder(base) {
     const relative = path.startsWith(base) ? path.slice(base.length) || 'index.html' : null;
     const file = relative && join(DIST, relative);
     if (!file || !file.startsWith(DIST) || !existsSync(file) || !statSync(file).isFile()) {
-      res.writeHead(404).end('404');
+      // como o GitHub Pages: dentro do site, o que não existe devolve a 404.html com status 404
+      const inside = path.startsWith(base);
+      res.writeHead(404, inside ? { 'Content-Type': TYPES['.html'] } : {});
+      res.end(inside ? readFileSync(`${DIST}404.html`) : '404');
       return;
     }
     res.writeHead(200, { 'Content-Type': TYPES[extname(file)] ?? 'application/octet-stream' });
@@ -108,6 +111,45 @@ describe(
         const { failed, problems } = await failures(path);
         assert.deepEqual(failed, [], path);
         assert.deepEqual(problems, [], path);
+      }
+    });
+
+    test('a 404 servida em subpastas inexistentes carrega logo, fonte e não quebra recursos', async () => {
+      for (const sub of ['nao-existe/', 'pasta/nao-existe', 'a/b/c']) {
+        const url = `${server.url}${sub}`;
+        const context = await browser.newContext();
+        const page = await context.newPage();
+        const failed = [];
+        const problems = [];
+        page.on('response', (res) => {
+          if (res.url() !== url && res.status() >= 400) {
+            failed.push(`${res.status()} ${res.url()}`);
+          }
+        });
+        page.on('requestfailed', (req) => {
+          failed.push(`falhou ${req.url()}`);
+        });
+        page.on('pageerror', (err) => problems.push(`pageerror: ${err.message}`));
+        page.on('console', (m) => {
+          if (['error', 'warning'].includes(m.type())) problems.push(`console: ${m.text()}`);
+        });
+        const res = await page.goto(url);
+        assert.equal(res?.status(), 404, `${sub} status 404`);
+        await page.waitForLoadState('load');
+        const logoOk = await page.evaluate(() => {
+          const img = document.querySelector('.logo img');
+          return Boolean(img && img.complete && img.naturalWidth > 0);
+        });
+        assert.ok(logoOk, `${sub}: logo carregou`);
+        const fontOk = await page.evaluate(() => {
+          return [...document.fonts].some(
+            (f) => f.family.includes('Archivo') && f.status === 'loaded',
+          );
+        });
+        assert.ok(fontOk, `${sub}: fonte Archivo carregou`);
+        assert.deepEqual(failed, [], `${sub}: nenhum pedido falhou`);
+        assert.deepEqual(problems, [], `${sub}: sem erros no console`);
+        await context.close();
       }
     });
 
