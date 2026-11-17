@@ -1,7 +1,7 @@
 // Carrossel de clientes (src/carrossel.js): esteira automática da direita para a esquerda em qualquer
 // largura e SEM nenhum controle (nem pausa, nem setas); pausa sozinha (mouse, foco de teclado, toque,
-// aba oculta e fora da tela), movimento reduzido (parada), poucos itens (a esteira anda do mesmo jeito),
-// cópias fora da leitura e do foco, e layout sem sobreposição nem rolagem horizontal.
+// aba oculta e fora da tela), movimento reduzido (parada), poucos itens (com 1 a 3 fica parada e centralizada;
+// a partir de 4 anda), cópias fora da leitura e do foco, e layout sem sobreposição nem rolagem horizontal.
 // A lista de clientes de content/ pode ter qualquer tamanho: cada teste põe no HTML servido a
 // quantidade de cartões de que precisa (`items`), com nomes "Cliente 1", "Cliente 2"...
 import assert from 'node:assert/strict';
@@ -17,7 +17,7 @@ const SCREENS = {
     deviceScaleFactor: 2,
   },
 };
-const MANY = 8; // quantidade suficiente para encher a tela em qualquer largura
+const MANY = 8; // quantidade suficiente para encher a tela e andar em qualquer largura
 
 let server;
 let browser;
@@ -273,30 +273,57 @@ describe('carrossel com movimento reduzido', () => {
   }
 });
 
-describe('poucos clientes: a esteira anda do mesmo jeito', () => {
+describe('poucos clientes: com 1 a 3 logos fica parada; a partir de 4 anda', () => {
   for (const [screen, items] of [
     ['1440×900', 1],
-    ['1440×900', 4],
+    ['1440×900', 2],
+    ['1440×900', 3],
     ['390×844', 1],
     ['390×844', 2],
+    ['390×844', 3],
   ]) {
-    test(`${screen} com ${items}: anda, e as cópias enchem a janela`, async () => {
-      const { page, context } = await open(screen, { items });
-      assert.equal(await estado(page), 'rodando');
+    test(`${screen} com ${items}: parado, centralizado e sem cópias`, async () => {
+      const { page, context } = await open(screen, { items, expected: 'estatico' });
+      assert.equal(await estado(page), 'estatico');
       const info = await page.evaluate(() => {
         const view = document.querySelector('.carrossel-janela').getBoundingClientRect();
         const all = [...document.querySelectorAll('.carrossel-trilho .cliente')];
+        const first = all[0].getBoundingClientRect();
         const last = all.at(-1).getBoundingClientRect();
         return {
-          originals: all.filter((li) => !li.hasAttribute('aria-hidden')).length,
-          right: last.right - view.right,
+          copies: all.filter((li) => li.hasAttribute('aria-hidden')).length,
+          left: first.left - view.left,
+          right: view.right - last.right,
+          scrollWidth: document.documentElement.scrollWidth,
+          innerWidth,
         };
       });
-      assert.equal(info.originals, items);
-      assert.ok(info.right >= 0, 'a janela fica cheia até a borda direita');
+      assert.equal(info.copies, 0);
+      assert.ok(info.scrollWidth <= info.innerWidth, 'sem rolagem horizontal');
+      assert.ok(
+        Math.abs(info.left - info.right) < 2,
+        `centralizado (${info.left.toFixed(1)} × ${info.right.toFixed(1)})`,
+      );
       await context.close();
     });
   }
+
+  test('1440×900 com 4: anda, e as cópias enchem a janela', async () => {
+    const { page, context } = await open('1440×900', { items: 4 });
+    assert.equal(await estado(page), 'rodando');
+    const info = await page.evaluate(() => {
+      const view = document.querySelector('.carrossel-janela').getBoundingClientRect();
+      const all = [...document.querySelectorAll('.carrossel-trilho .cliente')];
+      const last = all.at(-1).getBoundingClientRect();
+      return {
+        originals: all.filter((li) => !li.hasAttribute('aria-hidden')).length,
+        right: last.right - view.right,
+      };
+    });
+    assert.equal(info.originals, 4);
+    assert.ok(info.right >= 0, 'a janela fica cheia até a borda direita');
+    await context.close();
+  });
 
   for (const [screen, items] of [
     ['1440×900', 1],

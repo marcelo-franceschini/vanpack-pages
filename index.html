@@ -801,9 +801,8 @@
       /* clientes: só prova autorizada (ou exemplo, em demo), num carrossel (src/carrossel.js) em
          qualquer largura. Sem JS a janela rola na horizontal; com JS (.on) os itens andam devagar da
          direita para a esquerda numa esteira sem fim (transform, no compositor), com degradê Papel
-         nas bordas e sem nenhum controle (ela pausa sozinha, ver src/carrossel.js). Com poucos logos os
-         itens se repetem para encher a janela; só com movimento reduzido e itens que cabem na largura
-         (.estatico) ficam parados e centralizados. */
+         nas bordas e sem nenhum controle (ela pausa sozinha, ver src/carrossel.js). Com menos de 4 logos
+         ou com movimento reduzido (.estatico) ficam parados e centralizados. */
       .carrossel-janela {
         position: relative;
         overflow-x: auto;
@@ -837,6 +836,7 @@
       }
       .carrossel.estatico .carrossel-trilho {
         width: auto;
+        flex-wrap: wrap;
         justify-content: center;
       }
       .cliente {

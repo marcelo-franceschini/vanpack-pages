@@ -3,11 +3,11 @@
 // Web Animations API em transform, que roda no compositor: nada é medido a cada quadro, só no
 // ResizeObserver. A página não tem controle da esteira (nem pausa, nem setas): ela pausa sozinha com o
 // mouse em cima, com foco de teclado, ao tocar, com a aba oculta e fora da tela, e retoma sozinha. Com
-// movimento reduzido no sistema não há movimento: se os itens cabem na largura, ficam parados e
-// centralizados, sem cópias.
+// menos de 4 logos ou com movimento reduzido no sistema a esteira fica parada e centralizada, sem cópias.
 
 const SPEED = 30; // px/s: lento, para ler cada logo
 const RESUME_MS = 1500; // depois de soltar o dedo
+const MIN_TO_RUN = 4; // com menos logos a esteira mostraria o mesmo logo repetido lado a lado
 
 /**
  * @param {HTMLElement | null} root elemento `[data-carrossel]` gerado pelo build/render.js
@@ -65,9 +65,9 @@ export function mountCarousel(root) {
     const width = view.clientWidth;
     const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
     const nextWidth = originals.length * (originals[0].offsetWidth + gap);
-    // Com poucos logos a esteira anda do mesmo jeito (os itens se repetem para encher a janela); só com
-    // movimento reduzido eles ficam parados e centralizados, sem cópias.
-    if (nextWidth - gap <= width + 0.5 && reduced.matches) {
+    // Com 1 a 3 logos a esteira fica parada (com menos logos ela mostraria o mesmo logo repetido lado a
+    // lado); com 4 ou mais ela anda. Com movimento reduzido e itens que cabem na largura, também para.
+    if (originals.length < MIN_TO_RUN || (nextWidth - gap <= width + 0.5 && reduced.matches)) {
       animation?.cancel();
       animation = null;
       setClones(0);
