@@ -398,7 +398,7 @@ describe('build: CSP, requisições e marca na página', () => {
       const count = await page.evaluate(
         () => document.querySelectorAll('img[src*="brand"]').length,
       );
-      assert.ok(count >= 4, 'cabeçalho, carregamento, chamada final e rodapé');
+      assert.ok(count >= 3, 'cabeçalho, carregamento e rodapé');
       for (let index = 0; index < count; index++) {
         // cada logotipo é medido no meio da tela (o cabeçalho fixo não pode cobri-lo)
         await page.evaluate((i) => {

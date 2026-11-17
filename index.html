@@ -991,11 +991,6 @@
         gap: 3rem 5rem;
         align-items: start;
       }
-      .cta .mark {
-        height: 2.125rem;
-        width: auto;
-        margin-bottom: 2.5rem;
-      }
       .cta h2 {
         font-size: var(--t-display);
         font-weight: 900;
@@ -1150,11 +1145,6 @@
         background: var(--papel);
         color: var(--floresta);
         font: 900 var(--t-item) / 1 var(--font);
-      }
-      @media (min-width: 861px) {
-        .cta .how {
-          padding-top: 4.625rem; /* a altura da marca e o respiro dela: o 1º passo sai na linha do título */
-        }
       }
       @media (max-width: 860px) {
         .cta .wrap {
@@ -1708,15 +1698,6 @@
       <section class="block cta" id="orcamento">
         <div class="wrap">
           <div>
-            <img
-              class="mark"
-              src="/brand/vanpack-horizontal-negativo.svg"
-              alt="{{nome}}"
-              width="136"
-              height="34"
-              loading="lazy"
-              decoding="async"
-            />
             <h2>{{orcamento.titulo}}</h2>
             <p class="lead">{{orcamento.texto}}</p>
             <a class="btn btn-light" data-cta="orcamento" data-wa="{{whatsapp.mensagens.orcamento}}"

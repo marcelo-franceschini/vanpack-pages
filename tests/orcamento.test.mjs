@@ -59,7 +59,7 @@ const SVG_TOTAL = 13.7; // todos os SVGs de brand/ e produtos/ (13,5 + o SVG da 
 const TOTAL = {
   jsInicial: 131.0, // script da página + worker da história + three.js
   carga: 171.2, // HTML + JS inicial + fonte + os 2 logos do topo e da cena (171,0 no limite dos schemas)
-  visita: 181.5, // a carga + o 3D dos produtos + o logo do CTA final
+  visita: 180.4, // a carga + o 3D dos produtos
 };
 
 const built = existsSync(`${DIST}index.html`);
@@ -115,11 +115,7 @@ describe('orçamento de bytes', { skip: !built && 'sem dist/: rode `npm run buil
       size('fonts/archivo-latin.woff2') +
       gzip('brand/vanpack-horizontal.svg') +
       gzip('brand/vanpack-simbolo.svg');
-    const visita =
-      carga +
-      bytes.montar +
-      bytes['produtos-worker'] +
-      gzip('brand/vanpack-horizontal-negativo.svg');
+    const visita = carga + bytes.montar + bytes['produtos-worker'];
     assert.ok(jsInicial <= TOTAL.jsInicial * KB, over('JS inicial', jsInicial, TOTAL.jsInicial));
     assert.ok(carga <= TOTAL.carga * KB, over('carga inicial', carga, TOTAL.carga));
     assert.ok(visita <= TOTAL.visita * KB, over('visita completa', visita, TOTAL.visita));
