@@ -493,3 +493,35 @@ describe('telas de 320 e 344 px', () => {
     });
   }
 });
+
+describe('tablet em pé: os 5 cartões têm a mesma largura', () => {
+  for (const { width, height } of [
+    { width: 768, height: 1024 },
+    { width: 820, height: 1180 },
+    { width: 1024, height: 1366 },
+  ]) {
+    test(`${width}×${height}: os 5 cartões têm a mesma largura`, async () => {
+      const { page, context } = await openPage(browser, server.url, {
+        viewport: { width, height },
+        reducedMotion: 'reduce',
+        hasTouch: true,
+        isMobile: true,
+      });
+      const widths = [];
+      for (const p of CHAPTERS) {
+        await scrollToProgress(page, p);
+        const w = await page.evaluate(() => {
+          const card = document.querySelector('.card.on');
+          return Math.round(card.getBoundingClientRect().width);
+        });
+        widths.push(w);
+      }
+      assert.equal(
+        new Set(widths).size,
+        1,
+        `larguras diferentes nos capítulos: ${widths.join(', ')}`,
+      );
+      await context.close();
+    });
+  }
+});
