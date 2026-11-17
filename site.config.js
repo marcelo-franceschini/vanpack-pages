@@ -18,6 +18,7 @@ export const VAR_NAMES = [
   'cep',
   'telefone',
   'telefone_exibicao',
+  'email',
   'whatsapp',
   'whatsapp_exibicao',
   'horario',
@@ -132,6 +133,7 @@ export function createSiteConfig({
     whatsappDisplay: whatsapp ? formatPhone(`+${whatsapp}`) || `+${whatsapp}` : '',
     phone,
     phoneDisplay: text(empresa.telefone_exibicao) || formatPhone(phone) || phone,
+    email: text(empresa.email),
     cnpj: text(empresa.cnpj),
     legalName,
     address: {
@@ -219,6 +221,7 @@ export function createSiteConfig({
     cep: site.address.postalCode,
     telefone_exibicao: site.phoneDisplay,
     telefone: phone,
+    email: site.email,
     whatsapp, // folha "O WhatsApp não abriu?": o número para copiar
     whatsapp_exibicao: site.whatsappDisplay,
     horario: site.hours,

@@ -42,6 +42,12 @@
           "maxLength": 16,
           "description": "Rótulo do campo."
         },
+        "email": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20,
+          "description": "Rótulo do e-mail no rodapé."
+        },
         "cep": {
           "type": "string",
           "minLength": 1,

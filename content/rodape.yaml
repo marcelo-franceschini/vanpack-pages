@@ -10,6 +10,7 @@ rotulos:
   endereco: "Endereço"
   horario: "Horário"
   telefone: "Telefone"
+  email: "E-mail"
   mapa: "Mapa"
   cep: "CEP"
 ver_mapa: "Ver no mapa"

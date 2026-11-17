@@ -135,7 +135,7 @@ não começa, o console diz o motivo (`[vanpack] autoplay não iniciou: …`).
 - **Autoplay sem espera, em qualquer tela** (decisão do dono): o tour nunca é desligado por largura de
   tela nem por Save-Data; só o movimento reduzido do sistema o desliga (acessibilidade).
 - **Sem fotos** (decisão do dono): só SVG; a única foto real permitida seria a da fachada, e o dono prefere não usá-la. Depoimentos, logos e nota do Google só com autorização em `docs/provas/`.
-- **Página sem e-mail, prazo, promessa de tempo de resposta nem texto de processo** (decisão do dono): os
+- **Página sem prazo, promessa de tempo de resposta nem texto de processo** (decisão do dono): os
   cartões falam do que importa a quem pede e a cena mostra a fabricação sem narrá-la. O
   `tests/conteudo.test.mjs` confere texto, atributos de acessibilidade, metas, JSON-LD e mensagens do
   WhatsApp. O 3D principal é travado por hash (`tests/trava-3d.test.mjs`).

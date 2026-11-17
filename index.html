@@ -1238,6 +1238,7 @@
           grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 1rem 1.5rem;
         }
+        .f-email,
         .f-endereco,
         .f-horario,
         .f-cnpj {
@@ -1732,6 +1733,10 @@
           <dl class="foot-info">
             <div class="f-telefone" data-field="telefone" hidden>
               <dt>{{rodape.rotulos.telefone}}</dt>
+              <dd></dd>
+            </div>
+            <div class="f-email" data-field="email" hidden>
+              <dt>{{rodape.rotulos.email}}</dt>
               <dd></dd>
             </div>
             <div class="f-mapa" data-field="mapa" hidden>

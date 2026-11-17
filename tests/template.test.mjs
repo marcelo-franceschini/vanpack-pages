@@ -188,12 +188,13 @@ describe('nenhum texto de negócio escrito à mão', () => {
       .filter(([token]) => !used.has(token))
       .map(([, path]) => path);
     // só os textos que dependem de um dado que a demonstração não tem: o título alternativo do cartão 2,
-    // o texto alternativo do cartão 5 e as palavras da nota do Google
+    // o texto alternativo do cartão 5, as palavras da nota do Google e o rótulo de e-mail (opcional)
     assert.deepEqual(unused.sort(), [
       'historia.anos.titulo_sem_ano',
       'historia.entrega.texto_sem_regiao',
       'provas.textos.avaliacoes',
       'provas.textos.nota',
+      'rodape.rotulos.email',
     ]);
   });
 });

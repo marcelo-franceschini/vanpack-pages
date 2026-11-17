@@ -77,6 +77,7 @@ export function footerFields(site) {
     cnpj: site.cnpj && escapeHtml(site.cnpj),
     endereco: place,
     horario: site.hours && escapeHtml(site.hours),
+    email: site.email && link(`mailto:${site.email}`, site.email, ' data-contact="email"'),
     telefone:
       site.phone &&
       link(`tel:${site.phone}`, site.phoneDisplay || site.phone, ' data-contact="phone"'),
@@ -218,6 +219,7 @@ export function buildJsonLd(site) {
     image: `${site.siteUrl}og.jpg`,
     logo: `${site.siteUrl}icon-512.png`,
     ...(site.phone && { telephone: site.phone }),
+    ...(site.email && { email: site.email }),
     ...(site.cnpj && { taxID: site.cnpj }),
     ...(site.foundedYear && { foundingDate: site.foundedYear }),
     ...(site.hoursSchema && { openingHours: site.hoursSchema }),

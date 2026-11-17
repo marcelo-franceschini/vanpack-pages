@@ -1,4 +1,4 @@
-// Conteúdo que não pode estar na página: e-mail, prazo de produção ou entrega, promessa de tempo de
+// Conteúdo que não pode estar na página: prazo de produção ou entrega, promessa de tempo de
 // resposta e descrição do processo industrial, em nada que se veja ou que um leitor de tela leia
 // (texto, aria-label, alt, title, metas, JSON-LD e as mensagens prontas do WhatsApp); nem travessão
 // longo ou meio travessão. Renderiza a página e a política de privacidade em demo e em production,
@@ -23,7 +23,6 @@ const CONFIGS = {
 // Palavras do produto continuam valendo: "Corte e vinco", "com a sua marca impressa", "impressão",
 // "O que fabricamos".
 const FORBIDDEN = [
-  ['e-mail', /e-?mail|mailto:|[\w.+-]+@[\w-]+\.[a-z]{2,}/i],
   ['prazo', /prazo|dias? úteis|\d+\s*dias|entrega em \d|em até \d/i],
   [
     'promessa de tempo de resposta',
@@ -79,7 +78,7 @@ function assertClean(html, where) {
 describe('conteúdo que não pode estar na página', () => {
   for (const [mode, site] of Object.entries(CONFIGS)) {
     for (const page of PAGES) {
-      test(`${page} em ${mode}: sem e-mail, prazo, promessa de resposta, processo nem travessão`, () => {
+      test(`${page} em ${mode}: sem prazo, promessa de resposta, processo nem travessão`, () => {
         const html = renderPage(read(page), site);
         assertClean(html, `${page} (${mode})`);
         if (page === 'index.html') {
@@ -121,7 +120,6 @@ describe('conteúdo que não pode estar na página', () => {
       `<html><head><title>Vanpack</title></head><body><p>${body}</p></body></html>`;
     const filler = 'Caixas de papelão sob medida, com a sua marca impressa. '.repeat(5);
     for (const sample of [
-      'Fale com vendas@empresa.com.br',
       'Prazo de 10 dias úteis',
       'Resposta na hora, 24 horas',
       'Orçamento rápido',

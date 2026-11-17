@@ -416,6 +416,20 @@ describe('render', () => {
     assert.ok(!('aggregateRating' in ld), 'sem avaliação própria');
   });
 
+  test('e-mail opcional: presente, aparece no rodapé e no JSON-LD; ausente, o campo sai do HTML', () => {
+    const comEmail = siteWith({
+      content: withEmpresa({ ...DEMO_EMPRESA, email: 'contato@vanpack.com.br' }),
+    });
+    const out = renderPage(html, comEmail);
+    assert.ok(out.includes('href="mailto:contato@vanpack.com.br"'));
+    assert.ok(out.includes('data-contact="email"'));
+    assert.equal(buildJsonLd(comEmail).email, 'contato@vanpack.com.br');
+    const semEmail = renderPage(html, demo);
+    assert.ok(!semEmail.includes('data-field="email"'));
+    assert.ok(!semEmail.includes('mailto:'));
+    assert.equal(buildJsonLd(demo).email, undefined);
+  });
+
   test('sem ano de fundação não há anos de mercado nem "Desde"; o cartão 2 usa o texto alternativo', () => {
     const semAno = siteWith({ content: withEmpresa(setPath(DEMO_EMPRESA, 'ano_fundacao', '')) });
     const out = renderPage(html, semAno);
