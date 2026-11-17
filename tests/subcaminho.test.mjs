@@ -131,6 +131,9 @@ describe(
         });
         page.on('pageerror', (err) => problems.push(`pageerror: ${err.message}`));
         page.on('console', (m) => {
+          // o Chrome registra no console o 404 do próprio documento, que aqui é o esperado (conferido
+          // logo abaixo); qualquer outro recurso que falhe continua contando
+          if (m.location().url === url && m.text().startsWith('Failed to load resource')) return;
           if (['error', 'warning'].includes(m.type())) problems.push(`console: ${m.text()}`);
         });
         const res = await page.goto(url);
