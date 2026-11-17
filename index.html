@@ -32,7 +32,7 @@
       crossorigin
       fetchpriority="high"
     />
-    <!-- JSON-LD montado inteiro em build/render.js a partir do .env -->
+    <!-- JSON-LD montado inteiro em build/render.js a partir de content/ -->
     <script type="application/ld+json">
       {}
     </script>
@@ -62,10 +62,6 @@
         max-width: var(--maxw);
         margin: 0 auto;
         padding: 0 var(--pad);
-      }
-      .k {
-        font: 700 1rem/1.3 var(--font);
-        color: var(--floresta);
       }
 
       /* botões: cor sólida, sem contorno */
@@ -392,9 +388,6 @@
         transform: none;
         pointer-events: auto;
       }
-      .card .k {
-        margin-bottom: 0.875rem;
-      }
       .card h1,
       .card h2 {
         font-weight: 900;
@@ -471,9 +464,6 @@
           overflow: auto;
           padding: 1.125rem 1.5rem 1.25rem;
         }
-        .card .k {
-          margin-bottom: 0.5rem;
-        }
         .card h1 {
           font-size: 1.875rem;
           margin-bottom: 0.5rem;
@@ -534,9 +524,6 @@
           width: 100%;
           max-height: none;
           padding: 1.125rem 1.25rem 1.25rem;
-        }
-        .card .k {
-          margin-bottom: 0.5rem;
         }
         .card h1 {
           font-size: clamp(1.75rem, 8vw, 2.5rem);
