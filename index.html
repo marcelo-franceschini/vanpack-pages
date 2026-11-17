@@ -381,7 +381,10 @@
           transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
       }
       .card:has(h1) {
-        width: min(44rem, 100%); /* a abertura cabe em 2 linhas, ao lado da máquina de impressão */
+        /* a largura acompanha o tamanho do título (13,167 vezes ele, mais o respiro do cartão): a abertura
+           cabe em 2 linhas e para antes da máquina em qualquer largura; de 1412 px para cima dá os mesmos
+           44rem de antes */
+        width: min(calc(var(--t-display) * 13.167 + 4.5rem), 100%);
       }
       .card.on {
         opacity: 1;
@@ -452,7 +455,12 @@
         font-weight: 700;
         color: var(--floresta);
       }
-      @media (max-height: 700px) and (min-aspect-ratio: 1/1) {
+      @media (max-height: 560px) and (min-aspect-ratio: 1/1),
+        (max-height: 700px) and (max-width: 1199px) and (min-aspect-ratio: 1/1) {
+        /* no compacto o título tem 30 px: o cartão da abertura não precisa cobrir a máquina */
+        .card:has(h1) {
+          width: min(32rem, 100%);
+        }
         .step {
           align-items: flex-start;
           padding-top: calc(var(--hdr-h) + 0.5rem);

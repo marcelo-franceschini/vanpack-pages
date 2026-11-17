@@ -113,7 +113,7 @@ não começa, o console diz o motivo (`[vanpack] autoplay não iniciou: …`).
   acento (a exceção é o amarelo e o verde de sinalização da lâmpada da máquina, na ilustração da linha de produção).
 - Tipografia: só Archivo (`public/fonts/archivo-latin.woff2`, 400 a 900), subconjunto do português (ASCII, Latin-1, pontuação geral, ↓ ↑ € ™ −; kerning e ligaduras ficam, frações não; 28 KB). Caractere fora dele (`Œ`, `ł`...) cai para a fonte do sistema. Tudo em `rem`.
 - Alvos de toque ≥ 44 px; foco visível de 3 px; quebras: `(max-width: 760px), (max-aspect-ratio: 1/1)`
-  = celular (cartões embaixo); `(max-height: 700px)` em paisagem = compacto.
+  = celular (cartões embaixo); compacto: `(max-height: 560px)` em paisagem ou `(max-height: 700px)` com largura até 1199 px.
 
 ## 7. Decisões
 
