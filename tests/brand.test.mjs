@@ -385,74 +385,85 @@ describe('build: CSP, requisições e marca na página', () => {
     await context.close();
   });
 
-  test('logotipo: símbolo >= 24 px, respiro >= 1/4 do símbolo e negativo sobre Floresta', async () => {
-    const { page, context } = await openPage(browser, server.url + '?tour=0', {
-      reducedMotion: 'reduce',
-    });
-    const count = await page.evaluate(() => document.querySelectorAll('img[src*="brand"]').length);
-    assert.ok(count >= 4, 'cabeçalho, carregamento, chamada final e rodapé');
-    for (let index = 0; index < count; index++) {
-      // cada logotipo é medido no meio da tela (o cabeçalho fixo não pode cobri-lo)
-      await page.evaluate((i) => {
-        const img = document.querySelectorAll('img[src*="brand"]')[i];
-        if (!img.closest('#hdr')) img.scrollIntoView({ block: 'center' });
-      }, index);
-      await page.waitForTimeout(200);
-      const logo = await page.evaluate((i) => {
-        const img = document.querySelectorAll('img[src*="brand"]')[i];
-        const r = img.getBoundingClientRect();
-        const rects = [];
-        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-          if (
-            !node.textContent.trim() ||
-            node.parentElement.closest('script, style, svg, [hidden], [inert]')
-          )
-            continue;
-          const range = document.createRange();
-          range.selectNodeContents(node);
-          for (const q of range.getClientRects()) rects.push(q);
-        }
-        for (const el of document.querySelectorAll('a, button, img:not([src*="brand"])')) {
-          if (el.contains(img) || el.closest('[hidden], [inert]')) continue;
-          const q = el.getBoundingClientRect();
-          if (q.width && q.height) rects.push(q);
-        }
-        const gap = (a, b) =>
-          Math.hypot(
-            Math.max(0, a.left - b.right, b.left - a.right),
-            Math.max(0, a.top - b.bottom, b.top - a.bottom),
-          );
-        const inside = (q) =>
-          q.left >= r.left - 1 &&
-          q.right <= r.right + 1 &&
-          q.top >= r.top - 1 &&
-          q.bottom <= r.bottom + 1;
-        const clear = Math.min(...rects.filter((q) => !inside(q)).map((q) => gap(r, q)));
-        let node = img;
-        let background = 'rgba(0, 0, 0, 0)';
-        while (node && background === 'rgba(0, 0, 0, 0)') {
-          background = getComputedStyle(node).backgroundColor;
-          node = node.parentElement;
-        }
-        return {
-          src: img.getAttribute('src'),
-          symbol: r.height, // no horizontal o símbolo ocupa a altura toda e é quadrado
-          clear,
-          background,
-          visible: r.width > 0 && getComputedStyle(img).visibility !== 'hidden',
-        };
-      }, index);
-      if (!logo.visible) continue;
-      assert.ok(logo.symbol >= 24, `${logo.src}: símbolo de ${logo.symbol}px`);
-      assert.ok(
-        logo.clear >= logo.symbol / 4 - 0.5,
-        `${logo.src}: respiro ${logo.clear.toFixed(1)}px < ${(logo.symbol / 4).toFixed(1)}px`,
+  for (const screen of [
+    { name: '1440×900', width: 1440, height: 900 },
+    { name: '390×844', width: 390, height: 844 },
+    { name: '360×640', width: 360, height: 640 },
+  ]) {
+    test(`logotipo (${screen.name}): símbolo >= 24 px, respiro >= 1/4 do símbolo e negativo sobre Floresta`, async () => {
+      const { page, context } = await openPage(browser, server.url + '?tour=0', {
+        viewport: { width: screen.width, height: screen.height },
+        reducedMotion: 'reduce',
+      });
+      const count = await page.evaluate(
+        () => document.querySelectorAll('img[src*="brand"]').length,
       );
-      if (logo.background === 'rgb(20, 81, 58)') {
-        assert.match(logo.src, /negativo/, 'sobre Floresta só em negativo');
+      assert.ok(count >= 4, 'cabeçalho, carregamento, chamada final e rodapé');
+      for (let index = 0; index < count; index++) {
+        // cada logotipo é medido no meio da tela (o cabeçalho fixo não pode cobri-lo)
+        await page.evaluate((i) => {
+          const img = document.querySelectorAll('img[src*="brand"]')[i];
+          if (!img.closest('#hdr')) img.scrollIntoView({ block: 'center' });
+        }, index);
+        await page.waitForTimeout(200);
+        const logo = await page.evaluate((i) => {
+          const img = document.querySelectorAll('img[src*="brand"]')[i];
+          const r = img.getBoundingClientRect();
+          const rects = [];
+          const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+          for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+            if (
+              !node.textContent.trim() ||
+              node.parentElement.closest('script, style, svg, [hidden], [inert]')
+            )
+              continue;
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            for (const q of range.getClientRects()) rects.push(q);
+          }
+          for (const el of document.querySelectorAll('a, button, img:not([src*="brand"])')) {
+            if (el.contains(img) || el.closest('[hidden], [inert]')) continue;
+            const q = el.getBoundingClientRect();
+            if (q.width && q.height) rects.push(q);
+          }
+          const gap = (a, b) =>
+            Math.hypot(
+              Math.max(0, a.left - b.right, b.left - a.right),
+              Math.max(0, a.top - b.bottom, b.top - a.bottom),
+            );
+          const inside = (q) =>
+            q.left >= r.left - 1 &&
+            q.right <= r.right + 1 &&
+            q.top >= r.top - 1 &&
+            q.bottom <= r.bottom + 1;
+          const clear = Math.min(...rects.filter((q) => !inside(q)).map((q) => gap(r, q)));
+          let node = img;
+          let background = 'rgba(0, 0, 0, 0)';
+          while (node && background === 'rgba(0, 0, 0, 0)') {
+            background = getComputedStyle(node).backgroundColor;
+            node = node.parentElement;
+          }
+          const ratio = Number(img.getAttribute('width')) / Number(img.getAttribute('height'));
+          const symbol = Math.min(r.height, r.width / ratio);
+          return {
+            src: img.getAttribute('src'),
+            symbol,
+            clear,
+            background,
+            visible: r.width > 0 && getComputedStyle(img).visibility !== 'hidden',
+          };
+        }, index);
+        if (!logo.visible) continue;
+        assert.ok(logo.symbol >= 24, `${logo.src}: símbolo de ${logo.symbol}px`);
+        assert.ok(
+          logo.clear >= logo.symbol / 4 - 0.5,
+          `${logo.src}: respiro ${logo.clear.toFixed(1)}px < ${(logo.symbol / 4).toFixed(1)}px`,
+        );
+        if (logo.background === 'rgb(20, 81, 58)') {
+          assert.match(logo.src, /negativo/, 'sobre Floresta só em negativo');
+        }
       }
-    }
-    await context.close();
-  });
+      await context.close();
+    });
+  }
 });

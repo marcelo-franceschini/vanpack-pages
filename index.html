@@ -240,6 +240,7 @@
         color: var(--floresta);
       }
       .logo {
+        flex: none; /* o logo nunca cede espaço: encolhido, o símbolo fica abaixo do mínimo do manual (§4) */
         display: inline-flex;
         align-items: center;
         padding: 0.5rem 0;
@@ -1389,18 +1390,10 @@
         .step + .step {
           padding-bottom: calc(var(--bar-h) + 0.75rem + env(safe-area-inset-bottom));
         }
-        /* com a barra à vista, o botão do cabeçalho sai: um só "Pedir orçamento" na tela */
+        /* até 768 px o cabeçalho fica sem botão: ele só aparecia no 1º capítulo, junto do botão grande do
+           cartão, e tirava o espaço do logo; do 2º capítulo em diante quem chama é a barra */
         .hdr .btn {
-          transition:
-            background-color 0.2s,
-            transform 0.2s,
-            opacity 0.3s,
-            visibility 0s;
-        }
-        body:has(.fab.on) .hdr .btn {
-          opacity: 0;
-          visibility: hidden;
-          transition-delay: 0s, 0s, 0s, 0.3s;
+          display: none;
         }
       }
 

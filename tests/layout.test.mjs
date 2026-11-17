@@ -398,7 +398,7 @@ describe('barra fixa do WhatsApp (celular)', () => {
   }
 
   for (const screen of SCREENS.filter((s) => s.mobile && s.width <= 768)) {
-    test(`${screen.name}: escondida no capítulo 1, à vista do 2 ao 5 e o cabeçalho sem botão`, async () => {
+    test(`${screen.name}: escondida no capítulo 1, à vista do 2 ao 5 e o cabeçalho sempre sem botão`, async () => {
       const { page, context } = await openPage(browser, server.url, {
         viewport: { width: screen.width, height: screen.height },
         reducedMotion: 'reduce',
@@ -406,18 +406,15 @@ describe('barra fixa do WhatsApp (celular)', () => {
         isMobile: true,
         deviceScaleFactor: 2,
       });
-      // a barra e o botão do cabeçalho trocam de lugar com uma transição curta: espera o estado
+      // a barra aparece do 2º capítulo em diante e até 768 px o cabeçalho não tem botão
       const expect = (bar, chapter) =>
         page
           .waitForFunction(
             (bar) => {
-              const shown = (el) => getComputedStyle(el).visibility === 'visible';
               const fab = document.querySelector('#fab');
-              return (
-                fab.classList.contains('on') === bar &&
-                shown(fab) === bar &&
-                shown(document.querySelector('#hdr .btn')) === !bar
-              );
+              const shown = getComputedStyle(fab).visibility === 'visible';
+              const button = getComputedStyle(document.querySelector('#hdr .btn')).display;
+              return fab.classList.contains('on') === bar && shown === bar && button === 'none';
             },
             bar,
             { timeout: 5000 },
