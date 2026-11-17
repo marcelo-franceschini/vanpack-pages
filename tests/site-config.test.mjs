@@ -381,6 +381,7 @@ describe('render', () => {
       'openingHours',
       'areaServed',
       'foundingDate',
+      'hasMap',
     ]) {
       assert.ok(!(key in ld), `${key} não sai no JSON-LD sem dado`);
     }
@@ -404,6 +405,7 @@ describe('render', () => {
       assert.ok(link.startsWith(`https://wa.me/${DEMO_EMPRESA.whatsapp}?text=`), link);
     }
     const ld = buildJsonLd(demo);
+    assert.equal(ld.hasMap, DEMO_EMPRESA.mapa);
     assert.equal(ld.telephone, DEMO_EMPRESA.telefone);
     assert.equal(ld.openingHours, DEMO_EMPRESA.horario_schema);
     assert.equal(ld.address.addressLocality, 'Santo André');

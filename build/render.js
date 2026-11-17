@@ -222,6 +222,7 @@ export function buildJsonLd(site) {
     ...(site.foundedYear && { foundingDate: site.foundedYear }),
     ...(site.hoursSchema && { openingHours: site.hoursSchema }),
     ...(site.serviceArea && { areaServed: site.serviceArea }),
+    ...(site.mapUrl && { hasMap: site.mapUrl }),
     address: {
       '@type': 'PostalAddress',
       ...(streetAddress && { streetAddress }),
