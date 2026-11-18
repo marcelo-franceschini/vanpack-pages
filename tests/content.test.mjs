@@ -127,13 +127,14 @@ describe('campos e tipos', () => {
     );
   });
 
-  test('texto maior que o limite, UF e link fora do formato', () => {
+  test('texto maior que o limite, UF, link e e-mail fora do formato', () => {
     const all = joined({
       'empresa.yaml': stringify({
         ...empresa,
         razao_social: 'x'.repeat(81),
         endereco: { ...empresa.endereco, uf: 'sp1' },
         mapa: 'http://maps.google.com',
+        email: 'contato vanpack.com.br',
       }),
     });
     assert.match(
@@ -142,6 +143,17 @@ describe('campos e tipos', () => {
     );
     assert.match(all, /› endereco\.uf: use a sigla da UF com duas letras, ex\.: SP/);
     assert.match(all, /› mapa: o link do mapa precisa começar com https:\/\//);
+    assert.match(all, /› email: formato de e-mail inválido, use ex\.: contato@vanpack\.com\.br/);
+  });
+
+  test('e-mail opcional: vazio ou no formato certo passa; sem domínio, não', () => {
+    for (const email of ['', 'contato@vanpack.com.br']) {
+      assert.deepEqual(errorsWith({ 'empresa.yaml': stringify({ ...empresa, email }) }), [], email);
+    }
+    assert.match(
+      joined({ 'empresa.yaml': stringify({ ...empresa, email: 'contato@vanpack' }) }),
+      /› email: formato de e-mail inválido/,
+    );
   });
 });
 
