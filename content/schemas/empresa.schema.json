@@ -24,6 +24,8 @@
     "email": {
       "type": "string",
       "maxLength": 80,
+      "pattern": "^$|^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+      "dica": "formato de e-mail inválido, use ex.: contato@vanpack.com.br",
       "description": "E-mail de contato para orçamentos e cotações. Opcional: se vazio ou omitido, não aparece na página."
     },
     "telefone": {

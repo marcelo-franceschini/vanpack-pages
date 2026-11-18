@@ -15,6 +15,8 @@ cnpj: "00.000.000/0001-00"
 
 # WhatsApp que recebe os pedidos de orçamento: 55 + DDD + número. Obrigatório.
 whatsapp: "5511900000000"
+# E-mail de contato para orçamentos (opcional; se vazio ou omitido, não aparece).
+# email: "contato@vanpack.com.br"
 # Telefone para ligações (+55 + DDD + número) e o texto que aparece na página.
 telefone: "+551130000000"
 telefone_exibicao: "(11) 3000-0000"

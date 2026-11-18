@@ -23,7 +23,7 @@ before(async () => {
   // A medição só liga em production (o site de demonstração não soma visitas): o build usa dados reais de
   // teste e uma lista de clientes vazia.
   const { dir, remove } = contentCopy({
-    'empresa.yaml': realEmpresa,
+    'empresa.yaml': { ...realEmpresa, email: 'contato@vanpack.com.br' },
     'clientes.yaml': { ...baseContent.clientes, clientes: [] },
   });
   const saved = { ...process.env };
@@ -200,12 +200,12 @@ describe('Umami Cloud', () => {
     await context.close();
   });
 
-  test('os cliques de WhatsApp, telefone e mapa saem com o lugar certo', async () => {
+  test('os cliques de WhatsApp, telefone, e-mail e mapa saem com o lugar certo', async () => {
     const { page, context, calls } = await open();
     await page.click('[data-cta="hero"]');
     const whatsapp = await waitFor(calls, named('whatsapp_click'));
     assert.deepEqual(whatsapp.payload.data, { cta: 'hero' });
-    for (const kind of ['phone', 'map']) {
+    for (const kind of ['phone', 'email', 'map']) {
       await page.locator(`footer a[data-contact="${kind}"]`).click();
       const click = await waitFor(calls, named(`${kind}_click`));
       assert.deepEqual(click.payload.data, { cta: 'rodape' }, kind);

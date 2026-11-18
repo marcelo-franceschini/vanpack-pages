@@ -1,4 +1,4 @@
-// Conteúdo que não pode estar na página: prazo de produção ou entrega, promessa de tempo de
+// Conteúdo que não pode estar na página: e-mail (salvo no rodapé e no JSON-LD), prazo de produção ou entrega, promessa de tempo de
 // resposta e descrição do processo industrial, em nada que se veja ou que um leitor de tela leia
 // (texto, aria-label, alt, title, metas, JSON-LD e as mensagens prontas do WhatsApp); nem travessão
 // longo ou meio travessão. Renderiza a página e a política de privacidade em demo e em production,
@@ -23,6 +23,7 @@ const CONFIGS = {
 // Palavras do produto continuam valendo: "Corte e vinco", "com a sua marca impressa", "impressão",
 // "O que fabricamos".
 const FORBIDDEN = [
+  ['e-mail', /e-?mail|mailto:|[\w.+-]+@[\w-]+\.[a-z]{2,}/i],
   ['prazo', /prazo|dias? úteis|\d+\s*dias|entrega em \d|em até \d/i],
   [
     'promessa de tempo de resposta',
@@ -68,9 +69,17 @@ function readable(html) {
 function assertClean(html, where) {
   const text = readable(html);
   assert.ok(text.length > 200, `${where}: a página tem texto`);
+  // O e-mail é liberado exclusivamente no rodapé, no JSON-LD e no texto da política de privacidade
+  const semEmailLiberado = readable(
+    html
+      .replace(/<footer\b[\s\S]*?<\/footer>/gi, ' ')
+      .replace(/<script\b[^>]*type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<main id="conteudo"[\s\S]*?<\/main>/gi, ' '),
+  );
   for (const [name, pattern] of FORBIDDEN) {
-    const found = pattern.exec(text);
-    const around = found && text.slice(Math.max(0, found.index - 40), found.index + 40);
+    const alvo = name === 'e-mail' ? semEmailLiberado : text;
+    const found = pattern.exec(alvo);
+    const around = found && alvo.slice(Math.max(0, found.index - 40), found.index + 40);
     assert.equal(found, null, `${where}: ${name} em "…${around}…"`);
   }
 }
@@ -78,7 +87,7 @@ function assertClean(html, where) {
 describe('conteúdo que não pode estar na página', () => {
   for (const [mode, site] of Object.entries(CONFIGS)) {
     for (const page of PAGES) {
-      test(`${page} em ${mode}: sem prazo, promessa de resposta, processo nem travessão`, () => {
+      test(`${page} em ${mode}: sem e-mail fora do rodapé, prazo, promessa de resposta, processo nem travessão`, () => {
         const html = renderPage(read(page), site);
         assertClean(html, `${page} (${mode})`);
         if (page === 'index.html') {
@@ -95,22 +104,33 @@ describe('conteúdo que não pode estar na página', () => {
 
   test('os textos de content/ também estão limpos, antes de virarem página', () => {
     const texts = [];
-    const collect = (value) => {
-      if (typeof value === 'string') texts.push(value);
-      else if (Array.isArray(value)) value.forEach(collect);
-      else if (value && typeof value === 'object') Object.values(value).forEach(collect);
+    const textsComEmail = [];
+    const collect = (value, target) => {
+      if (typeof value === 'string') target.push(value);
+      else if (Array.isArray(value)) value.forEach((v) => collect(v, target));
+      else if (value && typeof value === 'object')
+        Object.values(value).forEach((v) => collect(v, target));
     };
-    // o que vira texto da página: tudo menos os dados da empresa (valores) e os de exemplo
+    // o que vira texto da página: tudo menos os dados da empresa (valores) e os de exemplo.
+    // O rodapé e a política podem citar e-mail; os outros arquivos não.
     for (const [name, value] of Object.entries(baseContent)) {
-      if (name !== 'empresa' && name !== 'exemplo') collect(value);
+      if (name === 'empresa' || name === 'exemplo') continue;
+      if (name === 'rodape' || name === 'privacidade') {
+        collect(value, textsComEmail);
+      } else {
+        collect(value, texts);
+        collect(value, textsComEmail);
+      }
     }
     const text = texts.join(' ');
+    const textComEmail = textsComEmail.join(' ');
     for (const [name, pattern] of FORBIDDEN) {
-      const found = pattern.exec(text);
+      const alvo = name === 'e-mail' ? text : textComEmail;
+      const found = pattern.exec(alvo);
       assert.equal(
         found,
         null,
-        `content/: ${name} em "…${found && text.slice(Math.max(0, found.index - 40), found.index + 40)}…"`,
+        `content/: ${name} em "…${found && alvo.slice(Math.max(0, found.index - 40), found.index + 40)}…"`,
       );
     }
   });
@@ -120,6 +140,7 @@ describe('conteúdo que não pode estar na página', () => {
       `<html><head><title>Vanpack</title></head><body><p>${body}</p></body></html>`;
     const filler = 'Caixas de papelão sob medida, com a sua marca impressa. '.repeat(5);
     for (const sample of [
+      'Fale com vendas@empresa.com.br',
       'Prazo de 10 dias úteis',
       'Resposta na hora, 24 horas',
       'Orçamento rápido',

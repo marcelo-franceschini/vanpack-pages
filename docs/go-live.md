@@ -37,6 +37,7 @@ anunciado. Depois do deploy, peça a indexação no Search Console.
 | `whatsapp`          | 55 + DDD + número, só dígitos                              | sim         | Teste um botão do site                              |
 | `telefone`          | Telefone em `+55DDDnúmero`                                 | production  | Igual ao do Perfil da Empresa no Google             |
 | `telefone_exibicao` | Telefone como aparece na página                            | não         | Sem ele, a página formata o `telefone`              |
+| `email`             | E-mail de contato para orçamentos                          | não         | Opcional; se vazio ou omitido, não aparece          |
 | `cnpj`              | CNPJ                                                       | production  | Cartão CNPJ da Receita (o build confere os dígitos) |
 | `razao_social`      | Razão social                                               | não         | Cartão CNPJ                                         |
 | `endereco.rua`      | Rua e número da fábrica                                    | production  | Igual ao Perfil da Empresa no Google                |

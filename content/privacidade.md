@@ -15,7 +15,7 @@ O site não grava cookies nem guarda identificadores no seu navegador, e não ca
 {{#se medicao_nome}}
 ## Medição do uso do site
 
-Para entender como o site é usado, medimos de forma agregada: as páginas vistas, os cliques nos botões de WhatsApp, telefone e mapa, se o WhatsApp abriu depois do clique, se o site foi aberto dentro de um aplicativo (como o Instagram), até que ponto da página a pessoa foi e o tempo de carregamento. Nada disso identifica você.
+Para entender como o site é usado, medimos de forma agregada: as páginas vistas, os cliques nos botões de WhatsApp, telefone, e-mail e mapa, se o WhatsApp abriu depois do clique, se o site foi aberto dentro de um aplicativo (como o Instagram), até que ponto da página a pessoa foi e o tempo de carregamento. Nada disso identifica você.
 
 A medição é feita pelo {{medicao_nome}}, que não usa cookies e informa que não coleta dados pessoais e que anonimiza os dados coletados. Como em qualquer acesso a um site, o endereço de IP e o navegador chegam ao servidor da ferramenta, que fica nos Estados Unidos e na União Europeia. Os dados de medição ficam na ferramenta por tempo limitado (no plano atual, até seis meses).
 {{/se}}
