@@ -325,6 +325,8 @@ docs/                      Manual da marca, notas da v4, 3D dos produtos, experi
 - `tests/partes.test.mjs`: cada arquivo de teste roda em exatamente uma das partes paralelas do CI, e as partes ficam equilibradas.
 - `tests/hooks.test.mjs`: o hook de pre-push opcional recusa o push quando o lint ou os tipos falham.
 
+Fora da suíte, `scripts/fumaca-webkit.mjs` é um teste de fumaça no WebKit, o motor do Safari: a página abre, a cena fica pronta, o 3D dos produtos monta e nada dá erro. Ele roda à mão pelo workflow "Fumaça WebKit" (aba Actions, Run workflow), porque o WebKit do Playwright só tem as bibliotecas prontas no Ubuntu e no Debian.
+
 ---
 
 ## Marca, produto e segurança

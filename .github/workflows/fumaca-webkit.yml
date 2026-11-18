@@ -1,4 +1,6 @@
-name: Fumaca WebKit
+# Teste de fumaça no WebKit (scripts/fumaca-webkit.mjs), só à mão: aba Actions, "Fumaça WebKit", Run
+# workflow. Fica fora dos pull requests para não gastar minutos do CI em todo PR.
+name: Fumaça WebKit
 
 on:
   workflow_dispatch:
@@ -20,5 +22,5 @@ jobs:
       - name: Instala o WebKit do Playwright
         run: npx playwright-core install --with-deps webkit
       - run: npm run build
-      - name: Teste de fumaca no WebKit
+      - name: Teste de fumaça no WebKit
         run: node scripts/fumaca-webkit.mjs
