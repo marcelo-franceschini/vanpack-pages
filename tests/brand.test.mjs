@@ -445,12 +445,18 @@ describe('build: CSP, requisições e marca na página', () => {
           }
           const ratio = Number(img.getAttribute('width')) / Number(img.getAttribute('height'));
           const symbol = Math.min(r.height, r.width / ratio);
+          // logo transparente não é visto: com movimento reduzido o do carregamento fica com opacidade 0
+          // assim que a cena fica pronta, mas a visibility só vira hidden 0,4 s depois (o
+          // transition-delay não encurta), e nessa janela o teste mediria um logo que ninguém vê
+          let opacity = 1;
+          for (let el = img; el; el = el.parentElement)
+            opacity *= Number(getComputedStyle(el).opacity);
           return {
             src: img.getAttribute('src'),
             symbol,
             clear,
             background,
-            visible: r.width > 0 && getComputedStyle(img).visibility !== 'hidden',
+            visible: r.width > 0 && getComputedStyle(img).visibility !== 'hidden' && opacity > 0,
           };
         }, index);
         if (!logo.visible) continue;
