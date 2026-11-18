@@ -1,7 +1,7 @@
 // A história ligada ao scroll: converte scrollY em progresso (0…1), troca o cartão ativo e atualiza
 // cabeçalho, dica de scroll e botão flutuante. As medidas ficam em cache: o scroll só lê scrollY.
 
-const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+export const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 // No desktop o botão flutuante só aparece depois do fim da história (px além dele): o do cabeçalho já
 // está à mão do mouse. Até 768 px (a barra de largura total, a mesma quebra do CSS) a barra aparece a
 // partir do 2º capítulo: o cartão 1 tem o botão grande, e do 2 ao 5 o polegar fica sem botão perto.
