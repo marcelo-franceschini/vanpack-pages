@@ -331,3 +331,25 @@ verdade. Se ele engasgar num Android de entrada, quem chega pelo celular sai ant
 - O CTA de upgrade que a skill põe no fim não se aplica a este projeto.
 
 Tempo de relógio desta rodada: cerca de 15 minutos, da leitura ao relatório.
+
+## Adendo: a suíte inteira no commit avaliado
+
+Esta rodada rodou lint, tipos, build e bytes, mas não o `npm test` inteiro. Rodado depois, no fim da Fase B,
+ele mostrou 5 falhas que já existiam no commit avaliado (`77a09bd`). Todas eram dos testes, nenhuma do site,
+e duas reprovariam o CI em qualquer push:
+
+| Falha                                           | Desde                            | Causa                                                                                                       | Corrigido em |
+| ----------------------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------ |
+| Diferenciais, em `tests/content.test.mjs`       | `a2e8315`                        | o teste esperava o erro de ícone fora da lista, e o ícone saiu do schema                                    | `bb64dd2`    |
+| 404 em subpasta, em `tests/subcaminho.test.mjs` | `3f83f18`, quando o teste nasceu | o 404 do próprio documento contava como erro de console                                                     | `b7dd65c`    |
+| Respiro do logo, em `tests/brand.test.mjs`      | antes da Fase A (`e747779`)      | corrida: o teste media o símbolo do carregamento já transparente; num computador lento, como o do CI, passa | `04a00ef`    |
+
+Isso entra no M5 como **ALTO**, já corrigido: a branch não passaria no CI. Ficam ainda:
+
+- **Pendência de design para o dono.** Desde o cartão da abertura de 44rem (`0ee80d8`), o símbolo do
+  carregamento, que também é o fundo sem WebGL e o da perda de contexto, fica atrás do cartão em 12 de 14
+  telas medidas (de 320×568 a 1920×1080); só aparece em celular alto e no tablet em pé, e em 390×844 a 14,9
+  px do título (o manual pede 20).
+- **BAIXO: um teste sensível a carga.** "Clicar na faixa com o mouse não deixa a esteira parada", em
+  `tests/carrossel.test.mjs`, mede a esteira andando em 1 s; numa rodada inteira ele falhou uma vez e passou
+  5 de 5 isolado.
