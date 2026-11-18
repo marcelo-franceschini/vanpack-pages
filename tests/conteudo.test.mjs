@@ -1,8 +1,9 @@
-// Conteúdo que não pode estar na página: e-mail (salvo no rodapé e no JSON-LD), prazo de produção ou entrega, promessa de tempo de
-// resposta e descrição do processo industrial, em nada que se veja ou que um leitor de tela leia
-// (texto, aria-label, alt, title, metas, JSON-LD e as mensagens prontas do WhatsApp); nem travessão
-// longo ou meio travessão. Renderiza a página e a política de privacidade em demo e em production,
-// com os mesmos helpers do site-config, e confere também o build publicado (o content/ de verdade).
+// Conteúdo que não pode estar na página: e-mail fora do lugar dele (o rodapé, o JSON-LD e o texto da
+// política de privacidade), prazo de produção ou entrega, promessa de tempo de resposta e descrição do
+// processo industrial, em nada que se veja ou que um leitor de tela leia (texto, aria-label, alt, title,
+// metas, JSON-LD e as mensagens prontas do WhatsApp); nem travessão longo ou meio travessão. Renderiza a
+// página e a política de privacidade em demo e em production, com os mesmos helpers do site-config, e
+// confere também o build publicado (o content/ de verdade).
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { describe, test } from 'node:test';
@@ -11,7 +12,8 @@ import { baseContent, exampleEnv, realContent, siteWith } from './dados.mjs';
 
 const ROOT = new URL('..', import.meta.url).pathname;
 const read = (file) => readFileSync(`${ROOT}${file}`, 'utf8');
-const PAGES = ['index.html', 'politica-de-privacidade.html'];
+const POLITICA = 'politica-de-privacidade.html';
+const PAGES = ['index.html', POLITICA];
 const CONFIGS = {
   demo: siteWith(),
   production: siteWith({
@@ -66,15 +68,24 @@ function readable(html) {
   return decodeEntities(parts.join('\n')).replace(/\s+/g, ' ');
 }
 
-function assertClean(html, where) {
+// Onde o e-mail tem lugar: o rodapé (o campo opcional, com o rótulo "E-mail") e o JSON-LD
+// (LocalBusiness.email), em qualquer página; e, só na política de privacidade, o texto dela (a medição
+// cita os cliques no e-mail). Na página principal o <main> inteiro continua vigiado.
+const EMAIL_LIVRE = [
+  /<footer\b[\s\S]*?<\/footer>/gi,
+  /<script\b[^>]*type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/gi,
+];
+const TEXTO_DA_POLITICA = /<main id="conteudo"[\s\S]*?<\/main>/gi;
+
+/** @param {{ politica?: boolean }} [options] `politica`: a página é a política de privacidade */
+function assertClean(html, where, { politica = false } = {}) {
   const text = readable(html);
   assert.ok(text.length > 200, `${where}: a página tem texto`);
-  // O e-mail é liberado exclusivamente no rodapé, no JSON-LD e no texto da política de privacidade
   const semEmailLiberado = readable(
-    html
-      .replace(/<footer\b[\s\S]*?<\/footer>/gi, ' ')
-      .replace(/<script\b[^>]*type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/gi, ' ')
-      .replace(/<main id="conteudo"[\s\S]*?<\/main>/gi, ' '),
+    [...EMAIL_LIVRE, ...(politica ? [TEXTO_DA_POLITICA] : [])].reduce(
+      (rest, area) => rest.replace(area, ' '),
+      html,
+    ),
   );
   for (const [name, pattern] of FORBIDDEN) {
     const alvo = name === 'e-mail' ? semEmailLiberado : text;
@@ -87,9 +98,9 @@ function assertClean(html, where) {
 describe('conteúdo que não pode estar na página', () => {
   for (const [mode, site] of Object.entries(CONFIGS)) {
     for (const page of PAGES) {
-      test(`${page} em ${mode}: sem e-mail fora do rodapé, prazo, promessa de resposta, processo nem travessão`, () => {
+      test(`${page} em ${mode}: sem e-mail fora do lugar, prazo, promessa de resposta, processo nem travessão`, () => {
         const html = renderPage(read(page), site);
-        assertClean(html, `${page} (${mode})`);
+        assertClean(html, `${page} (${mode})`, { politica: page === POLITICA });
         if (page === 'index.html') {
           const cards = html.match(/<div class="card(?: on)?">/g) ?? [];
           assert.equal(cards.length, 5, 'os 5 cartões da história ficam');
@@ -99,7 +110,9 @@ describe('conteúdo que não pode estar na página', () => {
   }
 
   test('o build publicado (dados de content/) também está limpo', () => {
-    for (const page of PAGES) assertClean(read(`dist/${page}`), `dist/${page}`);
+    for (const page of PAGES) {
+      assertClean(read(`dist/${page}`), `dist/${page}`, { politica: page === POLITICA });
+    }
   });
 
   test('os textos de content/ também estão limpos, antes de virarem página', () => {
@@ -155,6 +168,16 @@ describe('conteúdo que não pode estar na página', () => {
     }
     assert.doesNotThrow(() =>
       assertClean(page(`${filler}Corte e vinco. O que fabricamos. Mesma impressão.`), 'amostra'),
+    );
+    // o e-mail no lugar dele passa; no <main> da página principal, não
+    const html = (main, footer = '') =>
+      `<html><head><title>Vanpack</title></head><body><main id="conteudo"><p>${filler}${main}</p></main><footer>${footer}</footer></body></html>`;
+    const email = 'Fale com vendas@empresa.com.br';
+    assert.doesNotThrow(() => assertClean(html('', email), 'rodapé'), 'e-mail no rodapé');
+    assert.throws(() => assertClean(html(email), 'página principal'), 'e-mail no <main>');
+    assert.doesNotThrow(
+      () => assertClean(html(email), 'política', { politica: true }),
+      'e-mail no texto da política',
     );
   });
 });
