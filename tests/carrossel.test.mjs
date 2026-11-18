@@ -98,10 +98,22 @@ async function still(page, ms = 700) {
   return Math.abs(a.x - b.x) < 0.5;
 }
 
-async function moving(page, ms = 1000) {
+/**
+ * Espera a esteira andar para a esquerda (mais de 5 px e menos de meia volta).
+ * Em máquinas ocupadas a animação pode demorar alguns quadros a partir: em vez de
+ * uma amostra fixa de 1 s, espera ativamente até 5 s.
+ */
+async function moving(page, maxWaitMs = 5000) {
   const a = await position(page);
-  await page.waitForTimeout(ms);
-  const moved = leftward(a, await position(page));
+  const start = Date.now();
+  while (Date.now() - start < maxWaitMs) {
+    await page.waitForTimeout(100);
+    const b = await position(page);
+    const moved = leftward(a, b);
+    if (moved > 5 && moved < a.loop / 2) return true;
+  }
+  const b = await position(page);
+  const moved = leftward(a, b);
   return moved > 5 && moved < a.loop / 2;
 }
 
