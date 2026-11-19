@@ -31,10 +31,6 @@
             "type": "string",
             "maxLength": 160,
             "description": "Explicação curta. Vazio: o cartão fica só com o título."
-          },
-          "icone": {
-            "enum": ["fabrica", "lotes", "conversa", "caixa"],
-            "description": "Ícone do cartão. Vazio: sem ícone."
           }
         }
       }

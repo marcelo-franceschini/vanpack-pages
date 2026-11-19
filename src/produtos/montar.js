@@ -5,11 +5,11 @@
 // cartões, o worker libera tudo (dispose e forceContextLoss) e é encerrado.
 import { ilustrar } from './gatilho.js';
 
-const MOBILE = '(max-width: 760px), (pointer: coarse)'; // o mesmo critério do 3D principal
 const REDUCED = '(prefers-reduced-motion: reduce)';
-// 1,5 também no desktop: na grade 2×2 até 4 cartões ficam à vista, e a 2× eles desenhariam 3,6× mais
-// pixels por quadro que os 3 de antes (medido no WebGL por software: 18 contra 5 quadros por segundo)
-const MAX_DENSITY = { desktop: 1.5, mobile: 1.5 };
+// Densidade até 1,5 no celular e no desktop: na grade 2×2 até 4 cartões ficam à vista, e a 2× eles
+// desenhariam 3,6× mais pixels por quadro que os 3 de antes (medido no WebGL por software: 18 contra 5
+// quadros por segundo)
+const MAX_DENSITY = 1.5;
 const MAX_PIXELS = 700_000; // pixels desenhados por cartão: o 3D grande não pesa mais que os pequenos
 const NEAR = '300px 0px';
 const DRAG_RAD = 0.012; // rad girados por pixel arrastado
@@ -41,10 +41,7 @@ export function montarProdutos(areas) {
     return;
   }
   const reducedQuery = matchMedia(REDUCED);
-  const density = Math.min(
-    devicePixelRatio || 1,
-    matchMedia(MOBILE).matches ? MAX_DENSITY.mobile : MAX_DENSITY.desktop,
-  );
+  const density = Math.min(devicePixelRatio || 1, MAX_DENSITY);
   /** @type {any} */
   const audit =
     import.meta.env.MODE === 'audit'
@@ -66,8 +63,10 @@ export function montarProdutos(areas) {
   let worker = null;
   let failed = false;
 
-  const label = (card) =>
-    `Modelo 3D de ${card.area.dataset.peca}${reducedQuery.matches ? '' : ' girando'}`;
+  // o nome do cartão fica só na área (o elemento focável); o canvas é decorativo, senão o leitor de
+  // tela lê o mesmo texto duas vezes
+  const describe = (card) =>
+    `Modelo 3D de ${card.area.dataset.peca}${reducedQuery.matches ? '' : ' girando'}. Use as setas do teclado para girar.`;
   const send = (msg) => worker?.postMessage(msg);
 
   function measure(card, rect = card.area.getBoundingClientRect()) {
@@ -144,8 +143,7 @@ export function montarProdutos(areas) {
     if (!worker) start();
     if (!card.canvas) {
       card.canvas = document.createElement('canvas');
-      card.canvas.setAttribute('role', 'img');
-      card.canvas.setAttribute('aria-label', label(card));
+      card.canvas.setAttribute('aria-hidden', 'true');
       card.ctx = card.canvas.getContext('bitmaprenderer');
       card.area.prepend(card.canvas);
     }
@@ -224,7 +222,7 @@ export function montarProdutos(areas) {
     // teclado: setas giram a peça em foco (o mesmo arrasto, em passos)
     area.tabIndex = 0;
     area.setAttribute('role', 'group');
-    area.setAttribute('aria-label', `${label(card)}. Use as setas do teclado para girar.`);
+    area.setAttribute('aria-label', describe(card));
     area.addEventListener('keydown', (e) => {
       const turn = { ArrowLeft: -KEY_RAD, ArrowRight: KEY_RAD }[e.key];
       if (!turn || !card.near) return;
@@ -246,7 +244,8 @@ export function montarProdutos(areas) {
   );
   reducedQuery.addEventListener('change', () => {
     send({ type: 'reduced', value: reducedQuery.matches });
-    for (const card of cards) card.canvas?.setAttribute('aria-label', label(card));
+    if (failed) return; // sem 3D, fail() já tirou o papel e o nome das áreas
+    for (const card of cards) card.area.setAttribute('aria-label', describe(card));
   });
   if (audit) {
     audit.loseContext = () => send({ type: 'audit-lose' });

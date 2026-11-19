@@ -26,6 +26,7 @@ const FORWARD = new Set([
   'handoff_fail',
   'whatsapp_copy',
   'phone_click',
+  'email_click',
   'map_click',
   'cta_view',
 ]);

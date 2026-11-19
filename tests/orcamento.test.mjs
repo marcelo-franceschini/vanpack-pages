@@ -24,6 +24,11 @@
 // pior caso (dist-limite, Node 24) mais 0,1 a 0,2 KB: script da página 7,7, produtos-worker 6,5, HTML 10,6,
 // JS inicial 130,8, carga 170,2 e visita 179,0 KB. O único que sobe é o dos SVGs (13,5 para 13,7): a ilustração
 // da caixa normal, o fallback do 3D novo, pesa 0,33 KB.
+// Revisão de novembro (PR #27): a Fase B do 3D tirou 147 bytes do produtos-worker (a textura em canvas e a palavra
+// da marca reaproveitadas da cena) e a Fase A encolheu o HTML. Medido no dist-limite com o Node 24.22 e o 26, o pior
+// dos dois: produtos-worker 7,26 KB, HTML 11,00, carga 170,80 e visita 179,87. Os tetos descem ao pior caso mais
+// 0,1 KB: 7,4, 11,1, 170,9 e 180,0. O controller (11,52 KB no Node 24) e os SVGs (13,67 no Node 26) já estão a
+// menos de 0,1 KB do teto e não mudam; nenhum sobe.
 // O teto de JS inicial de npm run audit:bundle foi de 165 para 140, depois 132 e agora 131 KB (o do teste acima é 130,8).
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
@@ -41,13 +46,13 @@ const JS = {
   worker: 11.6, // a cena da história, no Web Worker (o three.js vem do arquivo three)
   three: 111.9, // o three.js, num arquivo só para os dois workers e o render de reserva
   controller: 11.6, // o mesmo render da história, só se o worker falhar (thread principal)
-  'produtos-worker': 7.5, // a vitrine dos produtos, baixada perto da seção (7,3 com as dobras de papelão e o papel granulado, aprovado pelo dono em 2026-10-26)
+  'produtos-worker': 7.4, // a vitrine dos produtos, baixada perto da seção (7,3 com as dobras de papelão e o papel granulado, aprovado pelo dono em 2026-10-26)
   montar: 2.0, // montagem do 3D dos produtos (1,9 com o giro por arrasto e por teclado e o aviso do arrasto)
   'web-vitals': 3.1,
   wizard: 2.2, // assistente do experimento (só na variante B)
 };
 const FILES = {
-  'index.html': 11.4, // o conteúdo no limite dos schemas (dist-limite, 11,3 KB) mais 0,1 KB: menu do celular, produtos em destaque e botão do pedido
+  'index.html': 11.1, // o conteúdo no limite dos schemas (dist-limite, 11,0 KB no Node 24) mais 0,1 KB
   'politica-de-privacidade.html': 3.6,
   '404.html': 2,
   'fonts/archivo-latin.woff2': 27.8,
@@ -58,8 +63,8 @@ const FILES = {
 const SVG_TOTAL = 13.7; // todos os SVGs de brand/ e produtos/ (13,5 + o SVG da caixa normal, 0,3 KB)
 const TOTAL = {
   jsInicial: 131.0, // script da página + worker da história + three.js
-  carga: 171.2, // HTML + JS inicial + fonte + os 2 logos do topo e da cena (171,0 no limite dos schemas)
-  visita: 181.5, // a carga + o 3D dos produtos + o logo do CTA final
+  carga: 170.9, // HTML + JS inicial + fonte + os 2 logos do topo e da cena (170,8 no limite dos schemas)
+  visita: 180.0, // a carga + o 3D dos produtos (179,9 no limite dos schemas)
 };
 
 const built = existsSync(`${DIST}index.html`);
@@ -115,11 +120,7 @@ describe('orçamento de bytes', { skip: !built && 'sem dist/: rode `npm run buil
       size('fonts/archivo-latin.woff2') +
       gzip('brand/vanpack-horizontal.svg') +
       gzip('brand/vanpack-simbolo.svg');
-    const visita =
-      carga +
-      bytes.montar +
-      bytes['produtos-worker'] +
-      gzip('brand/vanpack-horizontal-negativo.svg');
+    const visita = carga + bytes.montar + bytes['produtos-worker'];
     assert.ok(jsInicial <= TOTAL.jsInicial * KB, over('JS inicial', jsInicial, TOTAL.jsInicial));
     assert.ok(carga <= TOTAL.carga * KB, over('carga inicial', carga, TOTAL.carga));
     assert.ok(visita <= TOTAL.visita * KB, over('visita completa', visita, TOTAL.visita));

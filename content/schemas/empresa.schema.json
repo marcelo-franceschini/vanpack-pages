@@ -21,6 +21,13 @@
       "type": ["string", "integer"],
       "description": "WhatsApp que recebe os pedidos de orçamento: 55 + DDD + número, só dígitos (ex.: 5511912345678). Obrigatório."
     },
+    "email": {
+      "type": "string",
+      "maxLength": 80,
+      "pattern": "^$|^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+      "dica": "formato de e-mail inválido, use ex.: contato@vanpack.com.br",
+      "description": "E-mail de contato para orçamentos e cotações. Opcional: se vazio ou omitido, não aparece na página."
+    },
     "telefone": {
       "type": "string",
       "maxLength": 20,

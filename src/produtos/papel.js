@@ -1,8 +1,10 @@
 // Textura do papel kraft dos produtos: fundo liso com granulado e fibras curtas, bem sutis, para a
 // face não parecer uma peça de madeira ou plástico de cor chapada. Sem as faixas escuras de borda da
 // textura do corpo da cena (aqui cada placa é uma folha dobrada, não um painel com vinco nas pontas).
-// Seguro para Web Worker: não acessa DOM.
-import { CanvasTexture, RepeatWrapping, SRGBColorSpace } from 'three';
+// A textura em canvas é a da cena (canvasTexture, de src/scene/textures.js). Seguro para Web Worker:
+// não acessa DOM.
+import { RepeatWrapping } from 'three';
+import { canvasTexture } from '../scene/textures.js';
 
 const SIZE = 256;
 const SPECKS = 2600;
@@ -19,14 +21,10 @@ function random(seed) {
 
 /**
  * @param {string} color cor base do papel
- * @returns {CanvasTexture | null} `null` quando o ambiente não tem OffscreenCanvas (a face fica lisa)
+ * @returns {import('three').CanvasTexture | null} `null` quando o ambiente não tem OffscreenCanvas (a face fica lisa)
  */
 export function papelTexture(color) {
-  if (typeof OffscreenCanvas !== 'function') return null;
-  try {
-    const canvas = new OffscreenCanvas(SIZE, SIZE);
-    const g = canvas.getContext('2d');
-    if (!g) return null;
+  const texture = canvasTexture(SIZE, SIZE, 1, (g) => {
     const next = random(1337);
     g.fillStyle = color;
     g.fillRect(0, 0, SIZE, SIZE);
@@ -44,12 +42,7 @@ export function papelTexture(color) {
       g.lineTo(x + 4 + next() * 10, y + (next() - 0.5) * 3);
       g.stroke();
     }
-    const texture = new CanvasTexture(canvas);
-    texture.colorSpace = SRGBColorSpace;
-    texture.wrapS = texture.wrapT = RepeatWrapping;
-    texture.anisotropy = 4;
-    return texture;
-  } catch {
-    return null;
-  }
+  });
+  if (texture) texture.wrapS = texture.wrapT = RepeatWrapping;
+  return texture;
 }

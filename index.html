@@ -32,55 +32,13 @@
       crossorigin
       fetchpriority="high"
     />
-    <!-- JSON-LD montado inteiro em build/render.js a partir do .env -->
+    <!-- JSON-LD montado inteiro em build/render.js a partir de content/ -->
     <script type="application/ld+json">
       {}
     </script>
     <style>
-      @font-face {
-        font-family: 'Archivo';
-        font-style: normal;
-        font-weight: 400 900;
-        font-display: swap;
-        src: url(/fonts/archivo-latin.woff2) format('woff2');
-        unicode-range:
-          U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
-          U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-      }
-      /* Cores da marca (manual §2). Os derivados abaixo são só Carvão/Papel/Floresta misturados em oklab:
-   floresta-dark = 82% Floresta + preto · muted = 78% Carvão + Papel · tint = 6% · tint-2 = 11% · hover = 17% · on-floresta = 8% Papel + Floresta (7,2:1 com o texto Papel). */
-      :root {
-        color-scheme: light;
-        --floresta: #14513a;
-        --floresta-dark: #0d3c2a;
-        --carvao: #1b1a17;
-        --carvao-muted: #454440;
-        --papel: #fbf8f2;
-        --tint: #ece9e3;
-        --tint-2: #dfdcd7;
-        --soft-hover: #d0cdc8;
-        --on-floresta: #2a5d47;
-        --kraft: #b78c5c;
-        --font: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-        --pad: clamp(1.25rem, 4vw, 4.5rem);
-        --maxw: 90rem;
-        --hdr-h: 4.25rem;
-        --btn-h: 3.5rem;
-        --bar-h: 3.5rem; /* barra do WhatsApp no celular */
-        /* escala tipográfica: seis tamanhos no desktop (pequeno, texto, destaque, título de item, título
-           de seção e de capítulo, título de abertura); o celular só reduz os títulos */
-        --t-small: 1rem;
-        --t-body: 1.125rem;
-        --t-lead: 1.25rem;
-        --t-item: clamp(1.5rem, 2vw, 1.75rem);
-        --t-title: clamp(2rem, 3vw, 2.5rem);
-        --t-display: clamp(2.25rem, 3.4vw, 3rem);
-      }
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-      }
+      /* a fonte, os tokens da marca e o reset, comuns às três páginas: o build embute aqui */
+      @import '/src/base.css';
       /* telas grandes: tudo está em rem, então a página cresce junto (o texto não fica miúdo no 2560) */
       @media (min-width: 1800px) {
         html {
@@ -99,77 +57,11 @@
            no desktop), em vez de parar atrás dele */
         scroll-padding-bottom: calc(var(--bar-h) + 1.5rem + env(safe-area-inset-bottom));
       }
-      body {
-        margin: 0;
-        background: var(--papel);
-        color: var(--carvao);
-        font: 400 1.125rem/1.6 var(--font);
-        -webkit-font-smoothing: antialiased;
-      }
-      img,
-      svg,
-      canvas {
-        display: block;
-        max-width: 100%;
-      }
-      [hidden] {
-        display: none !important;
-      }
-      h1,
-      h2,
-      h3,
-      p,
-      ul,
-      ol,
-      dl,
-      dd {
-        margin: 0;
-      }
-      ul,
-      ol {
-        padding: 0;
-        list-style: none;
-      }
-      button {
-        font: inherit;
-        color: inherit;
-      }
-      a {
-        color: var(--floresta);
-        text-underline-offset: 0.2em;
-      }
-      a:hover {
-        color: var(--floresta-dark);
-      }
-      :focus-visible {
-        outline: 0.1875rem solid var(--floresta);
-        outline-offset: 0.1875rem;
-        border-radius: 0.25rem;
-      }
-      .skip {
-        position: fixed;
-        left: 0.75rem;
-        top: -4.5rem;
-        z-index: 100;
-        background: var(--carvao);
-        color: var(--papel);
-        padding: 0.75rem 1rem;
-        border-radius: 0.25rem;
-        transition: top 0.2s;
-      }
-      .skip:focus {
-        top: 0.75rem;
-        color: var(--papel);
-      }
       .wrap {
         width: 100%;
         max-width: var(--maxw);
         margin: 0 auto;
         padding: 0 var(--pad);
-      }
-      .k {
-        font: 700 1rem/1.3 var(--font);
-        color: var(--floresta);
       }
 
       /* botões: cor sólida, sem contorno */
@@ -348,6 +240,7 @@
         color: var(--floresta);
       }
       .logo {
+        flex: none; /* o logo nunca cede espaço: encolhido, o símbolo fica abaixo do mínimo do manual (§4) */
         display: inline-flex;
         align-items: center;
         padding: 0.5rem 0;
@@ -489,15 +382,15 @@
           transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
       }
       .card:has(h1) {
-        width: min(44rem, 100%); /* a abertura cabe em 2 linhas, ao lado da máquina de impressão */
+        /* a largura acompanha o tamanho do título (13,167 vezes ele, mais o respiro do cartão): a abertura
+           cabe em 2 linhas e para antes da máquina em qualquer largura; de 1412 px para cima dá os mesmos
+           44rem de antes */
+        width: min(calc(var(--t-display) * 13.167 + 4.5rem), 100%);
       }
       .card.on {
         opacity: 1;
         transform: none;
         pointer-events: auto;
-      }
-      .card .k {
-        margin-bottom: 0.875rem;
       }
       .card h1,
       .card h2 {
@@ -563,7 +456,12 @@
         font-weight: 700;
         color: var(--floresta);
       }
-      @media (max-height: 700px) and (min-aspect-ratio: 1/1) {
+      @media (max-height: 560px) and (min-aspect-ratio: 1/1),
+        (max-height: 700px) and (max-width: 1199px) and (min-aspect-ratio: 1/1) {
+        /* no compacto o título tem 30 px: o cartão da abertura não precisa cobrir a máquina */
+        .card:has(h1) {
+          width: min(32rem, 100%);
+        }
         .step {
           align-items: flex-start;
           padding-top: calc(var(--hdr-h) + 0.5rem);
@@ -574,9 +472,6 @@
           max-height: calc(100svh - var(--hdr-h) - 1.25rem);
           overflow: auto;
           padding: 1.125rem 1.5rem 1.25rem;
-        }
-        .card .k {
-          margin-bottom: 0.5rem;
         }
         .card h1 {
           font-size: 1.875rem;
@@ -634,13 +529,11 @@
         .step .wrap {
           padding: 0 0.75rem;
         }
-        .card {
+        .card,
+        .card:has(h1) {
           width: 100%;
           max-height: none;
           padding: 1.125rem 1.25rem 1.25rem;
-        }
-        .card .k {
-          margin-bottom: 0.5rem;
         }
         .card h1 {
           font-size: clamp(1.75rem, 8vw, 2.5rem);
@@ -659,6 +552,11 @@
         }
         .actions .btn {
           flex: 1 1 100%;
+          min-width: 0;
+          padding: 0.5rem 0.75rem;
+          line-height: 1.2;
+          text-align: center;
+          white-space: normal; /* um rótulo longo quebra em vez de vazar do cartão */
         }
         /* o 2º chamado ("Ver produtos ↓") é um link: um só bloco de largura total na 1ª tela */
         .actions .btn-soft {
@@ -727,13 +625,7 @@
         overflow: hidden;
       }
       .wave svg {
-        width: 100%;
-        height: 1.25rem;
         color: var(--kraft);
-      }
-      .block + .wave svg {
-        height: 1rem;
-        transform: scaleY(-1);
       }
       /* diferenciais: uma lista em tipo grande, uma linha por item (ícone, título e texto lado a lado) */
       .grid3 {
@@ -742,17 +634,12 @@
       }
       .pillar {
         display: grid;
-        grid-template-columns: 3rem minmax(0, 1.3fr) minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
         align-items: center;
         gap: 1.5rem clamp(1.5rem, 4vw, 4rem);
         padding: clamp(1.75rem, 3.5vw, 3rem);
         border-radius: 0.5rem;
         background: var(--papel); /* faixa Papel sobre a seção tint */
-      }
-      .pillar svg {
-        width: 3rem;
-        height: 3rem;
-        color: var(--floresta);
       }
       .pillar h3 {
         font-size: var(--t-title);
@@ -765,10 +652,6 @@
         font-size: var(--t-lead);
         line-height: 1.5;
         color: var(--carvao);
-      }
-      /* sem ícone ou sem texto, o título ocupa o que sobra da linha */
-      .pillar > h3:first-child {
-        grid-column: 1 / 3;
       }
       /* o que fabricamos: os modelos */
       /* o primeiro produto domina (3D grande de um lado, texto do outro); os demais dividem a fileira de baixo */
@@ -903,9 +786,8 @@
       /* clientes: só prova autorizada (ou exemplo, em demo), num carrossel (src/carrossel.js) em
          qualquer largura. Sem JS a janela rola na horizontal; com JS (.on) os itens andam devagar da
          direita para a esquerda numa esteira sem fim (transform, no compositor), com degradê Papel
-         nas bordas e sem nenhum controle (ela pausa sozinha, ver src/carrossel.js). Com poucos logos os
-         itens se repetem para encher a janela; só com movimento reduzido e itens que cabem na largura
-         (.estatico) ficam parados e centralizados. */
+         nas bordas e sem nenhum controle (ela pausa sozinha, ver src/carrossel.js). Com menos de 4 logos
+         ou com movimento reduzido (.estatico) ficam parados e centralizados. */
       .carrossel-janela {
         position: relative;
         overflow-x: auto;
@@ -939,6 +821,7 @@
       }
       .carrossel.estatico .carrossel-trilho {
         width: auto;
+        flex-wrap: wrap;
         justify-content: center;
       }
       .cliente {
@@ -1052,7 +935,7 @@
           font-size: var(--t-body);
         }
         .pillar {
-          grid-template-columns: 3rem minmax(0, 1fr) minmax(0, 1fr);
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
         }
         .pillar h3 {
           font-size: var(--t-item);
@@ -1089,15 +972,11 @@
           padding: 0 0 1rem;
           background: none; /* no celular a lista corre direto sobre a faixa, sem cartões */
         }
-        /* no celular o ícone sai: o título já abre cada item, e o ícone no topo faria dele um cartão */
-        .pillar svg {
-          display: none;
-        }
-        .pillar > h3:first-child {
-          grid-column: auto;
-        }
         .pillar h3 {
-          font-size: var(--t-lead);
+          font-size: var(--t-item);
+        }
+        .pillar p {
+          font-size: var(--t-body);
         }
       }
 
@@ -1111,11 +990,6 @@
         grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
         gap: 3rem 5rem;
         align-items: start;
-      }
-      .cta .mark {
-        height: 2.125rem;
-        width: auto;
-        margin-bottom: 2.5rem;
       }
       .cta h2 {
         font-size: var(--t-display);
@@ -1272,11 +1146,6 @@
         color: var(--floresta);
         font: 900 var(--t-item) / 1 var(--font);
       }
-      @media (min-width: 861px) {
-        .cta .how {
-          padding-top: 4.625rem; /* a altura da marca e o respiro dela: o 1º passo sai na linha do título */
-        }
-      }
       @media (max-width: 860px) {
         .cta .wrap {
           grid-template-columns: minmax(0, 1fr);
@@ -1369,7 +1238,9 @@
           grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 1rem 1.5rem;
         }
+        .f-email,
         .f-endereco,
+        .f-horario,
         .f-cnpj {
           grid-column: 1 / -1;
         }
@@ -1492,18 +1363,10 @@
         .step + .step {
           padding-bottom: calc(var(--bar-h) + 0.75rem + env(safe-area-inset-bottom));
         }
-        /* com a barra à vista, o botão do cabeçalho sai: um só "Pedir orçamento" na tela */
+        /* até 768 px o cabeçalho fica sem botão: ele só aparecia no 1º capítulo, junto do botão grande do
+           cartão, e tirava o espaço do logo; do 2º capítulo em diante quem chama é a barra */
         .hdr .btn {
-          transition:
-            background-color 0.2s,
-            transform 0.2s,
-            opacity 0.3s,
-            visibility 0s;
-        }
-        body:has(.fab.on) .hdr .btn {
-          opacity: 0;
-          visibility: hidden;
-          transition-delay: 0s, 0s, 0s, 0.3s;
+          display: none;
         }
       }
 
@@ -1657,59 +1520,6 @@
           d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"
         />
       </symbol>
-      <symbol id="i-fabrica" viewBox="0 0 24 24">
-        <path
-          d="M2 21V9l6 4V9l6 4V4h8v17H2z"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
-          stroke-linecap="square"
-        />
-        <path
-          d="M18 8h1M18 12h1M18 16h1M6 17h3v4H6z"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
-          stroke-linecap="square"
-        />
-      </symbol>
-      <symbol id="i-lotes" viewBox="0 0 24 24">
-        <rect
-          x="3"
-          y="3"
-          width="18"
-          height="18"
-          rx="1"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
-        />
-        <path
-          d="M3 9h18M9 3v6M15 3v6M9 15h6M12 12v6"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
-          stroke-linecap="square"
-        />
-      </symbol>
-      <symbol id="i-conversa" viewBox="0 0 24 24">
-        <path
-          d="M3 4h18v12H10l-5 4v-4H3zM7 9h10M7 12h6"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
-          stroke-linecap="square"
-        />
-      </symbol>
-      <symbol id="i-caixa" viewBox="0 0 24 24">
-        <path
-          d="M3 8l9-4 9 4v9l-9 4-9-4zM3 8l9 4 9-4M12 12v9"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.6"
-          stroke-linecap="square"
-        />
-      </symbol>
     </svg>
 
     <a class="skip" href="#conteudo">Pular para o conteúdo</a>
@@ -1834,13 +1644,18 @@
       </section>
 
       <div class="wave" aria-hidden="true">
-        <svg viewBox="0 0 1200 20" preserveAspectRatio="none">
-          <path
-            d="M0,10 Q15,0 30,10 T60,10 T90,10 T120,10 T150,10 T180,10 T210,10 T240,10 T270,10 T300,10 T330,10 T360,10 T390,10 T420,10 T450,10 T480,10 T510,10 T540,10 T570,10 T600,10 T630,10 T660,10 T690,10 T720,10 T750,10 T780,10 T810,10 T840,10 T870,10 T900,10 T930,10 T960,10 T990,10 T1020,10 T1050,10 T1080,10 T1110,10 T1140,10 T1170,10 T1200,10"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-          />
+        <svg width="100%" height="24">
+          <defs>
+            <pattern id="onda" width="44" height="24" patternUnits="userSpaceOnUse">
+              <path
+                d="M0 1.5h44M0 22.5h44M0 19.5C7 19.5 15 4.5 22 4.5S37 19.5 44 19.5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+              />
+            </pattern>
+          </defs>
+          <rect width="100%" height="24" fill="url(#onda)" />
         </svg>
       </div>
 
@@ -1856,13 +1671,8 @@
       </section>
 
       <div class="wave" aria-hidden="true" data-need="tem_diferenciais">
-        <svg viewBox="0 0 1200 20" preserveAspectRatio="none">
-          <path
-            d="M0,10 Q15,0 30,10 T60,10 T90,10 T120,10 T150,10 T180,10 T210,10 T240,10 T270,10 T300,10 T330,10 T360,10 T390,10 T420,10 T450,10 T480,10 T510,10 T540,10 T570,10 T600,10 T630,10 T660,10 T690,10 T720,10 T750,10 T780,10 T810,10 T840,10 T870,10 T900,10 T930,10 T960,10 T990,10 T1020,10 T1050,10 T1080,10 T1110,10 T1140,10 T1170,10 T1200,10"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-          />
+        <svg width="100%" height="24">
+          <rect width="100%" height="24" fill="url(#onda)" />
         </svg>
       </div>
 
@@ -1889,15 +1699,6 @@
       <section class="block cta" id="orcamento">
         <div class="wrap">
           <div>
-            <img
-              class="mark"
-              src="/brand/vanpack-horizontal-negativo.svg"
-              alt="{{nome}}"
-              width="136"
-              height="34"
-              loading="lazy"
-              decoding="async"
-            />
             <h2>{{orcamento.titulo}}</h2>
             <p class="lead">{{orcamento.texto}}</p>
             <a class="btn btn-light" data-cta="orcamento" data-wa="{{whatsapp.mensagens.orcamento}}"
@@ -1932,6 +1733,10 @@
           <dl class="foot-info">
             <div class="f-telefone" data-field="telefone" hidden>
               <dt>{{rodape.rotulos.telefone}}</dt>
+              <dd></dd>
+            </div>
+            <div class="f-email" data-field="email" hidden>
+              <dt>{{rodape.rotulos.email}}</dt>
               <dd></dd>
             </div>
             <div class="f-mapa" data-field="mapa" hidden>

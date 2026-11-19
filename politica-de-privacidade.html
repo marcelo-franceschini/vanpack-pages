@@ -20,76 +20,8 @@
       fetchpriority="high"
     />
     <style>
-      @font-face {
-        font-family: 'Archivo';
-        font-style: normal;
-        font-weight: 400 900;
-        font-display: swap;
-        src: url(/fonts/archivo-latin.woff2) format('woff2');
-        unicode-range:
-          U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
-          U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-      }
-      /* Mesmos tokens da página principal (cores do manual da marca). */
-      :root {
-        color-scheme: light;
-        --floresta: #14513a;
-        --floresta-dark: #0d3c2a;
-        --carvao: #1b1a17;
-        --carvao-muted: #454440;
-        --papel: #fbf8f2;
-        --tint: #ece9e3;
-        --font: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-        --pad: clamp(1.25rem, 4vw, 4.5rem);
-      }
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-      }
-      body {
-        margin: 0;
-        background: var(--papel);
-        color: var(--carvao);
-        font: 400 1.125rem/1.6 var(--font);
-        -webkit-font-smoothing: antialiased;
-      }
-      img {
-        display: block;
-        max-width: 100%;
-      }
-      h1,
-      h2,
-      p {
-        margin: 0;
-      }
-      a {
-        color: var(--floresta);
-        text-underline-offset: 0.2em;
-      }
-      a:hover {
-        color: var(--floresta-dark);
-      }
-      :focus-visible {
-        outline: 0.1875rem solid var(--floresta);
-        outline-offset: 0.1875rem;
-        border-radius: 0.25rem;
-      }
-      .skip {
-        position: fixed;
-        left: 0.75rem;
-        top: -4.5rem;
-        z-index: 100;
-        background: var(--carvao);
-        color: var(--papel);
-        padding: 0.75rem 1rem;
-        border-radius: 0.25rem;
-        transition: top 0.2s;
-      }
-      .skip:focus {
-        top: 0.75rem;
-        color: var(--papel);
-      }
+      /* a fonte, os tokens da marca e o reset, comuns às três páginas: o build embute aqui */
+      @import '/src/base.css';
       .wrap {
         width: 100%;
         max-width: 48rem;

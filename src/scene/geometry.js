@@ -20,6 +20,7 @@ const OFFSET_CORNER = 2 - Math.SQRT2; // deslocar um canto de 45° por `c` come 
 
 /**
  * Contorno octogonal (8 vértices, anti-horário visto de +z) de meias medidas hx × hy e chanfro `cut`.
+ * @returns {[number, number][]}
  */
 const octagon = (hx, hy, cut) => [
   [hx - cut, -hy],

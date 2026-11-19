@@ -13,14 +13,7 @@
 
 import { RICH_VARS, visibleClients, visibleProofs } from '../site.config.js';
 import { renderPolicy } from './privacidade.js';
-import { renderText } from './texto.js';
-
-export const escapeHtml = (s) =>
-  String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+import { escapeHtml, renderText } from './texto.js';
 
 export const decodeEntities = (s) =>
   s
@@ -75,14 +68,16 @@ export function footerFields(site) {
         address.postalCode && `${site.content.rodape.rotulos.cep} ${address.postalCode}`,
       ]
         .filter(Boolean)
-        .join(' · ')
+        .map(escapeHtml)
+        .join('<br />')
     : '';
   const link = (href, label, extra = '') =>
     `<a href="${escapeHtml(href)}"${extra}>${escapeHtml(label)}</a>`;
   return {
     cnpj: site.cnpj && escapeHtml(site.cnpj),
-    endereco: place && escapeHtml(place),
+    endereco: place,
     horario: site.hours && escapeHtml(site.hours),
+    email: site.email && link(`mailto:${site.email}`, site.email, ' data-contact="email"'),
     telefone:
       site.phone &&
       link(`tel:${site.phone}`, site.phoneDisplay || site.phone, ' data-contact="phone"'),
@@ -224,10 +219,12 @@ export function buildJsonLd(site) {
     image: `${site.siteUrl}og.jpg`,
     logo: `${site.siteUrl}icon-512.png`,
     ...(site.phone && { telephone: site.phone }),
+    ...(site.email && { email: site.email }),
     ...(site.cnpj && { taxID: site.cnpj }),
     ...(site.foundedYear && { foundingDate: site.foundedYear }),
     ...(site.hoursSchema && { openingHours: site.hoursSchema }),
     ...(site.serviceArea && { areaServed: site.serviceArea }),
+    ...(site.mapUrl && { hasMap: site.mapUrl }),
     address: {
       '@type': 'PostalAddress',
       ...(streetAddress && { streetAddress }),
@@ -263,14 +260,12 @@ const BLOCKS = {
       )
       .join('\n'),
 
-  // Diferenciais (content/diferenciais.yaml): título, texto e ícone (um <symbol> do index.html).
+  // Diferenciais (content/diferenciais.yaml): título e texto.
   diferenciais: (site) =>
     site.differentials
       .map(
-        ({ title, text: body, icon }) =>
-          `<article class="pillar">${
-            icon ? `<svg aria-hidden="true"><use href="#i-${escapeHtml(icon)}" /></svg>` : ''
-          }<h3>${text(site, title)}</h3>${body ? `<p>${text(site, body)}</p>` : ''}</article>`,
+        ({ title, text: body }) =>
+          `<article class="pillar"><h3>${text(site, title)}</h3>${body ? `<p>${text(site, body)}</p>` : ''}</article>`,
       )
       .join('\n'),
 

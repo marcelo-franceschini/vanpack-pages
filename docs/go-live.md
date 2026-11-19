@@ -37,6 +37,7 @@ anunciado. Depois do deploy, peça a indexação no Search Console.
 | `whatsapp`          | 55 + DDD + número, só dígitos                              | sim         | Teste um botão do site                              |
 | `telefone`          | Telefone em `+55DDDnúmero`                                 | production  | Igual ao do Perfil da Empresa no Google             |
 | `telefone_exibicao` | Telefone como aparece na página                            | não         | Sem ele, a página formata o `telefone`              |
+| `email`             | E-mail de contato para orçamentos                          | não         | Opcional; se vazio ou omitido, não aparece          |
 | `cnpj`              | CNPJ                                                       | production  | Cartão CNPJ da Receita (o build confere os dígitos) |
 | `razao_social`      | Razão social                                               | não         | Cartão CNPJ                                         |
 | `endereco.rua`      | Rua e número da fábrica                                    | production  | Igual ao Perfil da Empresa no Google                |
@@ -55,8 +56,8 @@ anunciado. Depois do deploy, peça a indexação no Search Console.
 Os outros arquivos de `content/` (os textos da página: `site.yaml`, `historia.yaml`, `orcamento.yaml`, `whatsapp.yaml`, `rodape.yaml` e o texto da política em `privacidade.md`, além destes):
 
 - `produtos.yaml`: os 4 produtos (nome, descrição, mensagem do botão e descrição do 3D para leitor de tela).
-- `diferenciais.yaml`: até 6 cartões de "Por que a Vanpack" (título, texto e ícone: `fabrica`, `lotes`,
-  `conversa` ou `caixa`). Sem nenhum, a seção some.
+- `diferenciais.yaml`: até 6 cartões de "Por que a Vanpack" (título e texto). Sem nenhum, a seção
+  some.
 - `clientes.yaml` e `clientes/`: até 12 clientes da faixa de logos, com o logo em SVG. O Biscoitê está
   listado com `autorizado: false`: em production ele fica fora da página até existir o registro em
   `docs/provas/<id>.md` (`autorizado: true` exige esse registro). Um cliente com `exemplo: true` o build de
@@ -120,7 +121,6 @@ A medição só liga com `VITE_DATA_MODE=production`: no site de demonstração 
 - [ ] Produtos, textos dos cartões e diferenciais conferidos; clientes listados com `autorizado: true` e o registro em `docs/provas/` (ou apagados).
 - [ ] O assistente (chatbot) do WhatsApp já está no ar: o passo 2 de "Como pedir" diz que ele pergunta medida, quantidade e impressão, e o CTA final convida a mandar a foto do produto. A página não promete tempo de resposta.
 - [ ] Depois do deploy, abra o link de dentro do Instagram (e do Facebook) num celular: o botão abre o WhatsApp? Se não abrir, a folha "O WhatsApp não abriu?" aparece?
-- [ ] `npm run og` gera de novo `public/og.jpg`: a imagem atual ainda mostra o texto antigo do hero ("A gente fabrica, imprime e entrega") e precisa ser refeita antes do go-live.
 - [ ] `npm run audit:lighthouse`: SEO 100 só é possível em `production` (em demo o `noindex` reprova o
       item "página bloqueada para indexação", como esperado). O orçamento do script (desempenho 99 no
       mobile, LCP 2,2 s) vale nos dois modos: o 99, e não 100, é o preço do `modulepreload` do three.js.

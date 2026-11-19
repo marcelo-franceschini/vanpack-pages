@@ -16,7 +16,14 @@ const ALLOWED_ORIGINS =
     ? [new URL(env.VITE_ANALYTICS_ENDPOINT || 'https://gateway.umami.is').origin]
     : [];
 const html = read('index.html');
-const styles = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join('\n');
+// O CSS de uma página como o build o entrega: os <style> dela com a base comum (src/base.css) no lugar do
+// `@import` que a embute.
+const stylesOf = (source) =>
+  [...source.matchAll(/<style>([\s\S]*?)<\/style>/g)]
+    .map((m) => m[1])
+    .join('\n')
+    .replace(/@import\s+'\/([^']+)';/g, (_, file) => read(file));
+const styles = stylesOf(html);
 const text = (source) =>
   source
     .replace(/<(script|style|svg)[\s\S]*?<\/\1>/g, ' ')
@@ -42,6 +49,18 @@ describe('paleta e tipografia (index.html)', () => {
       assert.deepEqual([r, g, b], [251, 248, 242], `rgb fora do Papel: ${channels}`);
     }
     assert.ok(!/\b(hsl|oklch|lab|lch)\(/.test(styles), 'sem outros espaços de cor');
+  });
+
+  test('a fonte e os tokens têm uma fonte só: as páginas embutem src/base.css e não repetem nada', () => {
+    for (const page of ['index.html', 'politica-de-privacidade.html', '404.html']) {
+      const own = [...read(page).matchAll(/<style>([\s\S]*?)<\/style>/g)]
+        .map((m) => m[1])
+        .join('\n');
+      assert.match(own, /@import '\/src\/base\.css';/, `${page} embute a base`);
+      assert.ok(!/@font-face|--font:/.test(own), `${page} não repete a fonte`);
+      assert.deepEqual(own.match(/#[0-9a-fA-F]{3,8}\b/g) ?? [], [], `${page}: cor só por token`);
+    }
+    assert.ok(!/@import/.test(read('dist/index.html')), 'no build a base vai embutida no HTML');
   });
 
   test('Kraft é só o material: nunca cor de texto, fundo de botão ou de interface', () => {
@@ -366,74 +385,91 @@ describe('build: CSP, requisições e marca na página', () => {
     await context.close();
   });
 
-  test('logotipo: símbolo >= 24 px, respiro >= 1/4 do símbolo e negativo sobre Floresta', async () => {
-    const { page, context } = await openPage(browser, server.url + '?tour=0', {
-      reducedMotion: 'reduce',
-    });
-    const count = await page.evaluate(() => document.querySelectorAll('img[src*="brand"]').length);
-    assert.ok(count >= 4, 'cabeçalho, carregamento, chamada final e rodapé');
-    for (let index = 0; index < count; index++) {
-      // cada logotipo é medido no meio da tela (o cabeçalho fixo não pode cobri-lo)
-      await page.evaluate((i) => {
-        const img = document.querySelectorAll('img[src*="brand"]')[i];
-        if (!img.closest('#hdr')) img.scrollIntoView({ block: 'center' });
-      }, index);
-      await page.waitForTimeout(200);
-      const logo = await page.evaluate((i) => {
-        const img = document.querySelectorAll('img[src*="brand"]')[i];
-        const r = img.getBoundingClientRect();
-        const rects = [];
-        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-          if (
-            !node.textContent.trim() ||
-            node.parentElement.closest('script, style, svg, [hidden], [inert]')
-          )
-            continue;
-          const range = document.createRange();
-          range.selectNodeContents(node);
-          for (const q of range.getClientRects()) rects.push(q);
-        }
-        for (const el of document.querySelectorAll('a, button, img:not([src*="brand"])')) {
-          if (el.contains(img) || el.closest('[hidden], [inert]')) continue;
-          const q = el.getBoundingClientRect();
-          if (q.width && q.height) rects.push(q);
-        }
-        const gap = (a, b) =>
-          Math.hypot(
-            Math.max(0, a.left - b.right, b.left - a.right),
-            Math.max(0, a.top - b.bottom, b.top - a.bottom),
-          );
-        const inside = (q) =>
-          q.left >= r.left - 1 &&
-          q.right <= r.right + 1 &&
-          q.top >= r.top - 1 &&
-          q.bottom <= r.bottom + 1;
-        const clear = Math.min(...rects.filter((q) => !inside(q)).map((q) => gap(r, q)));
-        let node = img;
-        let background = 'rgba(0, 0, 0, 0)';
-        while (node && background === 'rgba(0, 0, 0, 0)') {
-          background = getComputedStyle(node).backgroundColor;
-          node = node.parentElement;
-        }
-        return {
-          src: img.getAttribute('src'),
-          symbol: r.height, // no horizontal o símbolo ocupa a altura toda e é quadrado
-          clear,
-          background,
-          visible: r.width > 0 && getComputedStyle(img).visibility !== 'hidden',
-        };
-      }, index);
-      if (!logo.visible) continue;
-      assert.ok(logo.symbol >= 24, `${logo.src}: símbolo de ${logo.symbol}px`);
-      assert.ok(
-        logo.clear >= logo.symbol / 4 - 0.5,
-        `${logo.src}: respiro ${logo.clear.toFixed(1)}px < ${(logo.symbol / 4).toFixed(1)}px`,
+  for (const screen of [
+    { name: '1440×900', width: 1440, height: 900 },
+    { name: '390×844', width: 390, height: 844 },
+    { name: '360×640', width: 360, height: 640 },
+  ]) {
+    test(`logotipo (${screen.name}): símbolo >= 24 px, respiro >= 1/4 do símbolo e negativo sobre Floresta`, async () => {
+      const { page, context } = await openPage(browser, server.url + '?tour=0', {
+        viewport: { width: screen.width, height: screen.height },
+        reducedMotion: 'reduce',
+      });
+      const count = await page.evaluate(
+        () => document.querySelectorAll('img[src*="brand"]').length,
       );
-      if (logo.background === 'rgb(20, 81, 58)') {
-        assert.match(logo.src, /negativo/, 'sobre Floresta só em negativo');
+      assert.ok(count >= 3, 'cabeçalho, carregamento e rodapé');
+      for (let index = 0; index < count; index++) {
+        // cada logotipo é medido no meio da tela (o cabeçalho fixo não pode cobri-lo)
+        await page.evaluate((i) => {
+          const img = document.querySelectorAll('img[src*="brand"]')[i];
+          if (!img.closest('#hdr')) img.scrollIntoView({ block: 'center' });
+        }, index);
+        await page.waitForTimeout(200);
+        const logo = await page.evaluate((i) => {
+          const img = document.querySelectorAll('img[src*="brand"]')[i];
+          const r = img.getBoundingClientRect();
+          const rects = [];
+          const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+          for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+            if (
+              !node.textContent.trim() ||
+              node.parentElement.closest('script, style, svg, [hidden], [inert]')
+            )
+              continue;
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            for (const q of range.getClientRects()) rects.push(q);
+          }
+          for (const el of document.querySelectorAll('a, button, img:not([src*="brand"])')) {
+            if (el.contains(img) || el.closest('[hidden], [inert]')) continue;
+            const q = el.getBoundingClientRect();
+            if (q.width && q.height) rects.push(q);
+          }
+          const gap = (a, b) =>
+            Math.hypot(
+              Math.max(0, a.left - b.right, b.left - a.right),
+              Math.max(0, a.top - b.bottom, b.top - a.bottom),
+            );
+          const inside = (q) =>
+            q.left >= r.left - 1 &&
+            q.right <= r.right + 1 &&
+            q.top >= r.top - 1 &&
+            q.bottom <= r.bottom + 1;
+          const clear = Math.min(...rects.filter((q) => !inside(q)).map((q) => gap(r, q)));
+          let node = img;
+          let background = 'rgba(0, 0, 0, 0)';
+          while (node && background === 'rgba(0, 0, 0, 0)') {
+            background = getComputedStyle(node).backgroundColor;
+            node = node.parentElement;
+          }
+          const ratio = Number(img.getAttribute('width')) / Number(img.getAttribute('height'));
+          const symbol = Math.min(r.height, r.width / ratio);
+          // logo transparente não é visto: com movimento reduzido o do carregamento fica com opacidade 0
+          // assim que a cena fica pronta, mas a visibility só vira hidden 0,4 s depois (o
+          // transition-delay não encurta), e nessa janela o teste mediria um logo que ninguém vê
+          let opacity = 1;
+          for (let el = img; el; el = el.parentElement)
+            opacity *= Number(getComputedStyle(el).opacity);
+          return {
+            src: img.getAttribute('src'),
+            symbol,
+            clear,
+            background,
+            visible: r.width > 0 && getComputedStyle(img).visibility !== 'hidden' && opacity > 0,
+          };
+        }, index);
+        if (!logo.visible) continue;
+        assert.ok(logo.symbol >= 24, `${logo.src}: símbolo de ${logo.symbol}px`);
+        assert.ok(
+          logo.clear >= logo.symbol / 4 - 0.5,
+          `${logo.src}: respiro ${logo.clear.toFixed(1)}px < ${(logo.symbol / 4).toFixed(1)}px`,
+        );
+        if (logo.background === 'rgb(20, 81, 58)') {
+          assert.match(logo.src, /negativo/, 'sobre Floresta só em negativo');
+        }
       }
-    }
-    await context.close();
-  });
+      await context.close();
+    });
+  }
 });

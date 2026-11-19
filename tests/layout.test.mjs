@@ -8,11 +8,15 @@ const CHAPTERS = [0, 0.25, 0.5, 0.75, 1];
 const SCREENS = [
   { name: '1440×900', width: 1440, height: 900 },
   { name: '1366×768', width: 1366, height: 768 },
+  { name: '1366×640 (notebook, janela útil)', width: 1366, height: 640 },
+  { name: '1280×595 (notebook, janela útil)', width: 1280, height: 595 },
   { name: '924×540', width: 924, height: 540 },
   { name: '720×450 (zoom de 200% em 1440×900)', width: 720, height: 450 },
+  { name: '375×667 (celular)', width: 375, height: 667, mobile: true },
   { name: '360×640 (Android pequeno)', width: 360, height: 640, mobile: true },
   { name: '390×844 (celular em pé)', width: 390, height: 844, mobile: true },
   { name: '844×390 (celular deitado)', width: 844, height: 390, mobile: true },
+  { name: '768×1024 (tablet em pé)', width: 768, height: 1024, mobile: true },
 ];
 
 let server;
@@ -62,11 +66,26 @@ const measure = (page) =>
           height: r.height,
         };
       });
+    const style = getComputedStyle(card);
+    const cardBox = card.getBoundingClientRect();
+    const inner = {
+      left: cardBox.left + parseFloat(style.paddingLeft),
+      right: cardBox.right - parseFloat(style.paddingRight),
+    };
+    const spill = Math.max(
+      0,
+      ...[...card.querySelectorAll('h1, h2, p, a, .seal')]
+        .filter((el) => getComputedStyle(el).display !== 'none')
+        .map((el) => el.getBoundingClientRect())
+        .filter((r) => r.width > 0)
+        .map((r) => Math.max(r.right - inner.right, inner.left - r.left)),
+    );
     return {
       viewport: { width: innerWidth, height: innerHeight },
       scrollWidth: document.documentElement.scrollWidth,
       card: box(card),
       cardOverflow: card.scrollHeight - card.clientHeight,
+      spill,
       header: box(document.querySelector('#hdr')),
       fab: box(document.querySelector('#fab')),
       cue: box(document.querySelector('#cue')),
@@ -123,6 +142,7 @@ for (const screen of SCREENS) {
           m.cardOverflow <= 1,
           `o texto cabe no cartão sem rolar por dentro (sobra ${m.cardOverflow} px)`,
         );
+        assert.ok(m.spill <= 0.5, `nada vaza do respiro do cartão (spill ${m.spill} px)`);
       });
     }
 
@@ -378,7 +398,7 @@ describe('barra fixa do WhatsApp (celular)', () => {
   }
 
   for (const screen of SCREENS.filter((s) => s.mobile && s.width <= 768)) {
-    test(`${screen.name}: escondida no capítulo 1, à vista do 2 ao 5 e o cabeçalho sem botão`, async () => {
+    test(`${screen.name}: escondida no capítulo 1, à vista do 2 ao 5 e o cabeçalho sempre sem botão`, async () => {
       const { page, context } = await openPage(browser, server.url, {
         viewport: { width: screen.width, height: screen.height },
         reducedMotion: 'reduce',
@@ -386,18 +406,15 @@ describe('barra fixa do WhatsApp (celular)', () => {
         isMobile: true,
         deviceScaleFactor: 2,
       });
-      // a barra e o botão do cabeçalho trocam de lugar com uma transição curta: espera o estado
+      // a barra aparece do 2º capítulo em diante e até 768 px o cabeçalho não tem botão
       const expect = (bar, chapter) =>
         page
           .waitForFunction(
             (bar) => {
-              const shown = (el) => getComputedStyle(el).visibility === 'visible';
               const fab = document.querySelector('#fab');
-              return (
-                fab.classList.contains('on') === bar &&
-                shown(fab) === bar &&
-                shown(document.querySelector('#hdr .btn')) === !bar
-              );
+              const shown = getComputedStyle(fab).visibility === 'visible';
+              const button = getComputedStyle(document.querySelector('#hdr .btn')).display;
+              return fab.classList.contains('on') === bar && shown === bar && button === 'none';
             },
             bar,
             { timeout: 5000 },
@@ -453,4 +470,55 @@ describe('botão flutuante do WhatsApp', () => {
     assert.equal(await visible(), true, 'depois da história');
     await context.close();
   });
+});
+
+describe('telas de 320 e 344 px', () => {
+  for (const width of [320, 344]) {
+    test(`${width} px: nada vaza do respiro do cartão na abertura e sem rolagem horizontal`, async () => {
+      const { page, context } = await openPage(browser, server.url, {
+        viewport: { width, height: 568 },
+        reducedMotion: 'reduce',
+        hasTouch: true,
+        isMobile: true,
+        deviceScaleFactor: 2,
+      });
+      await scrollToProgress(page, 0);
+      const m = await measure(page);
+      assert.ok(m.spill <= 0.5, `spill é ${m.spill} px em ${width} px`);
+      assert.ok(m.scrollWidth <= width, `scrollWidth (${m.scrollWidth}) <= viewport (${width})`);
+      await context.close();
+    });
+  }
+});
+
+describe('tablet em pé: os 5 cartões têm a mesma largura', () => {
+  for (const { width, height } of [
+    { width: 768, height: 1024 },
+    { width: 820, height: 1180 },
+    { width: 1024, height: 1366 },
+  ]) {
+    test(`${width}×${height}: os 5 cartões têm a mesma largura`, async () => {
+      const { page, context } = await openPage(browser, server.url, {
+        viewport: { width, height },
+        reducedMotion: 'reduce',
+        hasTouch: true,
+        isMobile: true,
+      });
+      const widths = [];
+      for (const p of CHAPTERS) {
+        await scrollToProgress(page, p);
+        const w = await page.evaluate(() => {
+          const card = document.querySelector('.card.on');
+          return Math.round(card.getBoundingClientRect().width);
+        });
+        widths.push(w);
+      }
+      assert.equal(
+        new Set(widths).size,
+        1,
+        `larguras diferentes nos capítulos: ${widths.join(', ')}`,
+      );
+      await context.close();
+    });
+  }
 });

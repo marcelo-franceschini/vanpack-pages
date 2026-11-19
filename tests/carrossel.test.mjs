@@ -1,7 +1,7 @@
 // Carrossel de clientes (src/carrossel.js): esteira automática da direita para a esquerda em qualquer
 // largura e SEM nenhum controle (nem pausa, nem setas); pausa sozinha (mouse, foco de teclado, toque,
-// aba oculta e fora da tela), movimento reduzido (parada), poucos itens (a esteira anda do mesmo jeito),
-// cópias fora da leitura e do foco, e layout sem sobreposição nem rolagem horizontal.
+// aba oculta e fora da tela), movimento reduzido (parada), poucos itens (com 1 a 3 fica parada e centralizada;
+// a partir de 4 anda), cópias fora da leitura e do foco, e layout sem sobreposição nem rolagem horizontal.
 // A lista de clientes de content/ pode ter qualquer tamanho: cada teste põe no HTML servido a
 // quantidade de cartões de que precisa (`items`), com nomes "Cliente 1", "Cliente 2"...
 import assert from 'node:assert/strict';
@@ -17,7 +17,7 @@ const SCREENS = {
     deviceScaleFactor: 2,
   },
 };
-const MANY = 8; // anda em qualquer largura (a esteira anda a partir de 6 em 1440 e de 3 em 390)
+const MANY = 8; // quantidade suficiente para encher a tela e andar em qualquer largura
 
 let server;
 let browser;
@@ -81,26 +81,64 @@ const position = (page) =>
     const step = items.length > 1 ? items[1].offsetLeft - items[0].offsetLeft : 0;
     return {
       x: new DOMMatrix(getComputedStyle(track).transform).m41,
-      t: performance.now(), // quando a leitura foi feita: a velocidade usa o tempo real entre duas
+      // o tempo da linha do tempo da página (o do último quadro), o mesmo em que a animação calcula a
+      // posição: a velocidade usa ele, e não o relógio, que anda mesmo sem quadro nenhum
+      t: document.timeline.currentTime,
       step,
       loop: items.length * step,
     };
   });
 
+/**
+ * Espera a página produzir `ms` de quadros (tempo da linha do tempo, não do relógio). A esteira é uma
+ * animação e só anda quando há quadro: numa máquina ocupada, como o runner do CI, passam segundos de
+ * relógio sem quadro nenhum, e uma espera por relógio confundia isso com a esteira parada. Trava de 30 s
+ * de relógio para nunca prender a suíte.
+ */
+const frameTime = (page, ms) =>
+  page.evaluate(
+    (ms) =>
+      new Promise((resolve) => {
+        const start = document.timeline.currentTime;
+        const tick = (now) => (now - start >= ms ? resolve() : requestAnimationFrame(tick));
+        requestAnimationFrame(tick);
+        setTimeout(resolve, 30_000);
+      }),
+    ms,
+  );
+
 /** Quanto o trilho andou para a esquerda entre duas leituras, na volta da esteira. */
 const leftward = (a, b) => (((a.x - b.x) % a.loop) + a.loop) % a.loop;
 const estado = (page) => page.evaluate(() => document.querySelector('.carrossel').dataset.estado);
 
+/**
+ * Espera a pausa ou a retomada pedida à esteira valer. Na Web Animations API, `pause()` e `play()` só
+ * valem num quadro seguinte (o `ready` da animação resolve nessa hora): até lá ela ainda anda, ou ainda
+ * está parada, e uma retomada sobre uma pausa pendente pode recuar uma fração de pixel, que a conta da
+ * volta lia como quase uma volta inteira.
+ */
+const settled = (page) =>
+  page.evaluate(() =>
+    document
+      .querySelector('.carrossel-trilho')
+      .getAnimations()[0]
+      ?.ready.then(() => true),
+  );
+
+/** A esteira não sai do lugar em `ms` de quadros. */
 async function still(page, ms = 700) {
+  await settled(page);
   const a = await position(page);
-  await page.waitForTimeout(ms);
+  await frameTime(page, ms);
   const b = await position(page);
   return Math.abs(a.x - b.x) < 0.5;
 }
 
-async function moving(page, ms = 1000) {
+/** A esteira anda para a esquerda em 1 s de quadros: mais de 5 px (ela faz 30) e menos de meia volta. */
+async function moving(page) {
+  await settled(page);
   const a = await position(page);
-  await page.waitForTimeout(ms);
+  await frameTime(page, 1000);
   const moved = leftward(a, await position(page));
   return moved > 5 && moved < a.loop / 2;
 }
@@ -111,7 +149,7 @@ for (const screen of Object.keys(SCREENS)) {
       const { page, context, problems } = await open(screen);
       assert.equal(await estado(page), 'rodando');
       // a esteira só parte no 1º quadro da animação, que atrasa se a máquina estiver ocupada: espera
-      // ela andar e mede a velocidade (px/s) pelo tempo real entre as duas leituras, não por 1 s fixo
+      // ela andar e mede a velocidade (px/s) no tempo da linha do tempo entre as duas leituras
       const start = await position(page);
       await page.waitForFunction(
         (x) =>
@@ -121,7 +159,7 @@ for (const screen of Object.keys(SCREENS)) {
         { timeout: 10_000 },
       );
       const a = await position(page);
-      await page.waitForTimeout(1000);
+      await frameTime(page, 1000);
       const b = await position(page);
       const speed = (leftward(a, b) / (b.t - a.t)) * 1000;
       assert.ok(speed > 15 && speed < 60, `andou a ${speed.toFixed(1)} px/s`);
@@ -273,30 +311,57 @@ describe('carrossel com movimento reduzido', () => {
   }
 });
 
-describe('poucos clientes: a esteira anda do mesmo jeito', () => {
+describe('poucos clientes: com 1 a 3 logos fica parada; a partir de 4 anda', () => {
   for (const [screen, items] of [
     ['1440×900', 1],
-    ['1440×900', 4],
+    ['1440×900', 2],
+    ['1440×900', 3],
     ['390×844', 1],
     ['390×844', 2],
+    ['390×844', 3],
   ]) {
-    test(`${screen} com ${items}: anda, e as cópias enchem a janela`, async () => {
-      const { page, context } = await open(screen, { items });
-      assert.equal(await estado(page), 'rodando');
+    test(`${screen} com ${items}: parado, centralizado e sem cópias`, async () => {
+      const { page, context } = await open(screen, { items, expected: 'estatico' });
+      assert.equal(await estado(page), 'estatico');
       const info = await page.evaluate(() => {
         const view = document.querySelector('.carrossel-janela').getBoundingClientRect();
         const all = [...document.querySelectorAll('.carrossel-trilho .cliente')];
+        const first = all[0].getBoundingClientRect();
         const last = all.at(-1).getBoundingClientRect();
         return {
-          originals: all.filter((li) => !li.hasAttribute('aria-hidden')).length,
-          right: last.right - view.right,
+          copies: all.filter((li) => li.hasAttribute('aria-hidden')).length,
+          left: first.left - view.left,
+          right: view.right - last.right,
+          scrollWidth: document.documentElement.scrollWidth,
+          innerWidth,
         };
       });
-      assert.equal(info.originals, items);
-      assert.ok(info.right >= 0, 'a janela fica cheia até a borda direita');
+      assert.equal(info.copies, 0);
+      assert.ok(info.scrollWidth <= info.innerWidth, 'sem rolagem horizontal');
+      assert.ok(
+        Math.abs(info.left - info.right) < 2,
+        `centralizado (${info.left.toFixed(1)} × ${info.right.toFixed(1)})`,
+      );
       await context.close();
     });
   }
+
+  test('1440×900 com 4: anda, e as cópias enchem a janela', async () => {
+    const { page, context } = await open('1440×900', { items: 4 });
+    assert.equal(await estado(page), 'rodando');
+    const info = await page.evaluate(() => {
+      const view = document.querySelector('.carrossel-janela').getBoundingClientRect();
+      const all = [...document.querySelectorAll('.carrossel-trilho .cliente')];
+      const last = all.at(-1).getBoundingClientRect();
+      return {
+        originals: all.filter((li) => !li.hasAttribute('aria-hidden')).length,
+        right: last.right - view.right,
+      };
+    });
+    assert.equal(info.originals, 4);
+    assert.ok(info.right >= 0, 'a janela fica cheia até a borda direita');
+    await context.close();
+  });
 
   for (const [screen, items] of [
     ['1440×900', 1],

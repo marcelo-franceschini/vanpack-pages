@@ -3,6 +3,8 @@
 // sincronizados e a pessoa pode pegar o controle a qualquer instante (qualquer toque, roda do mouse,
 // tecla ou scroll interrompe). Interrompido, o tour nunca retoma sozinho.
 
+import { clamp } from './story.js';
+
 // Progresso (0…1) no centro de cada capítulo e tempos, em ms.
 const CENTERS = [0, 0.25, 0.5, 0.75, 1];
 const FIRST_HOLD = 0; // sem espera: o primeiro capítulo já começa andando
@@ -16,7 +18,6 @@ const NEAR = 0.02; // a que distância de um centro conta como "já estou nele"
 const SCROLL_TOLERANCE = 3; // px de diferença aceita entre o scroll pedido e o real
 const MODIFIER_KEYS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'CapsLock']);
 
-const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 // Quadrática: a cúbica quase não andava no começo e a página parecia parada.
 const easeInOut = (t) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
 

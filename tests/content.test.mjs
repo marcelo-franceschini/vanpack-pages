@@ -127,13 +127,14 @@ describe('campos e tipos', () => {
     );
   });
 
-  test('texto maior que o limite, UF e link fora do formato', () => {
+  test('texto maior que o limite, UF, link e e-mail fora do formato', () => {
     const all = joined({
       'empresa.yaml': stringify({
         ...empresa,
         razao_social: 'x'.repeat(81),
         endereco: { ...empresa.endereco, uf: 'sp1' },
         mapa: 'http://maps.google.com',
+        email: 'contato vanpack.com.br',
       }),
     });
     assert.match(
@@ -142,22 +143,33 @@ describe('campos e tipos', () => {
     );
     assert.match(all, /› endereco\.uf: use a sigla da UF com duas letras, ex\.: SP/);
     assert.match(all, /› mapa: o link do mapa precisa começar com https:\/\//);
+    assert.match(all, /› email: formato de e-mail inválido, use ex\.: contato@vanpack\.com\.br/);
+  });
+
+  test('e-mail opcional: vazio ou no formato certo passa; sem domínio, não', () => {
+    for (const email of ['', 'contato@vanpack.com.br']) {
+      assert.deepEqual(errorsWith({ 'empresa.yaml': stringify({ ...empresa, email }) }), [], email);
+    }
+    assert.match(
+      joined({ 'empresa.yaml': stringify({ ...empresa, email: 'contato@vanpack' }) }),
+      /› email: formato de e-mail inválido/,
+    );
   });
 });
 
 describe('listas', () => {
-  const diferencial = { titulo: 'Título', texto: 'Texto.', icone: 'fabrica' };
+  const diferencial = { titulo: 'Título', texto: 'Texto.' };
 
-  test('diferenciais: mais de 6, ícone fora da lista e título vazio', () => {
+  test('diferenciais: mais de 6, campo que não existe (o ícone saiu) e título vazio', () => {
     const all = joined({
       'diferenciais.yaml': stringify({
-        itens: [...Array(7).fill(diferencial), { ...diferencial, icone: 'estrela', titulo: '' }],
+        itens: [...Array(7).fill(diferencial), { ...diferencial, icone: 'fabrica', titulo: '' }],
       }),
     });
     assert.match(all, /› itens: tem 8 itens; o máximo é 6/);
     assert.match(
       all,
-      /› itens\[7\]\.icone: valor não aceito; use um destes: fabrica, lotes, conversa, caixa/,
+      /› itens\[7\]\.icone: o campo "icone" não existe; os campos são: titulo, texto/,
     );
     assert.match(all, /› itens\[7\]\.titulo: não pode ficar vazio/);
   });

@@ -1,18 +1,18 @@
 {
   "arquivos": {
-    "src/render/controller.js": "e3fd8ef4ee2067577e39a2df151481be1d2db91cdcb9bbfc18ef08156c60ad8e",
-    "src/render/stage.js": "3c9cac2358cc7a95cc03e8a5349d5014699b829b90a0209d4b5bdea6424b77a6",
+    "src/render/controller.js": "08fef00c76693fd115204cae413793ea08e73a97525d20e48355c3b9eafb7326",
+    "src/render/stage.js": "c40897dd30c079db7947da017c595845dc86371d881aa2d25c6fb8c0c83e6c24",
     "src/render/worker.js": "c32b0f1080c3ad43ed74ca41a3813bd20bd13589ccbdcc6641e77dbbb83632f0",
     "src/scene/camera.js": "cd73284addb6da518dcbffd2442dcd5aa70a8fffaa87c1f82aeb2fc21ec06ec9",
     "src/scene/constants.js": "6368e495c25785930268daa66cb0624079e9e395261ffb7bd708c5c00a93cb7f",
     "src/scene/factory.js": "0fd7e3ec6c35580d9893e94b08eafad159f9ea4bb43a2d28be020bee043ff3c0",
-    "src/scene/geometry.js": "eaa228f1285272b4a3d7b7ca5c43d2317dd476fa64c56fc9c65db1d36bc62c24",
+    "src/scene/geometry.js": "6a3800a9e73559dcf144e02d5bb94c766079a63c61dd11847a6a8b273ea4723c",
     "src/scene/hero.js": "9ebe47df1a84dfde2e3fb962d0b9099010a87c383d265829cadd8113bcd8594b",
     "src/scene/index.js": "764ba62f34bbf651cd47ae2f6bd8b438be8e48d5ea852e7bad2f3c3cdee164ed",
-    "src/scene/machine.js": "7796cf56c7ee45cf30ea2ae57665420e922c78f9daabf75bfe131b73702c7358",
-    "src/scene/math.js": "daaa1be8bb179fbd5a068c1129225cc08c7adad8839ba114a91ef8cf700fb4b3",
-    "src/scene/textures.js": "6c371f383286134192b5b1f5f5100ef7bd1b806672a732de38bc0b1f61ca797f",
-    "src/scene/timeline.js": "d5660135cf444c9b08daa62bd669118950d00682df385670925bd7a17d8f512c",
+    "src/scene/machine.js": "ec0fbaff9db5dda3c4b283a2eacec861c0ed20a364934b4879f341748d0b8199",
+    "src/scene/math.js": "940b4bfcb59d8c1a28705becd1bcfcdbf248353ea1f5a1cc3fbf4a1d5ce43cf7",
+    "src/scene/textures.js": "a75d2d08358a97d8b3bfb3b2accc6a87fab50a3e53669b6e6936bb0ff508f2d0",
+    "src/scene/timeline.js": "75c40d1a8a312508df336cb898682e10275eb58236cb39f586181e9daa572620",
     "src/scene/truck.js": "50696baf9be447ae4c4499d3c3decd44c07e59223a7e20207ffc3205c7bfb03e",
     "tests/scene.test.mjs": "f1cb930850c045b979d2e4625e5aee4ebe009ae970b3a1755157d88e2ce4b129"
   }
