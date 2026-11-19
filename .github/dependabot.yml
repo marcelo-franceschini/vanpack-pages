@@ -33,3 +33,7 @@ updates:
       # build/three-compartilhado.js foi verificado só com a versão fixada. Subir de versão é decisão do
       # dono, com as capturas de paridade comparadas e o teste de build/three-compartilhado conferido.
       - dependency-name: three
+      # Os tipos do Node seguem o Node do CI (.nvmrc, hoje 24): um major dos tipos aceitaria APIs que o
+      # Node do CI não tem. Minor e patch continuam vindo; o major sobe junto com o .nvmrc, à mão.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
