@@ -68,25 +68,6 @@ const pixels = (page, i) =>
     return { ink: ink / (data.length / 4), signature, width: source.width };
   }, i);
 
-const frameCount = (page) => page.evaluate(() => window.__audit.produtos.frames);
-
-/**
- * Espera os quadros pararem de chegar (três leituras iguais, com 1,2 s entre elas): um quadro já a
- * caminho quando o desenho para ainda chega, e num computador lento ele demora.
- */
-async function framesStop(page) {
-  let last = -1;
-  let equal = 0;
-  for (let i = 0; i < 12; i++) {
-    const now = await frameCount(page);
-    equal = now === last ? equal + 1 : 0;
-    if (equal === 2) return now;
-    last = now;
-    await page.waitForTimeout(1200);
-  }
-  return assert.fail('os quadros não pararam de chegar');
-}
-
 /**
  * Espera a página largar os cartões depois de rolar para longe (nenhum a 300 px da tela). O
  * observador do teste usa a mesma margem do da página e é criado depois dele, então é avisado no
@@ -298,7 +279,15 @@ describe('3D nos cartões', () => {
         document.dispatchEvent(new Event('visibilitychange'));
       }, hidden);
     await setHidden(true);
-    const paused = await framesStop(page);
+    // Barreira em vez de relógio: o worker atende as mensagens em ordem. Quando chega a resposta do
+    // pedido de memória, mandado depois da pausa, ele já tratou a pausa, e o quadro que estava sendo
+    // desenhado antes dela (com WebGL por software, um quadro pode levar segundos) já chegou à página.
+    await page.evaluate(() => {
+      window.__audit.produtos.memory = null;
+      window.__audit.produtos.askMemory();
+    });
+    await page.waitForFunction(() => window.__audit.produtos.memory !== null);
+    const paused = await frames();
     await page.waitForTimeout(1200);
     assert.equal(await frames(), paused, 'oculta: não desenha');
     await setHidden(false);
