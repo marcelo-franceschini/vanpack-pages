@@ -1,0 +1,236 @@
+/* Header, primary navigation, buttons, and shared layout primitives */
+
+.wrap {
+  width: min(100%, var(--maxw));
+  margin-inline: auto;
+  padding-inline: var(--pad);
+}
+
+/* Sticky top bar: 3-zone contract (brand · concise nav · primary CTA) */
+.hdr {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: var(--hdr-h);
+  background: color-mix(in srgb, var(--papel) 92%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--tint-2);
+}
+
+.hdr-inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.brand img {
+  height: 2rem;
+  width: auto;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(1.25rem, 2.5vw, 2.25rem);
+}
+
+.nav a {
+  text-decoration: none;
+  font-size: var(--t-small);
+  font-weight: 600;
+  color: var(--carvao-muted);
+  white-space: nowrap;
+  padding-block: 0.35rem;
+  position: relative;
+  transition: color 0.18s ease;
+}
+
+.nav a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--floresta);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.22s var(--ease-out);
+}
+
+.nav a:hover,
+.nav a:focus-visible {
+  color: var(--floresta);
+}
+
+.nav a:hover::after,
+.nav a:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.hdr-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* Mobile disclosure menu */
+.nav-m {
+  display: none;
+  position: relative;
+}
+
+.nav-m summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--tint-2);
+  background: var(--papel);
+  color: var(--carvao);
+}
+
+.nav-m summary::-webkit-details-marker {
+  display: none;
+}
+
+.nav-m summary svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.nav-m[open] .nav-m-panel {
+  position: fixed;
+  top: var(--hdr-h);
+  left: 0;
+  right: 0;
+  background: var(--papel);
+  border-bottom: 1px solid var(--tint-2);
+  padding: 1rem var(--pad) 1.5rem;
+  display: grid;
+  gap: 0.25rem;
+  box-shadow: 0 18px 40px rgba(27, 26, 23, 0.1);
+}
+
+.nav-m-panel a {
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--tint);
+  color: var(--carvao);
+}
+
+.nav-m-panel a:last-child {
+  border-bottom: 0;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-height: var(--btn-h);
+  padding: 0.75rem 1.45rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--floresta);
+  color: var(--papel);
+  font-size: var(--t-small);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.16s var(--ease-out);
+}
+
+.btn svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex-shrink: 0;
+}
+
+.btn:hover {
+  background: var(--floresta-dark);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-sm {
+  min-height: 2.6rem;
+  padding: 0.5rem 1.05rem;
+  font-size: 0.9375rem;
+}
+
+.btn-light {
+  background: var(--papel);
+  color: var(--floresta-dark);
+}
+
+.btn-light:hover {
+  background: var(--tint);
+}
+
+.btn-light:focus-visible {
+  outline-color: var(--papel);
+}
+
+.btn-soft {
+  background: var(--tint);
+  color: var(--carvao);
+  border-color: var(--tint-2);
+}
+
+.btn-soft:hover {
+  background: var(--soft-hover);
+}
+
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--t-small);
+  font-weight: 700;
+  color: var(--floresta);
+  text-decoration: none;
+  padding-block: 0.45rem;
+  border-bottom: 1.5px solid transparent;
+  transition: border-color 0.18s ease;
+}
+
+.text-link:hover {
+  border-bottom-color: var(--floresta);
+}
+
+@media (max-width: 56rem) {
+  .nav,
+  .hdr-cta {
+    display: none;
+  }
+
+  .nav-m {
+    display: block;
+  }
+}

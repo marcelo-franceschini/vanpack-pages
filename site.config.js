@@ -1,13 +1,8 @@
-// Configuração do site: junta o conteúdo editável (content/, lido e validado por build/content.js) com o
-// que muda por ambiente (.env: modo, URL do site e medição) e monta tudo o que o build precisa (as
-// variáveis dos textos, a config da medição). Nenhum dado nem texto de negócio fica escrito aqui.
-// Valor vazio = sem dado: o trecho correspondente sai do HTML (nada é inventado nem fica vazio).
-import { yearsSince } from './src/years.js';
+// Site configuration: combines editable YAML content (`content/`) with environment variables (`.env`).
+// Pure function: does not read `process.env` or filesystem directly.
 
-/** Ícones dos diferenciais (diferenciais.yaml): cada um é um <symbol id="i-<nome>"> do index.html. */
 export const DIFF_ICONS = ['fabrica', 'lotes', 'conversa', 'caixa'];
 
-/** Variáveis que os textos de content/ e os data-need do HTML podem usar (`{{cidade}}`...). */
 export const VAR_NAMES = [
   'nome',
   'razao_social',
@@ -36,22 +31,26 @@ export const VAR_NAMES = [
   'tem_provas',
 ];
 
-/** Variáveis cujo valor já é HTML montado aqui (o número que o navegador recalcula): não são escapadas. */
 export const RICH_VARS = new Set(['anos', 'ano']);
 
-/** "Café & Cia." → "cafe-cia": o id do cliente, que nomeia o registro em docs/provas/<id>.md. */
+export const UMAMI_CLOUD = 'https://gateway.umami.is';
+
+/** Calculates full years in business from founding year (`YYYY`). */
+export function yearsSince(foundedYear, now = new Date()) {
+  const year = Number.parseInt(String(foundedYear ?? '').trim(), 10);
+  if (!Number.isFinite(year) || year < 1900 || year > now.getFullYear()) return Number.NaN;
+  return now.getFullYear() - year;
+}
+
+/** Converts a client name to an ASCII slug (`"Café & Cia."` -> `"cafe-cia"`). */
 export const slug = (name) =>
-  name
+  String(name ?? '')
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 
-/**
- * Depoimentos e nota do Google que a página mostra: só os autorizados (e com registro em
- * docs/provas/<id>.md). O JSON-LD nunca leva nota própria.
- */
 export function visibleProofs(items) {
   return {
     testimonials: items.testimonials.filter((item) => item.authorized === true),
@@ -59,28 +58,10 @@ export function visibleProofs(items) {
   };
 }
 
-/**
- * Clientes que a página mostra: em production só os que autorizaram; em demo todos, e o não autorizado
- * leva o rótulo "Exemplo".
- */
 export const visibleClients = (clients, dataMode) =>
   clients.filter((client) => client.authorized || dataMode === 'demo');
 
-/**
- * Experimentos A/B (src/experiments.js). Todos desligados: ligue com `enabled: true` e uma data fixa em
- * `endsAt` (depois dela só a variante A). `split` são os pesos das variantes, na ordem de `variants`.
- * `?exp_<nome>=A|B` na URL força a variante (QA e testes), mesmo desligado. Detalhes e a conta do
- * tamanho de amostra em docs/experimentos.md.
- */
-export const experiments = {
-  // B troca o CTA final por um assistente de 3 passos que monta a mensagem do WhatsApp.
-  quote_wizard: { enabled: false, variants: ['A', 'B'], split: [50, 50], endsAt: '' },
-};
-
 const text = (value) => String(value ?? '').trim();
-
-/** Servidor do Umami Cloud; `VITE_ANALYTICS_ENDPOINT` só muda numa instância própria. */
-export const UMAMI_CLOUD = 'https://gateway.umami.is';
 
 function hostOf(url) {
   try {
@@ -90,26 +71,12 @@ function hostOf(url) {
   }
 }
 
-/** (11) 4700-1234 a partir de +551147001234; vazio se o telefone não tiver o formato do Brasil. */
 function formatPhone(phone) {
   const match = /^\+55(\d{2})(\d{4,5})(\d{4})$/.exec(phone);
   return match ? `(${match[1]}) ${match[2]}-${match[3]}` : '';
 }
 
-/**
- * Monta a configuração do site. Pura: não lê `process.env` nem arquivos.
- * @param {object} options
- * @param {Record<string, string | undefined>} [options.env] variáveis VITE_* do ambiente (modo, URL, medição)
- * @param {Record<string, any>} options.content o conteúdo de content/ (ver build/content.js)
- * @param {Date} [options.now] data do build (ano do © e anos de mercado)
- * @param {typeof experiments} [options.experiments] experimentos A/B
- */
-export function createSiteConfig({
-  env = {},
-  content,
-  now = new Date(),
-  experiments: tests = experiments,
-}) {
+export function createSiteConfig({ env = {}, content, now = new Date() }) {
   const empresa = content.empresa ?? {};
   const endereco = empresa.endereco ?? {};
   const city = text(endereco.cidade);
@@ -123,15 +90,15 @@ export function createSiteConfig({
 
   const products = content.produtos?.itens ?? [];
   const brand = content.site ?? {};
+
   const site = {
     name: text(brand.nome),
     description: text(brand.descricao),
     content,
     products,
-    dataMode: text(env.VITE_DATA_MODE),
+    dataMode: text(env.VITE_DATA_MODE) || 'demo',
     siteUrl: text(env.VITE_SITE_URL),
     whatsapp,
-    // como aparece na folha "O WhatsApp não abriu?": (11) 91234-5678
     whatsappDisplay: whatsapp ? formatPhone(`+${whatsapp}`) || `+${whatsapp}` : '',
     phone,
     phoneDisplay: text(empresa.telefone_exibicao) || formatPhone(phone) || phone,
@@ -152,7 +119,6 @@ export function createSiteConfig({
     foundedYear,
     serviceArea: text(empresa.regiao),
     paymentMethods: text(empresa.pagamento),
-    // "Por que a Vanpack" e a faixa de logos
     differentials: (content.diferenciais?.itens ?? []).map((item) => ({
       title: text(item.titulo),
       text: text(item.texto),
@@ -191,11 +157,8 @@ export function createSiteConfig({
     yearsInBusiness: Number.isFinite(years) ? String(years) : '',
   };
 
-  // O que vai ao navegador (define __SITE__): a medição só liga na página publicada (o host do site) e só em
-  // production: o site de demonstração tem CNPJ e telefone fictícios e não pode somar visitas ao Umami.
   site.client = {
-    experiments: tests ?? {},
-    models: products.map(({ id, nome }) => ({ id, name: nome })), // assistente de orçamento
+    whatsapp,
     analytics:
       site.analytics.provider === 'umami' && site.dataMode === 'production'
         ? {
@@ -206,14 +169,12 @@ export function createSiteConfig({
         : null,
   };
 
-  // Variáveis dos {{...}} do HTML e dos textos de content/. Vazia = o trecho que a usa tem de estar
-  // dentro de um elemento com data-need (ou de um {{#se}}).
   const shownProofs = visibleProofs(site.proofs);
   const shownClients = visibleClients(site.clients, site.dataMode);
   site.vars = {
     nome: site.name,
     razao_social: legalName,
-    titular: legalName || site.name, // titular do ©
+    titular: legalName || site.name,
     cnpj: site.cnpj,
     rua: site.address.street,
     bairro: site.address.district,
@@ -223,20 +184,17 @@ export function createSiteConfig({
     cep: site.address.postalCode,
     telefone_exibicao: site.phoneDisplay,
     telefone: phone,
-    whatsapp, // folha "O WhatsApp não abriu?": o número para copiar
+    whatsapp,
     whatsapp_exibicao: site.whatsappDisplay,
     horario: site.hours,
     ano_fundacao: foundedYear,
-    // os números que o navegador recalcula (src/main.js lê data-since e data-year)
     anos: site.yearsInBusiness
       ? `<span class="anos" data-since="${foundedYear}">${site.yearsInBusiness}</span>`
       : '',
     ano: `<span data-year>${site.year}</span>`,
-    ano_atual: site.year, // o mesmo ano em texto puro, para a página sem script (política de privacidade)
-    // política de privacidade: a ferramenta de medição (ou a ausência dela)
+    ano_atual: site.year,
     medicao_nome: site.analytics.provider === 'umami' ? 'Umami Cloud' : '',
     sem_medicao: site.analytics.provider ? '' : 'sim',
-    // seções que só existem se tiverem algo a mostrar
     tem_diferenciais: site.differentials.length ? 'sim' : '',
     tem_provas:
       shownClients.length || shownProofs.testimonials.length || shownProofs.googleRating
@@ -245,5 +203,6 @@ export function createSiteConfig({
     regiao: site.serviceArea,
     pagamento: site.paymentMethods,
   };
+
   return site;
 }

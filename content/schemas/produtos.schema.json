@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://vanpack.local/schemas/produtos.schema.json",
   "title": "Produtos",
-  "description": "Os produtos da seção \"O que fabricamos\". Cada um tem um 3D girando no topo do cartão e um botão de orçamento.",
+  "description": "Os produtos da seção \"O que fabricamos\". Cada um tem um modelo 3D interativo, especificações técnicas e botão de orçamento.",
   "type": "object",
   "additionalProperties": false,
   "required": ["titulo", "botao", "itens"],
@@ -23,39 +23,43 @@
       "type": "array",
       "minItems": 1,
       "maxItems": 4,
-      "description": "Um cartão por produto, na ordem em que aparecem. O 3D de cada um é uma peça pronta (caixa-normal, corte-e-vinco, divisorias ou chapas): não dá para criar um produto novo só por aqui.",
       "items": {
         "type": "object",
         "additionalProperties": false,
         "required": ["id", "nome", "mensagem", "peca", "texto"],
         "properties": {
           "id": {
-            "enum": ["corte-e-vinco", "divisorias", "chapas", "caixa-normal"],
-            "description": "Qual peça 3D e qual ilustração o cartão usa. Também vira o código de origem do botão: [site-produtos-<id>]."
+            "enum": ["corte-e-vinco", "divisorias", "chapas", "caixa-normal"]
           },
           "nome": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 50,
-            "description": "Título do cartão."
+            "maxLength": 50
           },
           "mensagem": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 160,
-            "description": "Mensagem pronta do botão de orçamento deste produto (o site acrescenta o código de origem no fim)."
+            "maxLength": 160
           },
           "peca": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 80,
-            "description": "Descrição da peça para leitor de tela (\"Modelo 3D de <peca> girando\")."
+            "maxLength": 80
           },
           "texto": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 140,
-            "description": "Descrição do produto no cartão."
+            "maxLength": 160
+          },
+          "especificacoes": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            }
           }
         }
       }

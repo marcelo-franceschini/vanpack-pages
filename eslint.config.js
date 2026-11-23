@@ -2,23 +2,13 @@ import js from '@eslint/js';
 import globals from 'globals';
 
 export default [
-  // dist-audit/ é o build de auditoria (npm run build:audit); os demais dist-*/ são builds de teste.
-  { ignores: ['dist/', 'dist-*/'] },
+  { ignores: ['dist/', 'dist-*/', '.playwright-cli/', '**/*.ts'] },
   js.configs.recommended,
   {
-    files: ['src/**/*.js'],
-    // __SITE__ é injetado pelo Vite (define): host, servidor e site da medição
-    languageOptions: {
-      globals: { ...globals.browser, ...globals.worker, __SITE__: 'readonly' },
-    },
-  },
-  {
-    files: ['*.config.js', 'build/**/*.js'],
-    languageOptions: { globals: globals.node },
-  },
-  {
-    // Scripts e testes: rodam no Node e passam funções para o navegador (page.evaluate).
-    files: ['scripts/**/*.mjs', 'tests/**/*.mjs'],
+    files: ['*.config.js', 'tools/**/*.js', 'tools/**/*.mjs'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
+    rules: {
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
   },
 ];

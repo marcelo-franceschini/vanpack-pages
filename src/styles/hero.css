@@ -1,0 +1,338 @@
+/* Sticky 3D factory story stage, chapter beats, and chapter navigator */
+
+.story {
+  position: relative;
+  height: 520svh;
+  background: var(--papel);
+}
+
+.stage {
+  position: sticky;
+  top: var(--hdr-h);
+  height: calc(100svh - var(--hdr-h));
+  min-height: 33rem;
+  overflow: hidden;
+  background: #f2ede3;
+  isolation: isolate;
+}
+
+.stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 0;
+}
+
+/* Subtle architectural card backdrop on desktop beats matching public/og.jpg clarity */
+.stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(242, 237, 227, 0.86) 0%,
+    rgba(242, 237, 227, 0.68) 32%,
+    rgba(242, 237, 227, 0.08) 52%,
+    rgba(242, 237, 227, 0) 68%
+  );
+}
+
+.stage-ui {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: 2rem 4.75rem;
+  pointer-events: none;
+}
+
+.beats {
+  position: relative;
+  width: min(100%, 31rem);
+  min-height: 19rem;
+  display: grid;
+}
+
+.beat {
+  grid-area: 1 / 1;
+  align-self: center;
+  opacity: 0;
+  transform: translateY(18px);
+  pointer-events: none;
+  visibility: hidden;
+  transition:
+    opacity 0.42s var(--ease-out),
+    transform 0.48s var(--ease-out),
+    visibility 0.42s;
+}
+
+.beat.on {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  visibility: visible;
+}
+
+.beat-kicker {
+  margin: 0 0 0.85rem;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--floresta);
+}
+
+.beat h1,
+.beat h2 {
+  margin: 0 0 1rem;
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  line-height: 1.07;
+  color: var(--carvao);
+}
+
+.beat h1 {
+  font-size: var(--t-display);
+}
+
+.beat h2 {
+  font-size: var(--t-title);
+}
+
+.beat p {
+  margin: 0;
+  font-size: var(--t-lead);
+  line-height: 1.5;
+  color: var(--carvao-muted);
+  max-width: 34ch;
+}
+
+.beat-actions {
+  margin-top: 1.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem 1.5rem;
+}
+
+.beat-foot {
+  margin-top: 1.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--carvao-muted);
+}
+
+/* Interactive discreet chapter navigator (01-05) */
+.chapter-nav {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1.35rem;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.chapter-nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.chapter-list {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.5rem;
+  background: color-mix(in srgb, var(--papel) 86%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--tint-2);
+  border-radius: var(--radius-sm);
+  pointer-events: auto;
+}
+
+.chapter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.42rem 0.65rem;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--carvao-muted);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease;
+}
+
+.chapter-btn:hover {
+  color: var(--carvao);
+  background: var(--tint);
+}
+
+.chapter-btn[aria-current='step'] {
+  background: var(--floresta);
+  color: var(--papel);
+}
+
+.chapter-label {
+  display: none;
+}
+
+.chapter-btn[aria-current='step'] .chapter-label {
+  display: inline;
+  font-weight: 600;
+}
+
+.chapter-track {
+  flex: 0 1 11rem;
+  height: 2px;
+  background: var(--tint-2);
+  overflow: hidden;
+  border-radius: 1px;
+}
+
+.chapter-fill {
+  height: 100%;
+  width: 100%;
+  background: var(--floresta);
+  transform-origin: left;
+  transform: scaleX(var(--story-p, 0));
+  will-change: transform;
+}
+
+/* Fallback static poster when WebGL is unavailable */
+.stage[data-fallback='true']::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 74% 52%, rgba(183, 140, 92, 0.26) 0%, rgba(251, 248, 242, 0) 52%),
+    linear-gradient(125deg, var(--papel) 45%, var(--tint) 100%);
+}
+
+@media (max-width: 60rem) {
+  .story {
+    height: 440svh;
+  }
+
+  .stage {
+    min-height: 36rem;
+  }
+
+  .stage::before {
+    background: linear-gradient(
+      0deg,
+      rgba(251, 248, 242, 0.96) 0%,
+      rgba(251, 248, 242, 0.9) 42%,
+      rgba(251, 248, 242, 0.16) 66%,
+      rgba(251, 248, 242, 0) 100%
+    );
+  }
+
+  .stage-ui {
+    justify-content: flex-end;
+    padding-block: 1rem 4.5rem;
+  }
+
+  .beats {
+    width: 100%;
+    min-height: 14.5rem;
+  }
+
+  .beat h1 {
+    font-size: clamp(1.75rem, 7.2vw, 2.35rem);
+  }
+
+  .beat h2 {
+    font-size: clamp(1.55rem, 6.2vw, 2.05rem);
+  }
+
+  .beat p {
+    font-size: 0.98rem;
+  }
+
+  .beat-actions {
+    margin-top: 1rem;
+    gap: 0.65rem 1.1rem;
+  }
+
+  .beat-actions .btn {
+    white-space: normal;
+    text-align: center;
+    padding-inline: 1rem;
+  }
+
+  .chapter-nav {
+    bottom: 0.65rem;
+  }
+
+  .chapter-list {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .chapter-track {
+    display: none;
+  }
+
+  .chapter-btn {
+    padding: 0.34rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Reduced motion: stack beats linearly with static hero visual */
+@media (prefers-reduced-motion: reduce) {
+  .story {
+    height: auto;
+  }
+
+  .stage {
+    position: relative;
+    top: 0;
+    height: auto;
+    min-height: 0;
+    padding-block: 3rem;
+  }
+
+  .stage canvas {
+    position: absolute;
+    opacity: 0.32;
+  }
+
+  .stage-ui {
+    padding-block: 0;
+  }
+
+  .beats {
+    width: min(100%, 42rem);
+    gap: 2.5rem;
+    min-height: 0;
+  }
+
+  .beat {
+    grid-area: auto;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    visibility: visible;
+    transition: none;
+  }
+
+  .chapter-nav {
+    display: none;
+  }
+}
