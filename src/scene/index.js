@@ -17,12 +17,12 @@ import {
   WebGLRenderer,
 } from 'three';
 import { createCameraRig } from './camera.js';
-import { FLAT_T, PALETTE, PALLET_H, SCRAPS, SHEET_LENGTH, STACK_TOP } from './constants.js';
+import { FLAT_T, KRAFT_INNER, LAYER, PALETTE, PALLET_H, SCRAPS, SHEET_LENGTH, SHEET_Y, STACK_TOP } from './constants.js';
 import { buildFactory } from './factory.js';
-import { Batch, fadedFloor, ribbon, softRects, stackSides } from './geometry.js';
+import { Batch, fadedFloor, ribbon, sheetGeometry, softRects, stackSides } from './geometry.js';
 import { createHero } from './hero.js';
 import { clamp } from './math.js';
-import { edgeTexture, truckLogoTexture } from './textures.js';
+import { bodyTexture, edgeTexture, innerBodyTexture, truckLogoTexture } from './textures.js';
 import { createTimeline } from './timeline.js';
 import { buildTruck } from './truck.js';
 
@@ -137,15 +137,25 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
   const machine = buildFactory(world, M);
   const edgeMap = track(edgeTexture());
   const edgeMaterial = track(new MeshLambertMaterial({ map: edgeMap }));
-  // mesmo passo de camada da pilha do palete: com 8 mm o desenho da borda não chega a 2 px na tela
+  const kraftTexture = track(bodyTexture(false));
+  const kraftSurfaceMaterial = track(new MeshLambertMaterial({ map: kraftTexture }));
+  const kraftInnerTexture = track(innerBodyTexture());
+  const kraftInnerMaterial = track(new MeshLambertMaterial({ map: kraftInnerTexture }));
+
+  // Pilha do alimentador com camadas com a mesma espessura LAYER da chapa
   const feederStack = new Mesh(
-    track(stackSides(-7.02, -6.38, 0.53, 0.842, -0.81, 0.67, FLAT_T)),
+    track(stackSides(-7.02, -6.38, 0.53, SHEET_Y - LAYER, -0.81, 0.67, LAYER)),
     edgeMaterial,
   );
   feederStack.castShadow = true;
-  const feederTop = new Mesh(track(new PlaneGeometry(0.64, 1.48).rotateX(-PI / 2)), M.kraft);
-  feederTop.position.set(-6.7, 0.842, -0.07);
-  const plain = new Mesh(track(new BoxGeometry(SHEET_LENGTH, 0.008, 1.48)), M.kraft);
+  const feederTop = new Mesh(
+    track(new PlaneGeometry(0.64, 1.48).rotateX(-PI / 2)),
+    kraftSurfaceMaterial,
+  );
+  feederTop.position.set(-6.7, SHEET_Y - LAYER, -0.07);
+
+  const plainMaterials = [kraftSurfaceMaterial, kraftInnerMaterial, edgeMaterial];
+  const plain = new Mesh(track(sheetGeometry(SHEET_LENGTH, LAYER, 1.48)), plainMaterials);
   plain.castShadow = true;
   world.add(feederStack, feederTop, plain);
 
@@ -167,7 +177,10 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
       edgeMaterial,
     );
     stack.castShadow = true;
-    const top = new Mesh(track(new PlaneGeometry(SHEET_LENGTH, 0.74).rotateX(-PI / 2)), M.kraft);
+    const top = new Mesh(
+      track(new PlaneGeometry(SHEET_LENGTH, 0.74).rotateX(-PI / 2)),
+      kraftSurfaceMaterial,
+    );
     top.position.y = STACK_TOP;
     load.add(stack, top);
   }
@@ -195,11 +208,11 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
   scene.add(truck);
 
   // peça "herói": a chapa que vira caixa
-  const hero = createHero(track);
+  const hero = createHero(track, edgeMaterial);
   scene.add(hero.spin);
 
-  // aparas que caem no recolhimento
-  const scraps = new InstancedMesh(track(new BoxGeometry(1, 0.012, 1)), M.kraft, SCRAPS.length);
+  // aparas que caem no recolhimento com espessura e textura de papelão
+  const scraps = new InstancedMesh(track(new BoxGeometry(1, LAYER, 1)), kraftSurfaceMaterial, SCRAPS.length);
   scraps.castShadow = true;
   scraps.frustumCulled = false;
   scene.add(scraps);
@@ -328,7 +341,7 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
 
     /** Contexto restaurado: reenvia as texturas desenhadas à GPU. */
     restore() {
-      for (const texture of [...hero.textures, truckLogo, edgeMap]) {
+      for (const texture of [...hero.textures, truckLogo, edgeMap, kraftTexture]) {
         if (texture) texture.needsUpdate = true;
       }
     },

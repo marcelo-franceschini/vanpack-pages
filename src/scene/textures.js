@@ -232,6 +232,46 @@ export const bodyTexture = (printed) =>
     if (printed) drawPrint(g, w, h);
   });
 
+/** Face interna do papelão (liner interno), com tom Kraft e textura de fibras e ranhuras táteis. */
+export const innerBodyTexture = () =>
+  canvasTexture(768, 592, SCALE.body, (g, w, h) => {
+    // Tom base Kraft interno
+    g.fillStyle = KRAFT_INNER;
+    g.fillRect(0, 0, w, h);
+
+    // Ondulação sutil da canelura interna sob o liner
+    const darkHex = '#b78c5c';
+    g.fillStyle = darkHex;
+    g.globalAlpha = 0.05;
+    for (let y = 0; y < h; y += 16) {
+      g.fillRect(0, y, w, 3);
+    }
+
+    // Fibras orgânicas e textura tátil de celulose
+    let seed = 4096;
+    const rand = () => {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+    for (let i = 0; i < 350; i++) {
+      const x = rand() * w;
+      const y = rand() * h;
+      const len = 4 + rand() * 14;
+      g.globalAlpha = 0.04 + rand() * 0.06;
+      g.fillStyle = rand() > 0.45 ? darkHex : '#f2dfc4';
+      g.fillRect(x, y, len, 1.2);
+    }
+    g.globalAlpha = 1;
+
+    // Leve vinco de sombra de borda
+    g.fillStyle = 'rgba(70,44,18,0.18)';
+    g.fillRect(0, 0, w, 4);
+    g.fillRect(0, h - 4, w, 4);
+    g.fillStyle = 'rgba(70,44,18,0.08)';
+    g.fillRect(0, 0, 2, h);
+    g.fillRect(w - 2, 0, 2, h);
+  });
+
 export const flapTexture = () =>
   canvasTexture(512, 256, SCALE.flap, (g, w, h) => {
     g.fillStyle = KRAFT;

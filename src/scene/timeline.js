@@ -3,6 +3,7 @@
 import { Euler, Matrix4, Quaternion, Vector3 } from 'three';
 import {
   BOX,
+  LAYER,
   PALLET_END_X,
   PALLET_X,
   PHASE,
@@ -67,7 +68,7 @@ export function createTimeline({
     // chapa: sai do alimentador, passa pelas máquinas e chega à mesa giratória
     const sheetX = lin(p, SHEET_X);
     plain.visible = sheetX < PHASE.heroFromX;
-    plain.position.set(sheetX, SHEET_Y - 0.004, -0.07);
+    plain.position.set(sheetX, SHEET_Y - LAYER / 2, -0.07);
     hero.spin.visible = sheetX >= PHASE.heroFromX && p < PHASE.heroEnd;
 
     // dobra enquanto atravessa a máquina de cola; depois abre, gira, fecha e salta para o palete
