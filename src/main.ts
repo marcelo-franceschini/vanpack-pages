@@ -56,9 +56,6 @@ if (stageEl && storyEl) {
   stage.ready.then((ok: boolean) => {
     stageOk = ok;
     stageEl.classList.add('ready');
-    if (stageOk && window.scrollY < 40 && !window.location.hash) {
-      tour.start({ auto: true });
-    }
   });
 }
 

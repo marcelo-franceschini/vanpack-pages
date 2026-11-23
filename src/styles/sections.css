@@ -3,6 +3,7 @@
 .sec {
   padding-block: clamp(4.25rem, 8vw, 6.75rem);
   border-top: 1px solid var(--tint-2);
+  scroll-margin-top: var(--hdr-h);
 }
 
 .sec-tint {

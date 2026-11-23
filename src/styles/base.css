@@ -6,10 +6,10 @@
   padding-inline: var(--pad);
 }
 
-/* Sticky top bar: 3-zone contract (brand · concise nav · primary CTA) */
+/* Fixed top bar: 3-zone contract (brand · concise nav · primary CTA) */
 .hdr {
-  position: sticky;
-  top: 0;
+  position: fixed;
+  inset: 0 0 auto;
   z-index: 50;
   height: var(--hdr-h);
   background: color-mix(in srgb, var(--papel) 92%, transparent);
