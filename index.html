@@ -142,81 +142,99 @@
 
     <main id="conteudo">
       <!-- Interactive 3D factory story stage -->
-      <section class="story" id="processo" aria-label="Processo produtivo e apresentação">
-        <div class="stage" data-stage>
-          <canvas aria-hidden="true"></canvas>
-
-          <div class="wrap stage-ui">
-            <div class="beats">
-              <article class="beat on" data-beat="0">
-                <p class="beat-kicker" data-need="regiao">{{historia.hero.selo_regiao}}</p>
-                <h1>{{historia.hero.titulo}}</h1>
-                <p>{{historia.hero.texto}}{{historia.hero.texto_extra}}.</p>
-                <div class="beat-actions">
-                  <a class="btn" data-cta="hero" data-wa="{{whatsapp.mensagens.hero}}">
-                    <svg aria-hidden="true"><use href="#i-wa" /></svg>{{historia.hero.botao}}
-                  </a>
-                  <a class="text-link" href="#produtos">{{historia.hero.link_produtos}}</a>
-                </div>
-              </article>
-
-              <article class="beat" data-beat="1" aria-hidden="true">
-                <p class="beat-kicker">02 · Experiência</p>
-                <h2 data-need="ano_fundacao">{{historia.anos.titulo}}</h2>
-                <h2 data-need="!ano_fundacao">{{historia.anos.titulo_sem_ano}}</h2>
-                <p>{{historia.anos.texto}}</p>
-              </article>
-
-              <article class="beat" data-beat="2" aria-hidden="true">
-                <p class="beat-kicker">03 · Padronização</p>
-                <h2>{{historia.qualidade.titulo}}</h2>
-                <p>{{historia.qualidade.texto}}</p>
-              </article>
-
-              <article class="beat" data-beat="3" aria-hidden="true">
-                <p class="beat-kicker">04 · Atendimento direto</p>
-                <h2>{{historia.orcamento.titulo}}</h2>
-                <p>{{historia.orcamento.texto}}</p>
-              </article>
-
-              <article class="beat" data-beat="4" aria-hidden="true">
-                <p class="beat-kicker">05 · Expedição</p>
-                <h2>{{historia.entrega.titulo}}</h2>
-                <p data-need="regiao">{{historia.entrega.texto}}</p>
-                <p data-need="!regiao">{{historia.entrega.texto_sem_regiao}}</p>
-                <div class="beat-actions">
-                  <a class="text-link" href="#produtos">{{historia.entrega.link}}</a>
-                </div>
-              </article>
-            </div>
+      <section class="story" id="processo" aria-label="Apresentação da {{nome}}" data-tour="idle">
+        <div class="stage" id="stage">
+          <canvas
+            id="gl"
+            role="img"
+            aria-label="Animação 3D da {{nome}} com caixas de papelão e o caminhão de entrega"
+          ></canvas>
+          <div class="loader" aria-hidden="true">
+            <img src="/brand/vanpack-simbolo.svg" alt="" width="80" height="80" />
           </div>
 
-          <nav class="chapter-nav" aria-label="Capítulos da fábrica em 3D">
-            <div class="wrap chapter-nav-inner">
-              <div class="chapter-list" role="group">
-                <button type="button" class="chapter-btn" data-chapter="0" aria-current="step">
-                  <span>01</span><span class="chapter-label">Início</span>
-                </button>
-                <button type="button" class="chapter-btn" data-chapter="1">
-                  <span>02</span><span class="chapter-label">Fábrica</span>
-                </button>
-                <button type="button" class="chapter-btn" data-chapter="2">
-                  <span>03</span><span class="chapter-label">Medida</span>
-                </button>
-                <button type="button" class="chapter-btn" data-chapter="3">
-                  <span>04</span><span class="chapter-label">Palete</span>
-                </button>
-                <button type="button" class="chapter-btn" data-chapter="4">
-                  <span>05</span><span class="chapter-label">Entrega</span>
-                </button>
-              </div>
-              <div class="chapter-track" aria-hidden="true">
-                <div class="chapter-fill"></div>
+          <div class="steps">
+            <div class="step">
+              <div class="wrap">
+                <div class="card on">
+                  <h1>{{historia.hero.titulo}}</h1>
+                  <p>
+                    {{historia.hero.texto}}<span class="optional">{{historia.hero.texto_extra}}</span>.
+                  </p>
+                  <div class="actions">
+                    <a class="btn" data-cta="hero" data-wa="{{whatsapp.mensagens.hero}}">
+                      <svg aria-hidden="true"><use href="#i-wa" /></svg>{{historia.hero.botao}}
+                    </a>
+                    <a class="btn btn-soft" href="#produtos">{{historia.hero.link_produtos}}</a>
+                  </div>
+                  <div class="seal" data-need="regiao">{{historia.hero.selo_regiao}}</div>
+                </div>
               </div>
             </div>
-          </nav>
+            <!-- Os 5 cartões ficam sempre (o scroll da história depende deles) -->
+            <div class="step">
+              <div class="wrap">
+                <div class="card">
+                  <h2>
+                    <span data-need="ano_fundacao">{{historia.anos.titulo}}</span>
+                    <span data-need="!ano_fundacao">{{historia.anos.titulo_sem_ano}}</span>
+                  </h2>
+                  <p>{{historia.anos.texto}}</p>
+                </div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="wrap">
+                <div class="card">
+                  <h2>{{historia.qualidade.titulo}}</h2>
+                  <p>{{historia.qualidade.texto}}</p>
+                </div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="wrap">
+                <div class="card">
+                  <h2>{{historia.orcamento.titulo}}</h2>
+                  <p>{{historia.orcamento.texto}}</p>
+                  <div class="actions card-cta">
+                    <a
+                      class="btn btn-primary"
+                      data-cta="historia-pedido"
+                      data-wa="{{whatsapp.mensagens.orcamento}}"
+                    >
+                      <svg aria-hidden="true"><use href="#i-wa" /></svg>{{whatsapp.botoes.cabecalho}}
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="wrap">
+                <div class="card">
+                  <h2>{{historia.entrega.titulo}}</h2>
+                  <p>
+                    <span data-need="regiao">{{historia.entrega.texto}}</span>
+                    <span data-need="!regiao">{{historia.entrega.texto_sem_regiao}}</span>
+                  </p>
+                  <a class="more" href="#diferenciais">{{historia.entrega.link}}</a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="scrollcue" id="cue" aria-hidden="true">Role para ver ↓</div>
         </div>
       </section>
+
+      <div class="wave" aria-hidden="true">
+        <svg viewBox="0 0 1200 20" preserveAspectRatio="none">
+          <path
+            d="M0,10 Q15,0 30,10 T60,10 T90,10 T120,10 T150,10 T180,10 T210,10 T240,10 T270,10 T300,10 T330,10 T360,10 T390,10 T420,10 T450,10 T480,10 T510,10 T540,10 T570,10 T600,10 T630,10 T660,10 T690,10 T720,10 T750,10 T780,10 T810,10 T840,10 T870,10 T900,10 T930,10 T960,10 T990,10 T1020,10 T1050,10 T1080,10 T1110,10 T1140,10 T1170,10 T1200,10"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          />
+        </svg>
+      </div>
 
       <section class="sec" id="produtos">
         <div class="wrap">

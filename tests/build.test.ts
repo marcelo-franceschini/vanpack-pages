@@ -40,7 +40,7 @@ test('production dist contains all rendered HTML pages, SEO files, inlined CSS, 
   }
 
   const indexHtml = readFileSync(join(DIST, 'index.html'), 'utf8');
-  assert.match(indexHtml, /data-chapter="0"/, 'index.html includes chapter navigator');
+  assert.match(indexHtml, /class="card on"/, 'index.html includes story cards');
   assert.match(indexHtml, /data-quick-quote/, 'index.html includes optional quick-quote builder');
   assert.match(indexHtml, /class="model-specs"/, 'index.html includes B2B product specs');
   assert.doesNotMatch(indexHtml, /wiz-step/, 'legacy dead wizard markup is removed');

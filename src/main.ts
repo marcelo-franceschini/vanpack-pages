@@ -1,9 +1,11 @@
-import { mountProductCatalog } from './scenes/catalog/mount';
+import { mountStage } from './render/stage.js';
+import { createStory } from './story.js';
+import { createTour } from './tour.js';
+import { observeProdutos } from './produtos/gatilho.js';
 import { initAnalytics } from './telemetry/analytics';
 import { mountClientShowcase } from './ui/carousel';
 import { mountWhatsAppHandoff } from './ui/handoff';
 import { mountQuickQuote } from './ui/quick-quote';
-import { mountStory } from './ui/story';
 import { updateYears } from './ui/years';
 
 function bindMobileMenu(): void {
@@ -16,10 +18,51 @@ function bindMobileMenu(): void {
   }
 }
 
+// Inicializações básicas
 updateYears();
 bindMobileMenu();
-mountStory();
-mountProductCatalog();
+
+// 1. Hero e Fábrica 3D
+const stageEl = document.getElementById('stage');
+const storyEl = document.getElementById('processo');
+const headerEl = document.querySelector<HTMLElement>('.hdr');
+const cueEl = document.getElementById('cue');
+const fabEl = document.getElementById('fab');
+const cards = [...document.querySelectorAll<HTMLElement>('.card')];
+
+if (stageEl && storyEl) {
+  const stage = mountStage(stageEl);
+  const story = createStory({
+    story: storyEl,
+    stage: stageEl,
+    header: headerEl,
+    cue: cueEl,
+    fab: fabEl,
+    cards,
+    onProgress: (p: number) => stage.setProgress(p),
+    onChapter: (_index: number) => {},
+  });
+
+  createTour({
+    stage,
+    story,
+    cards,
+    dock: document.querySelector('.hdr-cta'),
+    onState: (state: string) => {
+      storyEl.dataset.tour = state;
+      cueEl?.classList.toggle('gone', state === 'playing');
+    },
+  });
+
+  stage.ready.then((_ok: boolean) => {
+    stageEl.classList.add('ready');
+  });
+}
+
+// 2. Vitrine 3D dos Produtos
+observeProdutos();
+
+// 3. Do hero para baixo (seções mantidas do novo visual)
 mountClientShowcase();
 mountQuickQuote(__SITE__.whatsapp);
 mountWhatsAppHandoff();

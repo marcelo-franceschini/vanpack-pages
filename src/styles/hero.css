@@ -1,18 +1,19 @@
-/* Sticky 3D factory story stage, chapter beats, and chapter navigator */
+/* Hero 3D Story Stage, Sticky factory animation & 5 storytelling cards */
 
 .story {
   position: relative;
-  height: 520svh;
-  background: var(--papel);
+  height: 560vh;
+  height: 560svh;
 }
 
 .stage {
   position: sticky;
-  top: var(--hdr-h);
-  height: calc(100svh - var(--hdr-h));
+  top: 0;
+  height: 100vh;
+  height: 100svh;
   min-height: 33rem;
   overflow: hidden;
-  background: #f2ede3;
+  background: var(--papel);
   isolation: isolate;
 }
 
@@ -21,318 +22,292 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  display: block;
-  z-index: 0;
+  opacity: 0;
+  transition: opacity 0.4s;
 }
 
-/* Subtle architectural card backdrop on desktop beats matching public/og.jpg clarity */
-.stage::before {
-  content: '';
+.stage.ready canvas {
+  opacity: 1;
+}
+
+.loader {
   position: absolute;
   inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    rgba(242, 237, 227, 0.86) 0%,
-    rgba(242, 237, 227, 0.68) 32%,
-    rgba(242, 237, 227, 0.08) 52%,
-    rgba(242, 237, 227, 0) 68%
-  );
-}
-
-.stage-ui {
-  position: relative;
-  z-index: 2;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding-block: 2rem 4.75rem;
-  pointer-events: none;
-}
-
-.beats {
-  position: relative;
-  width: min(100%, 31rem);
-  min-height: 19rem;
   display: grid;
-}
-
-.beat {
-  grid-area: 1 / 1;
-  align-self: center;
-  opacity: 0;
-  transform: translateY(18px);
-  pointer-events: none;
-  visibility: hidden;
+  place-items: center;
+  background: var(--papel);
+  z-index: 5;
   transition:
-    opacity 0.42s var(--ease-out),
-    transform 0.48s var(--ease-out),
-    visibility 0.42s;
+    opacity 0.4s,
+    visibility 0s 0.4s;
 }
 
-.beat.on {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-  visibility: visible;
+.loader img {
+  width: 5rem;
+  height: 5rem;
 }
 
-.beat-kicker {
-  margin: 0 0 0.85rem;
-  font-size: 0.8125rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--floresta);
+.stage.ready .loader {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
-.beat h1,
-.beat h2 {
-  margin: 0 0 1rem;
-  font-weight: 900;
-  letter-spacing: -0.025em;
-  line-height: 1.07;
-  color: var(--carvao);
-}
-
-.beat h1 {
-  font-size: var(--t-display);
-}
-
-.beat h2 {
-  font-size: var(--t-title);
-}
-
-.beat p {
-  margin: 0;
-  font-size: var(--t-lead);
-  line-height: 1.5;
-  color: var(--carvao-muted);
-  max-width: 34ch;
-}
-
-.beat-actions {
-  margin-top: 1.75rem;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.9rem 1.5rem;
-}
-
-.beat-foot {
-  margin-top: 1.35rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--carvao-muted);
-}
-
-/* Interactive discreet chapter navigator (01-05) */
-.chapter-nav {
+/* Emendas com a página: faixas de Papel suaves */
+.stage::before,
+.stage::after {
+  content: '';
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 1.35rem;
-  z-index: 3;
+  z-index: 5;
   pointer-events: none;
 }
 
-.chapter-nav-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
+.stage::before {
+  top: 0;
+  height: calc(var(--hdr-h) + 1.25rem);
+  background: linear-gradient(var(--papel) calc(100% - 2.25rem), rgb(251 248 242 / 0));
 }
 
-.chapter-list {
-  display: inline-flex;
+.stage::after {
+  bottom: 0;
+  height: 3rem;
+  background: linear-gradient(rgb(251 248 242 / 0), var(--papel));
+}
+
+.scrollcue {
+  position: absolute;
+  left: 50%;
+  bottom: max(1.5rem, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  font-family: var(--font);
+  font-size: var(--t-small);
+  font-weight: 700;
+  color: var(--carvao-muted);
+  transition: opacity 0.4s;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.scrollcue.gone,
+[data-tour='playing'] .scrollcue {
+  opacity: 0;
+}
+
+/* Cartões da história */
+.steps {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.step {
+  position: absolute;
+  inset: 0;
+  display: flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.35rem 0.5rem;
-  background: color-mix(in srgb, var(--papel) 86%, transparent);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  padding: calc(var(--hdr-h) + 1rem) 0 1.5rem;
+  pointer-events: none;
+}
+
+.card {
+  width: min(30rem, 100%);
+  padding: 2rem 2.25rem 2.25rem;
+  border-radius: var(--radius-md, 0.5rem);
+  background: var(--papel);
   border: 1px solid var(--tint-2);
-  border-radius: var(--radius-sm);
+  box-shadow: 0 12px 32px rgba(27, 26, 23, 0.08);
+  opacity: 0;
+  transform: translateY(1rem);
+  transition:
+    opacity 0.5s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.card:has(h1) {
+  width: min(44rem, 100%);
+}
+
+.card.on {
+  opacity: 1;
+  transform: none;
   pointer-events: auto;
 }
 
-.chapter-btn {
+.card h1,
+.card h2 {
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  text-wrap: balance;
+  color: var(--carvao);
+  margin-top: 0;
+}
+
+.card h1 {
+  font-size: var(--t-display);
+  margin-bottom: 1rem;
+}
+
+.card h2 {
+  font-size: var(--t-title);
+  margin-bottom: 0.875rem;
+}
+
+.card h2 .anos {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--floresta);
+  font-size: clamp(4.5rem, 9vw, 8rem);
+  letter-spacing: -0.05em;
+  line-height: 0.9;
+}
+
+.card p {
+  color: var(--carvao-muted);
+  font-size: var(--t-lead);
+  line-height: 1.5;
+  margin-bottom: 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+
+.actions .btn-soft {
+  background: var(--tint);
+  color: var(--carvao);
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.42rem 0.65rem;
-  border: 0;
-  border-radius: 3px;
-  background: transparent;
-  color: var(--carvao-muted);
-  font-size: 0.8125rem;
+  justify-content: center;
   font-weight: 700;
-  letter-spacing: 0.03em;
-  cursor: pointer;
-  transition:
-    background-color 0.16s ease,
-    color 0.16s ease;
+  border-radius: var(--radius-sm, 4px);
+  padding: 0 1.5rem;
+  height: var(--btn-h);
 }
 
-.chapter-btn:hover {
-  color: var(--carvao);
-  background: var(--tint);
+.actions .btn-soft:hover {
+  background: var(--soft-hover);
 }
 
-.chapter-btn[aria-current='step'] {
-  background: var(--floresta);
-  color: var(--papel);
-}
-
-.chapter-label {
-  display: none;
-}
-
-.chapter-btn[aria-current='step'] .chapter-label {
-  display: inline;
+.seal {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  font-size: var(--t-small);
   font-weight: 600;
+  color: var(--carvao-muted);
 }
 
-.chapter-track {
-  flex: 0 1 11rem;
-  height: 2px;
-  background: var(--tint-2);
-  overflow: hidden;
+.seal::before {
+  content: '';
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--floresta);
   border-radius: 1px;
 }
 
-.chapter-fill {
-  height: 100%;
+.more {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin-top: 1rem;
+  color: var(--floresta);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.wave {
   width: 100%;
-  background: var(--floresta);
-  transform-origin: left;
-  transform: scaleX(var(--story-p, 0));
-  will-change: transform;
+  line-height: 0;
+  overflow: hidden;
 }
 
-/* Fallback static poster when WebGL is unavailable */
-.stage[data-fallback='true']::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background:
-    radial-gradient(circle at 74% 52%, rgba(183, 140, 92, 0.26) 0%, rgba(251, 248, 242, 0) 52%),
-    linear-gradient(125deg, var(--papel) 45%, var(--tint) 100%);
+.wave svg {
+  width: 100%;
+  height: 1.25rem;
+  color: var(--kraft);
 }
 
-@media (max-width: 60rem) {
+@media (max-width: 768px) {
+  .actions.card-cta {
+    display: none;
+  }
+}
+
+@media (max-width: 760px), (max-aspect-ratio: 1/1) {
   .story {
-    height: 440svh;
+    height: 400vh;
+    height: 400svh;
   }
 
-  .stage {
-    min-height: 36rem;
+  .step {
+    align-items: flex-end;
+    padding: var(--hdr-h) 0 0.75rem;
   }
 
-  .stage::before {
-    background: linear-gradient(
-      0deg,
-      rgba(251, 248, 242, 0.96) 0%,
-      rgba(251, 248, 242, 0.9) 42%,
-      rgba(251, 248, 242, 0.16) 66%,
-      rgba(251, 248, 242, 0) 100%
-    );
+  .step .wrap {
+    padding: 0 0.75rem;
   }
 
-  .stage-ui {
-    justify-content: flex-end;
-    padding-block: 1rem 4.5rem;
-  }
-
-  .beats {
+  .card {
     width: 100%;
-    min-height: 14.5rem;
+    padding: 1.125rem 1.25rem 1.25rem;
   }
 
-  .beat h1 {
-    font-size: clamp(1.75rem, 7.2vw, 2.35rem);
+  .card h1 {
+    font-size: clamp(1.75rem, 8vw, 2.35rem);
+    margin-bottom: 0.5rem;
   }
 
-  .beat h2 {
-    font-size: clamp(1.55rem, 6.2vw, 2.05rem);
+  .card h2 {
+    font-size: clamp(1.6rem, 7vw, 2rem);
+    margin-bottom: 0.5rem;
   }
 
-  .beat p {
-    font-size: 0.98rem;
+  .card p {
+    font-size: 1rem;
+    line-height: 1.45;
   }
 
-  .beat-actions {
+  .actions {
     margin-top: 1rem;
-    gap: 0.65rem 1.1rem;
   }
 
-  .beat-actions .btn {
-    white-space: normal;
-    text-align: center;
-    padding-inline: 1rem;
+  .actions .btn {
+    flex: 1 1 100%;
   }
 
-  .chapter-nav {
-    bottom: 0.65rem;
+  .actions .btn-soft {
+    flex: 0 0 auto;
+    min-height: 2.75rem;
+    margin: 0 auto;
+    padding: 0 0.5rem;
+    background: none;
+    color: var(--floresta);
+    text-decoration: underline;
   }
 
-  .chapter-list {
-    max-width: 100%;
-    overflow-x: auto;
+  .seal {
+    margin-top: 1rem;
+    font-size: var(--t-small);
   }
 
-  .chapter-track {
+  .scrollcue,
+  .optional {
     display: none;
-  }
-
-  .chapter-btn {
-    padding: 0.34rem 0.5rem;
-    font-size: 0.75rem;
   }
 }
 
-/* Reduced motion: stack beats linearly with static hero visual */
-@media (prefers-reduced-motion: reduce) {
-  .story {
-    height: auto;
-  }
-
-  .stage {
-    position: relative;
-    top: 0;
-    height: auto;
-    min-height: 0;
-    padding-block: 3rem;
-  }
-
-  .stage canvas {
-    position: absolute;
-    opacity: 0.32;
-  }
-
-  .stage-ui {
-    padding-block: 0;
-  }
-
-  .beats {
-    width: min(100%, 42rem);
-    gap: 2.5rem;
-    min-height: 0;
-  }
-
-  .beat {
-    grid-area: auto;
-    opacity: 1;
-    transform: none;
-    pointer-events: auto;
-    visibility: visible;
-    transition: none;
-  }
-
-  .chapter-nav {
-    display: none;
+@media (min-width: 601px) and (max-aspect-ratio: 1/1) {
+  .card p {
+    font-size: var(--t-body);
   }
 }

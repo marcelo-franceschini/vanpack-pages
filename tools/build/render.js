@@ -19,7 +19,7 @@ function renderProducts(site) {
             .join('<span class="sep" aria-hidden="true">·</span>')}</p>`
         : '';
       return `<article class="model">
-  <div class="model-3d" data-model="${escapeHtml(product.id)}" data-piece="${escapeHtml(product.peca)}">
+  <div class="model-3d" data-model="${escapeHtml(product.id)}" data-modelo="${escapeHtml(product.id)}" data-piece="${escapeHtml(product.peca)}" data-peca="${escapeHtml(product.peca)}">
     <span class="model-hint" aria-hidden="true">Arraste para girar</span>
   </div>
   <h3>${escapeHtml(product.nome)}</h3>
