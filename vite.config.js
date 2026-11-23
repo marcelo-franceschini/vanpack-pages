@@ -152,7 +152,11 @@ export default defineConfig(({ mode, command }) => {
   return {
     base: './',
     server: {
-      port: 3000,
+      port: 3005,
+      host: '0.0.0.0',
+    },
+    preview: {
+      port: 3005,
       host: '0.0.0.0',
     },
     plugins: [

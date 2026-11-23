@@ -71,9 +71,9 @@ export function createStory({
       cue: progress > 0.02,
       fab: y > top + range + FAB_AFTER || (bar.matches && active > 0),
     };
-    if (next.solid !== prev.solid) header.classList.toggle('solid', next.solid);
-    if (next.cue !== prev.cue) cue.classList.toggle('gone', next.cue);
-    if (next.fab !== prev.fab) fab.classList.toggle('on', next.fab);
+    if (next.solid !== prev.solid) header?.classList.toggle('solid', next.solid);
+    if (next.cue !== prev.cue) cue?.classList.toggle('gone', next.cue);
+    if (next.fab !== prev.fab) fab?.classList.toggle('on', next.fab);
     if (next.progress !== prev.progress) onProgress(progress);
     prev = next;
     onScroll?.(y, docHeight);

@@ -25,12 +25,13 @@ bindMobileMenu();
 // 1. Hero e Fábrica 3D
 const stageEl = document.getElementById('stage');
 const storyEl = document.getElementById('processo');
-const headerEl = document.querySelector<HTMLElement>('.hdr');
+const headerEl = document.querySelector<HTMLElement>('#hdr');
 const cueEl = document.getElementById('cue');
 const fabEl = document.getElementById('fab');
 const cards = [...document.querySelectorAll<HTMLElement>('.card')];
 
 if (stageEl && storyEl) {
+  let stageOk = false;
   const stage = mountStage(stageEl);
   const story = createStory({
     story: storyEl,
@@ -43,19 +44,21 @@ if (stageEl && storyEl) {
     onChapter: (_index: number) => {},
   });
 
-  createTour({
-    stage,
-    story,
-    cards,
-    dock: document.querySelector('.hdr-cta'),
+  const tour = createTour({
+    getProgress: () => story.progress(),
+    yAt: (p: number) => story.yAt(p),
     onState: (state: string) => {
       storyEl.dataset.tour = state;
       cueEl?.classList.toggle('gone', state === 'playing');
     },
   });
 
-  stage.ready.then((_ok: boolean) => {
+  stage.ready.then((ok: boolean) => {
+    stageOk = ok;
     stageEl.classList.add('ready');
+    if (stageOk && window.scrollY < 40 && !window.location.hash) {
+      tour.start({ auto: true });
+    }
   });
 }
 

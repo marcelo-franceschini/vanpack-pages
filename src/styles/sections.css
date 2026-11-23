@@ -83,12 +83,38 @@
   cursor: grabbing;
 }
 
+.model-3d::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url(/brand/vanpack-simbolo.svg) center / 3.5rem no-repeat;
+  opacity: 0.18;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+
+.model-3d.pronto::before,
+.model-3d:has(img)::before {
+  opacity: 0;
+}
+
 .model-3d canvas,
 .model-3d img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
   display: block;
+}
+
+.model-3d canvas {
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.model-3d.pronto canvas {
+  opacity: 1;
 }
 
 .model-hint {
@@ -332,7 +358,7 @@
   text-underline-offset: 4px;
 }
 
-.steps {
+.cta-steps {
   margin: 2.25rem 0 0;
   padding: 1.75rem 0 0;
   list-style: none;
@@ -342,7 +368,7 @@
   gap: 0.85rem;
 }
 
-.steps li {
+.cta-steps li {
   counter-increment: step;
   display: flex;
   align-items: baseline;
@@ -352,7 +378,7 @@
   color: color-mix(in srgb, var(--papel) 92%, transparent);
 }
 
-.steps li::before {
+.cta-steps li::before {
   content: '0' counter(step);
   font-size: 0.78rem;
   font-weight: 900;

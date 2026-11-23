@@ -96,7 +96,7 @@
 }
 
 /* Cartões da história */
-.steps {
+.stage .steps {
   position: absolute;
   inset: 0;
   z-index: 6;
