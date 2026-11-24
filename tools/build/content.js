@@ -1,11 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import Ajv2020Mod from 'ajv/dist/2020.js';
-import { parse as parseYaml } from 'yaml';
+import Ajv2020 from 'ajv/dist/2020.js';
+import { parse } from 'yaml';
 
-const Ajv2020 = Ajv2020Mod.default ?? Ajv2020Mod;
-
-export const CONTENT_FILES = [
+export const YAML_MODULES = [
   'site',
   'empresa',
   'historia',
@@ -18,56 +16,58 @@ export const CONTENT_FILES = [
   'whatsapp',
 ];
 
-function formatAjvError(name, err) {
-  const loc = err.instancePath ? `${name}.yaml${err.instancePath}` : `${name}.yaml`;
-  return `${loc}: ${err.message ?? 'valor inválido'}`;
+function createValidator() {
+  const ajv = new Ajv2020({ allErrors: true, strict: false });
+  return ajv;
 }
 
-/**
- * Loads all YAML files and `privacidade.md` from `contentDir` and validates each YAML document
- * against its JSON Schema (Draft 2020-12). Uses a fresh Ajv instance per invocation so hot-reloads
- * in Vite dev mode never collide on duplicate `$id` registrations.
- */
+/** Reads and schema-validates all YAML content modules plus `privacidade.md`. */
 export function readContent(contentDir) {
-  const ajv = new Ajv2020({ allErrors: true, strict: false });
   const content = {};
   const errors = [];
+  const ajv = createValidator();
+  const schemasDir = join(contentDir, 'schemas');
 
-  for (const name of CONTENT_FILES) {
+  for (const name of YAML_MODULES) {
     const yamlPath = join(contentDir, `${name}.yaml`);
-    const schemaPath = join(contentDir, 'schemas', `${name}.schema.json`);
-
     if (!existsSync(yamlPath)) {
-      errors.push(`Arquivo ausente: content/${name}.yaml`);
+      errors.push(`Arquivo de conteúdo ausente: ${name}.yaml`);
       continue;
     }
 
-    let data;
+    let parsed;
     try {
-      data = parseYaml(readFileSync(yamlPath, 'utf8'));
+      parsed = parse(readFileSync(yamlPath, 'utf8')) ?? {};
     } catch (err) {
-      errors.push(`Erro de sintaxe em content/${name}.yaml: ${err.message}`);
+      errors.push(`Erro de sintaxe em ${name}.yaml: ${err.message}`);
       continue;
     }
 
+    content[name] = parsed;
+
+    const schemaPath = join(schemasDir, `${name}.schema.json`);
     if (existsSync(schemaPath)) {
-      const schema = JSON.parse(readFileSync(schemaPath, 'utf8'));
-      const validate = ajv.compile(schema);
-      if (!validate(data)) {
-        for (const issue of validate.errors ?? []) {
-          errors.push(formatAjvError(name, issue));
+      try {
+        const schema = JSON.parse(readFileSync(schemaPath, 'utf8'));
+        const validate = ajv.compile(schema);
+        if (!validate(parsed)) {
+          for (const issue of validate.errors ?? []) {
+            const path = issue.instancePath || '/';
+            const hint = issue.parentSchema?.dica ? ` (${issue.parentSchema.dica})` : '';
+            errors.push(`${name}.yaml ${path}: ${issue.message}${hint}`);
+          }
         }
+      } catch (err) {
+        errors.push(`Erro ao validar schema ${name}.schema.json: ${err.message}`);
       }
     }
-
-    content[name] = data;
   }
 
   const privacyPath = join(contentDir, 'privacidade.md');
   if (existsSync(privacyPath)) {
     content.privacidade = readFileSync(privacyPath, 'utf8');
   } else {
-    errors.push('Arquivo ausente: content/privacidade.md');
+    errors.push('Arquivo de conteúdo ausente: privacidade.md');
     content.privacidade = '';
   }
 

@@ -50,9 +50,19 @@ if (stageEl && storyEl) {
     onChapter: (_index: number) => {},
   });
 
-  stage.ready.then(() => {
-    stageEl.classList.add('ready');
+  stage.ready.then((ok) => {
+    if (ok) stageEl.classList.add('ready');
   });
+}
+
+const quoteEl = document.getElementById('orcamento');
+if (fabEl && quoteEl && typeof IntersectionObserver === 'function') {
+  new IntersectionObserver(
+    ([entry]) => {
+      fabEl.classList.toggle('away', entry.isIntersecting);
+    },
+    { threshold: 0.3 },
+  ).observe(quoteEl);
 }
 
 // 2. Vitrine 3D dos Produtos e seções inferiores (diferidas para não disputar CPU com o Hero)

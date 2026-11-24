@@ -1,23 +1,29 @@
-function normalizeBaseUrl(url) {
-  const trimmed = String(url ?? '').trim();
-  if (!trimmed) return '';
-  return trimmed.endsWith('/') ? trimmed : `${trimmed}/`;
+function normalizeBaseUrl(siteUrl) {
+  const raw = String(siteUrl ?? '').trim();
+  if (!raw) return '';
+  return raw.endsWith('/') ? raw : `${raw}/`;
 }
 
-/** Generates `robots.txt` for static builds. */
+/** Emits `robots.txt`, disallowing crawlers outside `production` mode. */
 export function robotsTxt(site) {
-  const base = normalizeBaseUrl(site.siteUrl);
-  const lines = ['User-agent: *', 'Allow: /'];
-  if (base) {
-    lines.push('', `Sitemap: ${base}sitemap.xml`);
+  if (site.dataMode !== 'production') {
+    return 'User-agent: *\nDisallow: /\n';
   }
-  return `${lines.join('\n')}\n`;
+  const base = normalizeBaseUrl(site.siteUrl);
+  const sitemapLine = base ? `\nSitemap: ${base}sitemap.xml\n` : '';
+  return `User-agent: *\nAllow: /\n${sitemapLine}`;
 }
 
-/** Generates `sitemap.xml` listing the public HTML pages. */
+/** Emits `sitemap.xml` for the public landing page and privacy policy. */
 export function sitemapXml(site) {
-  const base = normalizeBaseUrl(site.siteUrl) || 'https://example.com/';
+  const base = normalizeBaseUrl(site.siteUrl) || 'https://example.invalid/';
   const urls = [base, `${base}politica-de-privacidade.html`];
   const entries = urls.map((loc) => `  <url>\n    <loc>${loc}</loc>\n  </url>`).join('\n');
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries}\n</urlset>\n`;
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    entries,
+    '</urlset>',
+    '',
+  ].join('\n');
 }
