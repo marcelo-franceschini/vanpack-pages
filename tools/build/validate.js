@@ -31,7 +31,9 @@ export function assertValidSite({ site, content, contentErrors = [], contentDir 
   }
 
   if (!/^\d{10,15}$/.test(site.whatsapp)) {
-    errors.push('content/empresa.yaml: "whatsapp" deve ter entre 10 e 15 dígitos (ex.: 5511912345678).');
+    errors.push(
+      'content/empresa.yaml: "whatsapp" deve ter entre 10 e 15 dígitos (ex.: 5511912345678).',
+    );
   }
 
   if (site.siteUrl) {

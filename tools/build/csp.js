@@ -15,16 +15,18 @@ export function contentSecurityPolicy({ styleHashes = [], site } = {}) {
     }
   }
 
-  return [
-    "default-src 'self'",
-    "base-uri 'self'",
-    "object-src 'none'",
-    "form-action 'none'",
-    "script-src 'self'",
-    "worker-src 'self' blob:",
-    `style-src ${styleSrc}`,
-    "img-src 'self' data: blob:",
-    "font-src 'self'",
-    `connect-src ${connectSources.join(' ')}`,
-  ].join('; ') + ';';
+  return (
+    [
+      "default-src 'self'",
+      "base-uri 'self'",
+      "object-src 'none'",
+      "form-action 'none'",
+      "script-src 'self'",
+      "worker-src 'self' blob:",
+      `style-src ${styleSrc}`,
+      "img-src 'self' data: blob:",
+      "font-src 'self'",
+      `connect-src ${connectSources.join(' ')}`,
+    ].join('; ') + ';'
+  );
 }

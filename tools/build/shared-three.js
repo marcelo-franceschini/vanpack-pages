@@ -5,15 +5,16 @@ import { build } from 'vite';
 
 const VIRTUAL_ENTRY = '\0vanpack:shared-three-entry';
 
-function collectThreeImports(dir, symbols = new Set()) {
+export function collectThreeImports(dir, symbols = new Set()) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
       collectThreeImports(full, symbols);
     } else if (/\.(?:js|mjs|ts)$/.test(entry.name)) {
       const code = readFileSync(full, 'utf8');
-      for (const match of code.matchAll(/import\s*\{([\s\S]*?)\}\s*from\s*['"]three['"]/g)) {
+      for (const match of code.matchAll(/import\s*\{([^{}]*?)\}\s*from\s*['"]three['"]/g)) {
         for (const raw of match[1].split(',')) {
+          if (/^\s*type\s+/.test(raw)) continue;
           const name = raw
             .trim()
             .split(/\s+as\s+/)[0]
