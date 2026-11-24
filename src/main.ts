@@ -17,13 +17,21 @@ function bindMobileMenu(): void {
   }
 }
 
-// Inicializações básicas
+function onIdle(cb: () => void): void {
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(() => cb(), { timeout: 1500 });
+  } else {
+    setTimeout(cb, 50);
+  }
+}
+
+// Inicializações básicas imediatas
 updateYears();
 bindMobileMenu();
 
 // 1. Hero e Fábrica 3D
 const stageEl = document.getElementById('stage');
-const storyEl = document.getElementById('processo');
+const storyEl = document.querySelector<HTMLElement>('.story');
 const headerEl = document.querySelector<HTMLElement>('#hdr');
 const cueEl = document.getElementById('cue');
 const fabEl = document.getElementById('fab');
@@ -47,11 +55,11 @@ if (stageEl && storyEl) {
   });
 }
 
-// 2. Vitrine 3D dos Produtos
-observeProdutos();
-
-// 3. Do hero para baixo (seções mantidas do novo visual)
-mountClientShowcase();
-mountQuickQuote(__SITE__.whatsapp);
-mountWhatsAppHandoff();
-initAnalytics();
+// 2. Vitrine 3D dos Produtos e seções inferiores (diferidas para não disputar CPU com o Hero)
+onIdle(() => {
+  observeProdutos();
+  mountClientShowcase();
+  mountQuickQuote(__SITE__.whatsapp);
+  mountWhatsAppHandoff();
+  initAnalytics();
+});
