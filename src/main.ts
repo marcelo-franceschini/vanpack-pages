@@ -19,55 +19,47 @@ function bindMobileMenu(): void {
 
 function onIdle(cb: () => void): void {
   if (typeof requestIdleCallback === 'function') {
-    requestIdleCallback(() => cb(), { timeout: 1500 });
+    requestIdleCallback(() => cb(), { timeout: 2000 });
   } else {
     setTimeout(cb, 50);
   }
 }
 
-function init(): void {
-  // Inicializações básicas
-  updateYears();
-  bindMobileMenu();
+// Inicializações básicas imediatas
+updateYears();
+bindMobileMenu();
 
-  // 1. Hero e Fábrica 3D
-  const stageEl = document.getElementById('stage');
-  const storyEl = document.querySelector<HTMLElement>('.story');
-  const headerEl = document.querySelector<HTMLElement>('#hdr');
-  const cueEl = document.getElementById('cue');
-  const fabEl = document.getElementById('fab');
-  const cards = [...document.querySelectorAll<HTMLElement>('.card')];
+// 1. Hero e Fábrica 3D
+const stageEl = document.getElementById('stage');
+const storyEl = document.querySelector<HTMLElement>('.story');
+const headerEl = document.querySelector<HTMLElement>('#hdr');
+const cueEl = document.getElementById('cue');
+const fabEl = document.getElementById('fab');
+const cards = [...document.querySelectorAll<HTMLElement>('.card')];
 
-  if (stageEl && storyEl) {
-    const stage = mountStage(stageEl);
-    createStory({
-      story: storyEl,
-      stage: stageEl,
-      header: headerEl,
-      cue: cueEl,
-      fab: fabEl,
-      cards,
-      onProgress: (p: number) => stage.setProgress(p),
-      onChapter: (_index: number) => {},
-    });
+if (stageEl && storyEl) {
+  const stage = mountStage(stageEl);
+  createStory({
+    story: storyEl,
+    stage: stageEl,
+    header: headerEl,
+    cue: cueEl,
+    fab: fabEl,
+    cards,
+    onProgress: (p: number) => stage.setProgress(p),
+    onChapter: (_index: number) => {},
+  });
 
-    stage.ready.then(() => {
-      stageEl.classList.add('ready');
-    });
-  }
-
-  // 2. Vitrine 3D dos Produtos e seções inferiores (diferidas para não disputar CPU com o Hero)
-  onIdle(() => {
-    observeProdutos();
-    mountClientShowcase();
-    mountQuickQuote(__SITE__.whatsapp);
-    mountWhatsAppHandoff();
-    initAnalytics();
+  stage.ready.then(() => {
+    stageEl.classList.add('ready');
   });
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => requestAnimationFrame(init));
-} else {
-  requestAnimationFrame(init);
-}
+// 2. Vitrine 3D dos Produtos e seções inferiores (diferidas para não disputar CPU com o Hero)
+onIdle(() => {
+  observeProdutos();
+  mountClientShowcase();
+  mountQuickQuote(__SITE__.whatsapp);
+  mountWhatsAppHandoff();
+  initAnalytics();
+});
