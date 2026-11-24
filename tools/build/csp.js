@@ -1,30 +1,32 @@
-function originOf(url) {
-  try {
-    return new URL(url).origin;
-  } catch {
-    return '';
-  }
-}
-
-/** Builds a strict Content-Security-Policy string embedding SHA-256 hashes for inlined styles. */
+/** Generates the strict Content-Security-Policy meta tag value for production HTML pages. */
 export function contentSecurityPolicy({ styleHashes = [], site } = {}) {
-  const analyticsOrigin = site?.client?.analytics?.endpoint
-    ? originOf(site.client.analytics.endpoint)
-    : '';
-
   const styleSrc = ["'self'", ...styleHashes].join(' ');
-  const connectSrc = analyticsOrigin ? `'self' ${analyticsOrigin}` : "'self'";
+  const connectSources = ["'self'"];
 
-  return [
-    "default-src 'self'",
-    "script-src 'self'",
-    `style-src ${styleSrc}`,
-    "img-src 'self' data: blob:",
-    "font-src 'self'",
-    `connect-src ${connectSrc}`,
-    "worker-src 'self' blob:",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-  ].join('; ');
+  const endpoint = site?.client?.analytics?.endpoint;
+  if (endpoint) {
+    try {
+      const origin = new URL(endpoint).origin;
+      if (origin && !connectSources.includes(origin)) {
+        connectSources.push(origin);
+      }
+    } catch {
+      // Invalid endpoint is caught by site validation
+    }
+  }
+
+  return (
+    [
+      "default-src 'self'",
+      "base-uri 'self'",
+      "object-src 'none'",
+      "form-action 'none'",
+      "script-src 'self'",
+      "worker-src 'self' blob:",
+      `style-src ${styleSrc}`,
+      "img-src 'self' data: blob:",
+      "font-src 'self'",
+      `connect-src ${connectSources.join(' ')}`,
+    ].join('; ') + ';'
+  );
 }

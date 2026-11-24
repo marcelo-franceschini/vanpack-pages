@@ -1,45 +1,235 @@
 import { visibleClients, visibleProofs } from '../../site.config.js';
-import {
-  escapeHtml,
-  expandTemplate,
-  renderMarkdown,
-  resolvePath,
-  stripTags,
-  whatsappUrl,
-} from './text.js';
+import { escapeHtml, expandTemplate, markdownToHtml, safeHttpsUrl, whatsappUrl } from './text.js';
+
+function normalizeBaseUrl(siteUrl) {
+  const raw = String(siteUrl ?? '').trim();
+  if (!raw) return '';
+  return raw.endsWith('/') ? raw : `${raw}/`;
+}
+
+/** Looks up a dotted path in `site.content` or a top-level variable in `site.vars`. */
+function lookupToken(path, site) {
+  if (path in site.vars) {
+    return { found: true, value: site.vars[path], isVar: true };
+  }
+  const parts = path.split('.');
+  let current = site.content;
+  for (const part of parts) {
+    if (current == null || typeof current !== 'object' || !(part in current)) {
+      return { found: false, value: '', isVar: false };
+    }
+    current = current[part];
+  }
+  return { found: true, value: String(current ?? ''), isVar: false };
+}
+
+/** Finds the end index (exclusive) of the matching closing tag for an opening tag at `start`. */
+function findElementEnd(html, tagName, openEnd) {
+  const tokenRe = new RegExp(`<(\\/?)${tagName}(?=[\\s/>])[^>]*>`, 'gi');
+  tokenRe.lastIndex = openEnd;
+  let depth = 1;
+  let match;
+  while ((match = tokenRe.exec(html)) !== null) {
+    const isClosing = match[1] === '/';
+    const isSelfClosing = match[0].endsWith('/>');
+    if (isClosing) {
+      depth -= 1;
+      if (depth === 0) return tokenRe.lastIndex;
+    } else if (!isSelfClosing) {
+      depth += 1;
+    }
+  }
+  return openEnd;
+}
+
+/** Evaluates and resolves `data-need="var"` / `data-need="!var"` conditional elements. */
+function applyDataNeed(html, vars) {
+  const attrRe = /<([a-z][a-z0-9-]*)\b([^>]*?)\sdata-need="([^"]+)"([^>]*)>/i;
+  let out = html;
+  let match;
+
+  while ((match = attrRe.exec(out)) !== null) {
+    const [fullTag, tagName, before, expr, after] = match;
+    const negated = expr.startsWith('!');
+    const key = negated ? expr.slice(1) : expr;
+    const hasValue = Boolean(String(vars[key] ?? '').trim());
+    const keep = negated ? !hasValue : hasValue;
+    const openStart = match.index;
+    const openEnd = openStart + fullTag.length;
+
+    if (keep) {
+      const cleanTag = `<${tagName}${before}${after}>`;
+      out = out.slice(0, openStart) + cleanTag + out.slice(openEnd);
+    } else {
+      const closeEnd = fullTag.endsWith('/>') ? openEnd : findElementEnd(out, tagName, openEnd);
+      const beforeSlice = out.slice(0, openStart).replace(/[ \t]+$/, '');
+      const afterSlice = out.slice(closeEnd);
+      out = beforeSlice + afterSlice;
+    }
+  }
+
+  return out;
+}
+
+function buildFieldContent(field, site) {
+  const rodape = site.content?.rodape ?? {};
+  switch (field) {
+    case 'endereco': {
+      const { street, district, postalCode } = site.address;
+      const lines = [];
+      if (street) lines.push(escapeHtml(street));
+      if (district) lines.push(escapeHtml(district));
+      if (site.cityState) lines.push(escapeHtml(site.cityState));
+      if (postalCode) {
+        const cepLabel = rodape.rotulos?.cep ?? 'CEP';
+        lines.push(`${escapeHtml(cepLabel)} ${escapeHtml(postalCode)}`);
+      }
+      return lines.join('<br />');
+    }
+    case 'horario':
+      return site.hours ? escapeHtml(site.hours) : '';
+    case 'telefone':
+      return site.phone
+        ? `<a href="tel:${escapeHtml(site.phone)}" data-contact="phone">${escapeHtml(site.phoneDisplay)}</a>`
+        : '';
+    case 'mapa': {
+      const safe = safeHttpsUrl(site.mapUrl);
+      if (!safe) return '';
+      const label = rodape.ver_mapa ?? 'Ver no mapa';
+      return `<a href="${escapeHtml(safe)}" target="_blank" rel="noopener noreferrer" data-contact="map">${escapeHtml(label)}</a>`;
+    }
+    case 'cnpj':
+      return site.cnpj ? escapeHtml(site.cnpj) : '';
+    default:
+      return '';
+  }
+}
+
+/** Populates `[data-field="..."]` elements in the footer and mobile bar, removing empty ones. */
+function applyDataFields(html, site) {
+  const fieldRe = /<([a-z][a-z0-9-]*)\b([^>]*?)\sdata-field="([^"]+)"([^>]*)>/i;
+  let out = html;
+  let match;
+
+  while ((match = fieldRe.exec(out)) !== null) {
+    const [fullTag, tagName, before, fieldName, after] = match;
+    const openStart = match.index;
+    const openEnd = openStart + fullTag.length;
+    const closeEnd = findElementEnd(out, tagName, openEnd);
+    const closeTagLen = `</${tagName}>`.length;
+    const inner = out.slice(openEnd, closeEnd - closeTagLen);
+    const valueHtml = buildFieldContent(fieldName, site);
+
+    if (!valueHtml) {
+      out = out.slice(0, openStart) + out.slice(closeEnd);
+      continue;
+    }
+
+    const attrs = `${before}${after}`.replace(/\s+hidden(?==|\s|$)(?:="[^"]*")?/i, '');
+    const nextInner = /<dd><\/dd>/i.test(inner)
+      ? inner.replace(/<dd><\/dd>/i, `<dd>${valueHtml}</dd>`)
+      : valueHtml;
+
+    out = `${out.slice(0, openStart)}<${tagName}${attrs}>${nextInner}</${tagName}>${out.slice(closeEnd)}`;
+  }
+
+  return out;
+}
+
+/** Replaces `{{...}}` tokens safely across both HTML attributes and text content. */
+function applyTokens(html, site) {
+  // Split HTML into tags and text segments so attributes never receive rich <span> tags
+  return html.replace(/(<[^>]+>)|([^<]+)/g, (_, tag, text) => {
+    if (tag) {
+      return tag.replace(/\{\{([a-zA-Z0-9_.]+)\}\}/g, (match, path) => {
+        const hit = lookupToken(path, site);
+        if (!hit.found) return match;
+        const expanded = hit.isVar
+          ? String(hit.value ?? '')
+          : expandTemplate(hit.value, site.vars, { escape: false, rich: false });
+        // Strip any HTML wrapper if a rich var was referenced inside an attribute
+        const plain = expanded.replace(/<[^>]+>/g, '');
+        return escapeHtml(plain);
+      });
+    }
+    return text.replace(/\{\{([a-zA-Z0-9_.]+)\}\}/g, (match, path) => {
+      const hit = lookupToken(path, site);
+      if (!hit.found) return match;
+      if (hit.isVar) {
+        return expandTemplate(`{{${path}}}`, site.vars, { escape: true, rich: true });
+      }
+      return expandTemplate(hit.value, site.vars, { escape: true, rich: true });
+    });
+  });
+}
+
+/** Converts `data-wa="..."` attributes into full `wa.me` links with `[site-<cta>]` tags. */
+function applyWhatsAppLinks(html, site) {
+  return html.replace(/<a\b([^>]*?)\sdata-wa="([^"]*)"([^>]*)>/gi, (_, before, rawMsg, after) => {
+    const combined = `${before}${after}`;
+    const ctaMatch = /\bdata-cta="([^"]+)"/i.exec(combined);
+    const cta = ctaMatch ? ctaMatch[1] : '';
+    const decodedMsg = rawMsg
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&');
+    const href = whatsappUrl(site.whatsapp, decodedMsg, cta);
+    const extra = href.startsWith('https://')
+      ? ` href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer"`
+      : ` href="${escapeHtml(href)}"`;
+    return `<a${before}${after}${extra}>`;
+  });
+}
 
 function renderProducts(site) {
-  const buttonLabel = escapeHtml(site.content.produtos?.botao ?? 'Pedir orçamento');
+  const buttonLabel = escapeHtml(site.content?.produtos?.botao ?? 'Pedir orçamento');
   return site.products
-    .map((product) => {
-      const specs = Array.isArray(product.especificacoes) ? product.especificacoes : [];
+    .map((item) => {
+      const id = escapeHtml(item.id);
+      const piece = escapeHtml(item.peca ?? item.nome);
+      const name = escapeHtml(item.nome);
+      const desc = escapeHtml(item.texto);
+      const specs = Array.isArray(item.especificacoes) ? item.especificacoes : [];
       const specsHtml = specs.length
         ? `\n  <p class="model-specs">${specs
-            .map((s) => `<span>${escapeHtml(s)}</span>`)
+            .map((spec) => `<span>${escapeHtml(spec)}</span>`)
             .join('<span class="sep" aria-hidden="true">·</span>')}</p>`
         : '';
-      return `<article class="model">
-  <div class="model-3d" data-model="${escapeHtml(product.id)}" data-modelo="${escapeHtml(product.id)}" data-piece="${escapeHtml(product.peca)}" data-peca="${escapeHtml(product.peca)}">
-    <span class="model-hint" aria-hidden="true">Arraste para girar</span>
-  </div>
-  <h3>${escapeHtml(product.nome)}</h3>
-  <p class="model-desc">${escapeHtml(product.texto)}</p>${specsHtml}
-  <a class="btn" data-cta="produto-${escapeHtml(product.id)}" data-wa="${escapeHtml(product.mensagem)}">
-    <svg aria-hidden="true"><use href="#i-wa" /></svg>${buttonLabel}
-  </a>
-</article>`;
+      const msg = expandTemplate(item.mensagem ?? '', site.vars, { escape: false, rich: false });
+      const cta = `produto-${item.id}`;
+      const href = whatsappUrl(site.whatsapp, msg, cta);
+      const linkAttrs = href.startsWith('https://')
+        ? `href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer"`
+        : `href="${escapeHtml(href)}"`;
+
+      return [
+        '<article class="model">',
+        `  <div class="model-3d" data-model="${id}" data-modelo="${id}" data-piece="${piece}" data-peca="${piece}">`,
+        '    <span class="model-hint" aria-hidden="true">Arraste para girar</span>',
+        '  </div>',
+        `  <h3>${name}</h3>`,
+        `  <p class="model-desc">${desc}</p>${specsHtml}`,
+        `  <a class="btn" data-cta="${escapeHtml(cta)}" ${linkAttrs}>`,
+        `    <svg aria-hidden="true"><use href="#i-wa" /></svg>${buttonLabel}`,
+        '  </a>',
+        '</article>',
+      ].join('\n');
     })
     .join('\n');
 }
 
 function renderDifferentials(site) {
   return site.differentials
-    .map(
-      (item) => `<article class="pillar">
-  <svg aria-hidden="true"><use href="#i-${escapeHtml(item.icon)}" /></svg>
-  <h3>${escapeHtml(item.title)}</h3>
-  <p>${escapeHtml(item.text)}</p>
-</article>`,
+    .map((item) =>
+      [
+        '<article class="pillar">',
+        `  <svg aria-hidden="true"><use href="#i-${escapeHtml(item.icon)}" /></svg>`,
+        `  <h3>${escapeHtml(item.title)}</h3>`,
+        `  <p>${escapeHtml(item.text)}</p>`,
+        '</article>',
+      ].join('\n'),
     )
     .join('\n');
 }
@@ -52,314 +242,188 @@ function renderClients(site) {
   if (shownClients.length) {
     const items = shownClients
       .map((client) => {
-        const inner = client.logo
-          ? `<img src="./clientes/${escapeHtml(client.logo)}" alt="${escapeHtml(client.alt || client.name)}" loading="lazy" decoding="async" />`
-          : `<span class="logo-name">${escapeHtml(client.name)}</span>`;
-        return `<li class="cliente">${inner}</li>`;
+        const alt = escapeHtml(client.alt || client.name);
+        if (client.logo) {
+          return `      <li class="cliente"><img src="./clientes/${escapeHtml(client.logo)}" alt="${alt}" loading="lazy" decoding="async" /></li>`;
+        }
+        return `      <li class="cliente"><span class="logo-name">${escapeHtml(client.name)}</span></li>`;
       })
       .join('\n');
 
-    parts.push(`<div class="carrossel" data-carousel>
-  <div class="carrossel-janela" role="region" aria-label="Clientes" tabindex="0">
-    <ul class="carrossel-trilho">
-      ${items}
-    </ul>
-  </div>
-</div>`);
+    parts.push(
+      [
+        '<div class="carrossel" data-carousel>',
+        '  <section class="carrossel-janela" aria-label="Clientes" tabindex="0">',
+        '    <ul class="carrossel-trilho">',
+        items,
+        '    </ul>',
+        '  </section>',
+        '</div>',
+      ].join('\n'),
+    );
   }
 
   if (shownProofs.testimonials.length) {
     const figures = shownProofs.testimonials
-      .map(
-        (t) => `<figure class="proof">
-  <blockquote class="proof-quote">“${escapeHtml(t.quote)}”</blockquote>
-  <figcaption>${escapeHtml(t.author)}</figcaption>
-</figure>`,
+      .map((item) =>
+        [
+          '  <figure class="proof">',
+          `    <blockquote class="proof-quote">“${escapeHtml(item.quote)}”</blockquote>`,
+          `    <figcaption>${escapeHtml(item.author)}</figcaption>`,
+          '  </figure>',
+        ].join('\n'),
       )
       .join('\n');
     parts.push(`<div class="proofs">\n${figures}\n</div>`);
   }
 
   if (shownProofs.googleRating) {
-    const g = shownProofs.googleRating;
-    const labels = site.content.provas?.textos ?? {};
-    const ratingVal = String(g.value).replace('.', ',');
-    const text = `${ratingVal} ${labels.nota ?? 'de 5 no Google'} (${g.count} ${labels.avaliacoes ?? 'avaliações'})`;
-    parts.push(
-      `<p class="rating"><a href="${escapeHtml(g.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(text)}</a></p>`,
-    );
+    const rating = shownProofs.googleRating;
+    const textos = site.content?.provas?.textos ?? {};
+    const score = String(rating.value).replace('.', ',');
+    const noteText = textos.nota ?? 'de 5 no Google';
+    const reviewsText = textos.avaliacoes ?? 'avaliações';
+    const label = `${escapeHtml(score)} ${escapeHtml(noteText)} (${escapeHtml(rating.count)} ${escapeHtml(reviewsText)})`;
+    const safeUrl = safeHttpsUrl(rating.url);
+    const inner = safeUrl
+      ? `<a href="${escapeHtml(safeUrl)}" target="_blank" rel="noopener noreferrer">${label}</a>`
+      : label;
+    parts.push(`<p class="rating">${inner}</p>`);
   }
 
   return parts.join('\n');
 }
 
 function renderQuickQuote(site) {
-  const m = site.content.orcamento?.montador;
-  if (!m) return '';
-  const productOptions = site.products
-    .map((p) => `<option value="${escapeHtml(p.nome)}">${escapeHtml(p.nome)}</option>`)
+  const montador = site.content?.orcamento?.montador;
+  if (!montador) return '';
+
+  const modelOptions = site.products
+    .map((item) => `<option value="${escapeHtml(item.nome)}">${escapeHtml(item.nome)}</option>`)
     .join('');
-  const printOptions = (m.opcoes_impressao ?? [])
+
+  const printOptions = (montador.opcoes_impressao ?? [])
     .map((opt) => `<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`)
     .join('');
+
+  const defaultModel = site.products[0]?.nome ?? 'Caixa de papelão';
   const defaultHref = whatsappUrl(
     site.whatsapp,
-    `Olá! Gostaria de um orçamento — Modelo: ${site.products[0]?.nome ?? 'Caixa de papelão'}.`,
+    `Olá! Gostaria de um orçamento: Modelo: ${defaultModel}.`,
     'montador',
   );
+  const linkAttrs = defaultHref.startsWith('https://')
+    ? `href="${escapeHtml(defaultHref)}"\n    target="_blank"\n    rel="noopener noreferrer"`
+    : `href="${escapeHtml(defaultHref)}"`;
 
-  return `<form class="quick-quote" id="quick-quote" data-quick-quote>
-  <h3 class="qq-title">${escapeHtml(m.titulo)}</h3>
-  <div class="qq-grid">
-    <label class="qq-field">
-      <span>${escapeHtml(m.produto)}</span>
-      <select name="model">${productOptions}</select>
-    </label>
-    <label class="qq-field">
-      <span>${escapeHtml(m.impressao)}</span>
-      <select name="print">${printOptions}</select>
-    </label>
-    <label class="qq-field">
-      <span>${escapeHtml(m.medidas)}</span>
-      <input type="text" name="dimensions" placeholder="Ex.: 40 x 30 x 25" autocomplete="off" />
-    </label>
-    <label class="qq-field">
-      <span>${escapeHtml(m.quantidade)}</span>
-      <input type="text" name="quantity" inputmode="numeric" placeholder="Ex.: 500" autocomplete="off" />
-    </label>
-  </div>
-  <p class="qq-preview" data-qq-preview aria-live="polite"></p>
-  <a
-    class="btn btn-light qq-submit"
-    href="${escapeHtml(defaultHref)}"
-    target="_blank"
-    rel="noopener noreferrer"
-    data-cta="montador"
-    data-qq-link
-  >
-    <svg aria-hidden="true"><use href="#i-wa" /></svg>${escapeHtml(m.enviar)}
-  </a>
-</form>`;
+  return [
+    '<div class="quick-quote" id="quick-quote" data-quick-quote role="group" aria-labelledby="qq-title">',
+    `  <h3 class="qq-title" id="qq-title">${escapeHtml(montador.titulo)}</h3>`,
+    '  <div class="qq-grid">',
+    '    <label class="qq-field">',
+    `      <span>${escapeHtml(montador.produto)}</span>`,
+    `      <select name="model">${modelOptions}</select>`,
+    '    </label>',
+    '    <label class="qq-field">',
+    `      <span>${escapeHtml(montador.impressao)}</span>`,
+    `      <select name="print">${printOptions}</select>`,
+    '    </label>',
+    '    <label class="qq-field">',
+    `      <span>${escapeHtml(montador.medidas)}</span>`,
+    '      <input type="text" name="dimensions" placeholder="Ex.: 40 x 30 x 25" autocomplete="off" />',
+    '    </label>',
+    '    <label class="qq-field">',
+    `      <span>${escapeHtml(montador.quantidade)}</span>`,
+    '      <input type="text" name="quantity" inputmode="numeric" placeholder="Ex.: 500" autocomplete="off" />',
+    '    </label>',
+    '  </div>',
+    '  <p class="qq-preview" data-qq-preview aria-live="polite"></p>',
+    '  <a',
+    '    class="btn btn-light qq-submit"',
+    `    ${linkAttrs}`,
+    '    data-cta="montador"',
+    '    data-qq-link',
+    '  >',
+    `    <svg aria-hidden="true"><use href="#i-wa" /></svg>${escapeHtml(montador.enviar)}`,
+    '  </a>',
+    '</div>',
+  ].join('\n');
 }
 
 function buildJsonLd(site) {
-  const url = site.siteUrl || undefined;
+  const base = normalizeBaseUrl(site.siteUrl);
+  const safeBase = safeHttpsUrl(base);
+  const safeMap = safeHttpsUrl(site.mapUrl);
   const ld = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: site.name,
-    legalName: site.legalName || undefined,
-    description: site.description,
-    url,
-    logo: url ? new URL('icon-512.png', url).href : undefined,
-    telephone: site.phone || undefined,
-    taxID: site.cnpj || undefined,
-    openingHours: site.hoursSchema || undefined,
-    areaServed: site.serviceArea || undefined,
-    hasMap: site.mapUrl || undefined,
   };
+  if (site.legalName) ld.legalName = site.legalName;
+  if (site.description) ld.description = site.description;
+  if (safeBase) {
+    ld.url = safeBase;
+    ld.logo = `${safeBase}icon-512.png`;
+  }
+  if (site.phone) ld.telephone = site.phone;
+  if (site.cnpj) ld.taxID = site.cnpj;
+  if (site.hoursSchema) ld.openingHours = site.hoursSchema;
+  if (site.serviceArea) ld.areaServed = site.serviceArea;
+  if (safeMap) ld.hasMap = safeMap;
 
-  if (site.address.street || site.address.city) {
-    ld.address = {
-      '@type': 'PostalAddress',
-      streetAddress: site.address.street || undefined,
-      addressLocality: site.address.city || undefined,
-      addressRegion: site.address.state || undefined,
-      postalCode: site.address.postalCode || undefined,
-      addressCountry: site.address.country,
-    };
+  const { street, city, state, postalCode, country } = site.address;
+  if (street || city || state || postalCode) {
+    const addr = { '@type': 'PostalAddress' };
+    if (street) addr.streetAddress = street;
+    if (city) addr.addressLocality = city;
+    if (state) addr.addressRegion = state;
+    if (postalCode) addr.postalCode = postalCode;
+    if (country) addr.addressCountry = country;
+    ld.address = addr;
   }
 
-  return JSON.stringify(ld);
+  return JSON.stringify(ld).replace(/</g, '\\u003c');
 }
 
-/** Removes any HTML element whose `data-need` requirement is not satisfied, handling nested same-name tags. */
-function processDataNeed(html, vars) {
-  const attrRe = /<([a-zA-Z][a-zA-Z0-9-]*)(\b[^>]*?\sdata-need="([^"]+)"[^>]*?)>/;
-  let result = html;
-  const voidTags = new Set([
-    'area',
-    'base',
-    'br',
-    'col',
-    'embed',
-    'hr',
-    'img',
-    'input',
-    'link',
-    'meta',
-    'source',
-  ]);
-
-  while (true) {
-    const match = attrRe.exec(result);
-    if (!match) break;
-
-    const [fullOpen, tagName, attrs, expr] = match;
-    const startIdx = match.index;
-    const conditions = expr.trim().split(/\s+/);
-    const keep = conditions.every((cond) =>
-      cond.startsWith('!') ? !vars[cond.slice(1)] : Boolean(vars[cond]),
-    );
-
-    if (keep) {
-      const cleanedAttrs = attrs.replace(/\sdata-need="[^"]+"/, '');
-      result =
-        result.slice(0, startIdx) +
-        `<${tagName}${cleanedAttrs}>` +
-        result.slice(startIdx + fullOpen.length);
-      continue;
-    }
-
-    if (voidTags.has(tagName.toLowerCase()) || fullOpen.endsWith('/>')) {
-      result = result.slice(0, startIdx) + result.slice(startIdx + fullOpen.length);
-      continue;
-    }
-
-    const tagRe = new RegExp(`<(\\/?)${tagName}(?=[\\s>/])[^>]*>`, 'gi');
-    tagRe.lastIndex = startIdx + fullOpen.length;
-    let depth = 1;
-    let endIdx = result.length;
-    let t;
-    while ((t = tagRe.exec(result)) !== null) {
-      if (t[1] === '/') {
-        depth -= 1;
-        if (depth === 0) {
-          endIdx = t.index + t[0].length;
-          break;
-        }
-      } else if (!t[0].endsWith('/>')) {
-        depth += 1;
-      }
-    }
-    result = result.slice(0, startIdx) + result.slice(endIdx);
-  }
-
-  return result;
-}
-
-function formatAddress(site) {
-  const { street, district, postalCode } = site.address;
-  const parts = [];
-  if (street) parts.push(street);
-  if (district) parts.push(district);
-  if (site.cityState) parts.push(site.cityState);
-  const cepLabel = site.content.rodape?.rotulos?.cep ?? 'CEP';
-  if (postalCode) parts.push(`${cepLabel} ${postalCode}`);
-  return parts.join(' · ');
-}
-
-function processDataFields(html, site) {
-  const addressText = formatAddress(site);
-  const mapLabel = site.content.rodape?.ver_mapa ?? 'Ver no mapa';
-
-  const values = {
-    endereco: addressText ? escapeHtml(addressText) : '',
-    horario: site.hours ? escapeHtml(site.hours) : '',
-    telefone: site.phone
-      ? `<a href="tel:${escapeHtml(site.phone)}" data-contact="phone">${escapeHtml(site.phoneDisplay)}</a>`
-      : '',
-    mapa: site.mapUrl
-      ? `<a href="${escapeHtml(site.mapUrl)}" target="_blank" rel="noopener noreferrer" data-contact="map">${escapeHtml(mapLabel)}</a>`
-      : '',
-    cnpj: site.cnpj ? escapeHtml(site.cnpj) : '',
-  };
-
-  // Footer <div data-field="X" hidden><dt>...</dt><dd></dd></div>
-  let out = html.replace(
-    /<div\s+data-field="([^"]+)"\s+hidden>([\s\S]*?)<dd><\/dd>([\s\S]*?)<\/div>/g,
-    (_, field, before, after) => {
-      const val = values[field];
-      if (!val) return '';
-      return `<div>${before}<dd>${val}</dd>${after}</div>`;
-    },
-  );
-
-  // Mobile floating bar <div class="fab-tel" data-field="telefone" hidden></div>
-  out = out.replace(
-    /<div\s+class="fab-tel"\s+data-field="([^"]+)"\s+hidden><\/div>/g,
-    (_, field) => {
-      const val = values[field];
-      if (!val) return '';
-      return `<div class="fab-tel">${val}</div>`;
-    },
-  );
-
-  return out;
-}
-
-function resolveToken(key, site, { rich }) {
-  if (key in site.vars) {
-    const val = site.vars[key];
-    return rich ? String(val ?? '') : escapeHtml(stripTags(val));
-  }
-  const fromContent = resolvePath(site.content, key);
-  if (fromContent !== undefined && fromContent !== null) {
-    return expandTemplate(String(fromContent), site.vars, { rich });
-  }
-  return '';
-}
-
-function interpolateTokens(html, site) {
-  // First resolve tokens inside HTML tags/attributes (plain text only, no <span> inside attributes)
-  let out = html.replace(/<[^>]+>/g, (tag) =>
-    tag.replace(/\{\{([a-zA-Z0-9_.]+)\}\}/g, (_, key) => resolveToken(key, site, { rich: false })),
-  );
-
-  // Resolve <title>...</title> in plain-text mode
-  out = out.replace(/<title>([\s\S]*?)<\/title>/gi, (_, inner) => {
-    const resolved = inner.replace(/\{\{([a-zA-Z0-9_.]+)\}\}/g, (__, key) =>
-      resolveToken(key, site, { rich: false }),
-    );
-    return `<title>${resolved}</title>`;
-  });
-
-  // Resolve remaining text-node tokens with rich HTML support (e.g. {{anos}}, {{ano}})
-  out = out.replace(/\{\{([a-zA-Z0-9_.]+)\}\}/g, (_, key) =>
-    resolveToken(key, site, { rich: true }),
-  );
-
-  return out;
-}
-
-function processWhatsAppLinks(html, site) {
-  return html.replace(/<a\b([^>]*?)>/gi, (full, attrs) => {
-    const waMatch = /\sdata-wa="([^"]*)"/.exec(attrs);
-    if (!waMatch) return full;
-    const ctaMatch = /\sdata-cta="([^"]*)"/.exec(attrs);
-    const message = waMatch[1]
-      .replaceAll('&quot;', '"')
-      .replaceAll('&#39;', "'")
-      .replaceAll('&lt;', '<')
-      .replaceAll('&gt;', '>')
-      .replaceAll('&amp;', '&');
-    const url = whatsappUrl(site.whatsapp, message, ctaMatch?.[1] ?? '');
-    const cleaned = attrs.replace(/\sdata-wa="[^"]*"/, '');
-    return `<a${cleaned} href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">`;
-  });
-}
-
-/** Transforms a raw HTML page template using the validated `site` model. */
+/** Transforms an HTML entry document using the resolved `site` config and YAML content. */
 export function renderPage(html, site) {
-  let out = html;
+  const baseUrl = normalizeBaseUrl(site.siteUrl);
+  let out = String(html ?? '');
+  if (baseUrl) {
+    out = out.replaceAll('%VITE_SITE_URL%', escapeHtml(baseUrl));
+  } else {
+    out = out
+      .replace(/^[ \t]*<link\s+rel="canonical"\s+href="%VITE_SITE_URL%"\s*\/?>\r?\n?/gim, '')
+      .replace(/^[ \t]*<meta\s+property="og:url"\s+content="%VITE_SITE_URL%"\s*\/?>\r?\n?/gim, '')
+      .replaceAll('%VITE_SITE_URL%', './');
+  }
 
-  out = out.replace('<!--render:produtos-->', () => renderProducts(site));
-  out = out.replace('<!--render:diferenciais-->', () => renderDifferentials(site));
-  out = out.replace('<!--render:clientes-->', () => renderClients(site));
-  out = out.replace('<!--render:montador-->', () => renderQuickQuote(site));
-  out = out.replace('<!--render:politica-->', () =>
-    renderMarkdown(site.content.privacidade ?? '', site),
-  );
+  if (site.dataMode !== 'production' && !/<meta\s+name="robots"/i.test(out)) {
+    out = out.replace(
+      /(<meta\s+name="viewport"[^>]*\/?>)/i,
+      '$1\n    <meta name="robots" content="noindex,nofollow" />',
+    );
+  }
 
-  out = processDataNeed(out, site.vars);
-  out = processDataFields(out, site);
-  out = interpolateTokens(out, site);
-  out = processWhatsAppLinks(out, site);
+  if (/<script\s+type="application\/ld\+json">[\s\S]*?<\/script>/i.test(out)) {
+    const jsonLd = buildJsonLd(site);
+    out = out.replace(
+      /<script\s+type="application\/ld\+json">[\s\S]*?<\/script>/i,
+      `<script type="application/ld+json">${jsonLd}</script>`,
+    );
+  }
 
-  out = out.replace(
-    /<script type="application\/ld\+json">\s*\{\}\s*<\/script>/i,
-    `<script type="application/ld+json">${buildJsonLd(site)}</script>`,
-  );
+  out = out
+    .replace('<!--render:produtos-->', () => renderProducts(site))
+    .replace('<!--render:diferenciais-->', () => renderDifferentials(site))
+    .replace('<!--render:clientes-->', () => renderClients(site))
+    .replace('<!--render:montador-->', () => renderQuickQuote(site))
+    .replace('<!--render:politica-->', () => markdownToHtml(site.content?.privacidade ?? '', site));
+
+  out = applyDataNeed(out, site.vars);
+  out = applyDataFields(out, site);
+  out = applyTokens(out, site);
+  out = applyWhatsAppLinks(out, site);
 
   return out;
 }

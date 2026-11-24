@@ -25,7 +25,9 @@
   --kraft: #b78c5c;
 
   --font: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --pad: clamp(1.25rem, 4vw, 4.5rem);
+  --pad: clamp(1rem, 4vw, 4.5rem);
+  --pad-left: max(var(--pad), env(safe-area-inset-left, 0px));
+  --pad-right: max(var(--pad), env(safe-area-inset-right, 0px));
   --maxw: 90rem;
   --hdr-h: 4.25rem;
   --btn-h: 3.35rem;

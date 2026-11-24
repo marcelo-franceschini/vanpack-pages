@@ -31,6 +31,9 @@ export function mountWhatsAppHandoff(root: Document = document): () => void {
   };
 
   const onDocClick = (event: MouseEvent) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
     const link = (event.target as Element | null)?.closest<HTMLAnchorElement>('a[href*="wa.me"]');
     if (!link) return;
     if (!isRestrictiveInAppBrowser(navigator.userAgent)) return;
@@ -40,12 +43,13 @@ export function mountWhatsAppHandoff(root: Document = document): () => void {
       if (document.visibilityState === 'visible') {
         openSheet();
       }
-    }, 1100);
+    }, 2500);
   };
 
   const onVisibility = () => {
     if (document.hidden) {
       window.clearTimeout(timer);
+      if (dialog.open) closeSheet();
     }
   };
 

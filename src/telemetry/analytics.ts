@@ -8,7 +8,8 @@ declare global {
 
 function sendUmami(name: string, data?: EventPayload): void {
   const cfg = __SITE__.analytics;
-  if (!cfg) return;
+  if (!cfg || navigator.webdriver) return;
+  if (cfg.host && window.location.hostname !== cfg.host) return;
   const body = JSON.stringify({
     type: 'event',
     payload: {
@@ -41,9 +42,7 @@ function sendUmami(name: string, data?: EventPayload): void {
 }
 
 export function trackEvent(name: string, data?: EventPayload): void {
-  if (Array.isArray(window.dataLayer)) {
-    window.dataLayer.push({ event: name, ...data });
-  }
+  (window.dataLayer ??= []).push({ event: name, ...data });
   sendUmami(name, data);
 }
 

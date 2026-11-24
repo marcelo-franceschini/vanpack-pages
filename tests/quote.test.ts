@@ -1,8 +1,13 @@
 import assert from 'node:assert/strict';
+import { join } from 'node:path';
 import test from 'node:test';
+import { createSiteConfig } from '../site.config.js';
 import { isRestrictiveInAppBrowser } from '../src/ui/handoff.ts';
 import { buildQuickQuoteMessage, buildQuickQuoteUrl } from '../src/ui/quick-quote.ts';
 import { calculateYearsSince } from '../src/ui/years.ts';
+import { readContent } from '../tools/build/content.js';
+import { robotsTxt } from '../tools/build/files.js';
+import { renderPage } from '../tools/build/render.js';
 import { whatsappUrl } from '../tools/build/text.js';
 
 test('quick-quote builder composes clean WhatsApp message and valid wa.me URL', () => {
@@ -18,6 +23,7 @@ test('quick-quote builder composes clean WhatsApp message and valid wa.me URL', 
   assert.match(msg, /Medidas: 40 x 30 x 25 cm/);
   assert.match(msg, /Quantidade: 500 un/);
   assert.match(msg, /\[site-montador\]$/);
+  assert.doesNotMatch(msg, /—/, 'WhatsApp quote message must not contain em-dash');
 
   const url = buildQuickQuoteUrl('+55 (11) 99999-8888', {
     model: 'Corte e vinco',
@@ -42,4 +48,33 @@ test('in-app WebView detector and dynamic years helper behave accurately', () =>
 
   assert.equal(calculateYearsSince('2000', new Date('2026-05-01')), 26);
   assert.equal(calculateYearsSince('invalid'), null);
+});
+
+test('robotsTxt disallows crawling outside production and allows production', () => {
+  assert.equal(robotsTxt({ dataMode: 'demo', siteUrl: '' }), 'User-agent: *\nDisallow: /\n');
+  assert.equal(
+    robotsTxt({ dataMode: 'production', siteUrl: 'https://vanpack.com.br/' }),
+    'User-agent: *\nAllow: /\n\nSitemap: https://vanpack.com.br/sitemap.xml\n',
+  );
+});
+
+test('renderPage rejects non-HTTPS map/rating URLs and breaks address lines cleanly', () => {
+  const { content } = readContent(join(process.cwd(), 'content'));
+  const site = createSiteConfig({ env: {}, content });
+  const tampered = {
+    ...site,
+    mapUrl: 'javascript:alert(1)',
+    proofs: {
+      ...site.proofs,
+      googleRating: { value: 4.9, count: 42, url: 'javascript:alert(2)' },
+    },
+  };
+  const html = renderPage(
+    '<div data-field="endereco" hidden><dt>End</dt><dd></dd></div>' +
+      '<div data-field="mapa" hidden><dt>Mapa</dt><dd></dd></div>' +
+      '<!--render:clientes-->',
+    tampered,
+  );
+  assert.doesNotMatch(html, /javascript:/i);
+  assert.match(html, /<br \/>/);
 });

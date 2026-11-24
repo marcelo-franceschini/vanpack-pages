@@ -20,7 +20,7 @@ export function buildQuickQuoteMessage(input: QuickQuoteInput): string {
   if (dimensions) details.push(`Medidas: ${dimensions} cm`);
   if (quantity) details.push(`Quantidade: ${quantity} un`);
 
-  return `Olá! Gostaria de um orçamento — ${details.join(' · ')}. [site-montador]`;
+  return `Olá! Gostaria de um orçamento: ${details.join(' · ')}. [site-montador]`;
 }
 
 /** Builds a clean `wa.me` link from the composed quote message. */
@@ -36,15 +36,15 @@ export function mountQuickQuote(
   whatsappNumber: string,
   root: Document | HTMLElement = document,
 ): () => void {
-  const form = root.querySelector<HTMLFormElement>('[data-quick-quote]');
-  if (!form) return () => {};
+  const container = root.querySelector<HTMLElement>('[data-quick-quote]');
+  if (!container) return () => {};
 
-  const modelEl = form.querySelector<HTMLSelectElement>('select[name="model"]');
-  const printEl = form.querySelector<HTMLSelectElement>('select[name="print"]');
-  const dimsEl = form.querySelector<HTMLInputElement>('input[name="dimensions"]');
-  const qtyEl = form.querySelector<HTMLInputElement>('input[name="quantity"]');
-  const previewEl = form.querySelector<HTMLElement>('[data-qq-preview]');
-  const linkEl = form.querySelector<HTMLAnchorElement>('[data-qq-link]');
+  const modelEl = container.querySelector<HTMLSelectElement>('select[name="model"]');
+  const printEl = container.querySelector<HTMLSelectElement>('select[name="print"]');
+  const dimsEl = container.querySelector<HTMLInputElement>('input[name="dimensions"]');
+  const qtyEl = container.querySelector<HTMLInputElement>('input[name="quantity"]');
+  const previewEl = container.querySelector<HTMLElement>('[data-qq-preview]');
+  const linkEl = container.querySelector<HTMLAnchorElement>('[data-qq-link]');
 
   const sync = () => {
     const input: QuickQuoteInput = {
@@ -62,20 +62,24 @@ export function mountQuickQuote(
     }
   };
 
-  const onSubmit = (e: Event) => {
-    e.preventDefault();
-    sync();
-    linkEl?.click();
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key !== 'Enter') return;
+    const target = e.target as HTMLElement | null;
+    if (target?.tagName === 'INPUT') {
+      e.preventDefault();
+      sync();
+      linkEl?.click();
+    }
   };
 
-  form.addEventListener('input', sync);
-  form.addEventListener('change', sync);
-  form.addEventListener('submit', onSubmit);
+  container.addEventListener('input', sync);
+  container.addEventListener('change', sync);
+  container.addEventListener('keydown', onKeyDown);
   sync();
 
   return () => {
-    form.removeEventListener('input', sync);
-    form.removeEventListener('change', sync);
-    form.removeEventListener('submit', onSubmit);
+    container.removeEventListener('input', sync);
+    container.removeEventListener('change', sync);
+    container.removeEventListener('keydown', onKeyDown);
   };
 }

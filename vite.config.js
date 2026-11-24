@@ -41,11 +41,15 @@ function clientLogosPlugin(site, contentDir) {
     },
     configureServer(server) {
       server.middlewares.use('/clientes', (req, res, next) => {
-        const file = join(
-          contentDir,
-          'clientes',
-          basename(decodeURIComponent((req.url ?? '').split('?')[0])),
-        );
+        let decoded;
+        try {
+          decoded = decodeURIComponent((req.url ?? '').split('?')[0]);
+        } catch {
+          res.statusCode = 400;
+          res.end('Bad Request');
+          return;
+        }
+        const file = join(contentDir, 'clientes', basename(decoded));
         if (!file.endsWith('.svg') || !existsSync(file)) return next();
         res.setHeader('Content-Type', 'image/svg+xml');
         res.end(readFileSync(file));
@@ -93,6 +97,16 @@ function inlineCssAndCspPlugin(site) {
           this.error('index.html não encontrado para aplicar a CSP.');
         }
 
+        let notFoundBasePath = '';
+        if (site.siteUrl) {
+          try {
+            const p = new URL(site.siteUrl).pathname;
+            if (p && p !== '/') notFoundBasePath = p.endsWith('/') ? p : `${p}/`;
+          } catch {
+            // Invalid siteUrl handled by validator
+          }
+        }
+
         for (const page of pages) {
           let html = String(page.source);
           html = html.replace(
@@ -102,7 +116,10 @@ function inlineCssAndCspPlugin(site) {
               const css = cssFiles.get(clean);
               if (css === undefined) return tag;
               inlined.add(clean);
-              return `<style>${css}</style>`;
+              // Emitted CSS lived under `assets/`, so Vite rewrote root-relative assets to `../`.
+              // Once inlined into root HTML documents, rewrite `url(../` back to `url(./`.
+              const fixedCss = css.replace(/url\((['"]?)\.\.\//g, 'url($1./');
+              return `<style>${fixedCss}</style>`;
             },
           );
 
@@ -110,9 +127,14 @@ function inlineCssAndCspPlugin(site) {
             ([, css]) => `'sha256-${createHash('sha256').update(css).digest('base64')}'`,
           );
           const policy = contentSecurityPolicy({ styleHashes, site });
+          const baseTag =
+            page.fileName === '404.html' && notFoundBasePath
+              ? `\n    <base href="${notFoundBasePath}" />`
+              : '';
           html = html.replace(
             /<meta charset="utf-8"\s*\/?>/i,
-            (m) => `${m}\n    <meta http-equiv="Content-Security-Policy" content="${policy}" />`,
+            (m) =>
+              `${m}${baseTag}\n    <meta http-equiv="Content-Security-Policy" content="${policy}" />`,
           );
           page.source = html;
         }
@@ -147,16 +169,16 @@ export default defineConfig(({ mode, command }) => {
 
   const { site, warnings } = loaded;
   for (const warning of warnings) console.warn(`[vanpack] ${warning}`);
-  const three = sharedThree();
+  const three = sharedThree(root);
 
   return {
     base: './',
     server: {
-      port: 3005,
+      port: 3000,
       host: '0.0.0.0',
     },
     preview: {
-      port: 3005,
+      port: 3000,
       host: '0.0.0.0',
     },
     plugins: [

@@ -74,6 +74,7 @@ export function montarProdutos(areas) {
 
   const label = (card) =>
     `Modelo 3D de ${card.area.dataset.peca}${reducedQuery.matches ? '' : ' girando'}`;
+  const describe = (card) => `${label(card)}. Use as setas do teclado para girar.`;
   const send = (msg) => worker?.postMessage(msg);
 
   function measure(card, rect = card.area.getBoundingClientRect()) {
@@ -99,6 +100,8 @@ export function montarProdutos(areas) {
     near.disconnect();
     seen.disconnect();
     sizes.disconnect();
+    document.removeEventListener('visibilitychange', onVisibility);
+    reducedQuery.removeEventListener('change', onReduced);
     cards.forEach((card) => {
       card.area.removeAttribute('tabindex');
       card.area.removeAttribute('role');
@@ -150,8 +153,7 @@ export function montarProdutos(areas) {
     if (!worker) start();
     if (!card.canvas) {
       card.canvas = document.createElement('canvas');
-      card.canvas.setAttribute('role', 'img');
-      card.canvas.setAttribute('aria-label', label(card));
+      card.canvas.setAttribute('aria-hidden', 'true');
       card.ctx = card.canvas.getContext('bitmaprenderer');
       card.area.prepend(card.canvas);
     }
@@ -213,6 +215,7 @@ export function montarProdutos(areas) {
       if (!card.near || (e.pointerType === 'mouse' && e.button !== 0)) return;
       from = e.clientX;
       area.setPointerCapture(e.pointerId);
+      area.dataset.interacted = 'true';
       area.classList.add('arrastando');
       send({ type: 'grab', id: card.id, on: true });
     });
@@ -230,11 +233,12 @@ export function montarProdutos(areas) {
     // teclado: setas giram a peça em foco (o mesmo arrasto, em passos)
     area.tabIndex = 0;
     area.setAttribute('role', 'group');
-    area.setAttribute('aria-label', `${label(card)}. Use as setas do teclado para girar.`);
+    area.setAttribute('aria-label', describe(card));
     area.addEventListener('keydown', (e) => {
       const turn = { ArrowLeft: -KEY_RAD, ArrowRight: KEY_RAD }[e.key];
       if (!turn || !card.near) return;
       e.preventDefault();
+      area.dataset.interacted = 'true';
       send({ type: 'drag', id: card.id, turn });
       send({ type: 'grab', id: card.id, on: false }); // segura o giro automático por um instante
     });
@@ -247,13 +251,14 @@ export function montarProdutos(areas) {
     sizes.observe(card.area);
   }
 
-  document.addEventListener('visibilitychange', () =>
-    send({ type: document.hidden ? 'pause' : 'resume' }),
-  );
-  reducedQuery.addEventListener('change', () => {
+  const onVisibility = () => send({ type: document.hidden ? 'pause' : 'resume' });
+  const onReduced = () => {
+    if (failed) return;
     send({ type: 'reduced', value: reducedQuery.matches });
-    for (const card of cards) card.canvas?.setAttribute('aria-label', label(card));
-  });
+    for (const card of cards) card.area.setAttribute('aria-label', describe(card));
+  };
+  document.addEventListener('visibilitychange', onVisibility);
+  reducedQuery.addEventListener('change', onReduced);
   if (audit) {
     audit.loseContext = () => send({ type: 'audit-lose' });
     audit.askMemory = () => send({ type: 'audit-memory' });

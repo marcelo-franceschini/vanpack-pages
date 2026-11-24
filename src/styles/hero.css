@@ -127,7 +127,7 @@
 }
 
 .card:has(h1) {
-  width: min(44rem, 100%);
+  width: min(44rem, calc(var(--t-display) * 13.167 + 4.5rem), 100%);
 }
 
 .card.on {
@@ -253,11 +253,12 @@
     padding: var(--hdr-h) 0 0.75rem;
   }
 
-  .step .wrap {
-    padding: 0 0.75rem;
+  .step:not(:first-child) {
+    padding-bottom: calc(var(--bar-h) + 0.75rem);
   }
 
-  .card {
+  .card,
+  .card:has(h1) {
     width: 100%;
     padding: 1.125rem 1.25rem 1.25rem;
   }
@@ -283,6 +284,10 @@
 
   .actions .btn {
     flex: 1 1 100%;
+    min-width: 0;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.2;
   }
 
   .actions .btn-soft {
@@ -291,6 +296,7 @@
     margin: 0 auto;
     padding: 0 0.5rem;
     background: none;
+    border-color: transparent;
     color: var(--floresta);
     text-decoration: underline;
   }
@@ -309,5 +315,43 @@
 @media (min-width: 601px) and (max-aspect-ratio: 1/1) {
   .card p {
     font-size: var(--t-body);
+  }
+}
+
+@media (max-height: 33rem) {
+  .stage {
+    min-height: 100vh;
+    min-height: 100svh;
+  }
+
+  .step {
+    padding: calc(var(--hdr-h) + 0.5rem) 0 0.75rem;
+  }
+
+  .card {
+    padding: 1.15rem 1.35rem;
+  }
+
+  .card h1 {
+    font-size: clamp(1.55rem, 3.2vw, 2rem);
+    margin-bottom: 0.45rem;
+  }
+
+  .card p {
+    font-size: 0.9375rem;
+    line-height: 1.4;
+  }
+
+  .actions {
+    margin-top: 0.85rem;
+  }
+
+  .seal {
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .scrollcue {
+    display: none;
   }
 }
