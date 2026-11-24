@@ -29,14 +29,14 @@ export const PALETTE = {
 /** Caixa: painéis longos, painéis curtos, altura e abas. */
 export const BOX = { L: 0.44, D: 0.3, H: 0.34, F: 0.15 };
 export const SHEET_LENGTH = BOX.H + 2 * BOX.F; // comprimento da chapa no sentido da linha
-export const LAYER = 0.013; // espessura de uma camada dobrada
+export const LAYER = 0.018; // espessura real da chapa de papelão (18 mm, onda robusta)
 export const SHEET_Y = 0.85; // plano da chapa
 export const RAIL_Y = SHEET_Y - LAYER; // topo dos trilhos e piso do baú
 export const TURNTABLE_X = 2.65; // mesa giratória
 export const TURNTABLE_TOP = RAIL_Y + 0.018; // topo do disco da mesa
 export const PALLET_X = 3.75; // palete
 export const PALLET_H = 0.12;
-const FLATS = 14; // caixas dobradas empilhadas no palete
+const FLATS = 12; // caixas dobradas empilhadas no palete (2 * LAYER cada)
 export const FLAT_T = 2 * LAYER;
 export const STACK_TOP = PALLET_H + FLATS * FLAT_T; // em coordenadas do palete
 export const TRUCK_X0 = 6.85; // centro do caminhão no início da estrada

@@ -2,94 +2,38 @@
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
     <title>{{site.nao_encontrada.titulo_aba}}</title>
-    <meta name="robots" content="noindex" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="theme-color" content="#FBF8F2" />
+    <meta name="color-scheme" content="light" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <style>
-      :root {
-        --floresta: #14513a;
-        --floresta-dark: #0f3d2c;
-        --carvao: #1b1a17;
-        --carvao-muted: #5a544b;
-        --papel: #fbf8f2;
-        --tint: #ece9e3;
-        --font: 'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      }
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      body {
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 2rem 1.5rem;
-        background: var(--papel);
-        color: var(--carvao);
-        font-family: var(--font);
-        text-align: center;
-      }
-      .card {
-        max-width: 32rem;
-        padding: 3rem 2rem;
-        background: var(--tint);
-        border-radius: 0.5rem;
-      }
-      .logo {
-        display: inline-block;
-        margin-bottom: 2rem;
-        color: var(--floresta);
-      }
-      .logo img {
-        width: 180px;
-        height: auto;
-      }
-      h1 {
-        font-size: 2.25rem;
-        font-weight: 850;
-        letter-spacing: -0.02em;
-        line-height: 1.1;
-        margin-bottom: 1rem;
-        color: var(--carvao);
-      }
-      p {
-        color: var(--carvao);
-        font-size: 1.125rem;
-        line-height: 1.5;
-        margin-bottom: 2rem;
-      }
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 3.5rem;
-        padding: 0 2rem;
-        border-radius: 4px;
-        background: var(--floresta);
-        color: var(--papel);
-        font: 700 1rem/1 var(--font);
-        text-decoration: none;
-        transition: background-color 0.2s;
-      }
-      .btn:hover {
-        background: var(--floresta-dark);
-      }
-    </style>
+    <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preload" href="/fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/src/styles/pages.css" />
   </head>
-  <body>
-    <div class="card">
-      <a class="logo" href="%VITE_SITE_URL%" aria-label="{{nome}} · início">
-        <img src="/brand/vanpack-horizontal.svg" alt="" width="180" height="45" />
-      </a>
+  <body class="page-shell">
+    <header class="hdr">
+      <div class="wrap hdr-inner">
+        <a class="brand" href="./" aria-label="{{nome}} — início">
+          <img src="/brand/vanpack-horizontal.svg" alt="{{nome}}" width="128" height="32" />
+        </a>
+      </div>
+    </header>
+
+    <main class="page-main not-found">
+      <p class="not-found-code">Erro 404</p>
       <h1>{{site.nao_encontrada.titulo}}</h1>
       <p>{{site.nao_encontrada.texto}}</p>
-      <a class="btn" href="%VITE_SITE_URL%">{{site.nao_encontrada.voltar}}</a>
-    </div>
+      <a class="btn" href="./">{{site.nao_encontrada.voltar}}</a>
+    </main>
+
+    <footer class="page-footer">
+      <div class="wrap page-footer-inner">
+        <span>© {{ano}} {{titular}}</span>
+        <a href="./politica-de-privacidade.html">{{site.menu.privacidade}}</a>
+      </div>
+    </footer>
   </body>
 </html>

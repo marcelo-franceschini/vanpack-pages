@@ -6,18 +6,20 @@
 export function ilustrar(area) {
   area.querySelector('canvas')?.remove();
   if (area.querySelector('img')) return;
+  const modelo = area.dataset.modelo || area.dataset.model;
+  const peca = area.dataset.peca || area.dataset.piece || modelo;
   const img = new Image(400, 300);
-  img.alt = `Ilustração de ${area.dataset.peca}`;
+  img.alt = `Ilustração de ${peca}`;
   img.decoding = 'async';
-  img.src = `./produtos/${area.dataset.modelo}.svg`; // relativo à página (subcaminho do GitHub Pages)
+  img.src = `./produtos/${modelo}.svg`; // relativo à página (subcaminho do GitHub Pages)
   area.append(img);
   area.classList.add('pronto');
 }
 
 export function observeProdutos() {
-  const list = document.querySelector('.models');
+  const list = document.querySelector('.models, .product-cards');
   const areas = /** @type {HTMLElement[]} */ ([
-    ...document.querySelectorAll('.model-3d[data-modelo]'),
+    ...document.querySelectorAll('.model-3d[data-modelo], .model-3d[data-model]'),
   ]);
   if (!list || !areas.length) return;
   const observer = new IntersectionObserver(

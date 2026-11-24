@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://vanpack.local/schemas/orcamento.schema.json",
   "title": "Orçamento",
-  "description": "Os textos da seção final da página.",
+  "description": "Os textos da seção final da página e do montador rápido de pedido.",
   "type": "object",
   "additionalProperties": false,
   "required": ["titulo", "texto", "botao", "ligar", "passos"],
@@ -10,36 +10,58 @@
     "titulo": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 60,
-      "description": "Título da seção final."
+      "maxLength": 60
     },
     "texto": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 170,
-      "description": "Parágrafo abaixo do título."
+      "maxLength": 170
     },
     "botao": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 40,
-      "description": "Texto do botão."
+      "maxLength": 40
     },
     "ligar": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 26,
-      "description": "Frase antes do telefone. Some se não houver telefone."
+      "maxLength": 26
     },
     "passos": {
       "type": "array",
       "minItems": 3,
       "maxItems": 3,
-      "description": "Os 3 passos de \"Como pedir\", na ordem.",
       "items": {
         "type": "string",
         "minLength": 1,
         "maxLength": 75
+      }
+    },
+    "montador": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "titulo",
+        "produto",
+        "medidas",
+        "quantidade",
+        "impressao",
+        "enviar",
+        "opcoes_impressao"
+      ],
+      "properties": {
+        "titulo": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "produto": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "medidas": { "type": "string", "minLength": 1, "maxLength": 50 },
+        "quantidade": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "impressao": { "type": "string", "minLength": 1, "maxLength": 40 },
+        "enviar": { "type": "string", "minLength": 1, "maxLength": 45 },
+        "opcoes_impressao": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 4,
+          "items": { "type": "string", "minLength": 1, "maxLength": 40 }
+        }
       }
     }
   }

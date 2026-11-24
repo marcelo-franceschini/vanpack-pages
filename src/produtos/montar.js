@@ -50,17 +50,23 @@ export function montarProdutos(areas) {
     import.meta.env.MODE === 'audit'
       ? ((window.__audit ??= {}).produtos = { frames: 0, stats: {}, memory: null, workers: 0 })
       : null;
-  const cards = areas.map((area, id) => ({
-    id,
-    area,
-    canvas: null,
-    ctx: null,
-    near: false,
-    visible: false,
-    nudged: false,
-    width: 0,
-    height: 0,
-  }));
+  const cards = areas.map((area, id) => {
+    const modelo = area.dataset.modelo || area.dataset.model;
+    const peca = area.dataset.peca || area.dataset.piece || modelo;
+    area.dataset.modelo = modelo;
+    area.dataset.peca = peca;
+    return {
+      id,
+      area,
+      canvas: null,
+      ctx: null,
+      near: false,
+      visible: false,
+      nudged: false,
+      width: 0,
+      height: 0,
+    };
+  });
   /** @type {Map<Element, (typeof cards)[number]>} */
   const byArea = new Map(cards.map((card) => [card.area, card]));
   let worker = null;

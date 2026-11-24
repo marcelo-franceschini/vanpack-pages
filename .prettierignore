@@ -1,7 +1,7 @@
 dist/
+.playwright-cli/
 package-lock.json
 public/fonts/
-# conteúdo editado por quem não programa: o que vale é o JSON Schema (npm run build), não o estilo
+# Content edited by non-developers: validated by JSON Schema, not Prettier formatting
 content/*.yaml
-content/exemplo/
 content/privacidade.md

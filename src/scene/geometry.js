@@ -12,7 +12,7 @@ import {
   SRGBColorSpace,
   Vector3,
 } from 'three';
-import { ROAD, TRUCK_X0 } from './constants.js';
+import { LAYER, ROAD, TRUCK_X0 } from './constants.js';
 import { smooth } from './math.js';
 
 const CHAMFER = 0.9; // cateto do chanfro da seção, em múltiplos do chanfro `c`
@@ -319,22 +319,233 @@ export function stackSides(x0, x1, y0, y1, z0, z1, layer) {
   return geometry;
 }
 
-/** Painel plano de largura `w` (em z) entre x0 e x1; `v(x)` dá a coordenada v da textura. */
-export function panelGeometry(x0, x1, w, v) {
+/** Painel de papelão com espessura `t` (em y), largura `w` (em z) entre x0 e x1; com faces externa, interna e bordas de corte flutuadas. */
+export function panelGeometry(x0, x1, w, v, t = LAYER) {
   const geometry = new BufferGeometry();
-  geometry.setAttribute(
-    'position',
-    new Float32BufferAttribute([x0, 0, 0, x1, 0, 0, x1, 0, w, x0, 0, w], 3),
+  const positions = [];
+  const normals = [];
+  const uvs = [];
+  const indices = [];
+
+  const addQuad = (p0, p1, p2, p3, norm, uv0, uv1, uv2, uv3) => {
+    const base = positions.length / 3;
+    positions.push(...p0, ...p1, ...p2, ...p3);
+    normals.push(...norm, ...norm, ...norm, ...norm);
+    uvs.push(...uv0, ...uv1, ...uv2, ...uv3);
+    indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+  };
+
+  // 1. Face superior (externa, y = t, normal +Y)
+  addQuad(
+    [x0, t, 0],
+    [x0, t, w],
+    [x1, t, w],
+    [x1, t, 0],
+    [0, 1, 0],
+    [0, v(x0)],
+    [1, v(x0)],
+    [1, v(x1)],
+    [0, v(x1)],
   );
-  geometry.setAttribute(
-    'normal',
-    new Float32BufferAttribute([0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0], 3),
+
+  // 2. Face inferior (interna, y = 0, normal -Y)
+  addQuad(
+    [x0, 0, 0],
+    [x1, 0, 0],
+    [x1, 0, w],
+    [x0, 0, w],
+    [0, -1, 0],
+    [0, v(x0)],
+    [0, v(x1)],
+    [1, v(x1)],
+    [1, v(x0)],
   );
-  geometry.setAttribute(
-    'uv',
-    new Float32BufferAttribute([0, v(x0), 0, v(x1), 1, v(x1), 1, v(x0)], 2),
+
+  // Frequência de onda idêntica à das pilhas do alimentador e palete (0,16m por tile de 2 ondas)
+  const u_x = (x1 - x0) / 0.16;
+  const u_z = w / 0.16;
+
+  // 3. Bordas de corte com desenho da onda senoidal de altura 1.0 (do liner inferior ao superior)
+  // Borda lateral z = 0 (normal -Z)
+  addQuad(
+    [x0, 0, 0],
+    [x0, t, 0],
+    [x1, t, 0],
+    [x1, 0, 0],
+    [0, 0, -1],
+    [0, 0],
+    [0, 1],
+    [u_x, 1],
+    [u_x, 0],
   );
-  geometry.setIndex([0, 3, 2, 0, 2, 1]);
+
+  // Borda lateral z = w (normal +Z)
+  addQuad(
+    [x1, 0, w],
+    [x1, t, w],
+    [x0, t, w],
+    [x0, 0, w],
+    [0, 0, 1],
+    [0, 0],
+    [0, 1],
+    [u_x, 1],
+    [u_x, 0],
+  );
+
+  // Borda ponta x = x1 (normal +X)
+  addQuad(
+    [x1, 0, 0],
+    [x1, t, 0],
+    [x1, t, w],
+    [x1, 0, w],
+    [1, 0, 0],
+    [0, 0],
+    [0, 1],
+    [u_z, 1],
+    [u_z, 0],
+  );
+
+  // Borda ponta x = x0 (normal -X)
+  addQuad(
+    [x0, 0, w],
+    [x0, t, w],
+    [x0, t, 0],
+    [x0, 0, 0],
+    [-1, 0, 0],
+    [0, 0],
+    [0, 1],
+    [u_z, 1],
+    [u_z, 0],
+  );
+
+  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('normal', new Float32BufferAttribute(normals, 3));
+  geometry.setAttribute('uv', new Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+
+  geometry.addGroup(0, 6, 0); // Face externa -> material 0
+  geometry.addGroup(6, 6, 1); // Face interna -> material 1
+  geometry.addGroup(12, 24, 2); // Bordas de corte -> material 2
+
+  return geometry;
+}
+
+/**
+ * Chapa inteira de papelão com espessura `t` centrada na origem.
+ * Face superior (+Y, material 0), face inferior (-Y, material 1) e 4 bordas de corte flutuadas (material 2).
+ */
+export function sheetGeometry(length, t = LAYER, depth = 1.48) {
+  const geometry = new BufferGeometry();
+  const positions = [];
+  const normals = [];
+  const uvs = [];
+  const indices = [];
+
+  const addQuad = (p0, p1, p2, p3, norm, uv0, uv1, uv2, uv3) => {
+    const base = positions.length / 3;
+    positions.push(...p0, ...p1, ...p2, ...p3);
+    normals.push(...norm, ...norm, ...norm, ...norm);
+    uvs.push(...uv0, ...uv1, ...uv2, ...uv3);
+    indices.push(base, base + 1, base + 2, base, base + 2, base + 3);
+  };
+
+  const x0 = -length / 2;
+  const x1 = length / 2;
+  const y0 = -t / 2;
+  const y1 = t / 2;
+  const z0 = -depth / 2;
+  const z1 = depth / 2;
+
+  // Face superior (+Y, material 0: kraftSurface)
+  addQuad(
+    [x0, y1, z1],
+    [x1, y1, z1],
+    [x1, y1, z0],
+    [x0, y1, z0],
+    [0, 1, 0],
+    [0, 0],
+    [1, 0],
+    [1, 1],
+    [0, 1],
+  );
+
+  // Face inferior (-Y, material 1: kraftInner)
+  addQuad(
+    [x0, y0, z0],
+    [x1, y0, z0],
+    [x1, y0, z1],
+    [x0, y0, z1],
+    [0, -1, 0],
+    [0, 0],
+    [1, 0],
+    [1, 1],
+    [0, 1],
+  );
+
+  const u_x = length / 0.16;
+  const u_z = depth / 0.16;
+
+  // Borda +X (normal +X, material 2: edge)
+  addQuad(
+    [x1, y0, z0],
+    [x1, y1, z0],
+    [x1, y1, z1],
+    [x1, y0, z1],
+    [1, 0, 0],
+    [0, 0],
+    [0, 1],
+    [u_z, 1],
+    [u_z, 0],
+  );
+
+  // Borda -X (normal -X, material 2: edge)
+  addQuad(
+    [x0, y0, z1],
+    [x0, y1, z1],
+    [x0, y1, z0],
+    [x0, y0, z0],
+    [-1, 0, 0],
+    [0, 0],
+    [0, 1],
+    [u_z, 1],
+    [u_z, 0],
+  );
+
+  // Borda +Z (normal +Z, material 2: edge)
+  addQuad(
+    [x1, y0, z1],
+    [x1, y1, z1],
+    [x0, y1, z1],
+    [x0, y0, z1],
+    [0, 0, 1],
+    [0, 0],
+    [0, 1],
+    [u_x, 1],
+    [u_x, 0],
+  );
+
+  // Borda -Z (normal -Z, material 2: edge)
+  addQuad(
+    [x0, y0, z0],
+    [x0, y1, z0],
+    [x1, y1, z0],
+    [x1, y0, z0],
+    [0, 0, -1],
+    [0, 0],
+    [0, 1],
+    [u_x, 1],
+    [u_x, 0],
+  );
+
+  geometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('normal', new Float32BufferAttribute(normals, 3));
+  geometry.setAttribute('uv', new Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+
+  geometry.addGroup(0, 6, 0); // Face superior -> material 0
+  geometry.addGroup(6, 6, 1); // Face inferior -> material 1
+  geometry.addGroup(12, 24, 2); // 4 Bordas de corte -> material 2
+
   return geometry;
 }
 

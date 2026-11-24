@@ -1,62 +1,45 @@
 // A peça "herói": a chapa, o tubo achatado e a caixa são a mesma peça (4 painéis + abas). Ela dobra
 // por baixo, abre cisalhando, gira e volta a dobrar. A marca do cliente demo fica nos dois painéis
 // longos.
-import {
-  BoxGeometry,
-  Color,
-  DoubleSide,
-  Group,
-  Mesh,
-  MeshBasicMaterial,
-  MeshLambertMaterial,
-} from 'three';
-import { BOX, KRAFT, KRAFT_INNER, LAYER, PALETTE, SHEET_LENGTH } from './constants.js';
+import { BoxGeometry, Group, Mesh, MeshBasicMaterial, MeshLambertMaterial } from 'three';
+import { BOX, LAYER, PALETTE, SHEET_LENGTH } from './constants.js';
 import { panelGeometry } from './geometry.js';
-import { bodyTexture, flapTexture } from './textures.js';
+import { bodyTexture, edgeTexture, flapTexture, innerBodyTexture } from './textures.js';
 
 const { L, D, H, F } = BOX;
 
 /**
  * @param {<T>(resource: T) => T} track registra o recurso para o `dispose()` da cena
+ * @param {import('three').Material} [edgeMaterial] material das bordas com miolo senoidal
  */
-export function createHero(track) {
+export function createHero(track, edgeMaterial) {
   const spin = new Group();
   const root = new Group();
   spin.add(root);
 
-  const innerColor = new Color(KRAFT_INNER);
-  const panelMaterial = (map) => {
-    const material = track(
-      new MeshLambertMaterial({ color: map ? 0xffffff : KRAFT, map, side: DoubleSide }),
-    );
-    // a face de dentro do papelão é mais clara e lisa
-    const inner = [innerColor.r, innerColor.g, innerColor.b].map((c) => c.toFixed(4)).join(',');
-    material.onBeforeCompile = (shader) => {
-      shader.fragmentShader = shader.fragmentShader.replace(
-        '#include <map_fragment>',
-        `#include <map_fragment>\nif(!gl_FrontFacing){diffuseColor.rgb=vec3(${inner});}`,
-      );
-    };
-    material.customProgramCacheKey = () => `vp-panel${map ? 1 : 0}`;
-    return material;
-  };
+  const innerTexture = track(innerBodyTexture());
+  const innerMaterial = track(new MeshLambertMaterial({ map: innerTexture }));
   const textures = [track(bodyTexture(false)), track(bodyTexture(true)), track(flapTexture())];
-  const bodyMaterial = panelMaterial(textures[0]);
-  const printMaterial = panelMaterial(textures[1]);
-  const flapMaterial = panelMaterial(textures[2]);
+  const bodyMaterial = track(new MeshLambertMaterial({ map: textures[0] }));
+  const printMaterial = track(new MeshLambertMaterial({ map: textures[1] }));
+  const flapMaterial = track(new MeshLambertMaterial({ map: textures[2] }));
+  const edgeMat = edgeMaterial || track(new MeshLambertMaterial({ map: track(edgeTexture()) }));
 
   // Um painel de largura `w` (em z) com aba em cima e, opcionalmente, embaixo.
   const panel = (w, withBottomFlap, printed) => {
     const group = new Group();
-    const mesh = (geometry, material) => {
-      const m = new Mesh(track(geometry), material);
+    const mesh = (geometry, materials) => {
+      const m = new Mesh(track(geometry), materials);
       m.castShadow = true;
       return m;
     };
+    const bodyMats = [printed ? printMaterial : bodyMaterial, innerMaterial, edgeMat];
+    const flapMats = [flapMaterial, innerMaterial, edgeMat];
+
     group.add(
       mesh(
         panelGeometry(F, F + H, w, (x) => (x - F) / H),
-        printed ? printMaterial : bodyMaterial,
+        bodyMats,
       ),
     );
     const top = new Group();
@@ -64,7 +47,7 @@ export function createHero(track) {
     top.add(
       mesh(
         panelGeometry(0, F, w, (x) => x / F),
-        flapMaterial,
+        flapMats,
       ),
     );
     group.add(top);
@@ -75,7 +58,7 @@ export function createHero(track) {
       bottom.add(
         mesh(
           panelGeometry(-F, 0, w, (x) => -x / F),
-          flapMaterial,
+          flapMats,
         ),
       );
       group.add(bottom);
@@ -105,7 +88,7 @@ export function createHero(track) {
     track(new BoxGeometry(1, 0.008, 0.032)),
     track(new MeshBasicMaterial({ color: PALETTE.white })),
   );
-  bead.position.set(0, 0.005, D - 0.05);
+  bead.position.set(0, LAYER + 0.004, D - 0.05);
   side2.group.add(bead);
 
   const panels = [side1, back, front, side2];

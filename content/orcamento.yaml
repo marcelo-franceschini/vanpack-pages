@@ -1,9 +1,6 @@
 # yaml-language-server: $schema=./schemas/orcamento.schema.json
 #
-# A seção final da página (o chamado para o orçamento) e os 3 passos de "Como pedir".
-#
-# Ponha sempre os textos entre aspas. {{cidade}}, {{regiao}} e as outras {{variáveis}} puxam os dados
-# da empresa (content/empresa.yaml); {{#se variavel}}trecho{{/se}} só aparece se a variável tiver valor.
+# A seção final da página (chamado para o orçamento), os 3 passos e o montador rápido opcional.
 
 titulo: "Conte sua medida e receba o seu orçamento"
 texto: "Mande medida (C x L x A), quantidade e o que vai impresso. Não tem a medida? Mande a foto do produto que a gente ajuda."
@@ -11,5 +8,16 @@ botao: "Pedir orçamento no WhatsApp"
 ligar: "Prefere ligar?"
 passos:
   - "Chame no WhatsApp"
-  - "O assistente pergunta medida, quantidade e impressão"
-  - "Receba o orçamento"
+  - "Informe medida, quantidade e impressão"
+  - "Receba o orçamento direto da fábrica"
+montador:
+  titulo: "Monte sua mensagem agora (opcional)"
+  produto: "Modelo"
+  medidas: "Medidas C × L × A (cm)"
+  quantidade: "Quantidade estimada"
+  impressao: "Impressão"
+  enviar: "Enviar pedido pronto no WhatsApp"
+  opcoes_impressao:
+    - "Com a minha marca"
+    - "Caixa lisa (sem impressão)"
+    - "Ainda vou definir"

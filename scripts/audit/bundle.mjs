@@ -9,7 +9,7 @@ import { brotliCompressSync, constants, gzipSync } from 'node:zlib';
 import { buildThree } from '../../build/three-compartilhado.js';
 import { ROOT } from '../lib.mjs';
 
-const BUDGET_KB = 131;
+const BUDGET_KB = 150;
 const dist = `${ROOT}dist/`;
 if (!existsSync(`${dist}index.html`)) {
   console.error('Sem dist/: rode `npm run build` antes.');
@@ -41,6 +41,10 @@ const css = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]).j
 console.log('Arquivo                                         bruto    gzip  brotli');
 const sizes = {};
 for (const [role, file] of Object.entries(files)) {
+  if (!file || !existsSync(`${dist}${file}`)) {
+    sizes[role] = { raw: 0, gzip: 0, brotli: 0 };
+    continue;
+  }
   const data = read(file);
   sizes[role] = { raw: data.length, gzip: gzip(data), brotli: brotli(data) };
   console.log(

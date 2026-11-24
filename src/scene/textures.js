@@ -10,7 +10,7 @@ import {
   SRGBColorSpace,
 } from 'three';
 import { drawHorizontalBrand } from '../brand/marks.js';
-import { KRAFT, PALETTE } from './constants.js';
+import { KRAFT, KRAFT_INNER, PALETTE } from './constants.js';
 
 const HAS_OFFSCREEN_CANVAS = typeof OffscreenCanvas === 'function';
 
@@ -18,22 +18,42 @@ const HAS_OFFSCREEN_CANVAS = typeof OffscreenCanvas === 'function';
 // metade da resolução já é 2x maior que o necessário (e 4x menos GPU e tempo de partida).
 const SCALE = { body: 0.5, print: 0.75, flap: 0.5, logo: 0.5 };
 
+function createSurface(width, height) {
+  if (HAS_OFFSCREEN_CANVAS) {
+    try {
+      const canvas = new OffscreenCanvas(width, height);
+      const ctx = canvas.getContext('2d');
+      if (ctx) return { canvas, ctx };
+    } catch {
+      // continua para fallback
+    }
+  }
+  if (typeof document !== 'undefined') {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    return { canvas, ctx };
+  }
+  return { canvas: null, ctx: null };
+}
+
 /**
  * @param {number} width largura de projeto (o desenho usa estas coordenadas)
  * @param {number} height altura de projeto
  * @param {number} scale fração do tamanho de projeto que a textura realmente tem
- * @param {(g: OffscreenCanvasRenderingContext2D, w: number, h: number) => void} draw
- * @returns {CanvasTexture | null} `null` quando o ambiente não tem OffscreenCanvas
+ * @param {(g: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, w: number, h: number) => void} draw
+ * @returns {CanvasTexture | null} `null` quando o ambiente não tem suporte a Canvas
  */
 function canvasTexture(width, height, scale, draw) {
-  if (!HAS_OFFSCREEN_CANVAS) return null;
+  const w = Math.round(width * scale);
+  const h = Math.round(height * scale);
+  const { canvas, ctx: g } = createSurface(w, h);
+  if (!canvas || !g) return null;
   try {
-    const canvas = new OffscreenCanvas(Math.round(width * scale), Math.round(height * scale));
-    const g = canvas.getContext('2d');
-    if (!g) return null;
     g.scale(scale, scale);
     draw(g, width, height);
-    const texture = new CanvasTexture(canvas);
+    const texture = new CanvasTexture(/** @type {any} */ (canvas));
     texture.colorSpace = SRGBColorSpace;
     texture.anisotropy = 4;
     return texture;
@@ -170,25 +190,117 @@ function drawPrint(g, w, h) {
   }
 }
 
-/** Painel do papelão (face externa), com ou sem a impressão do cliente. */
+/** Painel do papelão (face externa), com textura orgânica de Kraft e ondulação sutil. */
 export const bodyTexture = (printed) =>
   canvasTexture(768, 592, printed ? SCALE.print : SCALE.body, (g, w, h) => {
+    // Tom base Kraft
     g.fillStyle = KRAFT;
     g.fillRect(0, 0, w, h);
-    g.fillStyle = 'rgba(70,44,18,0.30)';
+
+    // Ondulação sutil da canelura do papelão sob o liner
+    const darkHex = PALETTE.kraftDark || '#9a7447';
+    g.fillStyle = darkHex;
+    g.globalAlpha = 0.055;
+    for (let y = 0; y < h; y += 16) {
+      g.fillRect(0, y, w, 3);
+    }
+
+    // Fibras e granulações orgânicas táteis
+    let seed = 1337;
+    const rand = () => {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+    for (let i = 0; i < 420; i++) {
+      const x = rand() * w;
+      const y = rand() * h;
+      const len = 4 + rand() * 14;
+      g.globalAlpha = 0.04 + rand() * 0.06;
+      g.fillStyle = rand() > 0.45 ? darkHex : '#e5c99f';
+      g.fillRect(x, y, len, 1.2);
+    }
+    g.globalAlpha = 1;
+
+    // Vincos de sombra de borda
+    g.fillStyle = 'rgba(70,44,18,0.25)';
     g.fillRect(0, 0, w, 5);
     g.fillRect(0, h - 5, w, 5);
     g.fillStyle = 'rgba(70,44,18,0.12)';
     g.fillRect(0, 0, 3, h);
     g.fillRect(w - 3, 0, 3, h);
+
     if (printed) drawPrint(g, w, h);
+  });
+
+/** Face interna do papelão (liner interno), com tom Kraft e textura de fibras e ranhuras táteis. */
+export const innerBodyTexture = () =>
+  canvasTexture(768, 592, SCALE.body, (g, w, h) => {
+    // Tom base Kraft interno
+    g.fillStyle = KRAFT_INNER;
+    g.fillRect(0, 0, w, h);
+
+    // Ondulação sutil da canelura interna sob o liner
+    const darkHex = '#b78c5c';
+    g.fillStyle = darkHex;
+    g.globalAlpha = 0.05;
+    for (let y = 0; y < h; y += 16) {
+      g.fillRect(0, y, w, 3);
+    }
+
+    // Fibras orgânicas e textura tátil de celulose
+    let seed = 4096;
+    const rand = () => {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+    for (let i = 0; i < 350; i++) {
+      const x = rand() * w;
+      const y = rand() * h;
+      const len = 4 + rand() * 14;
+      g.globalAlpha = 0.04 + rand() * 0.06;
+      g.fillStyle = rand() > 0.45 ? darkHex : '#f2dfc4';
+      g.fillRect(x, y, len, 1.2);
+    }
+    g.globalAlpha = 1;
+
+    // Leve vinco de sombra de borda
+    g.fillStyle = 'rgba(70,44,18,0.18)';
+    g.fillRect(0, 0, w, 4);
+    g.fillRect(0, h - 4, w, 4);
+    g.fillStyle = 'rgba(70,44,18,0.08)';
+    g.fillRect(0, 0, 2, h);
+    g.fillRect(w - 2, 0, 2, h);
   });
 
 export const flapTexture = () =>
   canvasTexture(512, 256, SCALE.flap, (g, w, h) => {
     g.fillStyle = KRAFT;
     g.fillRect(0, 0, w, h);
-    g.fillStyle = 'rgba(70,44,18,0.30)';
+
+    // Ondulação sutil sob o liner
+    const darkHex = PALETTE.kraftDark || '#9a7447';
+    g.fillStyle = darkHex;
+    g.globalAlpha = 0.055;
+    for (let y = 0; y < h; y += 16) {
+      g.fillRect(0, y, w, 3);
+    }
+
+    let seed = 2048;
+    const rand = () => {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+    for (let i = 0; i < 240; i++) {
+      const x = rand() * w;
+      const y = rand() * h;
+      const len = 4 + rand() * 14;
+      g.globalAlpha = 0.04 + rand() * 0.06;
+      g.fillStyle = rand() > 0.45 ? darkHex : '#e5c99f';
+      g.fillRect(x, y, len, 1.2);
+    }
+    g.globalAlpha = 1;
+
+    g.fillStyle = 'rgba(70,44,18,0.25)';
     g.fillRect(0, h - 5, w, 5);
     g.fillStyle = 'rgba(70,44,18,0.12)';
     g.fillRect(0, 0, 3, h);
@@ -202,15 +314,65 @@ export const truckLogoTexture = () =>
     drawHorizontalBrand(g, 80, 20, 1440, PALETTE.forest);
   });
 
-/** Borda de uma pilha de papelão: duas capas e a onda do miolo (só aparece nas bordas). */
-export const edgeTexture = () =>
-  dataTexture(
-    16,
-    16,
-    (x, y) => {
-      if (y < 2) return [143, 107, 67, 255];
-      const wave = 8.5 + 3 * Math.sin((x / 8) * Math.PI * 2);
-      return Math.abs(y - wave) < 1.1 ? [176, 127, 78, 255] : [203, 164, 114, 255];
-    },
-    { repeat: true },
-  );
+/** Borda de uma pilha/folha de papelão: duas capas e a onda senoidal nítida do miolo (2 ondas por tile). */
+export const edgeTexture = () => {
+  const w = 128;
+  const h = 64;
+  const { canvas, ctx } = createSurface(w, h);
+  if (!canvas || !ctx) {
+    return dataTexture(
+      16,
+      16,
+      (x, y) => {
+        if (y < 2) return [143, 107, 67, 255];
+        const wave = 8.5 + 3 * Math.sin((x / 8) * Math.PI * 2);
+        return Math.abs(y - wave) < 1.1 ? [176, 127, 78, 255] : [203, 164, 114, 255];
+      },
+      { repeat: true },
+    );
+  }
+
+  // Oco sombreado da onda
+  ctx.fillStyle = '#7c5c36';
+  ctx.fillRect(0, 0, w, h);
+
+  // Sombreamento senoidal nos vãos dos arcos (2 ondas completas no ladrilho)
+  for (let x = 0; x < w; x++) {
+    const s = Math.sin((x / w) * Math.PI * 4) * 0.5 + 0.5;
+    ctx.fillStyle = s > 0.5 ? 'rgba(207, 169, 120, 0.28)' : 'rgba(92, 66, 36, 0.28)';
+    ctx.fillRect(x, 8, 1, h - 16);
+  }
+
+  // Onda senoidal de papelão ondulado do miolo
+  ctx.beginPath();
+  const amp = (h - 22) * 0.46;
+  const mid = h * 0.5;
+  for (let x = 0; x <= w; x++) {
+    const y = mid + Math.sin((x / w) * Math.PI * 4) * amp;
+    if (x === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.strokeStyle = KRAFT_INNER;
+  ctx.lineWidth = 5.5;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  // Camadas superior e inferior de liner kraft
+  ctx.fillStyle = KRAFT;
+  ctx.fillRect(0, 0, w, 9);
+  ctx.fillRect(0, h - 9, w, 9);
+  ctx.fillStyle = PALETTE.kraftDark || '#9a7447';
+  ctx.fillRect(0, 8, w, 2);
+  ctx.fillRect(0, h - 10, w, 2);
+
+  const tex = new CanvasTexture(/** @type {any} */ (canvas));
+  tex.colorSpace = SRGBColorSpace;
+  tex.wrapS = RepeatWrapping;
+  tex.wrapT = RepeatWrapping;
+  tex.minFilter = LinearMipmapLinearFilter;
+  tex.magFilter = LinearFilter;
+  tex.generateMipmaps = true;
+  tex.anisotropy = 4;
+  tex.needsUpdate = true;
+  return tex;
+};

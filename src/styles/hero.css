@@ -1,0 +1,313 @@
+/* Hero 3D Story Stage, Sticky factory animation & 5 storytelling cards */
+
+.story {
+  position: relative;
+  height: 560vh;
+  height: 560svh;
+}
+
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  min-height: 33rem;
+  overflow: hidden;
+  background: var(--papel);
+  isolation: isolate;
+}
+
+.stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.stage.ready canvas {
+  opacity: 1;
+}
+
+.loader {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--papel);
+  z-index: 5;
+  transition:
+    opacity 0.4s,
+    visibility 0s 0.4s;
+}
+
+.loader img {
+  width: 5rem;
+  height: 5rem;
+}
+
+.stage.ready .loader {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Emendas com a página: faixas de Papel suaves */
+.stage::before,
+.stage::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.stage::before {
+  top: 0;
+  height: calc(var(--hdr-h) + 1.25rem);
+  background: linear-gradient(var(--papel) calc(100% - 2.25rem), rgb(251 248 242 / 0));
+}
+
+.stage::after {
+  bottom: 0;
+  height: 3rem;
+  background: linear-gradient(rgb(251 248 242 / 0), var(--papel));
+}
+
+.scrollcue {
+  position: absolute;
+  left: 50%;
+  bottom: max(1.5rem, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  font-family: var(--font);
+  font-size: var(--t-small);
+  font-weight: 700;
+  color: var(--carvao-muted);
+  transition: opacity 0.4s;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.scrollcue.gone,
+[data-tour='playing'] .scrollcue {
+  opacity: 0;
+}
+
+/* Cartões da história */
+.stage .steps {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.step {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding: calc(var(--hdr-h) + 1rem) 0 1.5rem;
+  pointer-events: none;
+}
+
+.card {
+  width: min(30rem, 100%);
+  padding: 2rem 2.25rem 2.25rem;
+  border-radius: var(--radius-md, 0.5rem);
+  background: var(--papel);
+  border: 1px solid var(--tint-2);
+  box-shadow: 0 12px 32px rgba(27, 26, 23, 0.08);
+  opacity: 0;
+  transform: translateY(1rem);
+  transition:
+    opacity 0.5s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.5s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.card:has(h1) {
+  width: min(44rem, 100%);
+}
+
+.card.on {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.card h1,
+.card h2 {
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  text-wrap: balance;
+  color: var(--carvao);
+  margin-top: 0;
+}
+
+.card h1 {
+  font-size: var(--t-display);
+  margin-bottom: 1rem;
+}
+
+.card h2 {
+  font-size: var(--t-title);
+  margin-bottom: 0.875rem;
+}
+
+.card h2 .anos {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--floresta);
+  font-size: clamp(4.5rem, 9vw, 8rem);
+  letter-spacing: -0.05em;
+  line-height: 0.9;
+}
+
+.card p {
+  color: var(--carvao-muted);
+  font-size: var(--t-lead);
+  line-height: 1.5;
+  margin-bottom: 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+}
+
+.actions .btn-soft {
+  background: var(--tint);
+  color: var(--carvao);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  border-radius: var(--radius-sm, 4px);
+  padding: 0 1.5rem;
+  height: var(--btn-h);
+}
+
+.actions .btn-soft:hover {
+  background: var(--soft-hover);
+}
+
+.seal {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  font-size: var(--t-small);
+  font-weight: 600;
+  color: var(--carvao-muted);
+}
+
+.seal::before {
+  content: '';
+  flex: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--floresta);
+  border-radius: 1px;
+}
+
+.more {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin-top: 1rem;
+  color: var(--floresta);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.wave {
+  width: 100%;
+  line-height: 0;
+  overflow: hidden;
+}
+
+.wave svg {
+  width: 100%;
+  height: 1.25rem;
+  color: var(--kraft);
+}
+
+@media (max-width: 768px) {
+  .actions.card-cta {
+    display: none;
+  }
+}
+
+@media (max-width: 760px), (max-aspect-ratio: 1/1) {
+  .story {
+    height: 400vh;
+    height: 400svh;
+  }
+
+  .step {
+    align-items: flex-end;
+    padding: var(--hdr-h) 0 0.75rem;
+  }
+
+  .step .wrap {
+    padding: 0 0.75rem;
+  }
+
+  .card {
+    width: 100%;
+    padding: 1.125rem 1.25rem 1.25rem;
+  }
+
+  .card h1 {
+    font-size: clamp(1.75rem, 8vw, 2.35rem);
+    margin-bottom: 0.5rem;
+  }
+
+  .card h2 {
+    font-size: clamp(1.6rem, 7vw, 2rem);
+    margin-bottom: 0.5rem;
+  }
+
+  .card p {
+    font-size: 1rem;
+    line-height: 1.45;
+  }
+
+  .actions {
+    margin-top: 1rem;
+  }
+
+  .actions .btn {
+    flex: 1 1 100%;
+  }
+
+  .actions .btn-soft {
+    flex: 0 0 auto;
+    min-height: 2.75rem;
+    margin: 0 auto;
+    padding: 0 0.5rem;
+    background: none;
+    color: var(--floresta);
+    text-decoration: underline;
+  }
+
+  .seal {
+    margin-top: 1rem;
+    font-size: var(--t-small);
+  }
+
+  .scrollcue,
+  .optional {
+    display: none;
+  }
+}
+
+@media (min-width: 601px) and (max-aspect-ratio: 1/1) {
+  .card p {
+    font-size: var(--t-body);
+  }
+}
