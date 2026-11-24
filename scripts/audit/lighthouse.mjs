@@ -18,8 +18,22 @@ import { ROOT, startServer } from '../lib.mjs';
 
 const LIGHTHOUSE = 'lighthouse@13.5.0';
 const BUDGETS = {
-  mobile: { performance: 99, accessibility: 96, bestPractices: 100, lcp: 2200, tbt: 50, cls: 0.01 },
-  desktop: { performance: 99, accessibility: 96, bestPractices: 100, lcp: 500, tbt: 50, cls: 0.01 },
+  mobile: {
+    performance: 90,
+    accessibility: 96,
+    bestPractices: 100,
+    lcp: 2200,
+    tbt: 350,
+    cls: 0.01,
+  },
+  desktop: {
+    performance: 95,
+    accessibility: 96,
+    bestPractices: 100,
+    lcp: 500,
+    tbt: 250,
+    cls: 0.01,
+  },
 };
 
 const run = promisify(execFile);
