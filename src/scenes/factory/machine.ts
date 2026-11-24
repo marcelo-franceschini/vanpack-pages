@@ -1,11 +1,7 @@
 import { BoxGeometry, CylinderGeometry, Group, Mesh } from 'three';
 import type { CardboardPalette } from '../../engine/materials';
 import { LAYOUT } from './constants';
-import {
-  createChamferedBox,
-  createPlinthShadow,
-  type FactoryMaterials,
-} from './geometry';
+import { createChamferedBox, createPlinthShadow, type FactoryMaterials } from './geometry';
 
 export interface ProductionLineRig {
   group: Group;

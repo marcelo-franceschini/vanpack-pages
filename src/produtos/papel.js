@@ -77,4 +77,3 @@ export function papelTexture(color) {
     return null;
   }
 }
-

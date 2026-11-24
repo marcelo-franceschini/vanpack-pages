@@ -53,7 +53,10 @@ export function createDeliveryTruck(mats: FactoryMaterials): DeliveryTruckRig {
   floor.position.set(cargoX, cargoBaseY, 0);
   truckGroup.add(floor);
 
-  const roof = new Mesh(createChamferedBox(boxL + 0.04, 0.12, boxW + 0.04, 0.08, 0.018), mats.cream);
+  const roof = new Mesh(
+    createChamferedBox(boxL + 0.04, 0.12, boxW + 0.04, 0.08, 0.018),
+    mats.cream,
+  );
   roof.position.set(cargoX, cargoBaseY + boxH, 0);
   truckGroup.add(roof);
 

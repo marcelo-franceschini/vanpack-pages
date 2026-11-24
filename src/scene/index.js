@@ -17,7 +17,16 @@ import {
   WebGLRenderer,
 } from 'three';
 import { createCameraRig } from './camera.js';
-import { FLAT_T, KRAFT_INNER, LAYER, PALETTE, PALLET_H, SCRAPS, SHEET_LENGTH, SHEET_Y, STACK_TOP } from './constants.js';
+import {
+  FLAT_T,
+  LAYER,
+  PALETTE,
+  PALLET_H,
+  SCRAPS,
+  SHEET_LENGTH,
+  SHEET_Y,
+  STACK_TOP,
+} from './constants.js';
 import { buildFactory } from './factory.js';
 import { Batch, fadedFloor, ribbon, sheetGeometry, softRects, stackSides } from './geometry.js';
 import { createHero } from './hero.js';
@@ -212,7 +221,11 @@ export function createScene(canvas, { dpr = 1, mobile = false } = {}) {
   scene.add(hero.spin);
 
   // aparas que caem no recolhimento com espessura e textura de papelão
-  const scraps = new InstancedMesh(track(new BoxGeometry(1, LAYER, 1)), kraftSurfaceMaterial, SCRAPS.length);
+  const scraps = new InstancedMesh(
+    track(new BoxGeometry(1, LAYER, 1)),
+    kraftSurfaceMaterial,
+    SCRAPS.length,
+  );
   scraps.castShadow = true;
   scraps.frustumCulled = false;
   scene.add(scraps);

@@ -177,7 +177,19 @@ function buildJsonLd(site) {
 function processDataNeed(html, vars) {
   const attrRe = /<([a-zA-Z][a-zA-Z0-9-]*)(\b[^>]*?\sdata-need="([^"]+)"[^>]*?)>/;
   let result = html;
-  const voidTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source']);
+  const voidTags = new Set([
+    'area',
+    'base',
+    'br',
+    'col',
+    'embed',
+    'hr',
+    'img',
+    'input',
+    'link',
+    'meta',
+    'source',
+  ]);
 
   while (true) {
     const match = attrRe.exec(result);

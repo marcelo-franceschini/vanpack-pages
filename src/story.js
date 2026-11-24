@@ -13,9 +13,9 @@ const BAR = '(max-width: 768px)';
  * @param {object} options
  * @param {HTMLElement} options.story seção `.story` (altura = scroll da história + 1 tela)
  * @param {HTMLElement} options.stage `.stage` fixo na tela
- * @param {HTMLElement} options.header
- * @param {HTMLElement} options.cue dica "Role para ver ↓"
- * @param {HTMLElement} options.fab botão flutuante de WhatsApp
+ * @param {HTMLElement | null} [options.header]
+ * @param {HTMLElement | null} [options.cue] dica "Role para ver ↓"
+ * @param {HTMLElement | null} [options.fab] botão flutuante de WhatsApp
  * @param {HTMLElement[]} options.cards um cartão por capítulo (o 1º já vem com `.on`)
  * @param {(progress: number) => void} options.onProgress o progresso mudou
  * @param {(index: number) => void} options.onChapter o capítulo ativo mudou

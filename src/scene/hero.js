@@ -1,18 +1,10 @@
 // A peça "herói": a chapa, o tubo achatado e a caixa são a mesma peça (4 painéis + abas). Ela dobra
 // por baixo, abre cisalhando, gira e volta a dobrar. A marca do cliente demo fica nos dois painéis
 // longos.
-import {
-  BoxGeometry,
-  Color,
-  DoubleSide,
-  Group,
-  Mesh,
-  MeshBasicMaterial,
-  MeshLambertMaterial,
-} from 'three';
-import { BOX, KRAFT, KRAFT_INNER, LAYER, PALETTE, SHEET_LENGTH } from './constants.js';
+import { BoxGeometry, Group, Mesh, MeshBasicMaterial, MeshLambertMaterial } from 'three';
+import { BOX, LAYER, PALETTE, SHEET_LENGTH } from './constants.js';
 import { panelGeometry } from './geometry.js';
-import { bodyTexture, flapTexture, innerBodyTexture } from './textures.js';
+import { bodyTexture, edgeTexture, flapTexture, innerBodyTexture } from './textures.js';
 
 const { L, D, H, F } = BOX;
 

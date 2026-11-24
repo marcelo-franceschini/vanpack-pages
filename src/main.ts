@@ -1,6 +1,5 @@
 import { mountStage } from './render/stage.js';
 import { createStory } from './story.js';
-import { createTour } from './tour.js';
 import { observeProdutos } from './produtos/gatilho.js';
 import { initAnalytics } from './telemetry/analytics';
 import { mountClientShowcase } from './ui/carousel';
@@ -31,9 +30,8 @@ const fabEl = document.getElementById('fab');
 const cards = [...document.querySelectorAll<HTMLElement>('.card')];
 
 if (stageEl && storyEl) {
-  let stageOk = false;
   const stage = mountStage(stageEl);
-  const story = createStory({
+  createStory({
     story: storyEl,
     stage: stageEl,
     header: headerEl,
@@ -44,17 +42,7 @@ if (stageEl && storyEl) {
     onChapter: (_index: number) => {},
   });
 
-  const tour = createTour({
-    getProgress: () => story.progress(),
-    yAt: (p: number) => story.yAt(p),
-    onState: (state: string) => {
-      storyEl.dataset.tour = state;
-      cueEl?.classList.toggle('gone', state === 'playing');
-    },
-  });
-
-  stage.ready.then((ok: boolean) => {
-    stageOk = ok;
+  stage.ready.then(() => {
     stageEl.classList.add('ready');
   });
 }

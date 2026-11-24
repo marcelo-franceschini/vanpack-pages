@@ -25,7 +25,11 @@ export const FLORESTA = '#14513a';
  * preserving exact brand hex tones (`#b78c5c` outer / `#cfa978` lighter inner)
  * while giving every cardboard sheet genuine tactile paper warmth.
  */
-function createKraftSurfaceTexture(baseHex: string, darkHex: string, maxAnisotropy: number): Texture {
+function createKraftSurfaceTexture(
+  baseHex: string,
+  darkHex: string,
+  maxAnisotropy: number,
+): Texture {
   const size = 256;
   const { canvas, ctx } = createSurface(size, size);
 

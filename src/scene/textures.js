@@ -376,4 +376,3 @@ export const edgeTexture = () => {
   tex.needsUpdate = true;
   return tex;
 };
-

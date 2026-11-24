@@ -57,7 +57,9 @@ export function assertValidSite({ site, content, contentErrors = [], root, conte
       errors.push('Em production, substitua o CNPJ de demonstração em content/empresa.yaml.');
     }
     if (site.hours === 'Seg a Sex, 8h às 17h' && !confirmed.has('horario')) {
-      warnings.push('Confirme o campo "horario" em content/empresa.yaml (ou liste em confirmados).');
+      warnings.push(
+        'Confirme o campo "horario" em content/empresa.yaml (ou liste em confirmados).',
+      );
     }
 
     for (const client of site.clients.filter((c) => c.authorized)) {

@@ -82,11 +82,7 @@ export function createChamferedBox(
 }
 
 /** Creates a grounded soft rectangular contact-shadow quad (`y = 0.003`) for diorama plinths. */
-export function createPlinthShadow(
-  width: number,
-  depth: number,
-  mats: FactoryMaterials,
-): Mesh {
+export function createPlinthShadow(width: number, depth: number, mats: FactoryMaterials): Mesh {
   const mesh = new Mesh(new PlaneGeometry(width, depth), mats.contactShadow);
   mesh.rotation.x = -Math.PI * 0.5;
   mesh.position.y = 0.003;
