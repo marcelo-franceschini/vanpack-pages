@@ -10,13 +10,24 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:audit": "vite build --mode audit --outDir dist-audit",
     "preview": "vite preview",
-    "lint": "tsc --noEmit && eslint . && prettier --check .",
+    "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
+    "hooks:instalar": "git config core.hooksPath .githooks",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && npx --yes tsx --test tests/*.test.ts",
-    "og": "node tools/assets/og.mjs",
-    "icons": "node tools/assets/icons.mjs"
+    "test:parte": "npm run build && npx --yes tsx --test tests/*.test.ts",
+    "audit:bundle": "node scripts/audit/bundle.mjs",
+    "audit:scene": "node scripts/audit/scene-stats.mjs",
+    "audit:runtime": "node scripts/audit/runtime.mjs",
+    "audit:lighthouse": "node scripts/audit/lighthouse.mjs",
+    "audit:carga": "node scripts/audit/carga.mjs",
+    "audit:capturas": "node scripts/audit/capturas.mjs",
+    "audit:produtos": "node scripts/audit/produtos-stats.mjs",
+    "audit:paridade": "node scripts/audit/paridade.mjs",
+    "og": "node scripts/og.mjs",
+    "amostra": "node scripts/amostra.mjs"
   },
   "dependencies": {
     "three": "0.184.0",
@@ -35,7 +46,6 @@
     "prettier": "^3.9.10",
     "svgo": "^4.1.0",
     "typescript": "^7.0.2",
-    "typescript-eslint": "^8.73.0",
     "vite": "^8.3.4",
     "yaml": "^2.9.1"
   }

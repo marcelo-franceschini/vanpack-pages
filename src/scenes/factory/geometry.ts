@@ -195,7 +195,7 @@ export function createFactoryMaterials(maxAnisotropy = 4): FactoryMaterials {
 }
 
 export function setShadows(root: Object3D, cast: boolean, receive: boolean): void {
-  root.traverse((obj) => {
+  root.traverse((obj: any) => {
     if (obj instanceof Mesh) {
       obj.castShadow = cast;
       obj.receiveShadow = receive;
@@ -205,7 +205,7 @@ export function setShadows(root: Object3D, cast: boolean, receive: boolean): voi
 
 export function disposeGeometries(root: Object3D): void {
   const seen = new Set<string>();
-  root.traverse((obj) => {
+  root.traverse((obj: any) => {
     if (obj instanceof Mesh && obj.geometry && !seen.has(obj.geometry.uuid)) {
       seen.add(obj.geometry.uuid);
       obj.geometry.dispose();

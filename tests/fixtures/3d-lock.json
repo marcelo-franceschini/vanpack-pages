@@ -1,0 +1,19 @@
+{
+  "arquivos": {
+    "src/render/controller.js": "e3fd8ef4ee2067577e39a2df151481be1d2db91cdcb9bbfc18ef08156c60ad8e",
+    "src/render/stage.js": "3c9cac2358cc7a95cc03e8a5349d5014699b829b90a0209d4b5bdea6424b77a6",
+    "src/render/worker.js": "c32b0f1080c3ad43ed74ca41a3813bd20bd13589ccbdcc6641e77dbbb83632f0",
+    "src/scene/camera.js": "cd73284addb6da518dcbffd2442dcd5aa70a8fffaa87c1f82aeb2fc21ec06ec9",
+    "src/scene/constants.js": "a076f0c7837791ca65acc7e25d439ba974269ff2040df30d940bb0847b906b74",
+    "src/scene/factory.js": "0fd7e3ec6c35580d9893e94b08eafad159f9ea4bb43a2d28be020bee043ff3c0",
+    "src/scene/geometry.js": "8b9d4a18d5b08d5a2a10a37e07b28bbe312ecec394ba13c49b51d0b3bf613be4",
+    "src/scene/hero.js": "3bb3560a505650c0bf7a9c122f4a64f358534b4bfc16318eed638164ee34e51c",
+    "src/scene/index.js": "5cc68b675a2bbdb0d980b65a61290d1153aa6093251535091273f16ca77851fc",
+    "src/scene/machine.js": "7796cf56c7ee45cf30ea2ae57665420e922c78f9daabf75bfe131b73702c7358",
+    "src/scene/math.js": "daaa1be8bb179fbd5a068c1129225cc08c7adad8839ba114a91ef8cf700fb4b3",
+    "src/scene/textures.js": "0b4538b7ddb577e71cd4ce0c303689ac7a7cc021917e9ad04ae6fb9e2fd5231c",
+    "src/scene/timeline.js": "cd9d5695972edea840dde8f4ee97554958b90d16c34c73b44fea003f3593fa4f",
+    "src/scene/truck.js": "50696baf9be447ae4c4499d3c3decd44c07e59223a7e20207ffc3205c7bfb03e",
+    "tests/scene.test.mjs": "f1cb930850c045b979d2e4625e5aee4ebe009ae970b3a1755157d88e2ce4b129"
+  }
+}
